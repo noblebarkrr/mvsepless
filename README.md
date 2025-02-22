@@ -1,4 +1,4 @@
 # mvsepless
-Web UI for Mel-Band Roformer and UVR in Google Colab
+CLI wrapper for MSST and python-audio-separator for Google Colab
 
 No Mvsep - No queue problem!
