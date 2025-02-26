@@ -136,7 +136,7 @@ elif model_code == 139: # GaboxR67 / Instrumental Bv2
     ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv2.ckpt?download=true"
     conf_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
 elif model_code == 140: # GaboxR67 / Karaoke
-    ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/experimental/KaraokeGabox.ckpt"
+    ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/KaraokeGabox.ckpt?download=true"
     conf_url = "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true"
 
 elif model_code == 141: # GaboxR67 / Vocals
