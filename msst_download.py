@@ -135,61 +135,65 @@ elif model_code == 138: # GaboxR67 / Instrumental Bv1
 elif model_code == 139: # GaboxR67 / Instrumental Bv2
     ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv2.ckpt?download=true"
     conf_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
-elif model_code == 140: # GaboxR67 / Vocals
+elif model_code == 140: # GaboxR67 / Karaoke
+    ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/experimental/KaraokeGabox.ckpt"
+    conf_url = "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true"
+
+elif model_code == 141: # GaboxR67 / Vocals
     ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.ckpt?download=true"
     conf_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
-elif model_code == 141: # GaboxR67 / Denoise Debleed
+elif model_code == 142: # GaboxR67 / Denoise Debleed
     ckpt_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/denoisedebleed.ckpt?download=true"
     conf_url = "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
 
 #   Anvuew
 
-elif model_code == 142: # Anvuew / Dereverb
+elif model_code == 143: # Anvuew / Dereverb
     ckpt_url = "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew_sdr_19.1729.ckpt?download=true"
     conf_url = "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew.yaml?download=true"
-elif model_code == 143: # Anvuew / Dereverb Aggressive
+elif model_code == 144: # Anvuew / Dereverb Aggressive
     ckpt_url = "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_less_aggressive_anvuew_sdr_18.8050.ckpt?download=true"
     conf_url = "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew.yaml?download=true"
-elif model_code == 144: # Anvuew / Dereverb Mono
+elif model_code == 145: # Anvuew / Dereverb Mono
     ckpt_url = "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_mono_anvuew_sdr_20.4029.ckpt?download=true"
     conf_url = "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew.yaml?download=true"
 
 #   Sucial
 
-elif model_code == 145: # Sucial / Aspiration
+elif model_code == 146: # Sucial / Aspiration
     ckpt_url = "https://huggingface.co/Sucial/Aspiration_Mel_Band_Roformer/resolve/main/aspiration_mel_band_roformer_less_aggr_sdr_18.1201.ckpt?download=true"
     conf_url = "https://huggingface.co/Sucial/Aspiration_Mel_Band_Roformer/resolve/main/config_aspiration_mel_band_roformer.yaml?download=true"
-elif model_code == 146: # Sucial / Dereverb Deecho
+elif model_code == 147: # Sucial / Dereverb Deecho
     ckpt_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb-echo_mel_band_roformer_sdr_10.0169.ckpt?download=true"
     conf_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb-echo_mel_band_roformer.yaml?download=true"
-elif model_code == 147: # Sucial / Big Dereverb
+elif model_code == 148: # Sucial / Big Dereverb
     ckpt_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/de_big_reverb_mbr_ep_362.ckpt?download=true"
     conf_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb-echo_mel_band_roformer.yaml?download=true"
-elif model_code == 148: # Sucial / Super Big Dereverb
+elif model_code == 149: # Sucial / Super Big Dereverb
     ckpt_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/de_super_big_reverb_mbr_ep_346.ckpt?download=true"
     conf_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb-echo_mel_band_roformer.yaml?download=true"
-elif model_code == 149: # Sucial / Dereverb Deecho MBR Fused v1
+elif model_code == 150: # Sucial / Dereverb Deecho MBR Fused v1
     ckpt_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb_echo_mbr_fused_0.5_v2_0.25_big_0.25_super.ckpt?download=true"
     conf_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb-echo_mel_band_roformer.yaml?download=true"
-elif model_code == 150: # Sucial / Dereverb Deecho MBR v2
+elif model_code == 151: # Sucial / Dereverb Deecho MBR v2
     ckpt_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb_echo_mbr_v2_sdr_dry_13.4843.ckpt?download=true"
     conf_url = "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb_echo_mbr_v2.yaml?download=true"
 
 #   Aufr33 & ViperX
 
-elif model_code == 151: # Aufr33 & ViperX / Karaoke
+elif model_code == 152: # Aufr33 & ViperX / Karaoke
     ckpt_url = "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt?download=true"
     conf_url = "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true"
-elif model_code == 152: # Aufr33 / Denoise
+elif model_code == 153: # Aufr33 / Denoise
     ckpt_url = "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt?download=true"
     conf_url = "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/model_mel_band_roformer_denoise.yaml?download=true"
-elif model_code == 153: # Aufr33 / Denoise Aggresive
+elif model_code == 154: # Aufr33 / Denoise Aggresive
     ckpt_url = "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt?download=true"
     conf_url = "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/model_mel_band_roformer_denoise.yaml?download=true"
-elif model_code == 154: # Aufr33 & ViperX / Decrowd
+elif model_code == 155: # Aufr33 & ViperX / Decrowd
     ckpt_url = "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.4/mel_band_roformer_crowd_aufr33_viperx_sdr_8.7144.ckpt"
     conf_url = "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.4/model_mel_band_roformer_crowd.yaml"
-elif model_code == 155: # ViperX / Vocals
+elif model_code == 156: # ViperX / Vocals
     ckpt_url = "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt"
     conf_url = "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/model_mel_band_roformer_ep_3005_sdr_11.4360.yaml"
 
