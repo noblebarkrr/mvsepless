@@ -458,7 +458,7 @@ def main():
     if 100 <= model_code <= 199:
         model_type = "mel_band_roformer"
         inference = "msst"
-        if 147 <= model_code <= 149:
+        if 148 <= model_code <= 150:
           raise("Unsupported model for inference. Wait fix...")
         else:
           new = True
