@@ -458,10 +458,7 @@ def main():
     if 100 <= model_code <= 199:
         model_type = "mel_band_roformer"
         inference = "msst"
-        if 148 <= model_code <= 150:
-          raise("Unsupported model for inference. Wait fix...")
-        else:
-          new = True
+        new = True
         download_model()
     elif 200 <= model_code <= 299:
         model_type = "bs_roformer"
