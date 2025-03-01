@@ -396,11 +396,16 @@ def main():
         subprocess.run(download_ckpt, check=True)
         subprocess.run(download_conf, check=True)
 
-        if 100 <= model_code <= 299:
+        if 200 <= model_code <= 299:
             overlap = 2
             chunk_size = 485100
             conf_edit(config_path, int(chunk_size), overlap)
 
+        if 1000 <= model_code <= 1999:
+            overlap = 2
+            chunk_size = 485100
+            conf_edit(config_path, int(chunk_size), overlap)
+            
         elif model_code == 304:
             overlap = 4
             chunk_size = 261120
@@ -455,7 +460,7 @@ def main():
     print(f"Код модели: {model_code}")
 
     # Определение типа модели
-    if 100 <= model_code <= 199:
+    if 1000 <= model_code <= 1999:
         model_type = "mel_band_roformer"
         inference = "msst"
         new = True
