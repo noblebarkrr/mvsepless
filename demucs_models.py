@@ -4,8 +4,6 @@
 # Создаем словарь с привязкой model_code к model
 models = [
     "drumsep", "htdemucs_ft.yaml", "htdemucs.yaml", 
-    "hdemucs_mmi.yaml", "htdemucs_6s.yaml",
-    "drumsep", "htdemucs_ft.yaml", "htdemucs.yaml",
     "hdemucs_mmi.yaml", "htdemucs_6s.yaml"
 ]
 
