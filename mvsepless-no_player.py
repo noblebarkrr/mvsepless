@@ -87,6 +87,7 @@ model_mapping = {
         "MelBand Roformer / ViperX / Vocals": 1054,
         "BS Roformer / ViperX / Vocals": 202,
         "BS Roformer / GaboxR67 / Vocals": 203,
+        "MDX23C / INST-VOC HQ": 300,
         "MDX-NET / INST-FULL": 400,
         "MDX-NET / INST 187 beta": 401,
         "MDX-NET / INST 82 beta": 402,
