@@ -40,6 +40,61 @@ def separate_audio(input_file, separation_type, model, output_format):
     # Возвращаем результат
     return [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith(output_format)]
 
+def separate_backs(input_file, output_format):
+    # Создаем директорию для входных файлов
+    
+    input_dir = "/content/input"
+    if os.path.exists(input_dir):
+        shutil.rmtree(input_dir)
+    os.makedirs(input_dir, exist_ok=True)
+    
+    # Получаем путь к временному файлу
+    temp_path = input_file.name  # Gradio возвращает путь как строку
+    input_filename = os.path.basename(temp_path)
+    input_path = os.path.join(input_dir, input_filename)
+    
+    # Копируем файл из временного хранилища
+    
+    shutil.copy(temp_path, input_path)
+    
+    # Создаем директорию для выходных файлов
+    all_backs = "allbacks_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = os.path.join("/content/output", all_backs)
+    os.makedirs(output_dir, exist_ok=True)
+    # Создаем папки где хранятся бэк вокалы
+    mel_gabox_1 = os.path.join("/tmp/allbacks", "mel_gabox_1")
+    mel_gabox_2 = os.path.join("/tmp/allbacks", "mel_gabox_2")
+    mel_aufr33 = os.path.join("/tmp/allbacks", "mel_aufr33")
+    mdx_kara_1 = os.path.join("/tmp/allbacks", "mdx_kara_1")
+    mdx_kara_2 = os.path.join("/tmp/allbacks", "mdx_kara_2")
+    uvr_kara_1 = os.path.join("/tmp/allbacks", "uvr_kara_1")
+    uvr_kara_2 = os.path.join("/tmp/allbacks", "uvr_kara_2")
+    uvr_bve = os.path.join("/tmp/allbacks", "uvr_bve")
+    os.makedirs(output_dir, exist_ok=True)
+    for model_code, output_temp_backs, name_file in [(1190, mel_gabox_1, "mel_gabox_1"), (1191, mel_gabox_2, "mel_gabox_2"), (1054, mel_aufr33, "mel_aufr33"), (422, mdx_kara_1, "mdx_kara_1"), (423, mdx_kara_2, "mdx_kara_2"), (504, uvr_kara_1, "uvr_kara_1"), (505, uvr_kara_2, "uvr_kara_2"), (524, uvr_bve, "uvr_bve")]:
+    # Формируем команду
+        sep_backs = [
+            "/content/MVSEPLESS/msst/venv/bin/python", "/content/MVSEPLESS/main.py",
+            "--input", str(input_dir), "--output", str(output_temp_backs),
+            "--modelcode", str(model_code), "--output_format", str(output_format)
+        ]
+        subprocess.run(sep_backs)
+
+# Получаем список файлов в папке output_temp_backs
+        files = os.listdir(output_temp_backs)
+
+# Перемещаем и переименовываем файлы
+        for i, file in enumerate(files):
+    # Полный путь к исходному файлу
+            src_path = os.path.join(output_temp_backs, file)    
+            new_name = f"{name_file}_vocals{i+1}_{input_filename}.{output_format}"    
+            dst_path = os.path.join(output_dir, new_name)    
+            shutil.move(src_path, dst_path)
+
+    # Возвращаем результат
+    return [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith(output_format)]
+
+
 # Словарь для сопоставления моделей и их кодов
 model_mapping = {
     "Инструментал/Вокал": {
@@ -193,47 +248,73 @@ def update_models(separation_type):
     return gr.Dropdown(choices=list(model_mapping[separation_type].keys()))
 # Создаем интерфейс Gradio с правильным обновлением моделей
 with gr.Blocks(title="Разделение музыки и голоса",theme=gr.themes.Soft()) as app:
-    gr.Markdown("## MVSEPLESS")
+    gr.Markdown("# MVSEPLESS")
+
+    with gr.Tabs():
+        # Первая вкладка
+        with gr.TabItem("Разделение вокала"):
     
-    with gr.Row():
-        input_file = gr.File(label="Перетащите, чтобы загрузить файл на сервер или выберите файл на устройстве", file_types=[".wav", ".mp3", ".flac"])
+            with gr.Row():
+                input_file = gr.File(label="Перетащите, чтобы загрузить файл на сервер или выберите файл на устройстве", file_types=[".wav", ".mp3", ".flac"])
 
-    with gr.Row():
-        separation_type = gr.Dropdown(
-            label="Тип разделения", 
-            choices=list(model_mapping.keys()), 
-            value="Инструментал/Вокал"
-        )
-    with gr.Row():    
-        model = gr.Dropdown(
-            label="Модель", 
-            choices=list(model_mapping["Инструментал/Вокал"].keys())
-        )
-    with gr.Row():
-        output_format = gr.Dropdown(
-            label="Формат вывода", 
-            choices=["wav", "mp3", "flac"], 
-            value="wav"
-        )
+            with gr.Row():
+                separation_type = gr.Dropdown(
+                    label="Тип разделения", 
+                    choices=list(model_mapping.keys()), 
+                    value="Инструментал/Вокал"
+                )
+            with gr.Row():    
+                model = gr.Dropdown(
+                    label="Модель", 
+                    choices=list(model_mapping["Инструментал/Вокал"].keys())
+                )
+            with gr.Row():
+                output_format = gr.Dropdown(
+                    label="Формат вывода", 
+                    choices=["wav", "mp3", "flac"], 
+                    value="wav"
+                )
 
-    btn = gr.Button("Разделить", variant="primary")
+            btn = gr.Button("Разделить", variant="primary")
 
-    with gr.Row():
-        output_file = gr.File(label="Файлы после разделения", interactive=False)
+            with gr.Row():
+                output_file = gr.File(label="Файлы после разделения", interactive=False)
 
     
-    # Обработчик изменения типа разделения
-    separation_type.change(
-        fn=lambda x: gr.Dropdown(choices=list(model_mapping[x].keys())),
-        inputs=separation_type,
-        outputs=model
-    )
+            # Обработчик изменения типа разделения
+            separation_type.change(
+                fn=lambda x: gr.Dropdown(choices=list(model_mapping[x].keys())),
+                inputs=separation_type,
+                outputs=model
+            )
 
-    # Обработчик кнопки
-    btn.click(
-        fn=separate_audio,
-        inputs=[input_file, separation_type, model, output_format],
-        outputs=output_file
-    )
+            # Обработчик кнопки
+            btn.click(
+                fn=separate_audio,
+                inputs=[input_file, separation_type, model, output_format],
+                outputs=output_file
+            )
 
+        with gr.TabItem("Извлечение бэк-вокала"):
+
+            with gr.Row():
+                input_file = gr.File(label="Перетащите, чтобы загрузить файл на сервер или выберите файл на устройстве", file_types=[".wav", ".mp3", ".flac"])
+                
+            with gr.Row():
+                output_format = gr.Dropdown(
+                    label="Формат вывода", 
+                    choices=["wav", "mp3", "flac"], 
+                    value="wav"
+                )
+
+            btn = gr.Button("Разделить", variant="primary")
+
+            with gr.Row():
+                output_file = gr.File(label="Файлы после разделения", interactive=False)
+
+            btn.click(
+                fn=separate_backs,
+                inputs=[input_file, output_format],
+                outputs=output_file
+            )            
 app.launch(share=True)
