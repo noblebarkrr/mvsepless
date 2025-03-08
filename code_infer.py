@@ -62,7 +62,7 @@ def code_infer():
             False,
             args.output_format,
             args.use_tta,
-            False, False)
+            False, False, args.modelcode)
     elif infer == "medley_vox":
         # coming_soon m_vox(input, output, args.modelcode, args.output_format)
         print(infer)

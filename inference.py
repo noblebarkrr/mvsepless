@@ -11,7 +11,7 @@ import soundfile as sf
 import torch.nn as nn
 from utils import prefer_target_instrument, demix, get_model_from_config
 
-def run_inference(model, config, input_folder, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose):
+def run_inference(model, config, input_folder, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode):
     start_time = time.time()
     model.eval()
     all_mixtures_path = glob.glob(input_folder + '/*.*')
@@ -103,7 +103,10 @@ def run_inference(model, config, input_folder, store_dir, device, model_type, ex
                 if config.inference['normalize'] is True:
                     estimates = estimates * std + mean
             file_name, _ = os.path.splitext(os.path.basename(path))
-            custom_name = f"{file_name}_mt-{model_type}_{instr}"
+            from models_list import get_model_config
+            config_models_list = get_model_config(modelcode)
+            model_name = config_models_list["model_name"]
+            custom_name = f"{file_name}_mt-{model_type}_{model_name}_{instr}"
             if output_format == "flac":
                 output_file = os.path.join(store_dir, f"{custom_name}.flac")
                 sf.write(output_file, estimates, sr, subtype='PCM_16')
@@ -170,10 +173,9 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
     return model, config, device
 
 
-def mvsep_offline(input_folder, store_dir, model_type, config_path, start_check_point, device_ids, extract_instrumental, disable_detailed_pbar, output_format, use_tta, force_cpu, verbose):
+def mvsep_offline(input_folder, store_dir, model_type, config_path, start_check_point, device_ids, extract_instrumental, disable_detailed_pbar, output_format, use_tta, force_cpu, verbose, modelcode):
     model, config, device = load_model(model_type, config_path, start_check_point, device_ids, force_cpu)
-    run_inference(model, config, input_folder, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose)
-
+    run_inference(model, config, input_folder, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode)
 
 if __name__ == "__main__":
     mvsep_offline(input_folder="path/to/input/folder", store_dir="path/to/store/dir")
