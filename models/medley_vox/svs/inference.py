@@ -121,7 +121,7 @@ def main():
 
     args, _ = parser.parse_known_args()
 
-    args.exp_result_dir = f"{args.model_dir}/checkpoint/{args.exp_name}"
+    args.exp_result_dir = f"{args.model_dir}/{args.exp_name}"
 
     with open(f"{args.exp_result_dir}/{args.target}.json", "r") as f:
         args_dict = json.load(f)
