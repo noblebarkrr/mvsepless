@@ -536,16 +536,6 @@ MODELS_CONFIG = {
         "ckpt_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20238/vocals.pth?download=true",
         "conf_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20238/vocals.json?download=true",
     },
-
-}
-
-def get_model_config(model_code):
-    return MODELS_CONFIG.get(model_code, {})
-
-
-
-UVR_MODELS_CONFIG = {
-    # VR Arch Models
     500: {
         "model_name": "1_HP-UVR",
         "arch": "vr_arch",
@@ -907,5 +897,5 @@ UVR_MODELS_CONFIG = {
     },
 }
 
-def get_uvr_model_config(model_code):
-    return UVR_MODELS_CONFIG.get(model_code, {})
+def get_model_config(model_code):
+    return MODELS_CONFIG.get(model_code, {})
