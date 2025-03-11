@@ -3,22 +3,24 @@ import argparse
 import subprocess
 from inference import mvsep_offline
 from config import conf_editor
-
+from audio_separator.separator import Separator
+from audio_sep import uvr
 
 def code_infer():
-    parser = argparse.ArgumentParser(description="Обработка входных и выходных директорий и кода модели.")
-    parser.add_argument("-i", "--input", type=str, help="folder with mixtures to process")
-    parser.add_argument("-o", "--output", default="", type=str, help="path to store results")
-    parser.add_argument("-inst", "--instrum", action='store_true', help="invert vocals")
+    parser = argparse.ArgumentParser(description="Универсальный инференс для разделения аудио на музыкальную и вокальную части")
+    parser.add_argument("-i", "--input", type=str, help="Директория входа")
+    parser.add_argument("-o", "--output", default="", type=str, help="Директория вывода")
+    parser.add_argument("-inst", "--instrum", action='store_true', help="Сохранение инструментала")
     parser.add_argument("-mcode", "-mc", "--modelcode", dest='modelcode', type=int, required=True, help="Код модели")
-    parser.add_argument("-of", "--output_format", type=str, choices=['mp3', 'wav', 'flac'], default='wav', help="Format of output files")
-    parser.add_argument("-tta", "--use_tta", action='store_true', help="Flag adds test time augmentation during inference (polarity and channel inverse). While this triples the runtime, it reduces noise and slightly improves prediction quality.")
+    parser.add_argument("-of", "--output_format", type=str, choices=['mp3', 'wav', 'flac'], default='wav', help="Формат вывода")
+    parser.add_argument("-tta", "--use_tta", action='store_true', help="Повышение качества разделения за счет смены полярности и инвертирования каналов в три прохода")
     args = parser.parse_args()
 
     model_dir = f"model/{args.modelcode}"
     os.makedirs(model_dir, exist_ok=True)
     
     from models_list import get_model_config
+    from models_list import get_uvr_model_config
     config = get_model_config(args.modelcode)
 
     if config:
@@ -27,13 +29,21 @@ def code_infer():
         ckpt_url = config["ckpt_url"]
         conf_url = config["conf_url"]
 
-        print(f"Model Name: {model_name}")
-        print(f"Architecture: {arch}")
-        print(f"Checkpoint URL: {ckpt_url}")
-        print(f"Config URL: {conf_url}")
+        print(f"Название модели: {model_name}")
+        print(f"Архитектура: {arch}")
+        print(f"Ссылка на модель: {ckpt_url}")
+        print(f"Ссылка на конфигурационный файл: {conf_url}")
     else:
-        print(f"Model with code {model_code} not found.")
+        print(f"Модель с кодом {model_code} не найдена.")
+    config = get_uvr_model_config(args.modelcode)
+    if config:
+        arch = config["arch"]
+        model_name = config["ckpt_url"]
 
+        print(f"Название модели: {model_name}")
+        print(f"Архитектура: {arch}")
+    else:
+        print(f"Модель с кодом {model_code} не найдена.")
     if arch == "mel_band_roformer" or arch == "bs_roformer" or arch == "mdx23c" or arch == "scnet":
         conf = f"{model_dir}/config.yaml"
         ckpt = f"{model_dir}/model.ckpt"
@@ -43,12 +53,13 @@ def code_infer():
         conf = f"{model_dir}/vocals.json"
         ckpt = f"{model_dir}/vocals.pth"
         infer = "medley_vox"
-
-    for local_path, url_model in [(ckpt, ckpt_url), (conf, conf_url)]:
-        download_ckpt = ("wget", "-O", str(local_path), str(url_model))
-        subprocess.run(download_ckpt, check=True)
+    elif arch == "vr_arch" or arch == "mdx-net" or arch == "demucs":
+        infer = "uvr"
 
     if infer == "mss":
+        for local_path, url_model in [(ckpt, ckpt_url), (conf, conf_url)]:
+            download_ckpt = ("wget", "-O", str(local_path), str(url_model))
+            subprocess.run(download_ckpt, check=True)
         conf_editor(conf)
         output_format = args.output_format
         mvsep_offline(
@@ -66,6 +77,8 @@ def code_infer():
     elif infer == "medley_vox":
         # coming_soon m_vox(input, output, args.modelcode, args.output_format)
         print(infer)
+    elif infer == "uvr":
+        uvr(args.input, model_name)
 
         
 

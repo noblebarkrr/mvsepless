@@ -541,3 +541,371 @@ MODELS_CONFIG = {
 
 def get_model_config(model_code):
     return MODELS_CONFIG.get(model_code, {})
+
+
+
+UVR_MODELS_CONFIG = {
+    # VR Arch Models
+    500: {
+        "model_name": "1_HP-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "1_HP-UVR.pth",
+    },
+    501: {
+        "model_name": "2_HP-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "2_HP-UVR.pth",
+    },
+    502: {
+        "model_name": "3_HP-Vocal-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "3_HP-Vocal-UVR.pth",
+    },
+    503: {
+        "model_name": "4_HP-Vocal-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "4_HP-Vocal-UVR.pth",
+    },
+    504: {
+        "model_name": "5_HP-Karaoke-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "5_HP-Karaoke-UVR.pth",
+    },
+    505: {
+        "model_name": "6_HP-Karaoke-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "6_HP-Karaoke-UVR.pth",
+    },
+    506: {
+        "model_name": "7_HP2-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "7_HP2-UVR.pth",
+    },
+    507: {
+        "model_name": "8_HP2-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "8_HP2-UVR.pth",
+    },
+    508: {
+        "model_name": "9_HP2-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "9_HP2-UVR.pth",
+    },
+    509: {
+        "model_name": "10_SP-UVR-2B-32000-1",
+        "arch": "vr_arch",
+        "ckpt_url": "10_SP-UVR-2B-32000-1.pth",
+    },
+    510: {
+        "model_name": "11_SP-UVR-2B-32000-2",
+        "arch": "vr_arch",
+        "ckpt_url": "11_SP-UVR-2B-32000-2.pth",
+    },
+    511: {
+        "model_name": "12_SP-UVR-3B-44100",
+        "arch": "vr_arch",
+        "ckpt_url": "12_SP-UVR-3B-44100.pth",
+    },
+    512: {
+        "model_name": "13_SP-UVR-4B-44100-1",
+        "arch": "vr_arch",
+        "ckpt_url": "13_SP-UVR-4B-44100-1.pth",
+    },
+    513: {
+        "model_name": "14_SP-UVR-4B-44100-2",
+        "arch": "vr_arch",
+        "ckpt_url": "14_SP-UVR-4B-44100-2.pth",
+    },
+    514: {
+        "model_name": "15_SP-UVR-MID-44100-1",
+        "arch": "vr_arch",
+        "ckpt_url": "15_SP-UVR-MID-44100-1.pth",
+    },
+    515: {
+        "model_name": "16_SP-UVR-MID-44100-2",
+        "arch": "vr_arch",
+        "ckpt_url": "16_SP-UVR-MID-44100-2.pth",
+    },
+    516: {
+        "model_name": "17_HP-Wind_Inst-UVR",
+        "arch": "vr_arch",
+        "ckpt_url": "17_HP-Wind_Inst-UVR.pth",
+    },
+    517: {
+        "model_name": "UVR-De-Echo-Aggressive",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-De-Echo-Aggressive.pth",
+    },
+    518: {
+        "model_name": "UVR-De-Echo-Normal",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-De-Echo-Normal.pth",
+    },
+    519: {
+        "model_name": "UVR-DeEcho-DeReverb",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-DeEcho-DeReverb.pth",
+    },
+    520: {
+        "model_name": "UVR-De-Reverb-aufr33-jarredou",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-De-Reverb-aufr33-jarredou.pth",
+    },
+    521: {
+        "model_name": "UVR-DeNoise-Lite",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-DeNoise-Lite.pth",
+    },
+    522: {
+        "model_name": "UVR-DeNoise",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-DeNoise.pth",
+    },
+    523: {
+        "model_name": "UVR-BVE-4B_SN-44100-1",
+        "arch": "vr_arch",
+        "ckpt_url": "UVR-BVE-4B_SN-44100-1.pth",
+    },
+    524: {
+        "model_name": "MGM_HIGHEND_v4",
+        "arch": "vr_arch",
+        "ckpt_url": "MGM_HIGHEND_v4.pth",
+    },
+    525: {
+        "model_name": "MGM_LOWEND_A_v4",
+        "arch": "vr_arch",
+        "ckpt_url": "MGM_LOWEND_A_v4.pth",
+    },
+    526: {
+        "model_name": "MGM_LOWEND_B_v4",
+        "arch": "vr_arch",
+        "ckpt_url": "MGM_LOWEND_B_v4.pth",
+    },
+    527: {
+        "model_name": "MGM_MAIN_v4",
+        "arch": "vr_arch",
+        "ckpt_url": "MGM_MAIN_v4.pth",
+    },
+
+    # MDX-NET Models
+    400: {
+        "model_name": "UVR-MDX-NET-Inst_full_292",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_full_292.onnx",
+    },
+    401: {
+        "model_name": "UVR-MDX-NET_Inst_187_beta",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Inst_187_beta.onnx",
+    },
+    402: {
+        "model_name": "UVR-MDX-NET_Inst_82_beta",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Inst_82_beta.onnx",
+    },
+    403: {
+        "model_name": "UVR-MDX-NET_Inst_90_beta",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Inst_90_beta.onnx",
+    },
+    404: {
+        "model_name": "UVR-MDX-NET_Main_340",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Main_340.onnx",
+    },
+    405: {
+        "model_name": "UVR-MDX-NET_Main_390",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Main_390.onnx",
+    },
+    406: {
+        "model_name": "UVR-MDX-NET_Main_406",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Main_406.onnx",
+    },
+    407: {
+        "model_name": "UVR-MDX-NET_Main_427",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Main_427.onnx",
+    },
+    408: {
+        "model_name": "UVR-MDX-NET_Main_438",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Main_438.onnx",
+    },
+    409: {
+        "model_name": "UVR-MDX-NET-Inst_HQ_1",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_HQ_1.onnx",
+    },
+    410: {
+        "model_name": "UVR-MDX-NET-Inst_HQ_2",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_HQ_2.onnx",
+    },
+    411: {
+        "model_name": "UVR-MDX-NET-Inst_HQ_3",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_HQ_3.onnx",
+    },
+    412: {
+        "model_name": "UVR-MDX-NET-Inst_HQ_4",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_HQ_4.onnx",
+    },
+    413: {
+        "model_name": "UVR-MDX-NET-Inst_HQ_5",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_HQ_5.onnx",
+    },
+    414: {
+        "model_name": "UVR_MDXNET_Main",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_Main.onnx",
+    },
+    415: {
+        "model_name": "UVR-MDX-NET-Inst_Main",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_Main.onnx",
+    },
+    416: {
+        "model_name": "UVR_MDXNET_1_9703",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_1_9703.onnx",
+    },
+    417: {
+        "model_name": "UVR_MDXNET_2_9682",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_2_9682.onnx",
+    },
+    418: {
+        "model_name": "UVR_MDXNET_3_9662",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_3_9662.onnx",
+    },
+    419: {
+        "model_name": "UVR-MDX-NET-Inst_1",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_1.onnx",
+    },
+    420: {
+        "model_name": "UVR-MDX-NET-Inst_2",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_2.onnx",
+    },
+    421: {
+        "model_name": "UVR-MDX-NET-Inst_3",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Inst_3.onnx",
+    },
+    422: {
+        "model_name": "UVR_MDXNET_KARA",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_KARA.onnx",
+    },
+    423: {
+        "model_name": "UVR_MDXNET_KARA_2",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_KARA_2.onnx",
+    },
+    424: {
+        "model_name": "UVR_MDXNET_9482",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR_MDXNET_9482.onnx",
+    },
+    425: {
+        "model_name": "UVR-MDX-NET-Voc_FT",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET-Voc_FT.onnx",
+    },
+    426: {
+        "model_name": "Kim_Vocal_1",
+        "arch": "mdx-net",
+        "ckpt_url": "Kim_Vocal_1.onnx",
+    },
+    427: {
+        "model_name": "Kim_Vocal_2",
+        "arch": "mdx-net",
+        "ckpt_url": "Kim_Vocal_2.onnx",
+    },
+    428: {
+        "model_name": "Kim_Inst",
+        "arch": "mdx-net",
+        "ckpt_url": "Kim_Inst.onnx",
+    },
+    429: {
+        "model_name": "Reverb_HQ_By_FoxJoy",
+        "arch": "mdx-net",
+        "ckpt_url": "Reverb_HQ_By_FoxJoy.onnx",
+    },
+    430: {
+        "model_name": "UVR-MDX-NET_Crowd_HQ_1",
+        "arch": "mdx-net",
+        "ckpt_url": "UVR-MDX-NET_Crowd_HQ_1.onnx",
+    },
+    431: {
+        "model_name": "kuielab_a_vocals",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_a_vocals.onnx",
+    },
+    432: {
+        "model_name": "kuielab_a_other",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_a_other.onnx",
+    },
+    433: {
+        "model_name": "kuielab_a_bass",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_a_bass.onnx",
+    },
+    434: {
+        "model_name": "kuielab_a_drums",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_a_drums.onnx",
+    },
+    435: {
+        "model_name": "kuielab_b_vocals",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_b_vocals.onnx",
+    },
+    436: {
+        "model_name": "kuielab_b_other",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_b_other.onnx",
+    },
+    437: {
+        "model_name": "kuielab_b_bass",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_b_bass.onnx",
+    },
+    438: {
+        "model_name": "kuielab_b_drums",
+        "arch": "mdx-net",
+        "ckpt_url": "kuielab_b_drums.onnx",
+    },
+
+    # Demucs Models
+    90: {
+        "model_name": "htdemucs_ft",
+        "arch": "demucs",
+        "ckpt_url": "htdemucs_ft.yaml",
+    },
+    91: {
+        "model_name": "htdemucs",
+        "arch": "demucs",
+        "ckpt_url": "htdemucs.yaml",
+    },
+    92: {
+        "model_name": "hdemucs_mmi",
+        "arch": "demucs",
+        "ckpt_url": "hdemucs_mmi.yaml",
+    },
+    93: {
+        "model_name": "htdemucs_6s",
+        "arch": "demucs",
+        "ckpt_url": "htdemucs_6s.yaml",
+    },
+}
+
+def get_uvr_model_config(model_code):
+    return UVR_MODELS_CONFIG.get(model_code, {})
