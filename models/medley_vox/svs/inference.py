@@ -8,6 +8,7 @@ import soundfile as sf
 import librosa
 import torch
 import pyloudnorm as pyln
+from pydub import AudioSegment
 
 from .models import load_model_with_args
 from .functions import load_ola_func_with_args
