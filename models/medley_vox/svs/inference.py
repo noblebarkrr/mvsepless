@@ -90,27 +90,58 @@ def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
 
     save_direc = f"{args.results_save_dir}"
     
-    if args.stereo is not None:
-        save_wav_path_1 = f"{save_direc}/{song_name}_output_{args.stereo}_1.wav"
-        save_wav_path_2 = f"{save_direc}/{song_name}_output_{args.stereo}_2.wav"
-    else:
+    if args.output_format == "wav":
         save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.wav"
         save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.wav"
-
-    sf.write(
-        save_wav_path_1,
-        out_wav_1,
-        args.sample_rate,
-    )
-    sf.write(
-        save_wav_path_2,
-        out_wav_2,
-        args.sample_rate,
-    )
+        sf.write(
+            save_wav_path_1,
+            out_wav_1,
+            args.sample_rate,
+        )
+        sf.write(
+            save_wav_path_2,
+            out_wav_2,
+            args.sample_rate,
+        )
+    elif args.output_format == "mp3":
+        save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.mp3"
+        save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.mp3"
+        audio_segment = AudioSegment(
+            out_wav_1.tobytes(),
+            frame_rate=tgt_sr,
+            sample_width=out_wav_1.dtype.itemsize,
+            channels=1,
+        )
+        audio_segment.export(save_wav_path_1, format="mp3", bitrate="320k")
+        audio_segment = AudioSegment(
+            out_wav_2.tobytes(),
+            frame_rate=tgt_sr,
+            sample_width=out_wav_2.dtype.itemsize,
+            channels=1,
+        )
+        audio_segment.export(save_wav_path_2, format="mp3", bitrate="320k")
+    elif args.output_format == "flac":
+        save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.mp3"
+        save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.mp3"
+        audio_segment = AudioSegment(
+            out_wav_1.tobytes(),
+            frame_rate=tgt_sr,
+            sample_width=out_wav_1.dtype.itemsize,
+            channels=1,
+        )
+        audio_segment.export(save_wav_path_1, format="flac")
+        audio_segment = AudioSegment(
+            out_wav_2.tobytes(),
+            frame_rate=tgt_sr,
+            sample_width=out_wav_2.dtype.itemsize,
+            channels=1,
+        )
+        audio_segment.export(save_wav_path_2, format="flac")
 
 
 def main():
     parser = argparse.ArgumentParser(description="medley_vox")
+    parser.add_argument("--output_format", type=str, choices=['mp3', 'wav', 'flac'], default='wav', help="Формат вывода")
     parser.add_argument("--batch", action='store_true', help="Пакетная обработка")
     parser.add_argument("--target", type=str, default="vocals")
     parser.add_argument("--exp_name", type=str, default=None)
