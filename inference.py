@@ -11,7 +11,7 @@ import soundfile as sf
 import torch.nn as nn
 from utils import prefer_target_instrument, demix, get_model_from_config
 
-def once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments):
+def once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir):
     print("Starting processing track: ", path)
     try:
         mix, sr = librosa.load(path, sr=sample_rate, mono=False)
@@ -128,9 +128,9 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
         all_mixtures_path.sort()
         print('Total files found: {} Use sample rate: {}'.format(len(all_mixtures_path), sample_rate))
         for path in all_mixtures_path:
-            once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments)
+            once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir)
     else:
-        once_inference(input, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments)
+        once_inference(input, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir)
 
     time.sleep(1)
     print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
