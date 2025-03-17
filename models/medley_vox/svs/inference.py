@@ -109,7 +109,7 @@ def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
 
 def main():
     parser = argparse.ArgumentParser(description="medley_vox")
-    parser.add_argument("-b", "--batch", action='store_true', help="Пакетная обработка")
+    parser.add_argument("--batch", action='store_true', help="Пакетная обработка")
     parser.add_argument("--target", type=str, default="vocals")
     parser.add_argument("--exp_name", type=str, default=None)
     parser.add_argument(
