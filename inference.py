@@ -11,29 +11,7 @@ import soundfile as sf
 import torch.nn as nn
 from utils import prefer_target_instrument, demix, get_model_from_config
 
-def run_inference(model, config, input_folder, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode):
-    start_time = time.time()
-    model.eval()
-    all_mixtures_path = glob.glob(input_folder + '/*.*')
-    all_mixtures_path.sort()
-    sample_rate = 44100
-    if 'sample_rate' in config.audio:
-        sample_rate = config.audio['sample_rate']
-    print('Total files found: {} Use sample rate: {}'.format(len(all_mixtures_path), sample_rate))
-
-    instruments = prefer_target_instrument(config)
-
-    os.makedirs(store_dir, exist_ok=True)
-
-    if not verbose:
-        all_mixtures_path = tqdm(all_mixtures_path, desc="Total progress")
-
-    if disable_detailed_pbar:
-        detailed_pbar = False
-    else:
-        detailed_pbar = True
-
-    for path in all_mixtures_path:
+def once_inference(path):
         print("Starting processing track: ", path)
         if not verbose:
             all_mixtures_path.set_postfix({'track': os.path.basename(path)})
@@ -126,6 +104,36 @@ def run_inference(model, config, input_folder, store_dir, device, model_type, ex
                 output_file = os.path.join(store_dir, f"{custom_name}.wav")
                 sf.write(output_file, estimates, sr, subtype='PCM_16')
 
+
+
+def run_inference(model, config, input, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode, batch):
+    start_time = time.time()
+    model.eval()
+    sample_rate = 44100
+    if 'sample_rate' in config.audio:
+        sample_rate = config.audio['sample_rate']
+    print('Total files found: {} Use sample rate: {}'.format(len(all_mixtures_path), sample_rate))
+
+    instruments = prefer_target_instrument(config)
+
+    os.makedirs(store_dir, exist_ok=True)
+
+    if not verbose:
+        all_mixtures_path = tqdm(all_mixtures_path, desc="Total progress")
+
+    if disable_detailed_pbar:
+        detailed_pbar = False
+    else:
+        detailed_pbar = True
+    if batch:
+        all_mixtures_path = glob.glob(input + '/*.*')
+        all_mixtures_path.sort()
+        for path in all_mixtures_path:
+            once_infernce(path)
+    else:
+        once_infernce(input)
+
+
     time.sleep(1)
     print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
 
@@ -173,9 +181,9 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
     return model, config, device
 
 
-def mvsep_offline(input_folder, store_dir, model_type, config_path, start_check_point, device_ids, extract_instrumental, disable_detailed_pbar, output_format, use_tta, force_cpu, verbose, modelcode):
+def mvsep_offline(input, store_dir, model_type, config_path, start_check_point, device_ids, extract_instrumental, disable_detailed_pbar, output_format, use_tta, force_cpu, verbose, modelcode, batch):
     model, config, device = load_model(model_type, config_path, start_check_point, device_ids, force_cpu)
-    run_inference(model, config, input_folder, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode)
+    run_inference(model, config, input, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode, batch)
 
 if __name__ == "__main__":
-    mvsep_offline(input_folder="path/to/input/folder", store_dir="path/to/store/dir")
+    mvsep_offline(input="/content/input", store_dir="/content/output", batch=True)
