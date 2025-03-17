@@ -104,8 +104,7 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
         elif output_format == "wav":
             output_file = os.path.join(store_dir, f"{custom_name}.wav")
             sf.write(output_file, estimates, sr, subtype='PCM_16')
-
-
+            
 def load_model(model_type, config_path, start_check_point, device_ids, force_cpu=False):
     device = "cpu"
     if force_cpu:
