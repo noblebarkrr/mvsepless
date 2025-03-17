@@ -14,104 +14,103 @@ from .functions import load_ola_func_with_args
 from .utils import loudnorm, str2bool, db2linear
 
 
-def once_infer(data_path):
-        song_name = (
-            os.path.basename(data_path)
-            .replace(".wav", "")
-            .replace(".mp3", "")
-            .replace(".flac", "")
+def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
+    song_name = (
+        os.path.basename(data_path)
+        .replace(".wav", "")
+        .replace(".mp3", "")
+        .replace(".flac", "")
+    )
+    print(f"now separating {song_name}")
+
+    if args.stereo == "left":
+        mixture, sr = librosa.load(
+            data_path,
+            sr=args.sample_rate,
+            mono=False,
+            offset=args.start_sec,
+            duration=args.read_length,
+            dtype=np.float32,
         )
-        print(f"now separating {song_name}")
+        mixture = mixture[0, :]
+    elif args.stereo == "right":
+        mixture, sr = librosa.load(
+            data_path,
+            sr=args.sample_rate,
+            mono=False,
+            offset=args.start_sec,
+            duration=args.read_length,
+            dtype=np.float32,
+        )
+        mixture = mixture[1, :]
+    else:
+        mixture, sr = librosa.load(
+            data_path,
+            sr=args.sample_rate,
+            mono=True,
+            offset=args.start_sec,
+            duration=args.read_length,
+            dtype=np.float32,
+        )
 
-        if args.stereo == "left":
-            mixture, sr = librosa.load(
-                data_path,
-                sr=args.sample_rate,
-                mono=False,
-                offset=args.start_sec,
-                duration=args.read_length,
-                dtype=np.float32,
-            )
-            mixture = mixture[0, :]
-        elif args.stereo == "right":
-            mixture, sr = librosa.load(
-                data_path,
-                sr=args.sample_rate,
-                mono=False,
-                offset=args.start_sec,
-                duration=args.read_length,
-                dtype=np.float32,
-            )
-            mixture = mixture[1, :]
-        else:
-            mixture, sr = librosa.load(
-                data_path,
-                sr=args.sample_rate,
-                mono=True,
-                offset=args.start_sec,
-                duration=args.read_length,
-                dtype=np.float32,
-            )
+    mixture, adjusted_gain = loudnorm(mixture, -24.0, meter)
 
-        mixture, adjusted_gain = loudnorm(mixture, -24.0, meter)
-
-        if args.save_normalized_input:
-            os.makedirs(f"{args.inference_data_dir}/24k_normalized", exist_ok=True)
-            sf.write(
-                f"{args.inference_data_dir}/24k_normalized/{song_name}.wav", mixture, sr
-            )
-
-        mixture = np.expand_dims(mixture, axis=0)
-        mixture = mixture.reshape(1, mixture.shape[0], mixture.shape[1])
-        mixture = torch.as_tensor(mixture, dtype=torch.float32).to(device)
-
-        if args.use_overlapadd:
-            out_wavs = continuous_nnet.forward(mixture)
-        else:
-            out_wavs = model.separate(mixture)
-
-        if args.use_gpu:
-            out_wav_1 = out_wavs[0, 0, :].cpu().detach().numpy()
-            out_wav_2 = out_wavs[0, 1, :].cpu().detach().numpy()
-        else:
-            out_wav_1 = out_wavs[0, 0, :]
-            out_wav_2 = out_wavs[0, 1, :]
-
-        out_wav_1 = out_wav_1 * db2linear(-adjusted_gain)
-        out_wav_2 = out_wav_2 * db2linear(-adjusted_gain)
-
-        if args.start_sec != 0.0:  # for sync between the output and the input audio.
-            out_wav_1 = np.pad(
-                out_wav_1, (int(args.start_sec * args.sample_rate) - 1, 0)
-            )
-            out_wav_2 = np.pad(
-                out_wav_2, (int(args.start_sec * args.sample_rate) - 1, 0)
-            )
-
-        if args.stereo:
-            save_wav_path_1 = f"{save_dir}/{song_name}_output_{args.stereo}_1.wav"
-            save_wav_path_2 = f"{save_dir}/{song_name}_output_{args.stereo}_2.wav"
-        else:
-            save_wav_path_1 = f"{save_dir}/{song_name}_vox_1.wav"
-            save_wav_path_2 = f"{save_dir}/{song_name}_vox_2.wav"
-
+    if args.save_normalized_input:
+        os.makedirs(f"{args.inference_data_dir}/24k_normalized", exist_ok=True)
         sf.write(
-            save_wav_path_1,
-            out_wav_1,
-            args.sample_rate,
+            f"{args.inference_data_dir}/24k_normalized/{song_name}.wav", mixture, sr
         )
-        sf.write(
-            save_wav_path_2,
-            out_wav_2,
-            args.sample_rate,
+
+    mixture = np.expand_dims(mixture, axis=0)
+    mixture = mixture.reshape(1, mixture.shape[0], mixture.shape[1])
+    mixture = torch.as_tensor(mixture, dtype=torch.float32).to(device)
+
+    if args.use_overlapadd and continuous_nnet is not None:
+        out_wavs = continuous_nnet.forward(mixture)
+    else:
+        out_wavs = model.separate(mixture)
+
+    if args.use_gpu:
+        out_wav_1 = out_wavs[0, 0, :].cpu().detach().numpy()
+        out_wav_2 = out_wavs[0, 1, :].cpu().detach().numpy()
+    else:
+        out_wav_1 = out_wavs[0, 0, :]
+        out_wav_2 = out_wavs[0, 1, :]
+
+    out_wav_1 = out_wav_1 * db2linear(-adjusted_gain)
+    out_wav_2 = out_wav_2 * db2linear(-adjusted_gain)
+
+    if args.start_sec != 0.0:  # for sync between the output and the input audio.
+        out_wav_1 = np.pad(
+            out_wav_1, (int(args.start_sec * args.sample_rate) - 1, 0)
         )
+        out_wav_2 = np.pad(
+            out_wav_2, (int(args.start_sec * args.sample_rate) - 1, 0)
+        )
+
+    if args.stereo is not None:
+        save_wav_path_1 = f"{save_dir}/{song_name}_output_{args.stereo}_1.wav"
+        save_wav_path_2 = f"{save_dir}/{song_name}_output_{args.stereo}_2.wav"
+    else:
+        save_wav_path_1 = f"{save_dir}/{song_name}_vox_1.wav"
+        save_wav_path_2 = f"{save_dir}/{song_name}_vox_2.wav"
+
+    sf.write(
+        save_wav_path_1,
+        out_wav_1,
+        args.sample_rate,
+    )
+    sf.write(
+        save_wav_path_2,
+        out_wav_2,
+        args.sample_rate,
+    )
 
 
 def main():
     parser = argparse.ArgumentParser(description="medley_vox")
     parser.add_argument("-b", "--batch", action='store_true', help="Пакетная обработка")
     parser.add_argument("--target", type=str, default="vocals")
-    parser.add_argument("--batch", )
     parser.add_argument("--exp_name", type=str, default=None)
     parser.add_argument(
         "--suffix_name",
@@ -173,7 +172,13 @@ def main():
         "--use_ema_model",
         type=str2bool,
         default=True,
-        help="use ema model or online model? only vaind when args.ema it True (model trained with ema)",
+        help="use ema model or online model? only valid when args.ema is True (model trained with ema)",
+    )
+    parser.add_argument(
+        "--ema",
+        type=str2bool,
+        default=False,
+        help="use ema model or online model? only valid when model trained with ema",
     )
     parser.add_argument(
         "--save_normalized_input",
@@ -267,13 +272,7 @@ def main():
     if args.use_overlapadd:
         continuous_nnet = load_ola_func_with_args(args, model, device, meter)
 
-    if args.use_overlapadd and args.mix_consistent_out:
-        save_dir = f"{args.results_save_dir}"
-    elif args.use_overlapadd and not args.mix_consistent_out:
-        save_dir = f"{args.results_save_dir}"
-    else:
-        save_dir = f"{args.results_save_dir}"
-
+    save_dir = f"{args.results_save_dir}"
     os.makedirs(f"{save_dir}", exist_ok=True)
     if args.batch:
         data_list = (
@@ -284,8 +283,10 @@ def main():
         print(data_list)
 
         for data_path in data_list:
-            once_infer(data_path)
+            once_infer(data_path, device, args, meter, model, continuous_nnet)
     else:
-        once_infer(input)
+        input_path = args.inference_data_dir  # Assuming input is a single file path
+        once_infer(input_path, device, args, meter, model, continuous_nnet)
+
 if __name__ == "__main__":
     main()
