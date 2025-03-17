@@ -84,7 +84,10 @@ def once_inference(path):
             from models_list import get_model_config
             config_models_list = get_model_config(modelcode)
             model_name = config_models_list["model_name"]
-            custom_name = f"{file_name}_mt-{model_type}_{model_name}_{instr}"
+            if use_tta:
+                custom_name = f"{file_name}_tta_mt-{model_type}_{model_name}_{instr}"
+            else:
+                custom_name = f"{file_name}_mt-{model_type}_{model_name}_{instr}"
             if output_format == "flac":
                 output_file = os.path.join(store_dir, f"{custom_name}.flac")
                 sf.write(output_file, estimates, sr, subtype='PCM_16')
