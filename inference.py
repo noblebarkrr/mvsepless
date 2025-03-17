@@ -97,7 +97,7 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
                 sample_width=sample_width,
                 channels=1,
             )
-            elif output_format == "wav":
+        elif output_format == "wav":
             output_file = os.path.join(store_dir, f"{custom_name}.wav")
             sf.write(output_file, estimates, sr, subtype='PCM_16')
 
