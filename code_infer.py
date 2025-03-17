@@ -79,7 +79,7 @@ def code_infer():
             args.use_tta,
             False, False, args.modelcode, args.batch)
     elif infer == "medley_vox":
-        medley_infer = ("python", "-m", "models.medley_vox.svs.inference", "--inference_data_dir", str(args.input), "--results_save_dir", str(args.output), "--model_dir", str(model_dir_medley_vox), "--exp_name", str(args.modelcode), "--use_overlapadd=ola", ('--batch' if args.batch else ''), "--output_format", str(args.output_format)
+        medley_infer = ("python", "-m", "models.medley_vox.svs.inference", "--inference_data_dir", str(args.input), "--results_save_dir", str(args.output), "--model_dir", str(model_dir_medley_vox), "--exp_name", str(args.modelcode), "--use_overlapadd=ola", ('--batch' if args.batch else ''), "--output_format", str(args.output_format) )
         subprocess.run(medley_infer, check=True) 
         print(infer)
     elif infer == "uvr":
