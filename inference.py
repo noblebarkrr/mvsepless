@@ -9,6 +9,7 @@ import torch
 import numpy as np
 import soundfile as sf
 import torch.nn as nn
+from pydub import AudioSegment
 from utils import prefer_target_instrument, demix, get_model_from_config
 
 def once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir):
@@ -97,6 +98,7 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
                 sample_width=sample_width,
                 channels=1,
             )
+            audio_segment.export(output_file, format="mp3", bitrate="320k")
         elif output_format == "wav":
             output_file = os.path.join(store_dir, f"{custom_name}.wav")
             sf.write(output_file, estimates, sr, subtype='PCM_16')
