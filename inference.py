@@ -13,8 +13,6 @@ from utils import prefer_target_instrument, demix, get_model_from_config
 
 def once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments):
     print("Starting processing track: ", path)
-    if not verbose:
-        all_mixtures_path.set_postfix({'track': os.path.basename(path)})
     try:
         mix, sr = librosa.load(path, sr=sample_rate, mono=False)
     except Exception as e:
@@ -107,36 +105,6 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
             output_file = os.path.join(store_dir, f"{custom_name}.wav")
             sf.write(output_file, estimates, sr, subtype='PCM_16')
 
-def run_inference(model, config, input, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, modelcode, batch):
-    start_time = time.time()
-    model.eval()
-    sample_rate = 44100
-    if 'sample_rate' in config.audio:
-        sample_rate = config.audio['sample_rate']
-    
-    all_mixtures_path = glob.glob(input + '/*.*')
-    all_mixtures_path.sort()
-    print('Total files found: {} Use sample rate: {}'.format(len(all_mixtures_path), sample_rate))
-
-    instruments = prefer_target_instrument(config)
-
-    os.makedirs(store_dir, exist_ok=True)
-
-    if not verbose:
-        all_mixtures_path = tqdm(all_mixtures_path, desc="Total progress")
-
-    if disable_detailed_pbar:
-        detailed_pbar = False
-    else:
-        detailed_pbar = True
-    if batch:
-        for path in all_mixtures_path:
-            once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments)
-    else:
-        once_inference(input, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments)
-
-    time.sleep(1)
-    print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
 
 def load_model(model_type, config_path, start_check_point, device_ids, force_cpu=False):
     device = "cpu"
