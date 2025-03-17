@@ -13,6 +13,7 @@ def code_infer():
     parser.add_argument("-mcode", "-mc", "--modelcode", dest='modelcode', type=int, required=True, help="Код модели")
     parser.add_argument("-of", "--output_format", type=str, choices=['mp3', 'wav', 'flac'], default='wav', help="Формат вывода")
     parser.add_argument("-tta", "--use_tta", action='store_true', help="Повышение качества разделения за счет смены полярности и инвертирования каналов в три прохода")
+    parser.add_argument("-b", "--batch", action='store_true', help="Пакетная обработка")
     args = parser.parse_args()
     os.makedirs(args.output, exist_ok=True)
     model_dir = f"model/{args.modelcode}"
@@ -76,7 +77,7 @@ def code_infer():
             False,
             args.output_format,
             args.use_tta,
-            False, False, args.modelcode)
+            False, False, args.modelcode, args.batch)
     elif infer == "medley_vox":
         medley_infer = ("python", "-m", "models.medley_vox.svs.inference", "--inference_data_dir", str(args.input), "--results_save_dir", str(args.output), "--model_dir", str(model_dir_medley_vox), "--exp_name", str(args.modelcode), "--use_overlapadd=ola" )
         subprocess.run(medley_infer, check=True) 
@@ -92,12 +93,15 @@ def code_infer():
             separator = Separator(use_autocast=True, output_dir=args.output, output_format=args.output_format, demucs_params={"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True})
 
         separator.load_model(model_filename=model_name)
-
-        for filename in os.listdir(args.input):
-            input_file = os.path.join(args.input, filename)
-            if os.path.isfile(input_file):
-                uvr_sep = separator.separate(input_file)
-                print(f"Обработан файл: {filename}")
+        if args.batch:
+            for filename in os.listdir(args.input):
+                input_file = os.path.join(args.input, filename)
+                if os.path.isfile(input_file):
+                    uvr_sep = separator.separate(input_file)
+                    print(f"Обработан файл: {filename}")
+        else:
+            uvr_sep = separator.separate(input_file)
+            print(f"Обработан файл: {filename}")
 
         
 
