@@ -88,12 +88,14 @@ def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
             out_wav_2, (int(args.start_sec * args.sample_rate) - 1, 0)
         )
 
+    save_direc = f"{args.results_save_dir}"
+    
     if args.stereo is not None:
-        save_wav_path_1 = f"{save_dir}/{song_name}_output_{args.stereo}_1.wav"
-        save_wav_path_2 = f"{save_dir}/{song_name}_output_{args.stereo}_2.wav"
+        save_wav_path_1 = f"{save_direc}/{song_name}_output_{args.stereo}_1.wav"
+        save_wav_path_2 = f"{save_direc}/{song_name}_output_{args.stereo}_2.wav"
     else:
-        save_wav_path_1 = f"{save_dir}/{song_name}_vox_1.wav"
-        save_wav_path_2 = f"{save_dir}/{song_name}_vox_2.wav"
+        save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.wav"
+        save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.wav"
 
     sf.write(
         save_wav_path_1,
