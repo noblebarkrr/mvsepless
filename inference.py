@@ -112,7 +112,6 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
     if 'sample_rate' in config.audio:
         sample_rate = config.audio['sample_rate']
     
-
     instruments = prefer_target_instrument(config)
 
     os.makedirs(store_dir, exist_ok=True)
@@ -121,11 +120,14 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
         detailed_pbar = False
     else:
         detailed_pbar = True
+
+    # Инициализация all_mixtures_path перед использованием
+    all_mixtures_path = glob.glob(input + '/*.*')
+    all_mixtures_path.sort()
+
     if batch:
         if not verbose:
             all_mixtures_path = tqdm(all_mixtures_path, desc="Total progress")
-        all_mixtures_path = glob.glob(input + '/*.*')
-        all_mixtures_path.sort()
         print('Total files found: {} Use sample rate: {}'.format(len(all_mixtures_path), sample_rate))
         for path in all_mixtures_path:
             once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir)
