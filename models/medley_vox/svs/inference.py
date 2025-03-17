@@ -109,31 +109,31 @@ def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
         save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.mp3"
         audio_segment = AudioSegment(
             out_wav_1.tobytes(),
-            frame_rate=tgt_sr,
+            frame_rate=args.sample_rate,
             sample_width=out_wav_1.dtype.itemsize,
             channels=1,
         )
         audio_segment.export(save_wav_path_1, format="mp3", bitrate="320k")
         audio_segment = AudioSegment(
             out_wav_2.tobytes(),
-            frame_rate=tgt_sr,
+            frame_rate=args.sample_rate,
             sample_width=out_wav_2.dtype.itemsize,
             channels=1,
         )
         audio_segment.export(save_wav_path_2, format="mp3", bitrate="320k")
     elif args.output_format == "flac":
-        save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.mp3"
-        save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.mp3"
+        save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.flac"
+        save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.flac"
         audio_segment = AudioSegment(
             out_wav_1.tobytes(),
-            frame_rate=tgt_sr,
+            frame_rate=args.sample_rate,
             sample_width=out_wav_1.dtype.itemsize,
             channels=1,
         )
         audio_segment.export(save_wav_path_1, format="flac")
         audio_segment = AudioSegment(
             out_wav_2.tobytes(),
-            frame_rate=tgt_sr,
+            frame_rate=args.sample_rate,
             sample_width=out_wav_2.dtype.itemsize,
             channels=1,
         )
