@@ -122,21 +122,22 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
         detailed_pbar = True
 
     # Инициализация all_mixtures_path перед использованием
-    all_mixtures_path = glob.glob(input + '/*.*')
-    all_mixtures_path.sort()
 
     if batch:
+        all_mixtures_path = glob.glob(input + '/*.*')
+        all_mixtures_path.sort()
         if not verbose:
+            # Используем tqdm только если verbose=False
             all_mixtures_path = tqdm(all_mixtures_path, desc="Total progress")
         print('Total files found: {} Use sample rate: {}'.format(len(all_mixtures_path), sample_rate))
         for path in all_mixtures_path:
             once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir)
     else:
+        # Если batch=False, обрабатываем только один файл (input)
         once_inference(input, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir)
 
     time.sleep(1)
-    print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
-    
+    print("Elapsed time: {:.2f} sec".format(time.time() - start_time))    
 def load_model(model_type, config_path, start_check_point, device_ids, force_cpu=False):
     device = "cpu"
     if force_cpu:
