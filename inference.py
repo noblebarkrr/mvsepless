@@ -134,7 +134,7 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
 
     time.sleep(1)
     print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
-
+    
 def load_model(model_type, config_path, start_check_point, device_ids, force_cpu=False):
     device = "cpu"
     if force_cpu:
