@@ -3,7 +3,7 @@ CLI wrapper for MSST and python-audio-separator and medley-vox for Google Colab 
 
 Обертка для MSST, python-audio-separator и medley-vox для Google Colab, с выбором модели по её коду.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/test/mvsepless_cli_test_0_0_7.ipynb)
+[![Open in Colab](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/test/mvsepless_cli_test_0_0_7.ipynb)
 
 No MVSep - No queue problem!
 
