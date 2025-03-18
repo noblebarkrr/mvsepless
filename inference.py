@@ -94,11 +94,13 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
         elif output_format == "mp3":
             output_file = os.path.join(store_dir, f"{custom_name}.mp3")
             sample_width = 2  # Для 16-битного аудио
+            if estimates.dtype != np.int16: 
+                estimates = (estimates * 32767).astype(np.int16) 
             audio_segment = AudioSegment(
                 estimates.tobytes(),
                 frame_rate=sample_rate,
-                sample_width=sample_width,
-                channels=1,
+                sample_width=estimates.dtype.itemsize,
+                channels=2,
             )
             audio_segment.export(output_file, format="mp3", bitrate="320k")
         elif output_format == "wav":
