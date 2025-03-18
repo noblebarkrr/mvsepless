@@ -107,6 +107,11 @@ def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
     elif args.output_format == "mp3":
         save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.mp3"
         save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.mp3"
+        if out_wav_1.dtype != np.int16: 
+            out_wav_1 = (out_wav_1 * 32767).astype(np.int16) 
+        if out_wav_2.dtype != np.int16: 
+            out_wav_2 = (out_wav_2 * 32767).astype(np.int16) 
+        
         audio_segment = AudioSegment(
             out_wav_1.tobytes(),
             frame_rate=args.sample_rate,
@@ -124,6 +129,10 @@ def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
     elif args.output_format == "flac":
         save_wav_path_1 = f"{save_direc}/{song_name}_vox_1.flac"
         save_wav_path_2 = f"{save_direc}/{song_name}_vox_2.flac"
+        if out_wav_1.dtype != np.int16: 
+            out_wav_1 = (out_wav_1 * 32767).astype(np.int16) 
+        if out_wav_2.dtype != np.int16: 
+            out_wav_2 = (out_wav_2 * 32767).astype(np.int16) 
         audio_segment = AudioSegment(
             out_wav_1.tobytes(),
             frame_rate=args.sample_rate,
