@@ -93,7 +93,6 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
             sf.write(output_file, estimates, sr, subtype='PCM_16')
         elif output_format == "mp3":
             output_file = os.path.join(store_dir, f"{custom_name}.mp3")
-            sample_width = 2  # Для 16-битного аудио
             if estimates.dtype != np.int16: 
                 estimates = (estimates * 32767).astype(np.int16) 
             audio_segment = AudioSegment(
