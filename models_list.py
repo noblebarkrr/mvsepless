@@ -217,6 +217,24 @@ MODELS_CONFIG = {
         "ckpt_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV7N.ckpt?download=true",
         "conf_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true",
     },
+    1110: {
+        "model_name": "gaboxr67_instrumental_fv8",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV8.ckpt?download=true",
+        "conf_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true",
+    },
+    1111: {
+        "model_name": "gaboxr67_instrumental_fv9",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV9.ckpt?download=true",
+        "conf_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true",
+    },
+    1112: {
+        "model_name": "gaboxr67_instrumental_fv10",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV10.ckpt?download=true",
+        "conf_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true",
+    },
     1130: {
         "model_name": "gaboxr67_instrumental_fvx",
         "arch": "mel_band_roformer",
