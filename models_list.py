@@ -156,6 +156,12 @@ MODELS_CONFIG = {
         "ckpt_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/MelBandRoformer4StemFTLarge.ckpt?download=true",
         "conf_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true",
     },
+    1026: {
+        "model_name": "syh99999_4_stems_ft_large_v2",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/ver2.ckpt?download=true",
+        "conf_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true",
+    },
     # Gabox Models
     1100: {
         "model_name": "gaboxr67_instrumental_fv1",
