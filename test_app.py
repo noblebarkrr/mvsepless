@@ -9,24 +9,24 @@ rvc_models_dir = "voice_models"
 output_dir_rvc = "/content/voice_output"
 output_dir_uvr = "/content/output"
 
-def conversion_vocals(input_file, pitch, modelname, index_rate, filter_radius, rms, protect, output_format, hop_length, method_pitch):
+def conversion_vocals(input_file, pitch, model_name, index_rate, filter_radius, rms, protect, output_format, hop_length, method_pitch):
     # Создаем директорию для входных файлов
     # Получаем путь к временному файлу
-    temp_path = input_file.name  # Gradio возвращает путь как строку
+    temp_path = input_file  # Gradio возвращает путь как строку
     input_filename = os.path.basename(temp_path)
     output_dir = "/content/voice_output"
     date_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    custom_name = date_time
-    output_name = os.path.join(output_dir, custom_name)
+    custom_name = f"converted_voice_{model_name}_{method_pitch}_{pitch}"
+    output_name = os.path.join(output_dir, f"{custom_name}.{output_format}")
     # Формируем команду
     command = [
         "python", "-m", "rvc.cli.rvc_cli",
         "-i", str(temp_path), "--o", str(output_dir),
         "-m", str(model_name), "--format", 
         str(output_format), "--custom_name", str(custom_name),
-        "-ir", float(index_rate), "-fr", float(filter_radius),
-        "-rms", float(rms), "-p", float(pitch),
-        "-pro" (protect), "-hop", float(hop_length),
+        "-ir", str(index_rate), "-fr", str(filter_radius),
+        "-rms", str(rms), "-p", str(pitch),
+        "-pro", str(protect), "-hop", str(hop_length),
         "-f0", str(method_pitch)
     ]
     subprocess.run(command)
@@ -80,8 +80,33 @@ def separate_audio(input_file, separation_type, model, output_format):
     ]
     subprocess.run(command)
     
-    # Возвращаем результат
-    return [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith(output_format)]
+    audio_folder = output_dir
+    audio_files = [os.path.join(audio_folder, f) for f in os.listdir(audio_folder) if f.endswith((".wav", ".mp3", ".flac"))]
+    
+    # Ограничиваем количество файлов до 7 (или любого другого числа)
+    audio_files = audio_files[:7]
+    # Список для хранения видимости каждой строки
+    visibility = [False] * 7
+    audio_paths = [None] * 7  # Список для хранения путей к аудиофайлам
+    
+    # Проверяем, сколько аудиофайлов передано
+    for i in range(len(audio_files)):
+        if i < 7:  # Убедимся, что не выходим за пределы количества строк
+            visibility[i] = True
+            audio_paths[i] = audio_files[i]  # Используем путь к файлу напрямую
+    
+    # Возвращаем обновленные параметры для каждого компонента
+    return (
+        gr.update(visible=visibility[0], value=audio_paths[0]),
+        gr.update(visible=visibility[1], value=audio_paths[1]),
+        gr.update(visible=visibility[2], value=audio_paths[2]),
+        gr.update(visible=visibility[3], value=audio_paths[3]),
+        gr.update(visible=visibility[4], value=audio_paths[4]),
+        gr.update(visible=visibility[5], value=audio_paths[5]),
+        gr.update(visible=visibility[6], value=audio_paths[6]),
+        [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith(output_format)]
+    )
+
     
 def separate_backs():
     # Создаем директорию для входных файлов
@@ -290,6 +315,14 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
             btn = gr.Button("Разделить", variant="primary")
 
             with gr.Row():
+                with gr.Accordion("Результаты разделения", open=False):
+                    stem_1 = gr.Audio(type="filepath", interactive=False, visible=False)
+                    stem_2 = gr.Audio(type="filepath", interactive=False, visible=False)
+                    stem_3 = gr.Audio(type="filepath", interactive=False, visible=False)
+                    stem_4 = gr.Audio(type="filepath", interactive=False, visible=False)
+                    stem_5 = gr.Audio(type="filepath", interactive=False, visible=False)
+                    stem_6 = gr.Audio(type="filepath", interactive=False, visible=False)
+                    stem_7 = gr.Audio(type="filepath", interactive=False, visible=False)
                 output_file = gr.File(label="Файлы после разделения", interactive=False)
     # Обновляем видимость строк и аудиофайлы при загрузке файлов
            
@@ -304,7 +337,7 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
             btn.click(
                 fn=separate_audio,
                 inputs=[input_file, separation_type, model, output_format],
-                outputs=output_file
+                outputs=[stem_1, stem_2, stem_3, stem_4, stem_5, stem_6, stem_7, output_file]
             )
 
         with gr.TabItem("Замена вокала"):
@@ -353,7 +386,7 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
             
             convert_btn.click(
                 fn=conversion_vocals,
-                inputs=[file_input, pitch_vocal, modelname, index_rate, filter_radius, rms, protect, output_format_rvc, hop_length, method_pitch],
+                inputs=[file_input, pitch_vocal, voicemodel_name, index_rate, filter_radius, rms, protect, output_format_rvc, hop_length, method_pitch],
                 outputs=converted_voice
             )
 
