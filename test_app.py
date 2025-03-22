@@ -4,10 +4,34 @@ import subprocess
 import shutil
 from datetime import datetime
 
-rvc_models_dir = "/content/voice_models"
+rvc_models_dir = "voice_models"
 
 output_dir_rvc = "/content/voice_output"
 output_dir_uvr = "/content/output"
+
+def conversion_vocals(input_file, pitch, modelname, index_rate, filter_radius, rms, protect, output_format, hop_length, method_pitch):
+    # Создаем директорию для входных файлов
+    # Получаем путь к временному файлу
+    temp_path = input_file.name  # Gradio возвращает путь как строку
+    input_filename = os.path.basename(temp_path)
+    output_dir = "/content/voice_output"
+    date_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    custom_name = date_time
+    output_name = os.path.join(output_dir, custom_name)
+    # Формируем команду
+    command = [
+        "python", "-m", "rvc.cli.rvc_cli",
+        "-i", str(temp_path), "--o", str(output_dir),
+        "-m", str(model_name), "--format", 
+        str(output_format), "--custom_name", str(custom_name),
+        "-ir", float(index_rate), "-fr", float(filter_radius),
+        "-rms", float(rms), "-p", float(pitch),
+        "-pro" (protect), "-hop", float(hop_length),
+        "-f0", str(method_pitch)
+    ]
+    subprocess.run(command)
+    return output_name
+    
 
 def update_audio_players(history_list):
     # Получаем список аудиофайлов в папке
@@ -285,7 +309,7 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
 
         with gr.TabItem("Замена вокала"):
             with gr.Row():
-                file_input = gr.File(file_count="multiple", label="Загрузить один или несколько файлов")
+                file_input = gr.Audio(label="Загрузить аудио", type="filepath")
                     
             with gr.Row():
                 voicemodel_name = gr.Dropdown(
@@ -319,7 +343,7 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
                 convert_btn = gr.Button("Преобразовать!", variant="primary")
                 
             with gr.Column():
-                output_files = gr.Files(label="Аудио с преобразованным вокалом")
+                converted_voice = gr.Audio(type="filepath", interactive=False, visible=True)
 
             # Обработчики
             refresh_btn.click(
@@ -328,8 +352,9 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
             )
             
             convert_btn.click(
-                fn=lambda: gr.update(value="Преобразование завершено"),
-                outputs=output_files
+                fn=conversion_vocals,
+                inputs=[file_input, pitch_vocal, modelname, index_rate, filter_radius, rms, protect, output_format_rvc, hop_length, method_pitch],
+                outputs=converted_voice
             )
 
         with gr.TabItem("История"):
@@ -360,4 +385,4 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
             )
 
 if __name__ == "__main__": 
-    demo.launch(share=True, allowed_paths=["/content/output/"])
+    demo.launch(share=True, allowed_paths=["/content"])
