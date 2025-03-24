@@ -228,7 +228,7 @@ model_mapping = {
         "MDX-NET / Karaoke v2": 423,
         "VR ARCH / Karaoke v1 (5_HP)": 504,
         "VR ARCH / Karaoke v2 (6_HP)": 505,
-        "VR ARCH / BVE": 524,
+        "VR ARCH / BVE": 523,
         "Medley-Vox / Vocals 238 epochs": 609,
         "Medley-Vox / Multi Singing Librispeech 138 epochs": 601,
         "Medley-Vox / Singing Librispeech FT iSRNet": 602,
@@ -270,8 +270,8 @@ model_mapping = {
         "MelBand Roformer / Aufr33 / Denoise": 1052,
         "MelBand Roformer / GaboxR67 / Denoise Debleed": 1199,
         "MDX-NET / Decrowd": 430,
-        "VR ARCH / Denoise Lite": 522,
-        "VR ARCH / Denoise": 523,
+        "VR ARCH / Denoise Lite": 521,
+        "VR ARCH / Denoise": 522,
     },
 }
 
