@@ -197,14 +197,10 @@ model_mapping = {
         "BS Roformer / ViperX / Vocals 12.96": 201,
         "BS Roformer / ViperX / Vocals 12.97": 202,
         "BS Roformer / GaboxR67 / Vocals": 203,
-        "BS Roformer / ZFTurbo / 4 Stems": 204,
-        
         # MDX23C
         "MDX23C / INST-VOC HQ": 300,
-        "MDX23C / Aufr33 & Jarredou / Drumsep": 301,
-        "MDX23C / Wesleyr36 / Mid-Side": 303,
-        "MDX23C / ZFTurbo / 4 Stems": 304,
         
+
         # MDX-NET
         "MDX-NET / INST-FULL": 400,
         "MDX-NET / INST 187 beta": 401,
@@ -254,6 +250,7 @@ model_mapping = {
         "BS Roformer / Sucial / Male-Female 146 epoch": 206,
         "BS Roformer / Sucial / Male-Female 267 epoch": 207,
         "BS Roformer / Aufr33 / Male-Female": 208,
+        "MDX23C / Wesleyr36 / Mid-Side": 303,
         "MDX-NET / Karaoke v1": 422,
         "MDX-NET / Karaoke v2": 423,
         "VR ARCH / Karaoke v1 (5_HP)": 504,
@@ -276,6 +273,7 @@ model_mapping = {
         "BS Roformer / SYH99999 / 4 Stems FT": 205,
         "BS Roformer / ZFTurbo / 4 Stems MUSDB18": 204,
         "MDX23C / ZFTurbo / 4 Stems MUSDB18": 304,
+        "MDX23C / Aufr33 & Jarredou / Drumsep 6 stems": 301,
         "SCNET / ZFTurbo / 4 Stems MUSDB18": 800,
         "SCNET / Starrytong / 4 Stems MUSDB18 XL": 801,
         "SCNET / ZFTurbo / 4 Stems MUSDB18 Large": 802,
