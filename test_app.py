@@ -3,6 +3,10 @@ import os
 import subprocess
 import shutil
 from datetime import datetime
+import urllib.parse
+import urllib.request
+
+from rvc.modules.model_manager import download_from_url, upload_separate_files, upload_zip_file
 
 rvc_models_dir = "voice_models"
 
@@ -389,7 +393,64 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
                 inputs=[file_input, pitch_vocal, voicemodel_name, index_rate, filter_radius, rms, protect, output_format_rvc, hop_length, method_pitch],
                 outputs=converted_voice
             )
+        with gr.TabItem("Замена вокала"):
+            with gr.Accordion("Загрузить ZIP-файл по ссылке", open=False):
+                gr.HTML(
+                    "<h3>"
+                    "Поддерживаемые сайты: "
+                    "<a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, "
+                    "<a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a>, "
+                    "<a href='https://drive.google.com/' target='_blank'>Google Drive</a>, "
+                    "<a href='https://mega.nz/' target='_blank'>Mega</a>, "
+                    "<a href='https://disk.yandex.ru/' target='_blank'>Яндекс Диск</a>"
+                    "</h3>"
+                )
+                with gr.Column():
+                    with gr.Group():
+                        zip_link = gr.Text(label="Ссылка на загрузку ZIP-файла")
+                        model_name = gr.Text(
+                            label="Имя модели",
+                            info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
+                        )
+                    download_btn = gr.Button("Загрузить модель", variant="primary")
 
+            download_btn.click(
+                download_from_url,
+                inputs=[zip_link, model_name],
+                outputs=output_message,
+            )
+            with gr.Accordion("Загрузить ZIP-файл", open=False):
+                with gr.Column():
+                    with gr.Group():
+                        zip_file = gr.File(label="Zip-файл", file_types=[".zip"], file_count="single")
+                        model_name = gr.Text(
+                            label="Имя модели",
+                            info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
+                        )
+                    upload_btn = gr.Button("Загрузить модель", variant="primary")
+
+            upload_btn.click(
+                upload_zip_file,
+                inputs=[zip_file, model_name],
+                outputs=output_message,
+            )
+            with gr.Accordion("Загрузить файлы .pth и .index", open=False):
+                with gr.Column():
+                    with gr.Group():
+                        with gr.Row(equal_height=False):
+                            pth_file = gr.File(label="pth-файл", file_types=[".pth"], file_count="single")
+                            index_file = gr.File(label="index-файл", file_types=[".index"], file_count="single")
+                        model_name = gr.Text(
+                            label="Имя модели",
+                            info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
+                        )
+                    upload_btn = gr.Button("Загрузить модель", variant="primary")
+
+            upload_btn.click(
+                upload_separate_files,
+                inputs=[pth_file, index_file, model_name],
+                outputs=output_message,
+            )
         with gr.TabItem("История"):
             with gr.Accordion("История разделений", open=True):
                 history_list = gr.Dropdown(
