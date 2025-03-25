@@ -132,8 +132,10 @@ def get_history_list(output_dir):
     return history
 
 # Словарь для сопоставления моделей и их кодов
+
 model_mapping = {
     "Инструментал/Вокал": {
+        # Mel Band Roformer - GaboxR67
         "MelBand Roformer / GaboxR67 / Instrumental Fullness v1": 1100,
         "MelBand Roformer / GaboxR67 / Instrumental Fullness v2": 1101,
         "MelBand Roformer / GaboxR67 / Instrumental Fullness v3": 1102,
@@ -154,8 +156,12 @@ model_mapping = {
         "MelBand Roformer / GaboxR67 / Vocals Fullness v2": 1171,
         "MelBand Roformer / GaboxR67 / Vocals Fullness v3": 1172,
         "MelBand Roformer / GaboxR67 / Vocals Fullness v4": 1173,
+        
+        # Mel Band Roformer - Becruily
         "MelBand Roformer / Becruily / Instrumental": 1016,
         "MelBand Roformer / Becruily / Vocals": 1017,
+        
+        # Mel Band Roformer - Unwa
         "MelBand Roformer / Unwa / Instrumental v1": 1013,
         "MelBand Roformer / Unwa / Instrumental v1e": 1002,
         "MelBand Roformer / Unwa / Instrumental v2": 1014,
@@ -164,13 +170,18 @@ model_mapping = {
         "MelBand Roformer / Unwa / Big Beta v3": 1010,
         "MelBand Roformer / Unwa / Big Beta v4": 1011,
         "MelBand Roformer / Unwa / Big Beta v5e": 1003,
+        "MelBand Roformer / Unwa / Big Beta v6": 1012,
         "MelBand Roformer / Unwa / Kim FT v1": 1001,
         "MelBand Roformer / Unwa / Kim FT v2": 1006,
         "MelBand Roformer / Unwa / Kim FT v2 Bleedless": 1007,
         "MelBand Roformer / Unwa / Small v1": 1015,
         "MelBand Roformer / Unwa / Instrumental & Vocals Duality v1": 1004,
         "MelBand Roformer / Unwa / Instrumental & Vocals Duality v2": 1005,
+        
+        # Mel Band Roformer - KimberlyJSN
         "MelBand Roformer / KimberlyJSN / Vocals": 1000,
+        
+        # Mel Band Roformer - SYH99999
         "MelBand Roformer / SYH99999 / SYHFT v1": 1018,
         "MelBand Roformer / SYH99999 / SYHFT v2": 1019,
         "MelBand Roformer / SYH99999 / SYHFT v2.5": 1020,
@@ -178,10 +189,23 @@ model_mapping = {
         "MelBand Roformer / SYH99999 / SYHFT Big v1 FAST Vocals": 1022,
         "MelBand Roformer / SYH99999 / SYHFT Merged Beta v1 Vocals": 1023,
         "MelBand Roformer / SYH99999 / SYHFT B1 Vocals": 1024,
+        
+        # Mel Band Roformer - ViperX
         "MelBand Roformer / ViperX / Vocals": 1054,
-        "BS Roformer / ViperX / Vocals": 202,
+        
+        # BS Roformer
+        "BS Roformer / ViperX / Vocals 12.96": 201,
+        "BS Roformer / ViperX / Vocals 12.97": 202,
         "BS Roformer / GaboxR67 / Vocals": 203,
+        "BS Roformer / ZFTurbo / 4 Stems": 204,
+        
+        # MDX23C
         "MDX23C / INST-VOC HQ": 300,
+        "MDX23C / Aufr33 & Jarredou / Drumsep": 301,
+        "MDX23C / Wesleyr36 / Mid-Side": 303,
+        "MDX23C / ZFTurbo / 4 Stems": 304,
+        
+        # MDX-NET
         "MDX-NET / INST-FULL": 400,
         "MDX-NET / INST 187 beta": 401,
         "MDX-NET / INST 82 beta": 402,
@@ -197,6 +221,7 @@ model_mapping = {
         "MDX-NET / INST-HQ 4": 412,
         "MDX-NET / INST-HQ 5": 413,
         "MDX-NET / MAIN": 414,
+        "MDX-NET / INST-MAIN": 415,
         "MDX-NET / 1": 416,
         "MDX-NET / 2": 417,
         "MDX-NET / 3": 418,
@@ -207,6 +232,8 @@ model_mapping = {
         "MDX-NET / KIM VOCAL 1": 426,
         "MDX-NET / KIM VOCAL 2": 427,
         "MDX-NET / KIM INST": 428,
+        
+        # VR ARCH
         "VR ARCH / 1_HP": 500,
         "VR ARCH / 2_HP": 501,
         "VR ARCH / 3_HP_Vocal": 502,
@@ -221,21 +248,27 @@ model_mapping = {
         "VR ARCH / 16_SP_MID": 515,
     },
     "Лид/Бэки": {
-        "MelBand Roformer / GaboxR67 / Karaoke 25.02.2024": 1190,
-        "MelBand Roformer / GaboxR67 / Karaoke 28.02.2024": 1191,
-        "MelBand Roformer / Aufr33 & ViperX / Karaoke": 1054,
-        "MelBand Roformer / Sucial / Male-Female 146 epoch": 206,
-        "MelBand Roformer / Sucial / Male-Female 267 epoch": 207,
-        "MelBand Roformer / Aufr33 / Male-Female": 208,
-        "MDX23C / Wesleyr36 / Mid-Side": 303,
+        "MelBand Roformer / GaboxR67 / Karaoke 25.02.2025": 1190,
+        "MelBand Roformer / GaboxR67 / Karaoke 28.02.2025": 1191,
+        "MelBand Roformer / Aufr33 & ViperX / Karaoke": 1050,
+        "BS Roformer / Sucial / Male-Female 146 epoch": 206,
+        "BS Roformer / Sucial / Male-Female 267 epoch": 207,
+        "BS Roformer / Aufr33 / Male-Female": 208,
         "MDX-NET / Karaoke v1": 422,
         "MDX-NET / Karaoke v2": 423,
         "VR ARCH / Karaoke v1 (5_HP)": 504,
         "VR ARCH / Karaoke v2 (6_HP)": 505,
         "VR ARCH / BVE": 523,
-        "Medley-Vox / Vocals 238 epochs": 609,
+        "Medley-Vox / Multi Singing Librispeech": 600,
         "Medley-Vox / Multi Singing Librispeech 138 epochs": 601,
         "Medley-Vox / Singing Librispeech FT iSRNet": 602,
+        "Medley-Vox / Singing Librispeech iSRNet": 603,
+        "Medley-Vox / Vocal 231": 604,
+        "Medley-Vox / Vocals 135": 605,
+        "Medley-Vox / Vocals 163": 606,
+        "Medley-Vox / Vocals 188": 607,
+        "Medley-Vox / Vocals 200": 608,
+        "Medley-Vox / Vocals 238": 609,
     },
     "Мультитрек": {
         "MelBand Roformer / SYH99999 / 4 Stems FT Large": 1025,
@@ -243,7 +276,6 @@ model_mapping = {
         "BS Roformer / SYH99999 / 4 Stems FT": 205,
         "BS Roformer / ZFTurbo / 4 Stems MUSDB18": 204,
         "MDX23C / ZFTurbo / 4 Stems MUSDB18": 304,
-        "MDX23C / Aufr33 & Jarredou / Drumsep 6 Stems": 301,
         "SCNET / ZFTurbo / 4 Stems MUSDB18": 800,
         "SCNET / Starrytong / 4 Stems MUSDB18 XL": 801,
         "SCNET / ZFTurbo / 4 Stems MUSDB18 Large": 802,
@@ -271,13 +303,16 @@ model_mapping = {
     },
     "Шумы": {
         "MelBand Roformer / Aufr33 & ViperX / Decrowd": 1053,
-        "MelBand Roformer / Aufr33 / Denoise": 1052,
+        "MelBand Roformer / Aufr33 / Denoise": 1051,
+        "MelBand Roformer / Aufr33 / Denoise Aggressive": 1052,
         "MelBand Roformer / GaboxR67 / Denoise Debleed": 1199,
+        "MelBand Roformer / Sucial / Aspiration": 1040,
         "MDX-NET / Decrowd": 430,
         "VR ARCH / Denoise Lite": 521,
         "VR ARCH / Denoise": 522,
     },
 }
+
 
 # Функция для обновления списка моделей в зависимости от типа разделения
 # ... (остальной код без изменений, кроме функции update_models)
