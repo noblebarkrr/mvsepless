@@ -98,10 +98,10 @@ def code_infer():
                 input_file = os.path.join(args.input, filename)
                 if os.path.isfile(input_file):
                     uvr_sep = separator.separate(input_file)
-                    print(f"Обработан файл: {filename}")
+                    #print(f"Обработан файл: {filename}")
         else:
             uvr_sep = separator.separate(args.input)
-            print(f"Обработан файл: {filename}")
+            #print(f"Обработан файл: {filename}")
 
         
 
