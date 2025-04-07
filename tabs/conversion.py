@@ -16,12 +16,10 @@ def get_models_list():
 def conversion():
     with gr.Column() as conversion_group:
         file_input = gr.Audio(label="Загрузить аудио", type="filepath")
-        models_list = get_models_list()
-        default_model = models_list[0] if models_list else None
         voicemodel_name = gr.Dropdown(
-            choices=models_list, 
+            choices=list(get_models_list()), 
             label="Имя модели", 
-            value=default_model,
+            value="senko",
             interactive=True,
             filterable=False
         )
@@ -43,7 +41,6 @@ def conversion():
         output_format_rvc = gr.Dropdown(
             label="Формат вывода", 
             choices=["wav", "mp3", "flac"], 
-            value="wav",
             interactive=True,
             filterable=False
         )
@@ -51,6 +48,8 @@ def conversion():
         
     with gr.Column() as output_voice_group:
         converted_voice = gr.Audio(type="filepath", interactive=False, visible=True)
+        # Добавляем скрытое текстовое поле для имени файла
+        output_filename = gr.Text(visible=False)
 
     # Обработчики
     refresh_btn.click(
@@ -58,23 +57,16 @@ def conversion():
         outputs=voicemodel_name
     )
     
+    # Функция для создания имени файла
+    def create_output_filename(model, method, pitch):
+        return f"converted_voice_{model}_{method}_{pitch}"
+    
     convert_btn.click(
+        fn=create_output_filename,
+        inputs=[voicemodel_name, method_pitch, pitch_vocal],
+        outputs=output_filename
+    ).then(
         fn=voice_pipeline,
-        inputs=[
-            file_input, 
-            voicemodel_name, 
-            pitch_vocal, 
-            index_rate, 
-            filter_radius, 
-            rms, 
-            method_pitch, 
-            hop_length, 
-            protect, 
-            output_format_rvc,
-            gr.Number(50, visible=False),  # Добавляем скрытый компонент для числа 50
-            f0_max, 
-            gr.Text("/content/voice_output", visible=False),  # Добавляем скрытый компонент для пути
-            gr.Text(f"converted_voice_{voicemodel_name}_{method_pitch}_{pitch_vocal}", visible=False)  # И для имени файла
-        ],
+        inputs=[file_input, voicemodel_name, pitch_vocal, index_rate, filter_radius, rms, method_pitch, hop_length, protect, output_format_rvc, 50, f0_max, "/content/voice_output", output_filename],
         outputs=converted_voice
     )
