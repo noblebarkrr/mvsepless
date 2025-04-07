@@ -44,11 +44,12 @@ def conversion():
             interactive=True,
             filterable=False
         )
+        # Add a hidden component for the constant value
+        constant_value = gr.Number(value=50, visible=False)
         convert_btn = gr.Button("Преобразовать", variant="primary")
         
     with gr.Column() as output_voice_group:
         converted_voice = gr.Audio(type="filepath", interactive=False, visible=True)
-        # Добавляем скрытое текстовое поле для имени файла
         output_filename = gr.Text(visible=False)
 
     # Обработчики
@@ -57,7 +58,6 @@ def conversion():
         outputs=voicemodel_name
     )
     
-    # Функция для создания имени файла
     def create_output_filename(model, method, pitch):
         return f"converted_voice_{model}_{method}_{pitch}"
     
@@ -67,6 +67,9 @@ def conversion():
         outputs=output_filename
     ).then(
         fn=voice_pipeline,
-        inputs=[file_input, voicemodel_name, pitch_vocal, index_rate, filter_radius, rms, method_pitch, hop_length, protect, output_format_rvc, 50, f0_max, "/content/voice_output", output_filename],
+        inputs=[file_input, voicemodel_name, pitch_vocal, index_rate, 
+                filter_radius, rms, method_pitch, hop_length, 
+                protect, output_format_rvc, constant_value, f0_max, 
+                "/content/voice_output", output_filename],
         outputs=converted_voice
     )
