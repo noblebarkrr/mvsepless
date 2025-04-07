@@ -31,7 +31,7 @@ def separate_audio(input_file, separation_type, model, output_format):
             output_name_folder = f"{msc_time}_{archr}_{model_name}"
     output_dir = os.path.join("/content/output", output_name_folder)
     os.makedirs(output_dir, exist_ok=True)
-    audio_separation(input_dir=temp_path, output_dir=output_dir, instrum=True, modelcode=modelcode, output_format=output_format, use_tta=False, batch=False)
+    audio_separation(input_dir=temp_path, output_dir=output_dir, instrum=True, modelcode=model_code, output_format=output_format, use_tta=False, batch=False)
 
     audio_folder = output_dir
     audio_files = [os.path.join(audio_folder, f) for f in os.listdir(audio_folder) if f.endswith((".wav", ".mp3", ".flac"))][:7]
