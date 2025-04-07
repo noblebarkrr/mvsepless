@@ -44,8 +44,9 @@ def conversion():
             interactive=True,
             filterable=False
         )
-        # Add a hidden component for the constant value
+        # Add hidden components for constant values
         constant_value = gr.Number(value=50, visible=False)
+        output_dir = gr.Text(value="/content/voice_output", visible=False)
         convert_btn = gr.Button("Преобразовать", variant="primary")
         
     with gr.Column() as output_voice_group:
@@ -70,6 +71,6 @@ def conversion():
         inputs=[file_input, voicemodel_name, pitch_vocal, index_rate, 
                 filter_radius, rms, method_pitch, hop_length, 
                 protect, output_format_rvc, constant_value, f0_max, 
-                "/content/voice_output", output_filename],
+                output_dir, output_filename],
         outputs=converted_voice
     )
