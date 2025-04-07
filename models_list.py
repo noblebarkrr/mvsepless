@@ -388,6 +388,30 @@ MODELS_CONFIG = {
         "ckpt_url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt",
         "conf_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/model_mel_band_roformer_ep_3005_sdr_11.4360.yaml",
     }, 
+    1060: {
+        "model_name": "unwa_instrumental_v1_plus",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1_plus_test.ckpt?download=true",
+        "conf_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true",
+    }, 
+    1061: {
+        "model_name": "unwa_instrumental_v1e_plus",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1e_plus.ckpt?download=true",
+        "conf_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true",
+    }, 
+    1062: {
+        "model_name": "unwa_big_beta_v6x",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6x.ckpt?download=true",
+        "conf_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6x.yaml?download=true",
+    }, 
+    1063: {
+        "model_name": "unwa_kim_ft_v3",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft3_prev.ckpt?download=true",
+        "conf_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true",
+    },
     201: {
         "model_name": "viperx_vocals_1296",
         "arch": "bs_roformer",
