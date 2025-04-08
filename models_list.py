@@ -412,6 +412,24 @@ MODELS_CONFIG = {
         "ckpt_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft3_prev.ckpt?download=true",
         "conf_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true",
     },
+    1200: {
+        "model_name": "test_karaoke_1",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/empz/mel_band_roformers/resolve/main/mel_band_roformer_karaoke.ckpt?download=true",
+        "conf_url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true",
+    },
+    1201: {
+        "model_name": "aname_vocals_fullness",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/FullnessVocalModel.ckpt?download=true",
+        "conf_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true",
+    },
+   1202: {
+        "model_name": "gaboxr67_instrumental_donotusepls",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/donotusepls.ckpt?download=true",
+        "conf_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true",
+    },
     201: {
         "model_name": "viperx_vocals_1296",
         "arch": "bs_roformer",

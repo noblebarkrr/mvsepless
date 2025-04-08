@@ -167,4 +167,9 @@ model_mapping = {
         "VR ARCH / Denoise Lite": 521,
         "VR ARCH / Denoise": 522,
     },
+    "Experimental": {
+        "MelBand Roformer / Unknown / Karaoke": 1200,
+        "MelBand Roformer / Aname / Vocals Fullness": 1201,
+        "MelBand Roformer / GaboxR67 / Instrumental DO NOT USE PLS": 1202,
+    },
 }
