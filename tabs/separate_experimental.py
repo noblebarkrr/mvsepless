@@ -55,7 +55,7 @@ def separate_audio(input_file, separation_type, model, output_format):
     )
 
 def update_models(separation_type):
-    return gr.Dropdown(choices=list(model_mapping[separation_type].keys()))
+    return gr.Dropdown(choices=list(experimental_model_mapping[separation_type].keys()))
 
 def reset_ui():
     # Сбрасываем состояние UI к начальному
