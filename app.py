@@ -1,5 +1,6 @@
 import gradio as gr
 from tabs.separate import separate_ui
+from tabs.separate_experimental import ex_separate_ui
 from tabs.history_separation import history_separations
 from tabs.conversion import conversion
 from tabs.download_models import url_download, zip_upload, files_upload
@@ -26,8 +27,11 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
     gr.HTML("<h1><center> MVSEPLESS </center></h1>")
 
     with gr.Tabs():
-        with gr.TabItem("Разделение вокала"):
-            separate_ui()
+        with gr.TabItem("Удаление вокала"):
+            with gr.TabItem("Одиночная обработка"):
+                separate_ui()
+            with gr.TabItem("Experimental"):
+                ex_separate_ui()
         with gr.TabItem("История"):
             history_separations()
         with gr.TabItem("Замена вокала"):

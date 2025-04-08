@@ -412,12 +412,6 @@ MODELS_CONFIG = {
         "ckpt_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft3_prev.ckpt?download=true",
         "conf_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true",
     },
-    1200: {
-        "model_name": "test_karaoke_1",
-        "arch": "mel_band_roformer",
-        "ckpt_url": "https://huggingface.co/empz/mel_band_roformers/resolve/main/mel_band_roformer_karaoke.ckpt?download=true",
-        "conf_url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true",
-    },
     1201: {
         "model_name": "aname_vocals_fullness",
         "arch": "mel_band_roformer",
@@ -429,6 +423,24 @@ MODELS_CONFIG = {
         "arch": "mel_band_roformer",
         "ckpt_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/donotusepls.ckpt?download=true",
         "conf_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true",
+    },
+    1220: {
+        "model_name": "exp_drums",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_mel_band_roformer_ep_11_sdr_7.6853.ckpt?download=true",
+        "conf_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_drums_musdb18_moises_mel_band_roformer.yaml?download=true",
+    },
+    250: {
+        "model_name": "exp_drums",
+        "arch": "bs_roformer",
+        "ckpt_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_drums_bs_roformer_ep_12_sdr_7.2279.ckpt?download=true",
+        "conf_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_4_drums_bs_roformer.yaml?download=true",
+    },
+    251: {
+        "model_name": "exp_bass",
+        "arch": "bs_roformer",
+        "ckpt_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_bass_bs_roformer_ep_10_sdr_5.7862.ckpt?download=true",
+        "conf_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_4_bass_bs_roformer.yaml?download=true",
     },
     201: {
         "model_name": "viperx_vocals_1296",
@@ -517,15 +529,21 @@ MODELS_CONFIG = {
         "conf_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.10/config_mdx23c_similarity.yaml",
     },
     304: {
-        "model_name": "zf_turbo_4_stems_mdx23c",
+        "model_name": "zf_turbo_4_stems",
         "arch": "mdx23c",
         "ckpt_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.1/model_mdx23c_ep_168_sdr_7.0207.ckpt",
         "conf_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.1/config_musdb18_mdx23c.yaml",
     },
+    350: {
+        "model_name": "exp_orch",
+        "arch": "mdx23c",
+        "ckpt_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_mdx23c_ep_120_sdr_4.4174.ckpt?download=true",
+        "conf_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_orchestra_mdx23c.yaml?download=true",
+    },
 
     # SCNET Models
     800: {
-        "model_name": "zf_turbo_4_stems_scnet",
+        "model_name": "zf_turbo_4_stems",
         "arch": "scnet",
         "ckpt_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.9/SCNet-large_starrytong_fixed.ckpt",
         "conf_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.9/config_musdb18_scnet_large_starrytong.yaml",
