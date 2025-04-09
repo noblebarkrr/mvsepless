@@ -1,5 +1,6 @@
 import gradio as gr
 from tabs.separate import separate_ui
+from tabs.batch_separate import batch_separate_ui
 from tabs.separate_experimental import ex_separate_ui
 from tabs.history_separation import history_separations
 from tabs.conversion import conversion
@@ -29,17 +30,22 @@ with gr.Blocks(title="Разделение музыки и голоса", theme=
     with gr.Tabs():
         with gr.TabItem("Удаление вокала"):
             with gr.TabItem("Одиночная обработка"):
-                separate_ui()
-            with gr.TabItem("Experimental"):
-                ex_separate_ui()
-        with gr.TabItem("История"):
-            history_separations()
+                with gr.TabItem("Основные модели"):
+                    separate_ui()
+                with gr.TabItem("Тестовые модели (beta)"):
+                    ex_separate_ui()
+            with gr.TabItem("Пакетная обработка"):
+                with gr.TabItem("Основные модели"):
+                    batch_separate_ui()
+            with gr.TabItem("История"):
+                history_separations()
         with gr.TabItem("Замена вокала"):
-            conversion()
-        with gr.Tab("Загрузка модели"):
-            url_download()
-            zip_upload()
-            files_upload()
+            with gr.TabItem("Одиночная обработка"):
+                conversion()
+            with gr.Tab("Загрузка модели"):
+                url_download()
+                zip_upload()
+                files_upload()
 
 if __name__ == "__main__": 
     demo.launch(share=True, allowed_paths=["/content"])
