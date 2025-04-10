@@ -76,6 +76,7 @@ model_mapping = {
         "MelBand Roformer / GaboxR67 / Instrumental Fullness vX": 1130,
         "MelBand Roformer / GaboxR67 / Instrumental Bleedless v1": 1150,
         "MelBand Roformer / GaboxR67 / Instrumental Bleedless v2": 1151,
+        "MelBand Roformer / Mesk / Metal Instrumental Preview": 1300,
         "MelBand Roformer / Unwa / Instrumental v1": 1013,
         "MelBand Roformer / Unwa / Instrumental v1+": 1060,
         "MelBand Roformer / Unwa / Instrumental v1e": 1002,

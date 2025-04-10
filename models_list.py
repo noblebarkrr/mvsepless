@@ -430,6 +430,12 @@ MODELS_CONFIG = {
         "ckpt_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_mel_band_roformer_ep_11_sdr_7.6853.ckpt?download=true",
         "conf_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_drums_musdb18_moises_mel_band_roformer.yaml?download=true",
     },
+    1300: {
+        "model_name": "mesk_metal_inst_prev",
+        "arch": "mel_band_roformer",
+        "ckpt_url": "https://huggingface.co/meskvlla33/metal_roformer_preview/resolve/main/metal_roformer_inst_mesk_preview.ckpt?download=true",
+        "conf_url": "https://huggingface.co/meskvlla33/metal_roformer_preview/resolve/main/config_inst_metal_roformer_mesk.yaml?download=true",
+    },
     250: {
         "model_name": "exp_drums",
         "arch": "bs_roformer",
