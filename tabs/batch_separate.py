@@ -26,7 +26,7 @@ def batch_separate_audio(input_files, separation_type, model, output_format):
             model_name = config["model_name"]
             output_name_folder = f"{msc_time}_{archr}_{model_name}"
     
-    base_output_dir = os.path.join("output", output_name_folder)
+    base_output_dir = os.path.join("output_batch", output_name_folder)
     os.makedirs(base_output_dir, exist_ok=True)
     
     all_results = {}
