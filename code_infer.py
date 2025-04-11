@@ -5,6 +5,14 @@ from inference import mvsep_offline
 from config import conf_editor
 from audio_separator.separator import Separator
 
+def shorten_long_name(name, max_length=100, part_length=50):
+    if len(name) <= max_length:
+        return name
+    
+    start = name[:part_length]
+    end = name[-part_length:]
+    return f"{start}...{end}"
+
 def audio_separation(input_dir, output_dir="", instrum=False, modelcode=None, output_format='wav', use_tta=False, batch=False):
     """
     Универсальная функция для разделения аудио на музыкальную и вокальную части
@@ -31,6 +39,7 @@ def audio_separation(input_dir, output_dir="", instrum=False, modelcode=None, ou
         archr = config["arch"]
         if archr == "vr_arch" or archr == "mdx-net" or archr == "demucs":
             model_name = config["ckpt_url"]
+            model_name2 = config["model_name"]
             print(f"Архитектура: {archr}")
             print(f"Название модели: {model_name}")
         else:
@@ -90,13 +99,42 @@ def audio_separation(input_dir, output_dir="", instrum=False, modelcode=None, ou
             separator = Separator(use_autocast=True, output_dir=output_dir, output_format=output_format, demucs_params={"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True})
 
         separator.load_model(model_filename=model_name)
+        
         if batch:
             for filename in os.listdir(input_dir):
                 input_file = os.path.join(input_dir, filename)
                 if os.path.isfile(input_file):
-                    uvr_sep = separator.separate(input_file)
+                    file_name = os.path.basename(input_file)
+                    if len(file_name) > 220:
+                        namefile = shorten_long_name(os.path.splitext(file_name)[0])
+                    else:
+                        namefile = os.path.splitext(file_name)[0]
+                    output_names = {
+                        "Instrumental": f"{namefile}_{model_name2}_instrumental",
+                        "Vocals": f"{namefile}_{model_name2}_vocals",
+                        "Drums": f"{namefile}_{model_name2}_drums",
+                        "Bass": f"{namefile}_{model_name2}_bass",
+                        "Other": f"{namefile}_{model_name2}_other",
+                        "Guitar": f"{namefile}_{model_name2}_guitar",
+                        "Piano": f"{namefile}_{model_name2}_piano",
+                    }
+                    uvr_sep = separator.separate(input_file, output_names)
         else:
-            uvr_sep = separator.separate(input_dir)
+            file_name = os.path.basename(input_dir)
+            if len(file_name) > 200:
+                 namefile = shorten_long_name(os.path.splitext(file_name)[0])
+            else:
+                 namefile = os.path.splitext(file_name)[0]
+            output_names = {
+                "Instrumental": f"{namefile}_{model_name2}_instrumental",
+                "Vocals": f"{namefile}_{model_name2}_vocals",
+                "Drums": f"{namefile}_{model_name2}_drums",
+                "Bass": f"{namefile}_{model_name2}_bass",
+                "Other": f"{namefile}_{model_name2}_other",
+                "Guitar": f"{namefile}_{model_name2}_guitar",
+                "Piano": f"{namefile}_{model_name2}_piano",
+            }
+            uvr_sep = separator.separate(input_dir, output_names)
 
 def code_infer():
     """Функция для обработки аргументов командной строки и вызова основной функции"""

@@ -14,14 +14,29 @@ from .models import load_model_with_args
 from .functions import load_ola_func_with_args
 from .utils import loudnorm, str2bool, db2linear
 
+def shorten_long_name(name, max_length=100, part_length=50):
+    if len(name) <= max_length:
+        return name
+    
+    start = name[:part_length]
+    end = name[-part_length:]
+    return f"{start}...{end}"
 
 def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
-    song_name = (
-        os.path.basename(data_path)
-        .replace(".wav", "")
-        .replace(".mp3", "")
-        .replace(".flac", "")
-    )
+    if len(file_name) > 200:
+        song_name = shorten_long_name(
+            os.path.basename(data_path)
+            .replace(".wav", "")
+            .replace(".mp3", "")
+            .replace(".flac", "")
+        )
+    else:
+        song_name = (
+            os.path.basename(data_path)
+            .replace(".wav", "")
+            .replace(".mp3", "")
+            .replace(".flac", "")
+        )
     print(f"now separating {song_name}")
 
     if args.stereo == "left":

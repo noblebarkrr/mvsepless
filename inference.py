@@ -13,6 +13,14 @@ from pydub import AudioSegment
 
 from utils import prefer_target_instrument, demix, get_model_from_config
 
+def shorten_long_name(name, max_length=100, part_length=50):
+    if len(name) <= max_length:
+        return name
+    
+    start = name[:part_length]
+    end = name[-part_length:]
+    return f"{start}...{end}"
+
 def once_inference(path, model, config, device, model_type, extract_instrumental, detailed_pbar, output_format, use_tta, verbose, modelcode, sample_rate, instruments, store_dir):
     print("Starting processing track: ", path)
     try:
@@ -84,8 +92,9 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
         from models_list import get_model_config
         config_models_list = get_model_config(modelcode)
         model_name = config_models_list["model_name"]
-        if use_tta:
-            custom_name = f"{file_name}_tta_mt-{model_type}_{model_name}_{instr}"
+        if len(file_name) > 200:
+            file_name_short = shorten_long_name(file_name)
+            custom_name = f"{file_name_short}_mt-{model_type}_{model_name}_{instr}"
         else:
             custom_name = f"{file_name}_mt-{model_type}_{model_name}_{instr}"
         if output_format == "flac":
