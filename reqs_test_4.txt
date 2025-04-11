@@ -28,8 +28,7 @@ accelerate
 huggingface-hub
 prodigyopt
 torch_log_wmse
-audio-separator[gpu]
-numpy<2.0
+audio-separator[gpu]==0.30.1
 torch<2.6
 torchaudio<2.6
 torchvision<0.21
