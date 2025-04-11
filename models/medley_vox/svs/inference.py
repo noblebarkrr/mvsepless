@@ -23,7 +23,7 @@ def shorten_long_name(name, max_length=100, part_length=50):
     return f"{start}...{end}"
 
 def once_infer(data_path, device, args, meter, model, continuous_nnet=None):
-    if len(file_name) > 200:
+    if len(data_path) > 200:
         song_name = shorten_long_name(
             os.path.basename(data_path)
             .replace(".wav", "")
