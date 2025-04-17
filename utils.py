@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
 from tqdm.auto import tqdm
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, List, Optional
 
 
 def load_config(model_type: str, config_path: str) -> Any:
@@ -744,3 +744,37 @@ def prefer_target_instrument(config: ConfigDict) -> List[str]:
         return [config.training.target_instrument]
     else:
         return config.training.instruments
+
+def prefer_target_instrument_test(config: ConfigDict, selected_instruments: Optional[List[str]] = None) -> List[str]:
+    """
+    Return the list of target instruments based on the configuration and selected instruments.
+    If selected_instruments is specified, returns the intersection with available instruments.
+    Otherwise, if a target instrument is specified, returns it, else returns all instruments.
+    
+    Parameters:
+    ----------
+    config : ConfigDict
+        Configuration object containing the list of instruments or the target instrument.
+    selected_instruments : Optional[List[str]]
+        List of instruments to select (optional)
+    
+    Returns:
+    -------
+    List[str]
+        A list of target instruments.
+    """
+    available_instruments = config.training.instruments
+    
+    if selected_instruments is not None:
+        # Return only selected instruments that are available
+        return [instr for instr in selected_instruments if instr in available_instruments]
+    elif config.training.get('target_instrument'):
+        # Default behavior if no selection - return target instrument
+        return [config.training.target_instrument]
+    else:
+        # If no target and no selection, return all instruments
+        return available_instruments
+
+
+
+
