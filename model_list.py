@@ -1111,7 +1111,8 @@ models_data = {
         },
         "UVR-MDX-NET-Voc_FT.onnx": {
             "full_name": "MDX-Net Model: UVR-MDX-NET Voc FT",
-            "stems": ["Vocals", "Instrumental"]
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "No"
         },
         "Kim_Vocal_1.onnx": {
             "full_name": "MDX-Net Model: Kim Vocal 1",
