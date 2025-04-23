@@ -929,11 +929,13 @@ models_data = {
         },
         "9_HP2-UVR.pth": {
             "full_name": "VR Arch Single Model v5: 9_HP2-UVR",
-            "stems": ["Instrumental", "Vocals"]
+            "stems": ["Instrumental", "Vocals"],
+            "target_instrument": "No"
         },
         "10_SP-UVR-2B-32000-1.pth": {
             "full_name": "VR Arch Single Model v5: 10_SP-UVR-2B-32000-1",
-            "stems": ["Instrumental", "Vocals"]
+            "stems": ["Instrumental", "Vocals"],
+            "target_instrument": "No"
         },
         "11_SP-UVR-2B-32000-2.pth": {
             "full_name": "VR Arch Single Model v5: 11_SP-UVR-2B-32000-2",
