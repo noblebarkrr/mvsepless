@@ -6,10 +6,8 @@ def model_info(model_type, model_name=None):
         print("Stems: ",model_info["stems"])
         print("Target instrumental: ",model_info["target_instrument"])
     else:
-        for model in models_data[model_type]:
-            if model_type == "vr_arch" or model_type == "mdx_net":
-                print("")
-                print("Model :", model)
-            else:
-                print("")
-                print("Model :", model, "    Target stem :", models_data[model_type][model]["target_instrument"])
+        for model in models_data[model_type]: 
+            print("")
+            print("Model :", model)
+            print("Stems :", models_data[model_type][model]["stems"])
+            print("Target stem :", models_data[model_type][model]["target_instrument"])
