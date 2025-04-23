@@ -93,7 +93,7 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
             
             # Output "instrumental", which is an inverse of 'vocals' or the first stem in list if 'vocals' absent
             waveforms[second_stem_key] = mix_orig - waveforms[instruments[0]]
-    elif extract_instrumental and selected_stems is not None and config.training.target_instrument == None:
+    elif extract_instrumental and selected_stems is not None and config.training.target_instrument == None and selected_stems != []:
         waveforms['inverted'] = mix_orig.copy()
         for instr in instruments:
             if instr in waveforms:
@@ -152,7 +152,7 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
     if config.training.target_instrument is not None:
         print ("Target instrument found. Selected stems ignored.")
     else:
-        if selected_instruments is not None:
+        if selected_instruments is not None and selected_instruments != []:
             instruments = [instr for instr in instruments if instr in selected_instruments]
             if verbose:
                 print(f"Selected instruments: {instruments}")

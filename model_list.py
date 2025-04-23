@@ -1221,6 +1221,64 @@ models_data = {
             "stems": ["Instrumental", "Vocals"],
             "target_instrument": "No"
         }
+    },
+    "htdemucs": {
+        "v4_mvsep_vocals": {
+            "full_name": "HT Demucs v4 Vocals (MVSep finetuned)",
+            "category": "Vocals",
+            "stems": ["vocals", "other"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.0/model_vocals_htdemucs_sdr_8.78.ckpt",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_vocals_htdemucs.yaml"
+        },
+        "v4_4stems": {
+            "full_name": "HT Demucs v4 4 stems",
+            "category": "Splitter",
+            "stems": ["vocals", "drums", "bass", "other"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        },
+        "v4_6stems": {
+            "full_name": "HT Demucs v4 6 stems",
+            "category": "Splitter",
+            "stems": ["vocals", "drums", "bass", "other", "guitar", "piano"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_htdemucs_6stems.yaml"
+        },
+        "v3_mmi_4_stems": {
+            "full_name": "HT Demucs v3 MMI 4 stems",
+            "category": "Splitter",
+            "stems": ["vocals", "drums", "bass", "other"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/75fc33f5-1941ce65.th",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_demucs3_mmi.yaml"
+        },
+        "v4_ft_bass": {
+            "full_name": "HT Demucs v4 FT Bass",
+            "category": "Bass",
+            "stems": ["bass"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/d12395a8-e57c48e6.th",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        },
+        "v4_ft_drums": {
+            "full_name": "HT Demucs v4 FT Drums",
+            "category": "Drums",
+            "stems": ["drums"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/f7e0c4bc-ba3fe64a.th",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        },
+        "v4_ft_vocals": {
+            "full_name": "HT Demucs v4 FT Vocals",
+            "category": "Vocals",
+            "stems": ["vocals"],
+            "target_instrument": "No",
+            "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/04573f0d-f3cf25b2.th",
+            "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        },
     }
 }
 

@@ -30,3 +30,4 @@ huggingface-hub
 prodigyopt
 torch_log_wmse
 audio-separator[gpu]==0.30.0
+demucs==4.0.0
