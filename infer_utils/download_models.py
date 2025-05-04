@@ -28,6 +28,12 @@ def download_model(model_paths, model_name, model_type, ckpt_url, conf_url):
     elif model_type == "htdemucs":
         config_path = os.path.join(model_dir, f"{model_name}_config.yaml")
         checkpoint_path = os.path.join(model_dir, f"{model_name}.th")
+
+    elif model_type == "medley_vox":
+        medley_vox_model_dir = os.path.join(model_dir, model_name)
+        os.makedirs(medley_vox_model_dir, exist_ok=True)
+        config_path = os.path.join(medley_vox_model_dir, f"vocals.json")
+        checkpoint_path = os.path.join(medley_vox_model_dir, f"vocals.pth")
     
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
@@ -44,4 +50,8 @@ def download_model(model_paths, model_name, model_type, ckpt_url, conf_url):
             download_ckpt = ("wget", "-O", str(local_path), str(url_model))
             subprocess.run(download_ckpt, check=True)
 
-    return config_path, checkpoint_path
+
+    if model_type == "medley_vox":
+        return model_dir
+    else:
+        return config_path, checkpoint_path

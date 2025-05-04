@@ -1282,6 +1282,88 @@ models_data = {
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/04573f0d-f3cf25b2.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
         },
+    },
+    "medley_vox": {
+        "multi_singing_librispeech": {
+            "full_name": "Multi singing LibriSpeech model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech/vocals.json?download=true"
+        },
+        "multi_singing_librispeech_138": {
+            "full_name": "Multi singing LibriSpeech 138 epoch model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech_138/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech_138/vocals.json?download=true"
+        },
+        "singing_librispeech_ft_isrnet": {
+            "full_name": "Singing LibriSpeech Finetuned model IsrNET for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_ft_iSRNet/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_ft_iSRNet/vocals.json?download=true"
+        },
+        "singing_librispeech_isrnet": {
+            "full_name": "Singing LibriSpeech IsrNET model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_iSRNet/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_iSRNet/vocals.json?download=true"
+        },
+        "vocal_231": {
+            "full_name": "Vocal 231 model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocal%20231/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocal%20231/vocals.json?download=true"
+        },
+        "vocals_135": {
+            "full_name": "Vocals 135 model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20135/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20135/vocals.json?download=true"
+        },
+        "vocals_163": {
+            "full_name": "Vocals 163 model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20163/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20163/vocals.json?download=true"
+        },
+        "vocals_188": {
+            "full_name": "Vocals 188 model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20188/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20188/vocals.json?download=true"
+        },
+        "vocals_200": {
+            "full_name": "Vocals 200 model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20200/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20200/vocals.json?download=true"
+        },
+        "vocals_238": {
+            "full_name": "Vocals 238 model for Medley-Vox",
+            "category": "Multi-singer",
+            "stems": ["vox1", "vox2"],
+            "target_instrument": "voxes",
+            "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20238/vocals.pth?download=true",
+            "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20238/vocals.json?download=true"
+        }
     }
 }
 

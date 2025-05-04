@@ -1,4 +1,5 @@
 import os
+import subprocess
 import shutil
 import argparse
 import subprocess
@@ -6,13 +7,39 @@ import tempfile
 import gradio as gr
 
 
-
+# audio-separator
 from audio_separator.separator import Separator
+
+# Modded Music-Source-Separation-Training
 from inference import mvsep_offline
+
+# Models list in inference
 from model_list import models_data
+
+# Model downloader
 from infer_utils.download_models import download_model
+
+# Renamer stems for audio-separator
 from infer_utils.uvr_rename_stems import rename_stems
+
+# Pre-edit config for Music-Source-Separation-Training
 from infer_utils.preedit_config import conf_editor
+
+# Add Vbach in app:
+def add_vbach(vbach):
+    if vbach:
+        from vbach import conversion, url_download, zip_upload, files_upload
+        with gr.TabItem("Voice to voice"):
+            with gr.TabItem("Inference"):
+                conversion()
+            with gr.TabItem("Download models"):
+                url_download()                            
+                zip_upload()
+                files_upload()
+
+
+
+# MVSEPLESS NON-CLI FUNCTIONS
 
 
 
@@ -36,14 +63,14 @@ def update_stems_ui(model_type, model_name, extract_checked):
     
     if target_instrument != "No":
         return gr.CheckboxGroup(
-            label=f"Target instrument is {target_instrument}, stems selection ignored",
+            label=f"Target instrument is {target_instrument}, for instrumental extraction, enable the 'Extract Instrumental' option.",
             choices=stems,
             value=None,
             interactive=False
         )
     elif extract_checked:
         return gr.CheckboxGroup(
-            label="Instrumental extraction enabled",
+            label="Instrumental extraction enabled. If one or more stems are selected, an 'inverted' stem is added.",
             choices=stems,
             value=None,
             interactive=True
@@ -59,6 +86,21 @@ def update_stems_ui(model_type, model_name, extract_checked):
 def on_extract_change(checked, model_type, model_name):
     print(f"Extract Instrumental: {checked}")
     return update_stems_ui(model_type, model_name, checked), checked
+
+
+# Medley-Vox Wrapper
+def medley_inference(input, output, model_dir, model_name, output_format, batch): 
+    medley_infer = ("python", "-m", "models.medley_vox.svs.inference", "--inference_data_dir", str(input), "--results_save_dir", str(output), "--model_dir", str(model_dir), "--exp_name", str(model_name), "--use_overlapadd=ola", "--output_format", str(output_format), ('--batch' if batch else ''))
+    subprocess.run(medley_infer, check=True) 
+    return
+
+
+
+
+
+
+
+# MVSEPLESS CLI FUNCTION FOR USING IN ANY PROJECTS
 
 
 
@@ -114,6 +156,19 @@ def audio_separation(input_dir, output_dir="", instrum=False, model_name="", mod
             progress(0.5, desc="Separating audio...")
         mvsep_offline(input_dir, output_dir, model_type, conf, ckpt, instrum, output_format, model_name, template, 0, use_tta=use_tta, batch=batch, selected_instruments=selected_instruments) 
 
+    elif model_type == "medley_vox":
+
+        model_paths = "ckpts"
+        config_url = models_data[model_type][model_name]["config_url"]
+
+        checkpoint_url = models_data[model_type][model_name]["checkpoint_url"]
+        if gradio:
+            progress(0.2, desc="Loading model")
+        medley_vox_model_dir = download_model(model_paths, model_name, model_type, checkpoint_url, config_url)
+        if gradio:
+            progress(0.5, desc="Separating audio...")
+        medley_inference(input_dir, output_dir, medley_vox_model_dir, model_name, output_format, batch)
+
     if gradio: # Show output results in Gradio
         audio_folder = output_dir
         audio_files = [os.path.join(audio_folder, f) for f in os.listdir(audio_folder) if f.endswith((".wav", ".mp3", ".flac"))][:7]
@@ -123,6 +178,11 @@ def audio_separation(input_dir, output_dir="", instrum=False, model_name="", mod
             visible = i < len(audio_files)
             results.append(gr.update(visible=visible, value=audio_files[i] if visible else None))
         return tuple(results)
+
+
+
+# MVSEPLESS NON-CLI
+
 
 
 theme = gr.themes.Base(
@@ -142,100 +202,96 @@ theme = gr.themes.Base(
     border_color_primary="#d0d0d6"
 )
 
+def mvsepless_non_cli(vbach):
 
-with gr.Blocks(title="Music & Voice Separation", theme=theme) as demo:
-    gr.HTML("<h1><center> MVSEPLESS </center></h1>")
-    with gr.Column() as audio_sep:
-        extract_state = gr.State(False)
-        false_state = gr.State(False)
-        true_state = gr.State(True)
+    with gr.Blocks() as demo:
+        with gr.Tabs():
+            with gr.TabItem("Separate"):
+                extract_state = gr.State(False)
+                false_state = gr.State(False)
+                true_state = gr.State(True)
 
-        with gr.Row():
-            input_file = gr.Audio(label="Upload audio", type="filepath", visible=True)
+                with gr.Row():
+                    input_file = gr.Audio(label="Upload audio", type="filepath", visible=True)
 
-        with gr.Row():
-            model_type_dropdown = gr.Dropdown(
-                choices=list(models_data.keys()),
-                label="Select Model Type",
-                interactive=True,
-                filterable=False
-            )
-            model_name_dropdown = gr.Dropdown(
+                with gr.Row():
+                    model_type_dropdown = gr.Dropdown(
+                        choices=list(models_data.keys()),
+                        label="Select Model Type",
+                        interactive=True,
+                        filterable=False
+                    )
+                    model_name_dropdown = gr.Dropdown(
                 choices=list(models_data["mel_band_roformer"].keys()),
-                label="Select Model Name",
-                value="aname_4_stems_xl",
-                interactive=True,
-                filterable=False
-            )
+                        label="Select Model Name",
+                        value="aname_4_stems_xl",
+                        interactive=True,
+                        filterable=False
+                    )
         
-        # Инициализируем стемы из начальной модели
-        initial_stems = get_stems_from_model("mel_band_roformer", "aname_4_stems_xl")
-        stems_checkbox = gr.CheckboxGroup(
-            label="Available stems",
-            interactive=True,
-            choices=initial_stems
-        )
+                # Инициализируем стемы из начальной модели
+                initial_stems = get_stems_from_model("mel_band_roformer", "aname_4_stems_xl")
+                stems_checkbox = gr.CheckboxGroup(
+                    label="Available stems",
+                    interactive=True,
+                    choices=initial_stems
+                )
 
-        extract_checkbox = gr.Checkbox(
-            label="Extract Instrumental",
-            value=False
-        )
+                extract_checkbox = gr.Checkbox(
+                    label="Extract Instrumental",
+                    value=False
+                )
 
-        with gr.Row():
-            output_format = gr.Radio(
-                label="Format export",
-                choices=["wav", "mp3", "flac"],
-                value="flac",
-                visible=True
-            )
+                with gr.Row():
+                    output_format = gr.Radio(
+                        label="Format export",
+                        choices=["wav", "mp3", "flac"],
+                        value="flac",
+                        visible=True
+                    )
 
-        template = gr.Text(value="NAME_STEM_MODEL", visible=False)
-        output = gr.Text(value="output_sep", visible=False)
+                template = gr.Text(label="Template for output file", value="NAME_STEM_MODEL", visible=True)
+                output = gr.Text(value="output_sep", visible=False)
 
-        separate_btn = gr.Button("Separate", variant="primary", visible=True)
+                separate_btn = gr.Button("Separate", variant="primary", visible=True)
 
-        stems = [gr.Audio(visible=False) for _ in range(7)]
+                stems = [gr.Audio(visible=(i == 0)) for i in range(7)]
 
-        separate_btn.click(
-            fn=audio_separation,
-            inputs=[input_file, output, extract_state, model_name_dropdown, model_type_dropdown, output_format, false_state, false_state, template, stems_checkbox, true_state],
-            outputs=[*stems]
-        )
+                separate_btn.click(
+                    fn=audio_separation,
+                    inputs=[input_file, output, extract_state, model_name_dropdown, model_type_dropdown, output_format, false_state, false_state, template, stems_checkbox, true_state],
+                    outputs=[*stems]
+                )
 
-        stems_checkbox.change(
-            lambda x: print(f"Stems selected: {x}"),
-            inputs=stems_checkbox,
-            outputs=None
-        )
+                stems_checkbox.change(
+                    lambda x: print(f"Stems selected: {x}"),
+                    inputs=stems_checkbox,
+                    outputs=None
+                )
 
-        extract_checkbox.change(
-            fn=on_extract_change,
-            inputs=[extract_checkbox, model_type_dropdown, model_name_dropdown],
-            outputs=[stems_checkbox, extract_state]
-        )
+                extract_checkbox.change(
+                    fn=on_extract_change,
+                    inputs=[extract_checkbox, model_type_dropdown, model_name_dropdown],
+                    outputs=[stems_checkbox, extract_state]
+                )
 
-        model_type_dropdown.change(
-            update_model_names,
-            inputs=model_type_dropdown,
-            outputs=[model_name_dropdown, stems_checkbox]
-        )
+                model_type_dropdown.change(
+                    update_model_names,
+                    inputs=model_type_dropdown,
+                    outputs=[model_name_dropdown, stems_checkbox]
+                )
 
-        model_name_dropdown.change(
-            lambda model_type, model_name, extract_checked: update_stems_ui(model_type, model_name, extract_checked),
-            inputs=[model_type_dropdown, model_name_dropdown, extract_checkbox],
-            outputs=stems_checkbox
-        )
-
-
+                model_name_dropdown.change(
+                    lambda model_type, model_name, extract_checked: update_stems_ui(model_type, model_name, extract_checked),
+                    inputs=[model_type_dropdown, model_name_dropdown, extract_checkbox],
+                    outputs=stems_checkbox
+                )
 
 
+            # Vbach NON-CLI
 
-
-
-
-
-
-
+            add_vbach(vbach)
+                    
 
 def code_infer():
     parser = argparse.ArgumentParser(description="Multi-inference fo separate audio")
@@ -252,13 +308,19 @@ def code_infer():
     parser.add_argument("-tmpl", "--template", type=str, default='NAME_MODEL_STEM', help="Template name output files")
     parser.add_argument("--select", nargs='+', help="Select stems")
     parser.add_argument("-gr", "--gradio", action='store_true', help="Use Gradio")
+    parser.add_argument("-grvc", "--gradiovbach", action='store_true', help="Use Gradio with Vbach")
 
     args = parser.parse_args()
 
     if args.model_name and not args.model_type:
         parser.error("При указании --model_name необходимо указать и --model_arch")
 
-    if args.gradio:
+    if args.gradio or args.gradiovbach:
+
+        vbach = args.gradiovbach
+        with gr.Blocks(title="Music & Voice Separation", theme=theme) as demo:
+            gr.HTML("<h1><center> MVSEPLESS </center></h1>")
+            mvsepless_non_cli(vbach)
         demo.launch(share=True, allowed_paths=["/content"])
     else:
 

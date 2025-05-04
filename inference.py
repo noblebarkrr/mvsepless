@@ -140,6 +140,8 @@ def once_inference(path, model, config, device, model_type, extract_instrumental
             output_file_path = os.path.join(store_dir, f"{custom_name}.wav")
             sf.write(output_file_path, estimates, sr, subtype='PCM_16')
 
+    return
+
 def run_inference(model, config, input, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, model_name, batch, template, selected_instruments):
     start_time = time.time()
     model.eval()
@@ -179,7 +181,7 @@ def run_inference(model, config, input, store_dir, device, model_type, extract_i
 
     time.sleep(1)
     print("Elapsed time: {:.2f} sec".format(time.time() - start_time))    
-
+    return
 
 def load_model(model_type, config_path, start_check_point, device_ids, force_cpu=False):
     # Determine device
@@ -237,6 +239,7 @@ def mvsep_offline(input, store_dir, model_type, config_path, start_check_point, 
     
     model, config, device = load_model(model_type, config_path, start_check_point, device_ids, force_cpu)
     run_inference(model, config, input, store_dir, device, model_type, extract_instrumental, disable_detailed_pbar, output_format, use_tta, verbose, model_name, batch, template, selected_instruments)
+    return
 
 if __name__ == "__main__":
     # Example: save only vocals and drums
