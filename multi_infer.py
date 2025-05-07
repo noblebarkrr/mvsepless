@@ -1,8 +1,6 @@
 import os
-import subprocess
 import shutil
 import argparse
-import subprocess
 import tempfile
 import gradio as gr
 
@@ -43,10 +41,39 @@ def add_vbach(vbach):
 
 
 
+
 def update_model_names(model_type):
     if model_type in models_data:
-        return gr.Dropdown(choices=list(models_data[model_type].keys())), gr.Dropdown(choices=[], interactive=False)
-    return gr.Dropdown(choices=[]), gr.Dropdown(choices=[], interactive=True)
+        model_names = list(models_data.get(model_type, {}).keys())
+        if not model_names:
+            return (
+                gr.Dropdown(choices=[], value=None),  # No models available
+                gr.CheckboxGroup(choices=[], value=[], interactive=False),
+                gr.Checkbox(visible=False, value=False)
+            )
+        
+        model_name = model_names[0]
+        stems, ext_inst = update_stems_ui(model_type, model_name, extract_checked=False)
+        
+        return (
+            gr.Dropdown(choices=model_names, value=model_name),  # Updated dropdown
+            stems,  # Updated checkbox group
+            ext_inst  # Updated extract instrumental checkbox
+        )
+    
+    # Fallback for unknown model types
+    return (
+        gr.Dropdown(choices=[], value=None),
+        gr.CheckboxGroup(choices=[], value=[], interactive=False),
+        gr.Checkbox(visible=False, value=False)
+    )
+
+
+
+
+
+
+
 
 def get_stems_from_model(model_type, model_name):
     if not model_type or not model_name:
@@ -55,43 +82,70 @@ def get_stems_from_model(model_type, model_name):
     model_info = models_data.get(model_type, {}).get(model_name, {})
     return model_info.get("stems", [])
 
-def update_stems_ui(model_type, model_name, extract_checked):
 
+
+
+def update_stems_ui(model_type, model_name, extract_checked):
     stems = get_stems_from_model(model_type, model_name)
     model_info = models_data.get(model_type, {}).get(model_name, {})
     target_instrument = model_info.get("target_instrument", "No")
     
     if target_instrument != "No":
+        if target_instrument == "voxes":
+            return gr.CheckboxGroup(
+                label="Medley Vox not supported selecting stems",
+                choices=stems,
+                value=[],
+                interactive=False
+           ), gr.Checkbox(visible=False, value=False)
         return gr.CheckboxGroup(
             label=f"Target instrument is {target_instrument}, for instrumental extraction, enable the 'Extract Instrumental' option.",
             choices=stems,
-            value=None,
+            value=[],
             interactive=False
-        )
+        ), gr.Checkbox(visible=True)
+    elif model_type == "vr_arch" or model_type == "mdx_net" or model_type == "medley_vox":
+        return gr.CheckboxGroup(
+            label="Instrumental extraction unavailable",
+            choices=stems,
+            interactive=True, 
+            value=[]
+        ), gr.Checkbox(visible=False, value=False)
     elif extract_checked:
         return gr.CheckboxGroup(
             label="Instrumental extraction enabled. If one or more stems are selected, an 'inverted' stem is added.",
             choices=stems,
-            value=None,
+            value=[],
             interactive=True
-        )
+        ), gr.Checkbox(visible=True)
     else:
         return gr.CheckboxGroup(
             choices=stems,
-            value=None,
+            value=[],
             label="Available stems",
-            interactive=bool(stems) 
-        )
+            interactive=bool(stems)
+        ), gr.Checkbox(visible=True)
 
 def on_extract_change(checked, model_type, model_name):
     print(f"Extract Instrumental: {checked}")
-    return update_stems_ui(model_type, model_name, checked), checked
+    return update_stems_ui(model_type, model_name, checked)
+
+
 
 
 # Medley-Vox Wrapper
 def medley_inference(input, output, model_dir, model_name, output_format, batch): 
-    medley_infer = ("python", "-m", "models.medley_vox.svs.inference", "--inference_data_dir", str(input), "--results_save_dir", str(output), "--model_dir", str(model_dir), "--exp_name", str(model_name), "--use_overlapadd=ola", "--output_format", str(output_format), ('--batch' if batch else ''))
-    subprocess.run(medley_infer, check=True) 
+    command = (
+        f"python -m models.medley_vox.svs.inference "
+        f"--inference_data_dir '{input}' "
+        f"--results_save_dir {output} "
+        f"--model_dir {model_dir} "
+        f"--exp_name {model_name} "
+        f"--use_overlapadd=ola "
+        f"--output_format {output_format} "
+        f"{'--batch' if batch else ''}"
+    )
+    os.system(command)
     return
 
 
@@ -203,14 +257,12 @@ theme = gr.themes.Base(
 )
 
 def mvsepless_non_cli(vbach):
-
     with gr.Blocks() as demo:
         with gr.Tabs():
             with gr.TabItem("Separate"):
+                # State variables
                 extract_state = gr.State(False)
-                false_state = gr.State(False)
-                true_state = gr.State(True)
-
+                
                 with gr.Row():
                     input_file = gr.Audio(label="Upload audio", type="filepath", visible=True)
 
@@ -218,28 +270,33 @@ def mvsepless_non_cli(vbach):
                     model_type_dropdown = gr.Dropdown(
                         choices=list(models_data.keys()),
                         label="Select Model Type",
+                        value=list(models_data.keys())[0],  # Set default to first model type
                         interactive=True,
                         filterable=False
                     )
                     model_name_dropdown = gr.Dropdown(
-                choices=list(models_data["mel_band_roformer"].keys()),
                         label="Select Model Name",
-                        value="aname_4_stems_xl",
                         interactive=True,
-                        filterable=False
+                        filterable=False,
+                        choices=list(models_data[list(models_data.keys())[0]].keys()),
+                        value="unwa_instrumental_v1e"
                     )
         
-                # Инициализируем стемы из начальной модели
-                initial_stems = get_stems_from_model("mel_band_roformer", "aname_4_stems_xl")
+                # Initialize stems based on default model
+                default_model_type = list(models_data.keys())[0]
+                default_model_name = list(models_data[default_model_type].keys())[0]
+                ext_instrum, initial_stems = get_stems_from_model(default_model_type, default_model_name)
+                
                 stems_checkbox = gr.CheckboxGroup(
-                    label="Available stems",
-                    interactive=True,
-                    choices=initial_stems
-                )
-
+                    label="Target instrument is other, for instrumental extraction, enable the 'Extract Instrumental' option.",
+                    choices=["vocals", "other"],
+                    value=[],
+                    interactive=False)
+                
                 extract_checkbox = gr.Checkbox(
                     label="Extract Instrumental",
-                    value=False
+                    value=False,
+                    visible=True
                 )
 
                 with gr.Row():
@@ -257,40 +314,58 @@ def mvsepless_non_cli(vbach):
 
                 stems = [gr.Audio(visible=(i == 0)) for i in range(7)]
 
+                # Event handlers
                 separate_btn.click(
                     fn=audio_separation,
-                    inputs=[input_file, output, extract_state, model_name_dropdown, model_type_dropdown, output_format, false_state, false_state, template, stems_checkbox, true_state],
+                    inputs=[
+                        input_file, output, extract_state, 
+                        model_name_dropdown, model_type_dropdown, 
+                        output_format, gr.State(False), gr.State(False),
+                        template, stems_checkbox, gr.State(True)
+                    ],
                     outputs=[*stems]
                 )
 
-                stems_checkbox.change(
-                    lambda x: print(f"Stems selected: {x}"),
-                    inputs=stems_checkbox,
-                    outputs=None
+                # Model type change updates both name dropdown and stems
+                model_type_dropdown.change(
+                    fn=update_model_names,
+                    inputs=model_type_dropdown,
+                    outputs=[model_name_dropdown, stems_checkbox, extract_checkbox]
                 )
 
+                # Model name change updates stems
+                model_name_dropdown.change(
+                    fn=lambda model_type, model_name, extract_checked: update_stems_ui(model_type, model_name, extract_checked),
+                    inputs=[model_type_dropdown, model_name_dropdown, extract_checkbox],
+                    outputs=[stems_checkbox, extract_checkbox]
+                )
+
+                # Extract checkbox change updates stems
                 extract_checkbox.change(
                     fn=on_extract_change,
                     inputs=[extract_checkbox, model_type_dropdown, model_name_dropdown],
                     outputs=[stems_checkbox, extract_state]
                 )
 
-                model_type_dropdown.change(
-                    update_model_names,
-                    inputs=model_type_dropdown,
-                    outputs=[model_name_dropdown, stems_checkbox]
+                # Debug handler for stems selection
+                stems_checkbox.change(
+                    lambda x: print(f"Stems selected: {x}"),
+                    inputs=stems_checkbox,
+                    outputs=None
                 )
-
-                model_name_dropdown.change(
-                    lambda model_type, model_name, extract_checked: update_stems_ui(model_type, model_name, extract_checked),
-                    inputs=[model_type_dropdown, model_name_dropdown, extract_checkbox],
-                    outputs=stems_checkbox
-                )
-
 
             # Vbach NON-CLI
 
             add_vbach(vbach)
+
+def should_show_extract(model_type, model_name):
+    """Helper to determine if extract checkbox should be visible"""
+    model_info = models_data.get(model_type, {}).get(model_name, {})
+    target_instrument = model_info.get("target_instrument", "No")
+    return target_instrument == "No" and model_type not in ["vr_arch", "mdx_net", "medley_vox"]
+
+
+
                     
 
 def code_infer():
@@ -309,6 +384,7 @@ def code_infer():
     parser.add_argument("--select", nargs='+', help="Select stems")
     parser.add_argument("-gr", "--gradio", action='store_true', help="Use Gradio")
     parser.add_argument("-grvc", "--gradiovbach", action='store_true', help="Use Gradio with Vbach")
+    parser.add_argument("-hface", "--hf", action='store_true', help="Only on Hugging Face Spaces")
 
     args = parser.parse_args()
 
@@ -317,11 +393,16 @@ def code_infer():
 
     if args.gradio or args.gradiovbach:
 
+        if args.hf:
+            google_colab = False
+        else:
+            google_colab = True
+
         vbach = args.gradiovbach
         with gr.Blocks(title="Music & Voice Separation", theme=theme) as demo:
             gr.HTML("<h1><center> MVSEPLESS </center></h1>")
             mvsepless_non_cli(vbach)
-        demo.launch(share=True, allowed_paths=["/content"])
+        demo.queue().launch(server_name="0.0.0.0", share=google_colab, server_port=7860, allowed_paths=["/content"])
     else:
 
         audio_separation(

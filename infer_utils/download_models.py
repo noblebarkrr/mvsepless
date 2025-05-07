@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 def download_model(model_paths, model_name, model_type, ckpt_url, conf_url):
     model_dir = os.path.join(model_paths, model_type)
@@ -47,9 +46,8 @@ def download_model(model_paths, model_name, model_type, ckpt_url, conf_url):
         print("Model already downloaded")
     else:
         for local_path, url_model in [(checkpoint_path, ckpt_url), (config_path, conf_url)]:
-            download_ckpt = ("wget", "-O", str(local_path), str(url_model))
-            subprocess.run(download_ckpt, check=True)
-
+            download_cmd = f"wget -O {local_path} {url_model}"
+            os.system(download_cmd)
 
     if model_type == "medley_vox":
         return model_dir
