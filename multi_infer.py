@@ -392,17 +392,14 @@ def code_infer():
         parser.error("При указании --model_name необходимо указать и --model_arch")
 
     if args.gradio or args.gradiovbach:
-
-        if args.hf:
-            google_colab = False
-        else:
-            google_colab = True
-
         vbach = args.gradiovbach
         with gr.Blocks(title="Music & Voice Separation", theme=theme) as demo:
             gr.HTML("<h1><center> MVSEPLESS </center></h1>")
             mvsepless_non_cli(vbach)
-        demo.queue().launch(server_name="0.0.0.0", share=google_colab, server_port=7860, allowed_paths=["/content"])
+        if args.hf:
+            demo.queue().launch(server_name="0.0.0.0", server_port=7860, allowed_paths=["/content"])
+        else:
+            demo.launch(share=True, allowed_paths=["/content"])
     else:
 
         audio_separation(
