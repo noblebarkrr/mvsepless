@@ -255,6 +255,24 @@ models_data = {
             "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/ver2.ckpt?download=true",
             "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
         },
+        "essid_instrumental_1652": {
+            "full_name": "Mel-Band Roformer Instrumental by Essid",
+            "category": "Instrumental",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Instrumental",
+            "information": "No info yet",
+            "checkpoint_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/main/model_mel_band_roformer_ep_17_sdr_16.5244.ckpt?download=true",
+            "config_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/main/config_vocals_mel_band_roformer_essid.yaml?download=true"
+        },
+        "essid_instrumental_1681": {
+            "full_name": "Mel-Band Roformer Instrumental by Essid",
+            "category": "Instrumental",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Instrumental",
+            "information": "No info yet",
+            "checkpoint_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/main/model_mel_band_roformer_ep_47_sdr_16.8121.ckpt?download=true",
+            "config_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/main/config_vocals_mel_band_roformer_essid.yaml?download=true"
+        },
         "gaboxr67_instrumental_fv1": {
             "full_name": "Mel-Band Roformer Instrumental Fv1 by GaboxR67",
             "category": "Instrumental",
@@ -706,6 +724,24 @@ models_data = {
             "information": "Vocal separation model with SDR 12.96 by ViperX",
             "checkpoint_url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
             "config_url": "https://raw.githubusercontent.com/TRvlvr/application_data/main/mdx_model_data/mdx_c_configs/model_bs_roformer_ep_368_sdr_12.9628.yaml"
+        },
+        "unwa_vocals_revive_v1": {
+            "full_name": "BS Roformer Vocals Revive by Unwa",
+            "category": "Vocals",
+            "stems": ["vocals", "other"],
+            "target_instrument": "vocals",
+            "information": "Finetuned viperx model by Unwa",
+            "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive.ckpt?download=true",
+            "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml?download=true"
+        },
+        "unwa_vocals_revive_v2": {
+            "full_name": "BS Roformer Vocals Revive by Unwa v2",
+            "category": "Vocals",
+            "stems": ["vocals", "other"],
+            "target_instrument": "vocals",
+            "information": "Finetuned viperx model by Unwa",
+            "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive2.ckpt?download=true",
+            "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml?download=true"
         },
         "viperx_vocals_1297": {
             "full_name": "BS Roformer Vocals 12.97 by ViperX",
