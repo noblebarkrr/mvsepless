@@ -28,6 +28,8 @@ tuple_constructor)
         if 'use_amp' not in data.keys():
           data['training']['use_amp'] = True
 
+        data['inference']['num_overlap'] = 2
+
         if data['inference']['batch_size'] == 1:
           data['inference']['batch_size'] = 2
 
