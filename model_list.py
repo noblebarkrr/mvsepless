@@ -228,7 +228,26 @@ models_data = {
             "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerMergedSYHFTBeta1/resolve/main/merge_syhft.ckpt?download=true",
             "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/config_vocals_mel_band_roformer_ft.yaml?download=true"
         },
-        "syh99999_syhft_b1": {
+        "syh99999_syhft_b1_model1": {
+            "full_name": "Mel-Band Roformer SYHFT B1 by SYH99999",
+            "category": "Vocals",
+            "stems": ["vocals", "other"],
+            "target_instrument": "vocals",
+            "information": "Beta version of fine-tuned vocal separation model by SYH99999",
+            "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/model.ckpt?download=true",
+            "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/config.yaml?download=true"
+        },
+        "syh99999_syhft_b1_model2": {
+            "full_name": "Mel-Band Roformer SYHFT B1 by SYH99999",
+            "category": "Vocals",
+            "stems": ["vocals", "other"],
+            "target_instrument": "vocals",
+            "information": "Beta version of fine-tuned vocal separation model by SYH99999",
+            "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/model2.ckpt?download=true",
+            "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/config.yaml?download=true"
+        },        
+
+        "syh99999_syhft_b1_model3": {
             "full_name": "Mel-Band Roformer SYHFT B1 by SYH99999",
             "category": "Vocals",
             "stems": ["vocals", "other"],
