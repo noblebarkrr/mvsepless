@@ -26,7 +26,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["vocals", "other"],
             "target_instrument": "other",
-            "information": "Instrumental separation model",
+            "information": "Max fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1e.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true"
         },
@@ -35,7 +35,7 @@ models_data = {
             "category": "Vocals",
             "stems": ["vocals", "other"],
             "target_instrument": "vocals",
-            "information": "Large-scale vocal separation model",
+            "information": "Max fullness vocal model",
             "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta5e.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta5e.yaml?download=true"
         },
@@ -152,7 +152,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Instrumental separation model by Becruily",
+            "information": "Max fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/mel_band_roformer_instrumental_becruily.ckpt?download=true",
             "config_url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/config_instrumental_becruily.yaml?download=true"
         },
@@ -161,7 +161,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "No",
-            "information": "Karaoke separation model by Becruily",
+            "information": "Better karaoke model for Roformers",
             "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-karaoke/resolve/main/mel_band_roformer_karaoke_becruily.ckpt?download=true",
             "config_url": "https://huggingface.co/becruily/mel-band-roformer-karaoke/resolve/main/config_karaoke_becruily.yaml?download=true"
         },
@@ -170,7 +170,7 @@ models_data = {
             "category": "Vocals",
             "stems": ["vocals", "other"],
             "target_instrument": "vocals",
-            "information": "Vocal separation model by Becruily",
+            "information": "Max fullness vocal model",
             "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/mel_band_roformer_vocals_becruily.ckpt?download=true",
             "config_url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/config_vocals_becruily.yaml?download=true"
         },
@@ -278,7 +278,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "First version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv1.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -287,7 +287,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Second version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv2.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -296,7 +296,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Third version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv3.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -305,7 +305,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Noise-optimized version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_Fv4Noise.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -314,7 +314,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Fifth version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV5.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -323,7 +323,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Noise-optimized fifth version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV5N.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -332,7 +332,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Sixth version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV6.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -341,7 +341,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Noise-optimized sixth version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV6N.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -350,7 +350,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Seventh version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxV7.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -359,8 +359,17 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Noise-optimized seventh version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV7N.ckpt?download=true",
+            "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        },
+        "gaboxr67_instrumental_fv8_experimental": {
+            "full_name": "Mel-Band Roformer Instrumental Fv8 by GaboxR67",
+            "category": "Instrumental",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Instrumental",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV8.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
         "gaboxr67_instrumental_fv8": {
@@ -368,25 +377,25 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Experimental eighth version of instrumental separation model by GaboxR67",
-            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV8.ckpt?download=true",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv8.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
-        "gaboxr67_instrumental_fv9": {
+        "gaboxr67_instrumental_fv9_experimental": {
             "full_name": "Mel-Band Roformer Instrumental Fv9 by GaboxR67",
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Experimental ninth version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV9.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
-        "gaboxr67_instrumental_fv10": {
+        "gaboxr67_instrumental_fv10_experimental": {
             "full_name": "Mel-Band Roformer Instrumental Fv10 by GaboxR67",
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Experimental tenth version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV10.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -395,7 +404,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Extended version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFVX.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -404,7 +413,7 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "First beta version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model to bleedless",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv1.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
@@ -413,8 +422,17 @@ models_data = {
             "category": "Instrumental",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "information": "Second beta version of instrumental separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness instrumental model to bleedless",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv2.ckpt?download=true",
+            "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        },
+        "gaboxr67_instrumental_bv3": {
+            "full_name": "Mel-Band Roformer Instrumental Bv2 by GaboxR67",
+            "category": "Instrumental",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Instrumental",
+            "information": "Fine-tune of Becruily's fullness instrumental model to bleedless",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv3.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
         "gaboxr67_vocals_fv1": {
@@ -422,7 +440,7 @@ models_data = {
             "category": "Vocals",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Vocals",
-            "information": "First version of vocal separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness vocal model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gaboxFv1.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
         },
@@ -431,7 +449,7 @@ models_data = {
             "category": "Vocals",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Vocals",
-            "information": "Second version of vocal separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness vocal model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gaboxFv2.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
         },
@@ -440,7 +458,7 @@ models_data = {
             "category": "Vocals",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "vocals",
-            "information": "Third version of vocal separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness vocal model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_Fv3.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
         },
@@ -449,8 +467,17 @@ models_data = {
             "category": "Vocals",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Vocals",
-            "information": "Fourth version of vocal separation model by GaboxR67",
+            "information": "Fine-tune of Becruily's fullness vocal model",
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv4.ckpt?download=true",
+            "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        },
+        "gaboxr67_vocals_fv5": {
+            "full_name": "Mel-Band Roformer Vocals Fv5 by GaboxR67",
+            "category": "Vocals",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Vocals",
+            "information": "Fine-tune of Becruily's fullness vocal model",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv5.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
         },
         "gaboxr67_karaoke_25_02_2025": {
@@ -674,7 +701,7 @@ models_data = {
             "category": "Splitter",
             "stems": ["vocals", "drums", "bass", "other"],
             "target_instrument": "No",
-            "information": "Extra large 4-stems separation model by Aname",
+            "information": "Largest 4-stems separation model for Roformers by Aname",
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/mel_band_roformer_4stems_xl_ver1.ckpt?download=true",
             "config_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/config_xl.yaml?download=true"
         },
@@ -683,7 +710,7 @@ models_data = {
             "category": "Drums",
             "stems": ["percussions", "other"],
             "target_instrument": "percussions",
-            "information": "Experimental drums separation model",
+            "information": "Experimental bad drums separation model",
             "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_mel_band_roformer_ep_11_sdr_7.6853.ckpt?download=true",
             "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_drums_musdb18_moises_mel_band_roformer.yaml?download=true"
         },
