@@ -4,12 +4,87 @@ import argparse
 import subprocess
 from datetime import datetime
 from rvc.scripts.voice_conversion import voice_pipeline
+import tempfile
 
 from rvc.modules.model_manager import (
     download_from_url,
     upload_zip_file,
     upload_separate_files,
 )
+
+
+
+
+
+## Функция для замены голоса
+
+
+
+
+def voice_conversion(input_path, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path=tempfile.mkdtemp(prefix="converted_voice_"), template="NAME_MODEL_F0METHOD_PITCH", batch=False, gradio=False):
+    if batch:
+        converted_files = []
+        if gradio:
+            if input_path is None or input_path == []:  # Check if input_path is None or empty list
+                print("Error: No files provided for batch processing")
+                return None
+                
+            for file in input_path:
+                file_name = os.path.basename(file)
+                namefile = os.path.splitext(file_name)[0]
+                time_create_file = datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_name = (
+                    template
+                    .replace("DATETIME", time_create_file)
+                    .replace("NAME", namefile)
+                    .replace("MODEL", model)
+                    .replace("F0METHOD", f0)
+                    .replace("PITCH", f"{pitch}")
+                )
+                converted_voice = voice_pipeline(file, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path, output_name)
+                converted_files.append(converted_voice)
+
+        else:
+            if input_path is None or not os.path.isdir(input_path):  # Check if input_path is None or not a directory
+                print(f"Error: {input_path} is not a directory (batch mode requires directory)")
+                return []
+            
+            for filename in os.listdir(input_path):
+                file = os.path.join(input_path, filename)
+                if os.path.isfile(file):
+                    file_name = os.path.basename(file)
+                    namefile = os.path.splitext(file_name)[0]
+                    time_create_file = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    output_name = (
+                        template
+                        .replace("DATETIME", time_create_file)
+                        .replace("NAME", namefile)
+                        .replace("MODEL", model)
+                        .replace("F0METHOD", f0)
+                        .replace("PITCH", f"{pitch}")
+                    )
+                    converted_voice = voice_pipeline(file, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path, output_name)
+                    converted_files.append(converted_voice)
+        return converted_files
+    else:
+        if input_path is None or not os.path.isfile(input_path):  # Check if input_path is None or not a file
+            print(f"Error: {input_path} is not a file")
+            return None
+            
+        file_name = os.path.basename(input_path)
+        namefile = os.path.splitext(file_name)[0]
+        time_create_file = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_name = (
+            template
+            .replace("DATETIME", time_create_file)
+            .replace("NAME", namefile)
+            .replace("MODEL", model)
+            .replace("F0METHOD", f0)
+            .replace("PITCH", f"{pitch}")
+        )
+        converted_voice = voice_pipeline(input_path, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path, output_name)
+        return converted_voice
+
 
 
 rvc_models_dir = "voice_models"
@@ -23,96 +98,149 @@ def get_models_list():
 
 def conversion():
     with gr.Column() as conversion_group:
-        file_input = gr.Audio(label="Upload audio", type="filepath")
+        batch_mode = gr.Checkbox(label="Пакетная обработка", info="Позволяет обрабатывать несколько файлов подряд", value=False)
+        
+        # Initialize components for both modes
+        with gr.Group(visible=False) as batch_group:
+            batch_file_input = gr.File(label="Загрузить аудио (пакетный режим)", type="filepath", file_count="multiple", file_types=['.mp3', '.wav', '.flac'])
+            batch_file_output = gr.Files(label="Результаты (пакетный режим)", interactive=False)
+            convert_batch_btn = gr.Button("Конвертировать все", variant="primary", visible=True)
+        with gr.Group(visible=True) as single_group:
+            single_file_input = gr.Audio(label="Загрузить аудио", type="filepath")
+            single_file_output = gr.Audio(label="Результат", type="filepath", interactive=False)
+            convert_single_btn = gr.Button("Конвертировать один", variant="primary", visible=True)
         voicemodel_name = gr.Dropdown(
             choices=list(get_models_list()), 
-            label="Model name", 
+            label="Имя модели", 
             value="senko",
             interactive=True,
             filterable=False
         )
-        refresh_btn = gr.Button("Refresh")
+        refresh_btn = gr.Button("Обновить список моделей")
         pitch_vocal = gr.Slider(-48, 48, value=0, step=12, label="Pitch", interactive=True)
         method_pitch = gr.Dropdown(
-            label="F0 method", 
+            label="Метод извлечения тона", 
             choices=["rmvpe+", "mangio-crepe", "fcpe"], 
             value="rmvpe+",
             interactive=True,
             filterable=False
         )
-        hop_length = gr.Slider(0, 255, value=73, step=1, label="Hop length (mangio-crepe only)", interactive=True)
-        index_rate = gr.Slider(0, 1, value=1, step=0.05, label="Index rate", interactive=True)
-        filter_radius = gr.Slider(0, 7, value=7, step=1, label="Filter radius", interactive=True)
-        rms = gr.Slider(0, 1, value=0, step=0.1, label="RMS", interactive=True)
-        protect = gr.Slider(0, 0.5, value=0.35, step=0.05, label="Protect", interactive=True)
-        f0_max = gr.Slider(1100, 2700, value=1100, step=50, label="F0 Max", interactive=True)
+        template_voice = gr.Text(label="Формат имени преобразованного вокала", info="Список доступных ключей для формата имени можете найти в вкладке 'Настройки'", value="NAME_MODEL_F0METHOD_PITCH", visible=True)
+        with gr.Accordion("Настройки RVC:", open=False):    
+            hop_length = gr.Slider(0, 255, value=128, step=1, label="Длина шага (для mangio-crepe)", interactive=True, info="Длина шага определяет точность передачи тона. Меньше = дольше, точнее; Больше = быстрее, неточнее")
+            index_rate = gr.Slider(0, 1, value=1, step=0.05, label="Влияние индекса", interactive=True, info="Индекс влияет на акцент и тембр ИИ-вокала")
+            filter_radius = gr.Slider(0, 7, value=7, step=1, label="Радиус фильтра", interactive=True)
+            rms = gr.Slider(0, 1, value=0, step=0.1, info="Ближе к 0 = оригинал, ближе к 1 = результат", label="Огибающая громкости", interactive=True)
+            protect = gr.Slider(0, 0.5, value=0.35, step=0.05, label="Защита согласных", interactive=True, info="Помогает избежать артефактов связанных с дыханием и шипящими. Полная защита - 0.5.")
+            f0_max = gr.Slider(1100, 2700, value=1100, step=50, label="Верхний лимит", interactive=True)
         output_format_rvc = gr.Dropdown(
-            label="Export format", 
+            label="Формат результата", 
             choices=["wav", "mp3", "flac"], 
             interactive=True,
             filterable=False
         )
-        # Add hidden components for constant values
-        constant_value = gr.Number(value=50, visible=False)
-        output_dir = gr.Text(value="/content/voice_output", visible=False)
-        convert_btn = gr.Button("Convert", variant="primary")
         
-    with gr.Column() as output_voice_group:
-        converted_voice = gr.Audio(type="filepath", interactive=False, visible=True)
-        output_filename = gr.Text(visible=False)
+        constant_value = gr.Number(value=50, visible=False)
+        
+        def toggle_ui(batch):
+            return {
+                batch_group: gr.update(visible=batch),
+                single_group: gr.update(visible=not batch)
+            }
+        
+        batch_mode.change(
+            fn=toggle_ui,
+            inputs=[batch_mode],
+            outputs=[batch_group, single_group]
+        )
 
     refresh_btn.click(
         fn=lambda: gr.update(choices=get_models_list()),
         outputs=voicemodel_name
     )
-    
-    def create_output_filename(model, method, pitch):
-        return f"converted_voice_{model}_{method}_{pitch}"
-    
-    convert_btn.click(
-        fn=create_output_filename,
-        inputs=[voicemodel_name, method_pitch, pitch_vocal],
-        outputs=output_filename
-    ).then(
-        fn=voice_pipeline,
-        inputs=[file_input, voicemodel_name, pitch_vocal, index_rate, 
-                filter_radius, rms, method_pitch, hop_length, 
-                protect, output_format_rvc, constant_value, f0_max, 
-                output_dir, output_filename],
-        outputs=converted_voice
+
+    convert_single_btn.click(
+        fn=voice_conversion,
+        inputs=[
+            single_file_input,
+            voicemodel_name, 
+            pitch_vocal, 
+            index_rate, 
+            filter_radius, 
+            rms, 
+            method_pitch, 
+            hop_length, 
+            protect, 
+            output_format_rvc, 
+            constant_value, 
+            f0_max, 
+            gr.State(tempfile.mkdtemp(prefix="converted_voice_")), 
+            template_voice, 
+            batch_mode, gr.State(True)
+        ],
+        outputs=single_file_output
+    )
+    convert_batch_btn.click(
+        fn=voice_conversion,
+        inputs=[
+            batch_file_input,
+            voicemodel_name, 
+            pitch_vocal, 
+            index_rate, 
+            filter_radius, 
+            rms, 
+            method_pitch, 
+            hop_length, 
+            protect, 
+            output_format_rvc, 
+            constant_value, 
+            f0_max, 
+            gr.State(tempfile.mkdtemp(prefix="converted_voice_")), 
+            template_voice, 
+            batch_mode, gr.State(True)
+        ],
+        outputs=batch_file_output
     )
 
 
 
 
+
+
+
+
+
+
+
 def url_download():
-    with gr.Tab("From ZIP in URL"):
+    with gr.Tab("Загрузить по ссылке"):
         with gr.Row():
             with gr.Column(variant="panel"):
                 gr.HTML(
-                    "<center><h3>Enter URL to ZIP archive with voice model files</h3></center>"
+                    "<center><h3>Введите в поле ниже ссылку на ZIP-архив.</h3></center>"
                 )
-                model_zip_link = gr.Text(label="Model URL")
+                model_zip_link = gr.Text(label="Ссылка на загрузку модели")
             with gr.Column(variant="panel"):
                 with gr.Group():
                     model_name = gr.Text(
-                        label="Model name",
-                        info="Give your downloaded model a unique name different from other voice models.",
+                        label="Имя модели",
+                        info="Дайте вашей загружаемой модели уникальное имя, "
+                        "отличное от других голосовых моделей.",
                     )
-                    download_btn = gr.Button("Download model", variant="primary")
+                    download_btn = gr.Button("Загрузить модель", variant="primary")
 
         gr.HTML(
             "<h3>"
-            "Supported sites: "
+            "Поддерживаемые сайты: "
             "<a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, "
             "<a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a>, "
             "<a href='https://drive.google.com/' target='_blank'>Google Drive</a>, "
             "<a href='https://mega.nz/' target='_blank'>Mega</a>, "
-            "<a href='https://disk.yandex.ru/' target='_blank'>Yandex Disk</a>"
+            "<a href='https://disk.yandex.ru/' target='_blank'>Яндекс Диск</a>"
             "</h3>"
         )
 
-        dl_output_message = gr.Text(label="Output message", interactive=False)
+        dl_output_message = gr.Text(label="Сообщение вывода", interactive=False)
         download_btn.click(
             download_from_url,
             inputs=[model_zip_link, model_name],
@@ -121,30 +249,31 @@ def url_download():
 
 
 def zip_upload():
-    with gr.Tab("From uploaded ZIP"):
+    with gr.Tab("Загрузить ZIP архивом"):
         with gr.Row():
             with gr.Column():
                 zip_file = gr.File(
-                    label="ZIP file", file_types=[".zip"], file_count="single"
+                    label="Zip-файл", file_types=[".zip"], file_count="single"
                 )
             with gr.Column(variant="panel"):
                 gr.HTML(
-                    "<h3>1. Find and download the files: .pth and "
-                    "optional .index file</h3>"
+                    "<h3>1. Найдите и скачайте файлы: .pth и "
+                    "необязательный файл .index</h3>"
                 )
                 gr.HTML(
-                    "<h3>2. Put the file(s) in a ZIP archive and "
-                    "place it in the upload area</h3>"
+                    "<h3>2. Закиньте файл(-ы) в ZIP-архив и "
+                    "поместите его в область загрузки</h3>"
                 )
-                gr.HTML("<h3>3. Wait for the ZIP archive to fully upload to the interface</h3>")
+                gr.HTML("<h3>3. Дождитесь полной загрузки ZIP-архива в интерфейс</h3>")
                 with gr.Group():
                     local_model_name = gr.Text(
-                        label="Model name",
-                        info="Give your downloaded model a unique name different from other voice models.",
+                        label="Имя модели",
+                        info="Дайте вашей загружаемой модели уникальное имя, "
+                        "отличное от других голосовых моделей.",
                     )
-                    model_upload_button = gr.Button("Download model", variant="primary")
+                    model_upload_button = gr.Button("Загрузить модель", variant="primary")
 
-        local_upload_output_message = gr.Text(label="Output message", interactive=False)
+        local_upload_output_message = gr.Text(label="Сообщение вывода", interactive=False)
         model_upload_button.click(
             upload_zip_file,
             inputs=[zip_file, local_model_name],
@@ -153,25 +282,26 @@ def zip_upload():
 
 
 def files_upload():
-    with gr.Tab("From uploaded files"):
+    with gr.Tab("Загрузить файлами"):
         with gr.Group():
             with gr.Row():
                 pth_file = gr.File(
-                    label="pth file", file_types=[".pth"], file_count="single"
+                    label="pth-файл", file_types=[".pth"], file_count="single"
                 )
                 index_file = gr.File(
-                    label="index file", file_types=[".index"], file_count="single"
+                    label="index-файл", file_types=[".index"], file_count="single"
                 )
         with gr.Column(variant="panel"):
             with gr.Group():
                 separate_model_name = gr.Text(
-                    label="Model name",
-                    info="Give your downloaded model a unique name different from other voice models.",
+                    label="Имя модели",
+                    info="Дайте вашей загружаемой модели уникальное имя, "
+                    "отличное от других голосовых моделей.",
                 )
-                separate_upload_button = gr.Button("Download model", variant="primary")
+                separate_upload_button = gr.Button("Загрузить модель", variant="primary")
 
         separate_upload_output_message = gr.Text(
-            label="Output message", interactive=False
+            label="Сообщение вывода", interactive=False
         )
         separate_upload_button.click(
             upload_separate_files,
@@ -186,49 +316,6 @@ def files_upload():
 
 
 
-## Cli version
-
-
-
-
-def voice_conversion(input_path, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path, template, batch):
-    if batch:
-        if not os.path.isdir(input_path):
-            print(f"Error: {input_path} is not a directory (batch mode requires directory)")
-            return
-            
-        for filename in os.listdir(input_path):
-            file = os.path.join(input_path, filename)
-            if os.path.isfile(file):
-                file_name = os.path.basename(file)
-                namefile = os.path.splitext(file_name)[0]
-                time_create_file = datetime.now().strftime("%Y%m%d_%H%M%S")
-                output_name = (
-                    template
-                    .replace("DATETIME", time_create_file)
-                    .replace("NAME", namefile)
-                    .replace("MODEL", model)
-                    .replace("F0METHOD", f0)
-                    .replace("PITCH", f"{pitch}")
-                )
-                voice_pipeline(file, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path, output_name)
-    else:
-        if not os.path.isfile(input_path):
-            print(f"Error: {input_path} is not a file")
-            return
-            
-        file_name = os.path.basename(input_path)
-        namefile = os.path.splitext(file_name)[0]
-        time_create_file = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_name = (
-            template
-            .replace("DATETIME", time_create_file)
-            .replace("NAME", namefile)
-            .replace("MODEL", model)
-            .replace("F0METHOD", f0)
-            .replace("PITCH", f"{pitch}")
-        )
-        voice_pipeline(input_path, model, pitch, ir, fr, rms, f0, hop, prtct, of, f0_min, f0_max, output_path, output_name)
 
 def main():
     parser = argparse.ArgumentParser(description='Voice Conversion Tool')
@@ -281,6 +368,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
