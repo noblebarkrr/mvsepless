@@ -1786,7 +1786,7 @@ models_data = {
         },
 
         "HTDemucs4_FT_Other": {
-            "category": "Вокал",
+            "category": "Прочее",
             "full_name": "HTDemucs4 FT Other",
             "stems": ["vocals", "drums", "bass", "other"],
             "target_instrument": None,
@@ -1795,7 +1795,7 @@ models_data = {
         },
 
         "HTDemucs4_Mid_Side_wesleyr36": {
-            "category": "Вокал",
+            "category": "Фантомный центр",
             "full_name": "HTDemucs4 MId-Side by wesleyr36",
             "stems": ["similarity", "difference"],
             "target_instrument": None,
