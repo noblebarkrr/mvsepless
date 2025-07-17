@@ -26,12 +26,14 @@ def t(key, **kwargs):
     translation = TRANSLATIONS[CURRENT_LANG].get(key, key)
     return translation.format(**kwargs) if kwargs else translation
 
-plugins_dir = "plugins"
+plugins_dir = os.path.join(os.getcwd(), "plugins")
 
 def upload_plugin_list(files):
     if not files:
+        return 
+    if files is not None:
         for file in files:
-            shutil(file, os.path.join(plugins_dir, os.path.basename(file)))    
+            shutil.copy(file, os.path.join(plugins_dir, os.path.basename(file)))    
 
         gr.Warning(t("restart_warning"))
 
@@ -43,3 +45,4 @@ def test_upload_plugin(lang):
     with gr.Blocks():
         upload_plugin_files = gr.Files(label=t('upload'), file_types=[".py"])
         upload_btn = gr.Button(t('upload_btn'))
+        upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
