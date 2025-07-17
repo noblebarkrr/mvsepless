@@ -200,7 +200,7 @@ ENSEMBLESS_TRANSLATIONS = {
         "ensemble": "Ensemble",
         "transform": "Transform",
         "algorithm": "Algorithm: {model_fullname}",
-        "output_format_info": "Output format: {output_format}"
+        "output_format_info": "Output format: {output_format}",
         "process1": "Start process",
         "process2": "Model",
         "process3": "Auto post-padding audios",
