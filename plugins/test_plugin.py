@@ -1,12 +1,13 @@
 import gradio as gr
 
-MVSEPLESS_TRANSLATIONS = {
+TRANSLATIONS = {
     "ru": {
         "test": "Сейчас интерфейс на русском языке"
     },
     "en": {
         "test": "Now interface on English"
     }
+}
 
 CURRENT_LANG = "ru"
 
