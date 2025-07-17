@@ -474,7 +474,7 @@ def create_mvsepless_app(lang):
                 with gr.Tab(t("inference")):
                     output_dir = gr.Text(value="/content/output/", visible=False)
                     batch_results_state = gr.State()
-                    with gr.Row(equal_height=True):
+                    with gr.Row(equal_height=False):
                         with gr.Column():
                             input_audio = gr.Audio(show_label=False, type="filepath", interactive=True)
                             input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
