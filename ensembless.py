@@ -254,7 +254,7 @@ def process_audio(audio1_path, audio2_path, out_format, method):
 def ensembless(input_audio, input_settings, type, out_format):
 
     progress = gr.Progress()
-    progress(0, desc="Начало обработки...")
+    progress(0, desc=f"{t('process1')}...")
 
     base_name = os.path.splitext(os.path.basename(input_audio))[0]
     temp_dir = tempfile.mkdtemp()
@@ -265,7 +265,7 @@ def ensembless(input_audio, input_settings, type, out_format):
 
     for i, (input_model, weight, s_stem) in enumerate(input_settings):
            
-        progress(i / block_count, desc=f"Модель {i+1}/{block_count}")
+        progress(i / block_count, desc=f"{t('process2')} {i+1}/{block_count}")
     
         model_type, model_name = input_model.split(" / ")
         
@@ -278,7 +278,7 @@ def ensembless(input_audio, input_settings, type, out_format):
                output_s_files.append(file)
                output_s_weights.append(weight)
 
-    progress(0.9, desc="Автоматическое выравнивание длин аудио...")
+    progress(0.9, desc=f"{t('process3')}...")
                
     padded_files = []
 
@@ -303,7 +303,7 @@ def ensembless(input_audio, input_settings, type, out_format):
         sf.write(file, padded_data.T, sr)
         padded_files.append(file)
 
-    progress(0.95, desc="Создание ансамбля...")
+    progress(0.95, desc=f"{t('process4')}...")
            
     output, output_wav = ensemble_audio_files(files=output_s_files, output=os.path.join(temp_dir, f"ensemble_{base_name}_{type}"), ensemble_type=type, weights=output_s_weights, out_format=out_format)
 

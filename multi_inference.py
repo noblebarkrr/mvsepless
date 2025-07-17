@@ -4,6 +4,7 @@ import argparse
 from pyngrok import ngrok
 import gradio as gr
 from datetime import datetime
+import importlib.util
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
@@ -536,6 +537,54 @@ def create_mvsepless_app(lang):
                 vbach_ui(lang)
         except ImportError:
             pass
+
+        with gr.Tab(t("plugins")):
+
+            # Путь к папке с плагинами
+            plugins_dir = "plugins"
+
+            # Словарь для хранения найденных плагинов
+            plugins = {}
+            plugin_name = {}
+
+            # Проверяем существование директории
+            if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
+                # Перебираем файлы в директории
+                for filename in os.listdir(plugins_dir):
+                    # Фильтруем .py файлы (исключаем __init__.py)
+                    if filename.endswith(".py") and filename != "__init__.py":
+                        # Формируем полный путь к файлу
+                        file_path = os.path.join(plugins_dir, filename)
+                        # Получаем имя модуля из имени файла
+                        module_name = filename[:-3]  # Удаляем расширение .py
+                        
+                        # Загружаем модуль
+                        spec = importlib.util.spec_from_file_location(module_name, file_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        
+                        # Ищем функции с суффиксом 'plugin'
+                        for attr_name in dir(module):
+                            attr = getattr(module, attr_name)
+                            # Проверяем что это функция и имя заканчивается на 'plugin'
+                            if callable(attr) and attr_name.endswith("plugin"):
+                                # Сохраняем в словарь
+                                plugins[f"{module_name}.{attr_name}"] = attr
+
+                        for attr_name in dir(module):
+                            attr = getattr(module, attr_name)
+                            # Проверяем что это функция и имя заканчивается на 'plugin'
+                            if callable(attr) and attr_name.endswith("plugin_name"):
+                                # Сохраняем в словарь
+                                plugin_name[f"{module_name}.{attr_name}"] = attr
+
+            # Пример использования
+            for func_name, func in plugins.items():
+                for f_name, pl_name in plugin_name.items():
+                   custom_plugin_name = pl_name()
+                print(f"Загружен плагин: {func_name}")
+                with gr.Tab(custom_plugin_name):
+                    func(lang)  # Можно вызвать функцию
                         
             
  

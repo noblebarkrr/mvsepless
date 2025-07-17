@@ -42,7 +42,8 @@ MVSEPLESS_TRANSLATIONS = {
         "processing": "Сейчас обрабатывается - {base_name}",
         "files": "файлов",
         "algorithm": "Алгоритм: {model_fullname}",
-        "output_format_info": "Формат выходных данных: {output_format}"
+        "output_format_info": "Формат выходных данных: {output_format}",
+        "plugins": "Плагины"
     },
     "en": {
         "app_title": "MVSEPLESS",
@@ -86,7 +87,8 @@ MVSEPLESS_TRANSLATIONS = {
         "processing": "Processing - {base_name}",
         "files": "files",
         "algorithm": "Algorithm: {model_fullname}",
-        "output_format_info": "Output format: {output_format}"
+        "output_format_info": "Output format: {output_format}",
+        "plugins": "Plugins"
     }
 }
 
@@ -142,7 +144,11 @@ ENSEMBLESS_TRANSLATIONS = {
         "ensemble": "Ансамбль",
         "transform": "Преобразование",
         "algorithm": "Алгоритм: {model_fullname}",
-        "output_format_info": "Формат выходных данных: {output_format}"
+        "output_format_info": "Формат выходных данных: {output_format}",
+        "process1": "Начало обработки",
+        "process2": "Модель",
+        "process3": "Автоматическое выравнивание длин аудио",
+        "process4": "Создание ансамбля"
     },
     "en": {
         "app_title": "EnsembLess",
@@ -195,6 +201,10 @@ ENSEMBLESS_TRANSLATIONS = {
         "transform": "Transform",
         "algorithm": "Algorithm: {model_fullname}",
         "output_format_info": "Output format: {output_format}"
+        "process1": "Start process",
+        "process2": "Model",
+        "process3": "Auto post-padding audios",
+        "process4": "Build ensemble"
     }
 }
 
