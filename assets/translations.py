@@ -43,7 +43,8 @@ MVSEPLESS_TRANSLATIONS = {
         "files": "файлов",
         "algorithm": "Алгоритм: {model_fullname}",
         "output_format_info": "Формат выходных данных: {output_format}",
-        "plugins": "Плагины"
+        "plugins": "Плагины",
+        "local_path": "Указать путь к аудио локально"
     },
     "en": {
         "app_title": "MVSEPLESS",
@@ -88,7 +89,8 @@ MVSEPLESS_TRANSLATIONS = {
         "files": "files",
         "algorithm": "Algorithm: {model_fullname}",
         "output_format_info": "Output format: {output_format}",
-        "plugins": "Plugins"
+        "plugins": "Plugins",
+        "local_path": "Specify path to audio locally"
     }
 }
 
