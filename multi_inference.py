@@ -510,6 +510,10 @@ def load_ui(mvsepless_ui):
         allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR]
     )
 
+def restart_ui():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
 def upload_plugin_list(files):
     if not files:
         return 
@@ -518,7 +522,7 @@ def upload_plugin_list(files):
             shutil.copy(file, os.path.join(plugins_dir, os.path.basename(file)))    
 
         gr.Warning(t_pl("restart_warning"))
-        load_ui(MVSEPLESS_UI)
+        restart_ui()
 
 
 def create_mvsepless_app(lang):
