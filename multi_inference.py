@@ -413,20 +413,12 @@ def batch_show_results(out, namefile):
 ##############
 
 def mvsepless_theme(font="Tektur"):
-    theme = gr.themes.Base(
-        primary_hue="blue",
-        secondary_hue="gray",
-        neutral_hue="slate",
-        font=[gr.themes.GoogleFont(font), "Arial", "sans-serif"],
-        font_mono=[gr.themes.GoogleFont("Roboto Mono"), "Courier New", "monospace"]
-    ).set(
-        button_primary_background_fill="#3a7bd5",
-        button_primary_background_fill_hover="#2c65c0",
-        button_primary_text_color="#ffffff",
-        input_background_fill="#ffffff",
-        input_border_color="#d0d0d6",
-        block_background_fill="#ffffff",
-        border_color_primary="#d0d0d6"
+    theme = gr.themes.Default(
+        primary_hue="teal",
+        text_size="sm",
+        spacing_size="sm",
+        radius_size="none",
+        font=[gr.themes.GoogleFont(font), 'ui-sans-serif', 'system-ui', 'sans-serif'],
     )
 
     return theme
@@ -558,7 +550,6 @@ def create_mvsepless_app(lang):
 
         with gr.Tab("Extra"):
             restart_btn = gr.Button(t("restart_btn"), variant="stop")
-            # gr.Code(label="Пример кода (работает только в Google Colab)", language="python", lines=15, value="")
 
 
     restart_btn.click(restart_ui)
