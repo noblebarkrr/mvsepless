@@ -497,14 +497,6 @@ def create_mvsepless_app(lang):
                 batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
                 output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
 
-
-        with gr.Tab(t("ensemble")):
-            try:
-                from ensembless import create_ensembless_app as ensem_tab
-                ensem_tab(lang)
-            except ImportError:
-                pass
-            
         try:
             from vbach.demo.app import create_demo as vbach_ui
             with gr.Tab(t("transform")):
