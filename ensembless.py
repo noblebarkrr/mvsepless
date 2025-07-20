@@ -439,11 +439,14 @@ def create_ensembless_app(lang):
                             filterable=False
                         )
                         model_name = gr.Dropdown(
+                            choices=get_models_by_type(get_model_types()[0]),
                             label=t("model_name"),
                             interactive=True,
+                            value=get_models_by_type(get_model_types()[0])[0],
                             filterable=False
                         )
                         stem = gr.Dropdown(
+                            choices=get_stems_by_model(get_model_types()[0], get_models_by_type(get_model_types()[0])[0]),
                             label=t("stem_selection"),
                             interactive=True,
                             filterable=False
