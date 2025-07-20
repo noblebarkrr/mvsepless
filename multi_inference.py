@@ -13,7 +13,7 @@ sys.path.append(SCRIPT_DIR)
 os.chdir(SCRIPT_DIR)
 
 import json
-from model_list import models_data, medley_vox_models
+from model_list import  models_data
 from utils.preedit_config import conf_editor
 from utils.download_models import download_model
 from assets.translations import MVSEPLESS_TRANSLATIONS, UPLOADER_PLUGIN_TRANSLATIONS, EXTRA_TRANSLATIONS
@@ -259,94 +259,6 @@ def single_multi_inference(
 ##############
 
 
-def medley_voxer(input, output, model_name, output_format, stereo_mode):
-    config_url = medley_vox_models[model_name]["config_url"]
-    checkpoint_url = medley_vox_models[model_name]["checkpoint_url"]
-    medley_vox_model_dir = download_model(MODELS_CACHE_DIR, model_name, "medley_vox", checkpoint_url, config_url)
-    command = (
-        f"python -m separator.medley_vox.svs.inference "
-        f"--inference_data_dir '{input}' "
-        f"--results_save_dir '{output}' "
-        f"--model_dir '{medley_vox_model_dir}' "
-        f"--exp_name {model_name} "
-        f"--use_overlapadd=ola "
-        f"--stereo '{stereo_mode}' "
-        f"--output_format {output_format} "
-    )
-    os.system(command)
-    results_path = os.path.join(output, "results.json")
-    if os.path.exists(results_path):
-        with open(results_path) as f:
-            return json.load(f)
-    return []
-
-def medley_voxer_gradio(input, output, model_name, output_format, stereo_mode):
-    output_audio = medley_voxer(input, output, model_name, output_format, stereo_mode)
-    results = []
-    if output_audio is not None:
-        for i, (stem, output_file) in enumerate(output_audio[:2]):
-            results.append(gr.update(
-                visible=True,
-                label=stem,
-                value=output_file
-            ))
-        return tuple(results)
-
-
-##############
-   
-    
-def multi_voxer(input, output, model_name, output_format, stereo_mode, stems):
-    output_audio = medley_voxer(input, output, model_name, output_format, stereo_mode) # primary stems
-    results = [] 
-    if stems == 2:
-        return output_audio
-    
-    if stems == 4: 
-        for stem, file in output_audio:
-            voxes = medley_voxer(file, output, model_name, output_format, stereo_mode)
-            results.extend(voxes)
-        print(results)
-        return results
-
-    if stems == 8: 
-        for stem, file in output_audio:
-            voxes = medley_voxer(file, output, model_name, output_format, stereo_mode)
-            for stem2, file2 in voxes:
-                voxes2 = medley_voxer(file2, output, model_name, output_format, stereo_mode)
-                results.extend(voxes2)
-        print(results)
-        return results
-                    
-    if stems == 16: 
-        for stem, file in output_audio:
-            voxes = medley_voxer(file, output, model_name, output_format, stereo_mode)
-            for stem2, file2 in voxes:
-                voxes2 = medley_voxer(file2, output, model_name, output_format, stereo_mode)
-                for stem3, file3 in voxes2:
-                    voxes3 = medley_voxer(file3, output, model_name, output_format, stereo_mode)    
-                    results.extend(voxes3)
-        print(results)
-        return results
-
-
-##############
-
-def multi_voxer_gradio(input, output, model_name, output_format, stereo_mode, stems):
-
-    output_audio = multi_voxer(input, output, model_name, output_format, stereo_mode, stems)
-    batch_names = []
-    if output_audio is not None:
-        for i, (stem, output_file) in enumerate(output_audio[:20]):
-            batch_names.append(gr.update(
-                visible=True,
-                label=stem,
-                value=output_file
-            ))
-        # Заполняем оставшиеся слоты невидимыми элементами
-        while len(batch_names) < 20:
-            batch_names.append(gr.update(visible=False, label=None, value=None))
-        return tuple(batch_names)                         
 
 def mvsepless(
     input_audio="test.mp3", # Путь к аудио / Список путей к аудио
@@ -585,31 +497,7 @@ def create_mvsepless_app(lang):
                     output_info = gr.Textbox(label=t("separation_info"))
                     batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
                     output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
-                    
-            with gr.Tab("Medley-Vox"):
-                with gr.Tab(t("inference")):
-                    with gr.Row(equal_height=True):
-                        with gr.Column():
-                            input_voice = gr.Audio(show_label=False, type="filepath", interactive=True)
-                        with gr.Column():
-                            vox_model_name = gr.Dropdown(label=t("vox_model_name"), choices=list(medley_vox_models.keys()), value=list(medley_vox_models.keys())[0], interactive=True, filterable=False)
-                            stereo_mode = gr.Dropdown(label=t("vox_stereo_mode"), choices=["mono", "full"], value="mono", interactive=True, filterable=False)
-                            output_vox_format = gr.Dropdown(label=t("vox_output_format"), choices=list(filter(lambda fmt: fmt != "ogg", OUTPUT_FORMATS)), value="mp3", interactive=True, filterable=False)
-                            separate_vox_btn = gr.Button(t("separate_vocals_btn"), variant="primary")
-                    output_voxes = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(2)]
 
-                with gr.Tab(t("vocal_multi_separation")):
-                    with gr.Row(equal_height=True):
-                        with gr.Column():
-                            input_vox = gr.Audio(show_label=False, type="filepath", interactive=True)
-                        with gr.Column():
-                            vox_m_model_name = gr.Dropdown(label=t("vox_model_name"), choices=list(medley_vox_models.keys()), value=list(medley_vox_models.keys())[0], interactive=True, filterable=False)
-                            with gr.Row():
-                                stereo_m_mode = gr.Dropdown(label=t("vox_stereo_mode"), choices=["mono", "full"], value="mono", interactive=True, filterable=False)
-                                count_stems = gr.Dropdown(label=t("vox_count_stems"), choices=[2, 4, 8, 16], value=2, interactive=True, filterable=False)
-                            output_m_vox_format = gr.Dropdown(label=t("vox_output_format"), choices=list(filter(lambda fmt: fmt != "ogg", OUTPUT_FORMATS)), value="mp3", interactive=True, filterable=False)
-                            separate_m_vox_btn = gr.Button(t("vox_multi_separate_btn"), variant="primary")
-                    output_m_voxes = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
 
         with gr.Tab(t("ensemble")):
             try:
@@ -683,12 +571,8 @@ def create_mvsepless_app(lang):
 
     local_check.change(fn=(lambda x:(gr.update(visible=False if x == True else True), gr.update(visible=True if x == True else False))), inputs=local_check, outputs={upload_group, input_file_explorer})
 
-    separate_vox_btn.click(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=medley_voxer_gradio, inputs=[input_voice, output_dir, vox_model_name, output_vox_format, stereo_mode], outputs=output_voxes)
-
     dw_m_btn.click(fn=downloader_models, inputs=[dw_m_model_type, dw_m_model_name], outputs=None)
-    
-    separate_m_vox_btn.click(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=multi_voxer_gradio, inputs=[input_vox, output_dir, vox_m_model_name, output_m_vox_format, stereo_m_mode, count_stems], outputs=[*output_m_voxes])
-    
+        
     batch_separation.change(fn=(lambda x: (gr.update(visible=True if x == True else False), gr.update(visible=True if x == True else False), gr.update(visible=False if x == True else True), gr.update(visible=False if x == True else True))), inputs=batch_separation, outputs=[input_audios, batch_separate_btn, input_audio, single_separate_btn]).then(fn=(lambda x: gr.update(file_count="multiple" if x == True else "single")), inputs=batch_separation, outputs=input_file_explorer)
 
     model_type.change(fn=lambda x: gr.update(visible=True if x == "vr" else False), inputs=model_type, outputs=vr_aggr_slider).then(
