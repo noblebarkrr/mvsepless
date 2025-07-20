@@ -1,4 +1,5 @@
 import os
+import time
 import shutil
 import sys
 import argparse
@@ -15,8 +16,10 @@ import json
 from model_list import models_data, medley_vox_models
 from utils.preedit_config import conf_editor
 from utils.download_models import download_model
-from assets.translations import MVSEPLESS_TRANSLATIONS as TRANSLATIONS
+from assets.translations import MVSEPLESS_TRANSLATIONS, UPLOADER_PLUGIN_TRANSLATIONS, EXTRA_TRANSLATIONS
 
+
+FAVICON_PATH = os.path.join(SCRIPT_DIR, os.path.join("assets", "mvsepless.png"))
 MODELS_CACHE_DIR = os.path.join(SCRIPT_DIR, os.path.join("separator", "models_cache"))
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 OUTPUT_DIR = "/content/output"
@@ -32,26 +35,19 @@ GRADIO_MAX_FILE_SIZE = "10000MB"
 CURRENT_LANG = "ru"
 MVSEPLESS_UI = None
 plugins_dir = "plugins"
-os.makedirs(plugins_dir, exist_ok=True)
 
-UPLOADER_PLUGIN_TRANSLATIONS = {
+TRANSLATIONS = {
     "ru": {
-        "upload": "Загрузка плагинов (.py)",
-        "upload_btn": "Загрузить",
-        "restart_warning": "Чтобы загруженные плагины отобразились в интерфейсе, Gradio будет перезапущен",
-        "loading_plugin": "Загружается плагин: {name}",
-        "error_loading_plugin": "Произошла ошибка при загрузке плагина: {e}",
+        **MVSEPLESS_TRANSLATIONS["ru"],
+        **UPLOADER_PLUGIN_TRANSLATIONS["ru"],
+        **EXTRA_TRANSLATIONS["ru"]
     },
     "en": {
-        "upload": "Upload plugins (.py)",
-        "upload_btn": "Upload",
-        "restart_warning": "For loaded plugins to appear in the interface, restarting Gradio...",
-        "loading_plugin": "Loading plugin: {name}",
-        "error_loading_plugin": "As error occured loading plugin: {e}"
-
+        **MVSEPLESS_TRANSLATIONS["en"],
+        **UPLOADER_PLUGIN_TRANSLATIONS["en"],
+        **EXTRA_TRANSLATIONS["en"]
     }
 }
-
 def set_language(lang):
     global CURRENT_LANG
     CURRENT_LANG = lang
@@ -59,11 +55,6 @@ def set_language(lang):
 def t(key, **kwargs):
     """Функция для получения перевода с подстановкой значений"""
     translation = TRANSLATIONS[CURRENT_LANG].get(key, key)
-    return translation.format(**kwargs) if kwargs else translation
-
-def t_pl(key, **kwargs):
-    """Функция для получения перевода с подстановкой значений"""
-    translation = UPLOADER_PLUGIN_TRANSLATIONS[CURRENT_LANG].get(key, key)
     return translation.format(**kwargs) if kwargs else translation
 
 def downloader_models(model_type, model_name):
@@ -508,7 +499,8 @@ def load_ui(mvsepless_ui):
         ssl_keyfile=GRADIO_SSL_KEYFILE,
         ssl_certfile=GRADIO_SSL_CERTFILE,
         max_file_size=GRADIO_MAX_FILE_SIZE,
-        allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR]
+        allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR],
+        favicon_path=FAVICON_PATH
     )
 
 def restart_ui():
@@ -522,7 +514,8 @@ def upload_plugin_list(files):
         for file in files:
             shutil.copy(file, os.path.join(plugins_dir, os.path.basename(file)))    
 
-        gr.Warning(t_pl("restart_warning"))
+        gr.Warning(t("restart_warning"))
+        time.sleep(5)
         restart_ui()
 
 
@@ -588,8 +581,11 @@ def create_mvsepless_app(lang):
                     output_m_voxes = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
 
         with gr.Tab(t("ensemble")):
-            from ensembless import create_ensembless_app as ensem_tab
-            ensem_tab(lang)
+            try:
+                from ensembless import create_ensembless_app as ensem_tab
+                ensem_tab(lang)
+            except ImportError:
+                pass
             
         try:
             from vbach.demo.app import create_demo as vbach_ui
@@ -601,10 +597,10 @@ def create_mvsepless_app(lang):
         with gr.Tab(t("plugins")):
             plugins = []  # будем хранить кортежи (name, function)
 
-            with gr.Tab(t_pl('upload')):
+            with gr.Tab(t('upload')):
                 with gr.Blocks():
-                    upload_plugin_files = gr.Files(label=t_pl('upload'), file_types=[".py"])
-                    upload_btn = gr.Button(t_pl('upload_btn'))
+                    upload_plugin_files = gr.Files(label=t('upload'), file_types=[".py"])
+                    upload_btn = gr.Button(t('upload_btn'))
                     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
 
             if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
@@ -637,13 +633,19 @@ def create_mvsepless_app(lang):
             # Теперь создаем вкладки для каждого плагина
             for name, func in plugins:
                 try:
-                    print(t_pl("loading_plugin", name=name))
+                    print(t("loading_plugin", name=name))
                     with gr.Tab(name):
                         func(lang)
                 except Exception as e:
-                    print(t_pl("error_loading_plugin", e=e))
+                    print(t("error_loading_plugin", e=e))
                     pass
- 
+
+        with gr.Tab("Extra"):
+            restart_btn = gr.Button(t("restart_btn"), variant="stop")
+
+
+    restart_btn.click(restart_ui)
+
     separate_vox_btn.click(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=medley_voxer_gradio, inputs=[input_voice, output_dir, vox_model_name, output_vox_format, stereo_mode], outputs=output_voxes)
 
     dw_m_btn.click(fn=downloader_models, inputs=[dw_m_model_type, dw_m_model_name], outputs=None)
