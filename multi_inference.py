@@ -464,39 +464,38 @@ def create_mvsepless_app(lang):
     gr.HTML(f"<h1><center> {t('app_title')} </center></h1>")
     with gr.Tabs():
         with gr.Tab(t("separation")):
-            with gr.Tab("MVSEPLESS"):
-                with gr.Tab(t("inference")):
-                    output_dir = gr.Text(value="/content/output/", visible=False)
-                    batch_results_state = gr.State()
-                    with gr.Row(equal_height=False):
-                        with gr.Column():
-                            with gr.Group(visible=True) as upload_group:
-                                input_audio = gr.Audio(show_label=False, type="filepath", interactive=True)
-                                input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
-                            input_file_explorer = gr.FileExplorer(show_label=False, root_dir="/content", file_count="single", visible=False)
-                            local_check = gr.Checkbox(label=t("local_path"), value=False, interactive=True)
-                            batch_separation = gr.Checkbox(label=t("batch_processing"), value=False, interactive=True, info=t("batch_info"))
-                        with gr.Column():
-                            with gr.Row():
-                                model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
-                                model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
-                            ext_inst = gr.Checkbox(label=t("extract_instrumental"), visible=True, value=True, interactive=True, info=t("extract_info"))
-                            vr_aggr_slider = gr.Slider(label=t("vr_aggressiveness"), minimum=0, maximum=100, step=1, visible=False, interactive=True, value=5)
-                            stems = gr.CheckboxGroup(label=t("stems_list"), choices=models_data[list(models_data.keys())[0]][list(models_data[list(models_data.keys())[0]].keys())[0]]["stems"], value=None, interactive=False, info=t("stems_info", target_instrument="vocals"))
-                            with gr.Row():
-                                template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True, info=t("template_info"))
-                                output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False)
-                            single_separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True, size="lg")
-                            batch_separate_btn = gr.Button(t("separate_btn"), variant="primary", visible=False, interactive=True, size="lg")
-                with gr.Tab(t("model_loading")):
-                    dw_m_model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
-                    dw_m_model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
-                    dw_m_btn = gr.Button(t("download_model_btn"))
+            with gr.Tab(t("inference")):
+                output_dir = gr.Text(value="/content/output/", visible=False)
+                batch_results_state = gr.State()
+                with gr.Row(equal_height=False):
+                    with gr.Column():
+                        with gr.Group(visible=True) as upload_group:
+                            input_audio = gr.Audio(show_label=False, type="filepath", interactive=True)
+                            input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
+                        input_file_explorer = gr.FileExplorer(show_label=False, root_dir="/content", file_count="single", visible=False)
+                        local_check = gr.Checkbox(label=t("local_path"), value=False, interactive=True)
+                        batch_separation = gr.Checkbox(label=t("batch_processing"), value=False, interactive=True, info=t("batch_info"))
+                    with gr.Column():
+                        with gr.Row():
+                            model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
+                            model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
+                        ext_inst = gr.Checkbox(label=t("extract_instrumental"), visible=True, value=True, interactive=True, info=t("extract_info"))
+                        vr_aggr_slider = gr.Slider(label=t("vr_aggressiveness"), minimum=0, maximum=100, step=1, visible=False, interactive=True, value=5)
+                        stems = gr.CheckboxGroup(label=t("stems_list"), choices=models_data[list(models_data.keys())[0]][list(models_data[list(models_data.keys())[0]].keys())[0]]["stems"], value=None, interactive=False, info=t("stems_info", target_instrument="vocals"))
+                        with gr.Row():
+                            template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True, info=t("template_info"))
+                            output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False)
+                        single_separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True, size="lg")
+                        batch_separate_btn = gr.Button(t("separate_btn"), variant="primary", visible=False, interactive=True, size="lg")
+            with gr.Tab(t("model_loading")):
+                dw_m_model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
+                dw_m_model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
+                dw_m_btn = gr.Button(t("download_model_btn"))
 
-                with gr.Tab(t("results")):
-                    output_info = gr.Textbox(label=t("separation_info"))
-                    batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
-                    output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
+            with gr.Tab(t("results")):
+                output_info = gr.Textbox(label=t("separation_info"))
+                batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
+                output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
 
 
         with gr.Tab(t("ensemble")):
