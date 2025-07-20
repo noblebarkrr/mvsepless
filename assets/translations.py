@@ -92,7 +92,33 @@ MVSEPLESS_TRANSLATIONS = {
     }
 }
 
-# ============== TRANSLATIONS ==============
+UPLOADER_PLUGIN_TRANSLATIONS = {
+    "ru": {
+        "upload": "Загрузка плагинов (.py)",
+        "upload_btn": "Загрузить",
+        "restart_warning": "Перезапуск Gradio...",
+        "loading_plugin": "Загружается плагин: {name}",
+        "error_loading_plugin": "Произошла ошибка при загрузке плагина: {e}",
+    },
+    "en": {
+        "upload": "Upload plugins (.py)",
+        "upload_btn": "Upload",
+        "restart_warning": "Restarting Gradio...",
+        "loading_plugin": "Loading plugin: {name}",
+        "error_loading_plugin": "As error occured loading plugin: {e}"
+
+    }
+}
+
+EXTRA_TRANSLATIONS = {
+    "ru": {
+        "restart_btn": "Перезапустить",
+    },
+    "en": {
+        "restart_btn": "Restart",
+    }
+}
+
 ENSEMBLESS_TRANSLATIONS = {
     "ru": {
         "app_title": "EnsembLess",
