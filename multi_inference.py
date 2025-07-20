@@ -32,6 +32,7 @@ GRADIO_MAX_FILE_SIZE = "10000MB"
 CURRENT_LANG = "ru"
 MVSEPLESS_UI = None
 plugins_dir = "plugins"
+os.makedirs(plugins_dir, exist_ok=True)
 
 UPLOADER_PLUGIN_TRANSLATIONS = {
     "ru": {
