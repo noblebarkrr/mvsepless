@@ -34,7 +34,9 @@ GRADIO_SSL_CERTFILE = None
 GRADIO_MAX_FILE_SIZE = "10000MB"
 CURRENT_LANG = "ru"
 MVSEPLESS_UI = None
-plugins_dir = "plugins"
+plugins_dir = os.path.join(SCRIPT_DIR, "plugins")
+os.makedirs(plugins_dir, exist_ok=True)
+
 
 TRANSLATIONS = {
     "ru": {
