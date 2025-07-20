@@ -604,6 +604,7 @@ def create_mvsepless_app(lang):
                     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
 
             if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
+              try:
                 for filename in os.listdir(plugins_dir):
                     if filename.endswith(".py") and filename != "__init__.py":
                         file_path = os.path.join(plugins_dir, filename)
@@ -629,6 +630,9 @@ def create_mvsepless_app(lang):
                             # Если есть функция имени, вызываем ее для получения имени, иначе используем имя модуля
                             plugin_name = name_func() if name_func is not None else module_name
                             plugins.append((plugin_name, plugin_func))
+
+              except SyntaxError as e:
+                print(e)
 
             # Теперь создаем вкладки для каждого плагина
             for name, func in plugins:
