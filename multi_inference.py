@@ -413,32 +413,60 @@ def mvsepless(
 
 ##############
 
-def mvsepless_sep_gradio(a, b, c, d, e, f, g, h, i_stem, batch):
-    if not a:
-        text, output = mvsepless(a, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-        if batch == True:
-            return text, None
-        else:
+def mvsepless_sep_gradio(a1, a2, b, c, d, e, f, g, h, i_stem, batch, local_check):
+    if local_check == False:
+        if not a1:
+            text, output = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            if batch == True:
+                return text, None
+            else:
+                results = []
+                for i in range(20):
+                    results.append(gr.update(visible=False, label=None, value=None))
+                return (gr.update(value=text),) + tuple(results)
+        elif a1 is not None and isinstance(a1, list):
+            text, batch_separated = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            return text, batch_separated        
+        elif a1 is not None and isinstance(a1, str):
+            text, output_audio = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
             results = []
-            for i in range(20):
+            if output_audio is not None:
+                for i, (stem, output_file) in enumerate(output_audio[:20]):
+                    results.append(gr.update(
+                        visible=True,
+                        label=stem,
+                        value=output_file
+                    ))
+            while len(results) < 20:
                 results.append(gr.update(visible=False, label=None, value=None))
             return (gr.update(value=text),) + tuple(results)
-    elif a is not None and isinstance(a, list):
-        text, batch_separated = mvsepless(a, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-        return text, batch_separated        
-    elif a is not None and isinstance(a, str):
-        text, output_audio = mvsepless(a, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-        results = []
-        if output_audio is not None:
-            for i, (stem, output_file) in enumerate(output_audio[:20]):
-                results.append(gr.update(
-                    visible=True,
-                    label=stem,
-                    value=output_file
-                ))
-        while len(results) < 20:
-            results.append(gr.update(visible=False, label=None, value=None))
-        return (gr.update(value=text),) + tuple(results)
+
+    if local_check == True:
+        if not a2:
+            text, output = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            if batch == True:
+                return text, None
+            else:
+                results = []
+                for i in range(20):
+                    results.append(gr.update(visible=False, label=None, value=None))
+                return (gr.update(value=text),) + tuple(results)
+        elif a2 is not None and isinstance(a2, list):
+            text, batch_separated = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            return text, batch_separated        
+        elif a2 is not None and isinstance(a2, str):
+            text, output_audio = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            results = []
+            if output_audio is not None:
+                for i, (stem, output_file) in enumerate(output_audio[:20]):
+                    results.append(gr.update(
+                        visible=True,
+                        label=stem,
+                        value=output_file
+                    ))
+            while len(results) < 20:
+                results.append(gr.update(visible=False, label=None, value=None))
+            return (gr.update(value=text),) + tuple(results)
 
 ##############
         
@@ -530,8 +558,11 @@ def create_mvsepless_app(lang):
                     batch_results_state = gr.State()
                     with gr.Row(equal_height=False):
                         with gr.Column():
-                            input_audio = gr.Audio(show_label=False, type="filepath", interactive=True)
-                            input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
+                            with gr.Group(visible=True) as upload_group:
+                                input_audio = gr.Audio(show_label=False, type="filepath", interactive=True)
+                                input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
+                            input_file_explorer = gr.FileExplorer(show_label=False, root_dir="/content", file_count="single", visible=False)
+                            local_check = gr.Checkbox(label=t("local_path"), value=False, interactive=True)
                             batch_separation = gr.Checkbox(label=t("batch_processing"), value=False, interactive=True, info=t("batch_info"))
                         with gr.Column():
                             with gr.Row():
@@ -650,13 +681,15 @@ def create_mvsepless_app(lang):
 
     restart_btn.click(restart_ui)
 
+    local_check.change(fn=(lambda x:(gr.update(visible=False if x == True else True), gr.update(visible=True if x == True else False))), inputs=local_check, outputs={upload_group, input_file_explorer})
+
     separate_vox_btn.click(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=medley_voxer_gradio, inputs=[input_voice, output_dir, vox_model_name, output_vox_format, stereo_mode], outputs=output_voxes)
 
     dw_m_btn.click(fn=downloader_models, inputs=[dw_m_model_type, dw_m_model_name], outputs=None)
     
     separate_m_vox_btn.click(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=multi_voxer_gradio, inputs=[input_vox, output_dir, vox_m_model_name, output_m_vox_format, stereo_m_mode, count_stems], outputs=[*output_m_voxes])
     
-    batch_separation.change(fn=(lambda x: (gr.update(visible=True if x == True else False), gr.update(visible=True if x == True else False), gr.update(visible=False if x == True else True), gr.update(visible=False if x == True else True))), inputs=batch_separation, outputs=[input_audios, batch_separate_btn, input_audio, single_separate_btn])
+    batch_separation.change(fn=(lambda x: (gr.update(visible=True if x == True else False), gr.update(visible=True if x == True else False), gr.update(visible=False if x == True else True), gr.update(visible=False if x == True else True))), inputs=batch_separation, outputs=[input_audios, batch_separate_btn, input_audio, single_separate_btn]).then(fn=(lambda x: gr.update(file_count="multiple" if x == True else "single")), inputs=batch_separation, outputs=input_file_explorer)
 
     model_type.change(fn=lambda x: gr.update(visible=True if x == "vr" else False), inputs=model_type, outputs=vr_aggr_slider).then(
         fn=lambda x: gr.update(choices=list(models_data[x].keys()), value=list(models_data[x].keys())[0]), inputs=model_type, outputs=model_name).then(fn=(lambda x: gr.update(visible=False if x in ["vr", "mdx"] else True)), inputs=model_type, outputs=ext_inst)
@@ -665,9 +698,9 @@ def create_mvsepless_app(lang):
 
     model_name.change(fn=lambda x, y: gr.update(choices=list(models_data[x][y]["stems"]), value=None, interactive=True if models_data[x][y]["target_instrument"] == None else False, info=t("stems_info", target_instrument=models_data[x][y]["target_instrument"]) if models_data[x][y]["target_instrument"] != None else t("stems_info2")), inputs=[model_type, model_name], outputs=stems).then(fn=(lambda x, y: gr.update(value=False if models_data[x][y]["target_instrument"] == None else True) ), inputs=[model_type, model_name], outputs=ext_inst)
 
-    single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation], outputs=[output_info, *output_stems])
+    single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, *output_stems])
     
-    batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
+    batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
     
     batch_select_dir.change(fn=batch_show_results, inputs=[batch_results_state, batch_select_dir], outputs=[*output_stems])
 
