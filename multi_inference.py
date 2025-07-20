@@ -558,6 +558,7 @@ def create_mvsepless_app(lang):
 
         with gr.Tab("Extra"):
             restart_btn = gr.Button(t("restart_btn"), variant="stop")
+            # gr.Code(label="Пример кода (работает только в Google Colab)", language="python", lines=15, value="")
 
 
     restart_btn.click(restart_ui)
