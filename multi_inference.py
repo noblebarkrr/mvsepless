@@ -572,7 +572,7 @@ def create_mvsepless_app(lang):
 
     dw_m_btn.click(fn=downloader_models, inputs=[dw_m_model_type, dw_m_model_name], outputs=None)
         
-    batch_separation.change(fn=(lambda x: (gr.update(visible=True if x == True else False), gr.update(visible=True if x == True else False), gr.update(visible=False if x == True else True), gr.update(visible=False if x == True else True))), inputs=batch_separation, outputs=[input_audios, batch_separate_btn, input_audio, single_separate_btn]).then(fn=(lambda x: gr.update(file_count="multiple" if x == True else "single")), inputs=batch_separation, outputs=input_file_explorer)
+    batch_separation.change(fn=(lambda x: (gr.update(visible=True if x == True else False), gr.update(visible=True if x == True else False), gr.update(visible=False if x == True else True), gr.update(visible=False if x == True else True))), inputs=batch_separation, outputs=[input_audios, batch_separate_btn, input_audio, single_separate_btn]).then(fn=(lambda x: gr.update(file_count="multiple" if x == True else "single", value=None)), inputs=batch_separation, outputs=input_file_explorer)
 
     model_type.change(fn=lambda x: gr.update(visible=True if x == "vr" else False), inputs=model_type, outputs=vr_aggr_slider).then(
         fn=lambda x: gr.update(choices=list(models_data[x].keys()), value=list(models_data[x].keys())[0]), inputs=model_type, outputs=model_name).then(fn=(lambda x: gr.update(visible=False if x in ["vr", "mdx"] else True)), inputs=model_type, outputs=ext_inst)
