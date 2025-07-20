@@ -174,7 +174,8 @@ ENSEMBLESS_TRANSLATIONS = {
         "process1": "Начало обработки",
         "process2": "Модель",
         "process3": "Автоматическое выравнивание длин аудио",
-        "process4": "Создание ансамбля"
+        "process4": "Создание ансамбля",
+        "result_source": "Промежуточные файлы"
     },
     "en": {
         "app_title": "EnsembLess",
@@ -230,7 +231,8 @@ ENSEMBLESS_TRANSLATIONS = {
         "process1": "Start process",
         "process2": "Model",
         "process3": "Auto post-padding audios",
-        "process4": "Build ensemble"
+        "process4": "Build ensemble",
+        "result_source": "Intermediate files"
     }
 }
 
