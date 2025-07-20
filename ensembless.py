@@ -26,7 +26,6 @@ def t(key, **kwargs):
     """Функция для получения перевода с подстановкой значений"""
     translation = TRANSLATIONS[CURRENT_LANG].get(key, key)
     return translation.format(**kwargs) if kwargs else translation
-# ============== END TRANSLATIONS ==============
 
 def analyze_sample_rate(files):
     """
@@ -258,7 +257,7 @@ def ensembless(input_audio, input_settings, type, out_format):
 
     base_name = os.path.splitext(os.path.basename(input_audio))[0]
     temp_dir = tempfile.mkdtemp()
-
+    source_files = []
     output_s_files = []
     output_s_weights = []
     block_count = len(input_settings)
@@ -274,6 +273,7 @@ def ensembless(input_audio, input_settings, type, out_format):
         output = single_multi_inference(input_audio, output_s_dir, model_type, model_name, True, vr_aggr=10, output_format="wav", output_bitrate="320k", template="MODEL_STEM", call_method="cli", selected_stems=[])
         
         for stem, file in output:       
+            source_files.append(file)
             if stem == s_stem:
                output_s_files.append(file)
                output_s_weights.append(weight)
@@ -307,7 +307,7 @@ def ensembless(input_audio, input_settings, type, out_format):
            
     output, output_wav = ensemble_audio_files(files=output_s_files, output=os.path.join(temp_dir, f"ensemble_{base_name}_{type}"), ensemble_type=type, weights=output_s_weights, out_format=out_format)
 
-    return output, output_wav
+    return output, output_wav, source_files
 
 
 
@@ -412,13 +412,13 @@ def run_ensemble(input_audio, ensemble_type, output_format):
     
     input_settings = manager.get_settings()
     
-    output, output_wav = ensembless(
+    output, output_wav, result_source = ensembless(
         input_audio=input_audio,
         input_settings=input_settings,
         type=ensemble_type,
         out_format=output_format,
     )
-    return output, output_wav
+    return output, output_wav, result_source
 
 # Создаем интерфейс
 def create_ensembless_app(lang):
@@ -514,23 +514,27 @@ def create_ensembless_app(lang):
                             filterable=False
                         )
                         run_btn = gr.Button(t("run_button"), variant="primary")
+
+                    with gr.Tab(t('results')):
                     
-                    with gr.Column():
-                        gr.Markdown(f"### {t('results')}")
-                        output_audio = gr.Audio(label=t("results"), type="filepath", interactive=False)
-                        output_wav = gr.Text(label="Результат в WAV", interactive=False, visible=False)
-            
-                        gr.Markdown(f"###### {t('inverted_result')}")
-            
-                        invert_method = gr.Radio(
-                            choices=["waveform", "spectrogram"],
-                            label=t("invert_method"),
-                            value="waveform"
-                        )
-                        invert_btn = gr.Button(t("invert_button"))
-                        inverted_output_audio = gr.Audio(label=t("inverted_result"), type="filepath", interactive=False)
-                        inverted_wav = gr.Text(label="Инвертированный результат в WAV", interactive=False, visible=False)
-                        
+                        with gr.Column():
+                            output_audio = gr.Audio(label=t("results"), type="filepath", interactive=False, show_download_button=True)
+                            output_wav = gr.Text(label="Результат в WAV", interactive=False, visible=False)
+                
+                            gr.Markdown(f"###### {t('inverted_result')}")
+                
+                            invert_method = gr.Radio(
+                                choices=["waveform", "spectrogram"],
+                                label=t("invert_method"),
+                                value="waveform"
+                            )
+                            invert_btn = gr.Button(t("invert_button"))
+                            inverted_output_audio = gr.Audio(label=t("inverted_result"), type="filepath", interactive=False, show_download_button=True)
+                            inverted_wav = gr.Text(label="Инвертированный результат в WAV", interactive=False, visible=False)
+
+                    with gr.Tab(t('result_source')):
+                        result_source = gr.Files(interactive=False, label=t('result_source'))
+
                 
                 # Обработчики событий
             
@@ -566,7 +570,7 @@ def create_ensembless_app(lang):
                 run_btn.click(
                     run_ensemble,
                     inputs=[input_audio_resampled, ensemble_type, output_format],
-                    outputs=[output_audio, output_wav]
+                    outputs=[output_audio, output_wav, result_source]
                 )
 
             with gr.Tab(t("manual_ensemble")):
@@ -593,7 +597,7 @@ def create_ensembless_app(lang):
 
                 run_man_btn = gr.Button(t("run_button"), variant="primary")
                         
-                output_man_audio = gr.Audio(label=t("results"), type="filepath", interactive=False)
+                output_man_audio = gr.Audio(label=t("results"), type="filepath", interactive=False, show_download_button=True)
                 output_man_wav = gr.Text(label="Результат в WAV", interactive=False, visible=False)
                 
                 
@@ -627,7 +631,7 @@ def create_ensembless_app(lang):
                 invert_man_btn = gr.Button(t("invert_button"))
                 
                 with gr.Column():
-                    invert_man_output = gr.Audio(label=t("results"), interactive=False)
+                    invert_man_output = gr.Audio(label=t("results"), interactive=False, show_download_button=True)
                     invert_man_output_wav = gr.Text(interactive=False, visible=False)
                     
                 invert_man_btn.click(
