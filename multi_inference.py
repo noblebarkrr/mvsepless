@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import argparse
 from pyngrok import ngrok
@@ -19,10 +20,36 @@ from assets.translations import MVSEPLESS_TRANSLATIONS as TRANSLATIONS
 MODELS_CACHE_DIR = os.path.join(SCRIPT_DIR, os.path.join("separator", "models_cache"))
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 OUTPUT_DIR = "/content/output"
-
-
-# Глобальная переменная для текущего языка
+GOOGLE_FONT = "Tektur"
+GRADIO_HOST = "0.0.0.0"
+GRADIO_PORT = 7860
+GRADIO_SHARE = True
+GRADIO_DEBUG = True
+GRADIO_AUTH = None
+GRADIO_SSL_KEYFILE = None
+GRADIO_SSL_CERTFILE = None
+GRADIO_MAX_FILE_SIZE = "10000MB"
 CURRENT_LANG = "ru"
+MVSEPLESS_UI = None
+plugins_dir = "plugins"
+
+UPLOADER_PLUGIN_TRANSLATIONS = {
+    "ru": {
+        "upload": "Загрузка плагинов (.py)",
+        "upload_btn": "Загрузить",
+        "restart_warning": "Чтобы загруженные плагины отобразились в интерфейсе, Gradio будет перезапущен",
+        "loading_plugin": "Загружается плагин: {name}",
+        "error_loading_plugin": "Произошла ошибка при загрузке плагина: {e}",
+    },
+    "en": {
+        "upload": "Upload plugins (.py)",
+        "upload_btn": "Upload",
+        "restart_warning": "For loaded plugins to appear in the interface, restarting Gradio...",
+        "loading_plugin": "Loading plugin: {name}",
+        "error_loading_plugin": "As error occured loading plugin: {e}"
+
+    }
+}
 
 def set_language(lang):
     global CURRENT_LANG
@@ -31,6 +58,11 @@ def set_language(lang):
 def t(key, **kwargs):
     """Функция для получения перевода с подстановкой значений"""
     translation = TRANSLATIONS[CURRENT_LANG].get(key, key)
+    return translation.format(**kwargs) if kwargs else translation
+
+def t_pl(key, **kwargs):
+    """Функция для получения перевода с подстановкой значений"""
+    translation = UPLOADER_PLUGIN_TRANSLATIONS[CURRENT_LANG].get(key, key)
     return translation.format(**kwargs) if kwargs else translation
 
 def downloader_models(model_type, model_name):
@@ -465,6 +497,29 @@ def mvsepless_theme(font="Tektur"):
 
     return theme
 
+def load_ui(mvsepless_ui):
+    mvsepless_ui.launch(        
+        server_name=GRADIO_HOST,
+        server_port=GRADIO_PORT,
+        share=GRADIO_SHARE,
+        debug=GRADIO_DEBUG,
+        auth=GRADIO_AUTH,
+        ssl_keyfile=GRADIO_SSL_KEYFILE,
+        ssl_certfile=GRADIO_SSL_CERTFILE,
+        max_file_size=GRADIO_MAX_FILE_SIZE,
+        allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR]
+    )
+
+def upload_plugin_list(files):
+    if not files:
+        return 
+    if files is not None:
+        for file in files:
+            shutil.copy(file, os.path.join(plugins_dir, os.path.basename(file)))    
+
+        gr.Warning(t_pl("restart_warning"))
+        load_ui(MVSEPLESS_UI)
+
 
 def create_mvsepless_app(lang):
     # Добавляем переключатель языка
@@ -539,8 +594,13 @@ def create_mvsepless_app(lang):
             pass
 
         with gr.Tab(t("plugins")):
-            plugins_dir = "plugins"
             plugins = []  # будем хранить кортежи (name, function)
+
+            with gr.Tab(t_pl('upload')):
+                with gr.Blocks():
+                    upload_plugin_files = gr.Files(label=t_pl('upload'), file_types=[".py"])
+                    upload_btn = gr.Button(t_pl('upload_btn'))
+                    upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
 
             if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
                 for filename in os.listdir(plugins_dir):
@@ -571,9 +631,13 @@ def create_mvsepless_app(lang):
 
             # Теперь создаем вкладки для каждого плагина
             for name, func in plugins:
-                print(f"Загружен плагин: {name}")
-                with gr.Tab(name):
-                    func(lang)
+                try:
+                    print(t_pl("loading_plugin", name=name))
+                    with gr.Tab(name):
+                        func(lang)
+                except Exception as e:
+                    print(t_pl("error_loading_plugin", e=e))
+                    pass
  
     separate_vox_btn.click(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=medley_voxer_gradio, inputs=[input_voice, output_dir, vox_model_name, output_vox_format, stereo_mode], outputs=output_voxes)
 
@@ -595,7 +659,7 @@ def create_mvsepless_app(lang):
     batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
     
     batch_select_dir.change(fn=batch_show_results, inputs=[batch_results_state, batch_select_dir], outputs=[*output_stems])
-    
+
 
 
 def parse_args():
@@ -626,33 +690,33 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
+
     args = parse_args()
-    
-    # Переопределяем пути, если указаны в аргументах
+    if args.google_font:
+        GOOGLE_FONT = args.google_font
     if args.models_cache_dir:
         MODELS_CACHE_DIR = args.models_cache_dir
     if args.output_dir:
         OUTPUT_DIR = args.output_dir
 
+    GRADIO_HOST = args.host
+    GRADIO_PORT = args.server_port
+    GRADIO_SHARE = args.share
+    GRADIO_DEBUG = args.debug
+    GRADIO_AUTH = args.auth.split(":") if args.auth else None
+    GRADIO_SSL_KEYFILE = args.ssl_keyfile
+    GRADIO_SSL_CERTFILE = args.ssl_certfile
+    GRADIO_MAX_FILE_SIZE = args.max_file_size
+
     set_language(args.language)
 
-    with gr.Blocks(title="Разделение музыки и вокала", theme=mvsepless_theme(args.google_font)) as demo:
-        create_mvsepless_app(args.language)
-    # Запуск Gradio с парсированными аргументами
+    with gr.Blocks(title="Разделение музыки и вокала", theme=mvsepless_theme(GOOGLE_FONT)) as MVSEPLESS_UI:
+        create_mvsepless_app(CURRENT_LANG)
+
     if args.ngrok_token:
         ngrok.set_auth_token(args.ngrok_token)
         ngrok.kill()
         tunnel = ngrok.connect(args.server_port)
         print(f"Публичная ссылка - {tunnel.public_url}")
-    
-    demo.launch(
-        server_name=args.host,
-        server_port=args.server_port,
-        share=args.share,
-        debug=args.debug,
-        auth=args.auth.split(":") if args.auth else None,
-        ssl_keyfile=args.ssl_keyfile,
-        ssl_certfile=args.ssl_certfile,
-        max_file_size=args.max_file_size,
-        allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR]  # Добавляем разрешенные пути
-    )
+
+    load_ui(MVSEPLESS_UI)
