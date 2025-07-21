@@ -412,16 +412,54 @@ def batch_show_results(out, namefile):
 
 ##############
 
+
+
 def mvsepless_theme(font="Tektur"):
     theme = gr.themes.Default(
-        primary_hue="teal",
+        primary_hue="violet",
+        secondary_hue="cyan",
+        neutral_hue="blue",
         text_size="sm",
         spacing_size="sm",
         radius_size="none",
-        font=[gr.themes.GoogleFont(font), 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        font=[gr.themes.GoogleFont('Tektur'), 'ui-sans-serif', 'system-ui', 'sans-serif'],
+    ).set(
+        body_text_color='*neutral_950',
+        body_text_size='*text_sm',
+        body_text_color_subdued='*neutral_500',
+        background_fill_primary='*neutral_200',
+        background_fill_primary_dark='*neutral_800',
+        border_color_accent='*primary_950',
+        border_color_accent_dark='*neutral_700',
+        border_color_accent_subdued='*primary_500',
+        border_color_primary='*primary_800',
+        border_color_primary_dark='*neutral_400',
+        color_accent_soft='*primary_100',
+        color_accent_soft_dark='*neutral_800',
+        link_text_color='*secondary_700',
+        link_text_color_active='*secondary_700',
+        link_text_color_hover='*secondary_800',
+        link_text_color_visited='*secondary_600',
+        link_text_color_visited_dark='*secondary_700',
+        block_background_fill='*background_fill_secondary',
+        block_background_fill_dark='*neutral_950',
+        block_label_background_fill='*secondary_400',
+        block_label_text_color='*neutral_800',
+        panel_background_fill='*background_fill_primary',
+        checkbox_background_color='*background_fill_secondary',
+        checkbox_label_background_fill_dark='*neutral_900',
+        input_background_fill_dark='*neutral_900',
+        input_background_fill_focus='*neutral_100',
+        input_background_fill_focus_dark='*neutral_950',
+        button_small_radius='*radius_sm',
+        button_secondary_background_fill='*neutral_400',
+        button_secondary_background_fill_dark='*neutral_500',
+        button_secondary_background_fill_hover_dark='*neutral_950'
     )
-
+    
     return theme
+
+
 
 def load_ui(mvsepless_ui):
     mvsepless_ui.launch(        
@@ -567,9 +605,9 @@ def create_mvsepless_app(lang):
 
     model_name.change(fn=lambda x, y: gr.update(choices=list(models_data[x][y]["stems"]), value=None, interactive=True if models_data[x][y]["target_instrument"] == None else False, info=t("stems_info", target_instrument=models_data[x][y]["target_instrument"]) if models_data[x][y]["target_instrument"] != None else t("stems_info2")), inputs=[model_type, model_name], outputs=stems).then(fn=(lambda x, y: gr.update(value=False if models_data[x][y]["target_instrument"] == None else True) ), inputs=[model_type, model_name], outputs=ext_inst)
 
-    single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, *output_stems])
+    single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, *output_stems])
     
-    batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda : os.path.join(OUTPUT_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))), inputs=None, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
+    batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
     
     batch_select_dir.change(fn=batch_show_results, inputs=[batch_results_state, batch_select_dir], outputs=[*output_stems])
 
