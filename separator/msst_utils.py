@@ -88,12 +88,17 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
     elif model_type == 'torchseg':
         from models.torchseg_models import Torchseg_Net
         model = Torchseg_Net(config)
+
     elif model_type == 'mel_band_roformer':
         from models.bs_roformer import MelBandRoformer
         model = MelBandRoformer(**dict(config.model))
     elif model_type == 'bs_roformer':
-        from models.bs_roformer import BSRoformer
-        model = BSRoformer(**dict(config.model))
+        if hasattr(config.model, 'use_shared_bias'):
+            from models.bs_roformer.bs_roformer_sw import BSRoformer_SW
+            model = BSRoformer_SW(**dict(config.model))
+        else:
+            from models.bs_roformer import BSRoformer
+            model = BSRoformer(**dict(config.model))
     elif model_type == 'swin_upernet':
         from models.upernet_swin_transformers import Swin_UperNet_Model
         model = Swin_UperNet_Model(config)
