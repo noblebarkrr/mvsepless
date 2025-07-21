@@ -617,6 +617,30 @@ models_data = {
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
 
+        "Mel-Band-Roformer_Karaoke_Fusion_gonzaluigi": {
+            "category": "Караоке",
+            "full_name": "Mel-Band Roformer Karaoke Fusion by Gonzaluigi",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_standard.ckpt?download=true",
+            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/melband_karaokefusion_gonza.yaml?download=true"
+        },
+
+        "Mel-Band-Roformer_Karaoke_Fusion_Aggr_gonzaluigi": {
+            "category": "Караоке",
+            "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
+            "stems": ["Vocals", "Instrumental"],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_aggressive.ckpt?download=true",
+            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/melband_karaokefusion_gonza.yaml?download=true"
+        },
+
+
+
+
+
+
+
         "Mel-Band-Roformer_DeReverb_anvuew": {
             "category": "Реверб",
             "full_name": "Mel-Band Roformer DeReverb by Anvuew",
@@ -893,7 +917,7 @@ models_data = {
 
         "BS-Roformer_Revive_v1_unwa": {
             "category": "Вокал",
-            "full_name": "BS Roformer Vocals Revive by Unwa",
+            "full_name": "BS Roformer Vocals Revive v1 by Unwa",
             "stems": ["vocals", "other"],
             "target_instrument": "vocals",
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive.ckpt?download=true",
@@ -902,7 +926,7 @@ models_data = {
 
         "BS-Roformer_Revive_v2_unwa": {
             "category": "Вокал",
-            "full_name": "BS Roformer Vocals Revive by Unwa v2",
+            "full_name": "BS Roformer Vocals Revive v2 by Unwa",
             "stems": ["vocals", "other"],
             "target_instrument": "vocals",
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive2.ckpt?download=true",
@@ -911,11 +935,21 @@ models_data = {
 
         "BS-Roformer_Revive_v3e_unwa": {
             "category": "Вокал",
-            "full_name": "BS Roformer Vocals Revive by Unwa v3e",
+            "full_name": "BS Roformer Vocals Revive v3e by Unwa",
             "stems": ["vocals", "other"],
             "target_instrument": "vocals",
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive3e.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml?download=true"
+        },
+
+
+        "BS-Roformer_Resurrection_unwa": {
+            "category": "Вокал",
+            "full_name": "BS Roformer Vocals Resurrection by Unwa",
+            "stems": ["vocals", "other"],
+            "target_instrument": "vocals",
+            "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection.ckpt?download=true",
+            "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Config.yaml?download=true"
         },
 
 
@@ -926,6 +960,15 @@ models_data = {
             "target_instrument": "vocals",
             "checkpoint_url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/resolve/main/voc_gaboxBSR.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/resolve/main/voc_gaboxBSroformer.yaml?download=true"
+        },
+
+        "BS-Roformer_SW": {
+            "category": "6 стемов",
+            "full_name": "BS Roformer SW",
+            "stems": ["bass", "drums", "other", "piano", "guitar", "vocals"],
+            "target_instrument": None,
+            "checkpoint_url": "https://github.com/undef13/splifft/releases/download/v0.0.1/roformer-fp16.pt",
+            "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/BS-Roformer_SW_config.yaml?download=true"
         },
 
         "BS-Roformer_4_stems_zfturbo": {
