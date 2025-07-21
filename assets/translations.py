@@ -120,7 +120,6 @@ EXTRA_TRANSLATIONS = {
 
 ENSEMBLESS_TRANSLATIONS = {
     "ru": {
-        "app_title": "MVSepLess",
         "ensemble": "Ансамбль",
         "auto_ensemble": "Авто-ансамбль",
         "manual_ensemble": "Ручной ансамбль",
@@ -164,7 +163,6 @@ ENSEMBLESS_TRANSLATIONS = {
         "resampled_path": "Путь к ресэмпленному аудио"
     },
     "en": {
-        "app_title": "MVSepLess",
         "ensemble": "Ensemble",
         "auto_ensemble": "Auto-Ensemble",
         "manual_ensemble": "Manual Ensemble",
