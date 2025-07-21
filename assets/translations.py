@@ -121,6 +121,7 @@ EXTRA_TRANSLATIONS = {
 ENSEMBLESS_TRANSLATIONS = {
     "ru": {
         "app_title": "EnsembLess",
+        "ensemble": "Ансамбль",
         "auto_ensemble": "Авто-ансамбль",
         "manual_ensemble": "Ручной ансамбль",
         "inverter": "Инвертер",
@@ -164,6 +165,7 @@ ENSEMBLESS_TRANSLATIONS = {
     },
     "en": {
         "app_title": "EnsembLess",
+        "ensemble": "Ensemble",
         "auto_ensemble": "Auto-Ensemble",
         "manual_ensemble": "Manual Ensemble",
         "inverter": "Inverter",
