@@ -34,6 +34,9 @@ FAVICON_PATH = os.path.join(SCRIPT_DIR, os.path.join("assets", "mvsepless.png"))
 MODELS_CACHE_DIR = os.path.join(SCRIPT_DIR, os.path.join("separator", "models_cache"))
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 OUTPUT_DIR = "/content/output"
+ENSEMBLESS_OUTPUT_DIR = "/content/ensembless_output"
+
+
 GOOGLE_FONT = "Tektur"
 GRADIO_HOST = "0.0.0.0"
 GRADIO_PORT = 7860
@@ -568,7 +571,8 @@ def ensembless(input_audio, input_settings, type, out_format):
     progress(0, desc=f"{t('process1')}...")
 
     base_name = os.path.splitext(os.path.basename(input_audio))[0]
-    temp_dir = tempfile.mkdtemp()
+    temp_dir = os.path.join(ENSEMBLESS_OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}')
+
     source_files = []
     output_s_files = []
     output_s_weights = []
