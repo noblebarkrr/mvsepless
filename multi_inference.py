@@ -1099,6 +1099,10 @@ def create_mvsepless_app(lang):
                 )
                 
                 e_run_btn.click(
+                    fn=(lambda: (gr.update(value=None), gr.update(value=None))),
+                    inputs=None,
+                    outputs=[inverted_output_audio, inverted_wav]
+                ).then(
                     run_ensemble,
                     inputs=[e_input_audio_resampled, ensemble_type, output_format],
                     outputs=[e_output_audio, e_output_wav, result_source]
