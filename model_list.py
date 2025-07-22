@@ -448,7 +448,7 @@ models_data = {
             "full_name": "Mel-Band Roformer Instrumental Fv7z by GaboxR67",
             "stems": ["Vocals", "Instrumental"],
             "target_instrument": "Instrumental",
-            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv7z.ckpt?download=true?download=true",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv7z.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
 
