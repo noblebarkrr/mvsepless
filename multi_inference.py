@@ -823,7 +823,23 @@ def create_mvsepless_app(lang):
                         with gr.Group():
                             output_info = gr.Textbox(label=t("separation_info"), lines=3)
                             batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
-                            output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
+                            output_stems = []
+
+                            # Создаем первую строку с видимым плеером
+                            with gr.Row():
+                                audio1 = gr.Audio(visible=True, interactive=False, type="filepath", show_download_button=True)
+                                audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                                output_stems.extend([audio1, audio2])
+
+                            # Создаем остальные строки со скрытыми плеерами
+                            for _ in range(9):  # 9 строк (итого 10 строк = 20 элементов)
+                                with gr.Row():
+                                    audio1 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                                    audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                                    output_stems.extend([audio1, audio2])
+
+
+
             ########### Авто-ансамбль
             with gr.Tab(t("auto_ensemble")):
                 with gr.Row():
