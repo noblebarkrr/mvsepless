@@ -1,4 +1,3 @@
-# ============== TRANSLATIONS ==============
 MVSEPLESS_TRANSLATIONS = {
     "ru": {
         "app_title": "MVSEPLESS",
@@ -12,10 +11,17 @@ MVSEPLESS_TRANSLATIONS = {
         "extract_info": "Инвертирует целевой инструмент/выбранные стемы",
         "vr_aggressiveness": "Агрессивность для VR моделей",
         "stems_list": "Список стемов",
-        "stems_info": "Целевой инструмент - {target_instrument} \nВыбор стемов недоступен\nДля извлечения второго стема включите \"Извлечь инструментал\"",
+        "stems_info": """Целевой инструмент - {target_instrument}
+                      Выбор стемов недоступен
+                      Для извлечения второго стема включите \"Извлечь инструментал\" """,
         "stems_info2": "Для получения остатка (при выбранных стемах), включите \"Извлечь инструментал\" ",
         "template": "Шаблон",
-        "template_info": "Доступные ключи для формата:\nNAME - Имя входного файла\nMODEL - Название модели\nSTEM - Название стема (обязательно)\n \nПример - NAME_MODEL_STEM → name_demucs4_ht_drums",
+        "template_info": """Доступные ключи для формата:
+                         NAME - Имя входного файла
+                         MODEL - Название модели
+                         STEM - Название стема (обязательно)
+                         
+                         Пример - NAME_MODEL_STEM → name_demucs4_ht_drums""",
         "output_format": "Формат вывода",
         "separate_btn": "Разделить",
         "download_model_btn": "Загрузить модель",
@@ -43,83 +49,13 @@ MVSEPLESS_TRANSLATIONS = {
         "algorithm": "Алгоритм: {model_fullname}",
         "output_format_info": "Формат выходных данных: {output_format}",
         "plugins": "Плагины",
-        "local_path": "Указать путь к аудио локально"
-    },
-    "en": {
-        "app_title": "MVSEPLESS",
-        "separation": "Separation",
-        "inference": "Inference",
-        "results": "Results",
-        "model_loading": "Model Loading",
-        "batch_processing": "Batch Processing",
-        "batch_info": "Allows uploading multiple files at once (Not working in Auto-Ensemble)",
-        "extract_instrumental": "Extract Instrumental",
-        "extract_info": "Inverts the target instrument/selected stems",
-        "vr_aggressiveness": "Aggressiveness for VR Models",
-        "stems_list": "Stems List",
-        "stems_info": "Target instrument - {target_instrument} \nStem selection unavailable\nEnable \"Extract Instrumental\" to extract the second stem",
-        "stems_info2": "To extract the residual (with selected_stems), enable \"Extract Instrumental\" ",
-        "template": "Template",
-        "template_info": "Available format keys:\nNAME - Input file name\nMODEL - Model name\nSTEM - Stem name (required)\n \nExample - NAME_MODEL_STEM → name_demucs4_ht_drums",
-        "output_format": "Output Format",
-        "separate_btn": "Separate",
-        "download_model_btn": "Download Model",
-        "select_file": "Select File",
-        "separation_info": "Separation Info",
-        "vocal_separation": "Vocal Separation",
-        "stereo_mode": "Stereo Mode",
-        "stem": "Stem",
-        "vocal_multi_separation": "Multi-Vocal",
-        "transform": "Conversion",
-        "language": "Language",
-        "model_type": "Model Type",
-        "model_name": "Model Name",
-        "vox_model_name": "Model Name",
-        "vox_stereo_mode": "Stereo Mode",
-        "vox_output_format": "Output Format",
-        "separate_vocals_btn": "Separate Vocals",
-        "vox_count_stems": "Stem",
-        "vox_multi_separate_btn": "Separate Vocals",
-        "no_audio": "No audio selected",
-        "no_model": "Model type and name not selected",
-        "no_output_dir": "Output directory not specified",
-        "processing": "Processing - {base_name}",
-        "files": "files",
-        "algorithm": "Algorithm: {model_fullname}",
-        "output_format_info": "Output format: {output_format}",
-        "plugins": "Plugins",
-        "local_path": "Specify path to audio locally"
-    }
-}
-
-UPLOADER_PLUGIN_TRANSLATIONS = {
-    "ru": {
+        "local_path": "Указать путь к аудио локально",
         "upload": "Загрузка плагинов (.py)",
         "upload_btn": "Загрузить",
         "restart_warning": "Перезапуск Gradio...",
         "loading_plugin": "Загружается плагин: {name}",
         "error_loading_plugin": "Произошла ошибка при загрузке плагина: {e}",
-    },
-    "en": {
-        "upload": "Upload plugins (.py)",
-        "upload_btn": "Upload",
-        "restart_warning": "Restarting Gradio...",
-        "loading_plugin": "Loading plugin: {name}",
-        "error_loading_plugin": "As error occured loading plugin: {e}"
-    }
-}
-
-EXTRA_TRANSLATIONS = {
-    "ru": {
         "restart_btn": "Перезапустить",
-    },
-    "en": {
-        "restart_btn": "Restart",
-    }
-}
-
-ENSEMBLESS_TRANSLATIONS = {
-    "ru": {
         "ensemble": "Ансамбль",
         "auto_ensemble": "Авто-ансамбль",
         "manual_ensemble": "Ручной ансамбль",
@@ -163,6 +99,62 @@ ENSEMBLESS_TRANSLATIONS = {
         "resampled_path": "Путь к ресэмпленному аудио"
     },
     "en": {
+        "app_title": "MVSEPLESS",
+        "separation": "Separation",
+        "inference": "Inference",
+        "results": "Results",
+        "model_loading": "Model Loading",
+        "batch_processing": "Batch Processing",
+        "batch_info": "Allows uploading multiple files at once (Not working in Auto-Ensemble)",
+        "extract_instrumental": "Extract Instrumental",
+        "extract_info": "Inverts the target instrument/selected stems",
+        "vr_aggressiveness": "Aggressiveness for VR Models",
+        "stems_list": "Stems List",
+        "stems_info": """Target instrument - {target_instrument}
+                      Stem selection unavailable
+                      Enable \"Extract Instrumental\" to extract the second stem""",
+        "stems_info2": "To extract the residual (with selected_stems), enable \"Extract Instrumental\" ",
+        "template": "Template",
+        "template_info": """Available format keys:
+                         NAME - Input file name
+                         MODEL - Model name
+                         STEM - Stem name (required)
+
+                         Example - NAME_MODEL_STEM → name_demucs4_ht_drums""",
+        "output_format": "Output Format",
+        "separate_btn": "Separate",
+        "download_model_btn": "Download Model",
+        "select_file": "Select File",
+        "separation_info": "Separation Info",
+        "vocal_separation": "Vocal Separation",
+        "stereo_mode": "Stereo Mode",
+        "stem": "Stem",
+        "vocal_multi_separation": "Multi-Vocal",
+        "transform": "Conversion",
+        "language": "Language",
+        "model_type": "Model Type",
+        "model_name": "Model Name",
+        "vox_model_name": "Model Name",
+        "vox_stereo_mode": "Stereo Mode",
+        "vox_output_format": "Output Format",
+        "separate_vocals_btn": "Separate Vocals",
+        "vox_count_stems": "Stem",
+        "vox_multi_separate_btn": "Separate Vocals",
+        "no_audio": "No audio selected",
+        "no_model": "Model type and name not selected",
+        "no_output_dir": "Output directory not specified",
+        "processing": "Processing - {base_name}",
+        "files": "files",
+        "algorithm": "Algorithm: {model_fullname}",
+        "output_format_info": "Output format: {output_format}",
+        "plugins": "Plugins",
+        "local_path": "Specify path to audio locally",
+        "upload": "Upload plugins (.py)",
+        "upload_btn": "Upload",
+        "restart_warning": "Restarting Gradio...",
+        "loading_plugin": "Loading plugin: {name}",
+        "error_loading_plugin": "As error occured loading plugin: {e}",
+        "restart_btn": "Restart",
         "ensemble": "Ensemble",
         "auto_ensemble": "Auto-Ensemble",
         "manual_ensemble": "Manual Ensemble",
