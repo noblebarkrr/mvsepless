@@ -813,13 +813,14 @@ def create_mvsepless_app(lang):
                             ext_inst = gr.Checkbox(label=t("extract_instrumental"), visible=True, value=True, interactive=True, info=t("extract_info"))
                             vr_aggr_slider = gr.Slider(label=t("vr_aggressiveness"), minimum=0, maximum=100, step=1, visible=False, interactive=True, value=5)
                             stems = gr.CheckboxGroup(label=t("stems_list"), choices=models_data[list(models_data.keys())[0]][list(models_data[list(models_data.keys())[0]].keys())[0]]["stems"], value=None, interactive=False, info=t("stems_info", target_instrument="vocals"))
-                            with gr.Row():
-                                template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True)
+                            with gr.Row(""):
+                                with gr.Accordion(t("template"), open=False):
+                                    template_info = gr.Markdown(f"""{t("template_info")}""", line_breaks=True)
+                                    template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True)
                                 output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False)
                             single_separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True, size="lg")
                             batch_separate_btn = gr.Button(t("separate_btn"), variant="primary", visible=False, interactive=True, size="lg")
                     with gr.Column(variant="panel"):
-                        template_info = gr.Markdown(f"""{t("template_info")}""", line_breaks=True)
                         with gr.Group():
                             output_info = gr.Textbox(label=t("separation_info"), lines=3)
                             batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
