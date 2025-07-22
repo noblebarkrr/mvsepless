@@ -30,13 +30,13 @@ import soundfile as sf
 from separator.audio_writer import write_audio_file
 from pydub.exceptions import CouldntDecodeError
 
+########### Константы
+
 FAVICON_PATH = os.path.join(SCRIPT_DIR, os.path.join("assets", "mvsepless.png"))
 MODELS_CACHE_DIR = os.path.join(SCRIPT_DIR, os.path.join("separator", "models_cache"))
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 OUTPUT_DIR = "/content/output"
 ENSEMBLESS_OUTPUT_DIR = "/content/ensembless_output"
-
-
 GOOGLE_FONT = "Tektur"
 GRADIO_HOST = "0.0.0.0"
 GRADIO_PORT = 7860
@@ -48,8 +48,13 @@ GRADIO_SSL_CERTFILE = None
 GRADIO_MAX_FILE_SIZE = "10000MB"
 CURRENT_LANG = "ru"
 MVSEPLESS_UI = None
+N_FFT = 2048
+WIN_LENGTH = 2048
+HOP_LENGTH = WIN_LENGTH // 4
 plugins_dir = os.path.join(SCRIPT_DIR, "plugins")
 os.makedirs(plugins_dir, exist_ok=True)
+
+########### Объединение словарей с переводами
 
 TRANSLATIONS = {
     "ru": {
@@ -66,6 +71,8 @@ TRANSLATIONS = {
     }
 }
 
+########### Код для перевода на нужный язык
+
 def set_language(lang):
     global CURRENT_LANG
     CURRENT_LANG = lang
@@ -74,6 +81,87 @@ def t(key, **kwargs):
     """Функция для получения перевода с подстановкой значений"""
     translation = TRANSLATIONS[CURRENT_LANG].get(key, key)
     return translation.format(**kwargs) if kwargs else translation
+
+########### Запуск интерфейса
+
+def load_ui(mvsepless_ui):
+    mvsepless_ui.launch(        
+        server_name=GRADIO_HOST,
+        server_port=GRADIO_PORT,
+        share=GRADIO_SHARE,
+        debug=GRADIO_DEBUG,
+        auth=GRADIO_AUTH,
+        ssl_keyfile=GRADIO_SSL_KEYFILE,
+        ssl_certfile=GRADIO_SSL_CERTFILE,
+        max_file_size=GRADIO_MAX_FILE_SIZE,
+        allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR],
+        favicon_path=FAVICON_PATH
+    )
+
+########### Перезапуск интерфейса
+
+def restart_ui():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
+########### Загрузка плагинов из списка
+
+def upload_plugin_list(files):
+    if not files:
+        return 
+    if files is not None:
+        for file in files:
+            shutil.copy(file, os.path.join(plugins_dir, os.path.basename(file)))    
+
+        gr.Warning(t("restart_warning"))
+        time.sleep(5)
+        restart_ui()
+
+########### Генерация темы для интерфейса
+
+def mvsepless_theme(font="Tektur"):
+    theme = gr.themes.Default(
+        primary_hue="violet",
+        secondary_hue="cyan",
+        neutral_hue="blue",
+        spacing_size="sm",
+        font=[gr.themes.GoogleFont(font), 'ui-sans-serif', 'system-ui', 'sans-serif'],
+    ).set(
+        body_text_color='*neutral_950',
+        body_text_color_subdued='*neutral_500',
+        background_fill_primary='*neutral_200',
+        background_fill_primary_dark='*neutral_800',
+        border_color_accent='*primary_950',
+        border_color_accent_dark='*neutral_700',
+        border_color_accent_subdued='*primary_500',
+        border_color_primary='*primary_800',
+        border_color_primary_dark='*neutral_400',
+        color_accent_soft='*primary_100',
+        color_accent_soft_dark='*neutral_800',
+        link_text_color='*secondary_700',
+        link_text_color_active='*secondary_700',
+        link_text_color_hover='*secondary_800',
+        link_text_color_visited='*secondary_600',
+        link_text_color_visited_dark='*secondary_700',
+        block_background_fill='*background_fill_secondary',
+        block_background_fill_dark='*neutral_950',
+        block_label_background_fill='*secondary_400',
+        block_label_text_color='*neutral_800',
+        panel_background_fill='*background_fill_primary',
+        checkbox_background_color='*background_fill_secondary',
+        checkbox_label_background_fill_dark='*neutral_900',
+        input_background_fill_dark='*neutral_900',
+        input_background_fill_focus='*neutral_100',
+        input_background_fill_focus_dark='*neutral_950',
+        button_small_radius='*radius_sm',
+        button_secondary_background_fill='*neutral_400',
+        button_secondary_background_fill_dark='*neutral_500',
+        button_secondary_background_fill_hover_dark='*neutral_950'
+    )
+    
+    return theme
+
+########### Загрузка модели, минуя разделение
 
 def downloader_models(model_type, model_name):
     if model_type in ["mel_band_roformer", "bs_roformer", "mdx23c", "scnet", "htdemucs", "bandit", "bandit_v2"]:
@@ -85,6 +173,273 @@ def downloader_models(model_type, model_name):
         checkpoint_url = models_data[model_type][model_name]["checkpoint_url"]               
         primary_stem = models_data[model_type][model_name]["primary_stem"]
         conf, ckpt = download_model(MODELS_CACHE_DIR, model_name, model_type, checkpoint_url, config_url)
+
+########### Получение данных из словаря моделей (Авто ансамбль)
+
+def get_model_types():
+    return list(models_data.keys())
+
+def get_models_by_type(model_type):
+    return list(models_data[model_type].keys()) if model_type in models_data else []
+
+def get_stems_by_model(model_type, model_name):
+    if model_type in models_data and model_name in models_data[model_type]:
+        return models_data[model_type][model_name]['stems']
+    return []
+
+def update_model_dropdown(model_type):
+    models = get_models_by_type(model_type)
+    return gr.Dropdown(choices=models, value=models[0] if models else None)
+
+def update_stem_dropdown(model_type, model_name):
+    stems = get_stems_by_model(model_type, model_name)
+    return gr.Dropdown(choices=stems, value=stems[0] if stems else None)
+
+########### Отображение списка входных файлов, с которых были извлечены стемы (Пакетная обработка)
+
+def batch_show_names(out):
+    names = []
+    for name, (stems) in out:
+        names.append(name)
+    return gr.update(choices=names, value=None, visible=True)
+
+########### Отображение стемов в пакетной обработке
+
+def batch_show_results(out, namefile):
+        batch_names = []
+        if namefile is not None:
+            for name, (stems) in out:
+                if name == namefile:
+                    for i, (stem, output_file) in enumerate(stems[:20]):
+                        batch_names.append(gr.update(
+                            visible=True,
+                            label=stem,
+                            value=output_file
+                        ))
+
+                    while len(batch_names) < 20:
+                        batch_names.append(gr.update(visible=False, label=None, value=None))
+                    return tuple(batch_names)                         
+        else:
+            for i in range(20):
+                batch_names.append(gr.update(visible=(i == 0), label=None, value=None))
+            return tuple(batch_names)
+
+
+########### Смена частоты дискретизации аудио (Авто-ансамбль)
+
+def resample_audio(audio, file_path):
+    if not audio and not file_path:
+        gr.Warning(t("error_no_audio"))
+        return None
+    if isinstance(file_path, list) and not audio:
+        audio = file_path[0]
+    if isinstance(audio, str) and not file_path:
+        audio = audio
+    if isinstance(file_path, str) and not audio:
+        audio = file_path
+
+    original_name = os.path.splitext(os.path.basename(audio))[0]
+    folder_path = os.path.dirname(audio)
+    audio = AudioSegment.from_file(audio)
+    audio_resampled = audio.set_frame_rate(44100)
+    resampled_audio = os.path.join(folder_path, f"resampled_{original_name}.wav")
+    audio_resampled.export(resampled_audio, format="wav")
+    # gr.Warning(message=t("resample_warning"))
+    return resampled_audio
+
+########### Код для работы инвертера и ручного ансамбля
+
+### Проверка файлов из списка на одинаковую частоту дискретизации
+
+def analyze_sample_rate(files):
+    """
+    Анализирует частоту дискретизации для списка аудиофайлов
+    Возвращает форматированную строку с результатами
+    """
+    if not files:
+        return t("error_no_files")
+    
+    results = []
+    common_rate = None
+    all_same = True
+    
+    for file_info in files:
+        try:
+            audio = AudioSegment.from_file(file_info.name)
+            rate = audio.frame_rate
+            
+            if common_rate is None:
+                common_rate = rate
+            elif common_rate != rate:
+                all_same = False
+                
+            results.append(f"{file_info.name.split('/')[-1]}: {rate} Hz")
+            
+        except CouldntDecodeError:
+            results.append(f"{file_info.name.split('/')[-1]}: {t('error_unsupported_format')}")
+        except Exception as e:
+            results.append(f"{file_info.name.split('/')[-1]}: {t('error_general', error=str(e))}")
+    
+    header = t("analyze_title") + "\n" + "-" * 50 + "\n"
+    body = "\n".join(results)
+    footer = "\n" + "-" * 50 + "\n"
+    
+    if all_same and common_rate is not None:
+        footer += f"\n{t('all_same_rate', rate=common_rate)}"
+    elif common_rate is not None:
+        footer += f"\n{t('different_rates')}"
+    
+    return header + body + footer
+
+### Инвертер
+
+def load_audio(filepath):
+    """Загрузка аудиофайла с помощью librosa"""
+    if filepath is None:
+        return None, None
+    try:
+        return librosa.load(filepath, sr=None, mono=False)
+    except Exception as e:
+        print(f"Ошибка загрузки аудио: {e}")
+        return None, None
+
+def process_channel(y1_ch, y2_ch, sr, method):
+    """Обработка одного аудиоканала"""
+    if method == "waveform":
+        return y1_ch - y2_ch
+    
+    elif method == "spectrogram":
+        S1 = librosa.stft(y1_ch, n_fft=N_FFT, hop_length=HOP_LENGTH, win_length=WIN_LENGTH)
+        S2 = librosa.stft(y2_ch, n_fft=N_FFT, hop_length=HOP_LENGTH, win_length=WIN_LENGTH)
+        
+        mag1 = np.abs(S1)
+        mag2 = np.abs(S2)
+        
+        mag_result = np.maximum(mag1 - mag2, 0)
+        
+        phase = np.angle(S1)
+        
+        S_result = mag_result * np.exp(1j * phase)
+        
+        return librosa.istft(
+            S_result,
+            n_fft=N_FFT,
+            hop_length=HOP_LENGTH,
+            win_length=WIN_LENGTH,
+            length=len(y1_ch)
+        )
+
+def process_audio(audio1_path, audio2_path, out_format, method):
+    y1, sr1 = load_audio(audio1_path)
+    y2, sr2 = load_audio(audio2_path)
+    
+    if sr1 is None or sr2 is None:
+        raise gr.Error(t("error_both_audio"))
+    
+    channels1 = 1 if y1.ndim == 1 else y1.shape[0]
+    channels2 = 1 if y2.ndim == 1 else y2.shape[0]
+    
+    if channels1 > 1:
+        y1 = y1.T  
+    else:
+        y1 = y1.reshape(-1, 1)
+    
+    if channels2 > 1:
+        y2 = y2.T  
+    else:
+        y2 = y2.reshape(-1, 1)
+    
+    if sr1 != sr2:
+        if channels2 > 1:
+            y2_resampled = np.zeros((len(y2), channels2), dtype=np.float32)
+            for c in range(channels2):
+                y2_resampled[:, c] = librosa.resample(
+                    y2[:, c], 
+                    orig_sr=sr2, 
+                    target_sr=sr1
+                )
+            y2 = y2_resampled
+        else:
+            y2 = librosa.resample(y2[:, 0], orig_sr=sr2, target_sr=sr1)
+            y2 = y2.reshape(-1, 1)
+        sr2 = sr1
+    
+    min_len = min(len(y1), len(y2))
+    y1 = y1[:min_len]
+    y2 = y2[:min_len]
+    
+    result_channels = []
+    
+    if channels1 == 1 and channels2 > 1:
+        y2 = y2.mean(axis=1, keepdims=True)
+        channels2 = 1
+    
+    for c in range(channels1):
+        y1_ch = y1[:, c]
+        
+        if channels2 == 1:
+            y2_ch = y2[:, 0]
+        else:
+            y2_ch = y2[:, min(c, channels2-1)]
+        
+        result_ch = process_channel(y1_ch, y2_ch, sr1, method)
+        result_channels.append(result_ch)
+    
+    if len(result_channels) > 1:
+        result = np.column_stack(result_channels)
+    else:
+        result = np.array(result_channels[0])
+    
+    if result.ndim > 1:
+        for c in range(result.shape[1]):
+            channel = result[:, c]
+            max_val = np.max(np.abs(channel))
+            if max_val > 0:
+                result[:, c] = channel * 0.9 / max_val
+    else:
+        max_val = np.max(np.abs(result))
+        if max_val > 0:
+            result = result * 0.9 / max_val
+
+    folder_path = os.path.dirname(audio2_path)
+    inverted_wav = os.path.join(folder_path, "inverted.wav")
+    sf.write(inverted_wav, result, sr1)
+    inverted = os.path.join(folder_path, f"inverted_ensemble.{out_format}")
+    write_audio_file(inverted, result.T, sr1, out_format, "320k")
+    return inverted, inverted_wav
+
+### Ручной ансамбль с автоподгоном длительности аудио
+
+def manual_ensem(input_audios, method, weights, out_format):
+    temp_dir = tempfile.mkdtemp()
+    weights = [float(x) for x in weights.split(",")]
+    padded_files = []
+
+    audio_data = []
+    max_length = 0
+    for file in input_audios:
+        
+        data, sr = librosa.load(file, sr=None, mono=False)
+        if data.ndim == 1:
+            data = np.stack([data, data])
+        elif data.shape[0] != 2:
+            data = data.T
+        audio_data.append([file, data])
+        max_length = max(max_length, data.shape[1])
+                          
+    for i, [file, data] in enumerate(audio_data):
+        if data.shape[1] < max_length:
+            pad_width = ((0, 0), (0, max_length - data.shape[1]))
+            padded_data = np.pad(data, pad_width, mode='constant')
+        else:
+            padded_data = data
+        sf.write(f"{file}.wav", padded_data.T, sr)
+        padded_files.append(f"{file}.wav")
+    a1, a2 = ensemble_audio_files(padded_files, output=os.path.join(temp_dir, f"ensemble_{method}"), ensemble_type=method, weights=weights, out_format=out_format)
+    return a1, a2
+
+########### Основной инференс (только одиночная обработка)
 
 def single_multi_inference(
     input_file, # Путь к аудио
@@ -112,36 +467,18 @@ def single_multi_inference(
             conf_editor(conf)
         
         if call_method == "cli":
-            # Создаем базовую команду
-            cmd = [
-                "python",
-                "-m",
-                "separator.msst_separator",
-                f"--input \"{input_file}\"",
-                f"--store_dir \"{output_dir}\"",
-                f"--model_type \"{model_type}\"",
-                f"--model_name \"{model_name}\"",
-                f"--config_path \"{conf}\"",
-                f"--start_check_point \"{ckpt}\"",
-                f"--output_format \"{output_format}\"",
-                f"--output_bitrate \"{output_bitrate}\"",
-                f"--template \"{template}\"",
-                "--save_results_info"
-            ]
+            cmd = ["python", "-m", "separator.msst_separator", f"--input \"{input_file}\"", f"--store_dir \"{output_dir}\"", f"--model_type \"{model_type}\"", f"--model_name \"{model_name}\"", f"--config_path \"{conf}\"", f"--start_check_point \"{ckpt}\"", f"--output_format \"{output_format}\"", f"--output_bitrate \"{output_bitrate}\"", f"--template \"{template}\"", "--save_results_info",]
             
-            # Добавляем опциональные аргументы
             if ext_inst:
                 cmd.append("--extract_instrumental")
             if selected_stems:
                 instruments = " ".join(f'"{stem}"' for stem in selected_stems)
                 cmd.append(f'--selected_instruments {instruments}')
             
-            # Преобразуем список в строку и выполняем
             command = " ".join(cmd)
-            print(f"Executing command: {command}")  # Для отладки
+            print(f"Executing command: {command}")
             os.system(command)
             
-            # Проверяем результаты
             results_path = os.path.join(output_dir, "results.json")
             if os.path.exists(results_path):
                 with open(results_path) as f:
@@ -151,25 +488,7 @@ def single_multi_inference(
                     
         elif call_method == "direct":
             from separator.msst_separator import mvsep_offline
-            return mvsep_offline(
-                input_path=input_file,
-                store_dir=output_dir,
-                model_type=model_type,
-                config_path=conf,
-                start_check_point=ckpt,
-                extract_instrumental=ext_inst,
-                output_format=output_format,
-                output_bitrate=output_bitrate,
-                model_name=model_name,
-                template=template,
-                device_ids=0,
-                disable_detailed_pbar=False,
-                use_tta=False,
-                force_cpu=False,
-                verbose=False,
-                selected_instruments=selected_stems,
-                save_results_info=False,
-            )
+            return mvsep_offline(input_path=input_file, store_dir=output_dir, model_type=model_type, config_path=conf, start_check_point=ckpt, extract_instrumental=ext_inst, output_format=output_format, output_bitrate=output_bitrate, model_name=model_name, template=template, device_ids=0, disable_detailed_pbar=False, use_tta=False, force_cpu=False, verbose=False, selected_instruments=selected_stems, save_results_info=False)
     
     elif model_type in ["vr", "mdx"]:
     
@@ -180,22 +499,7 @@ def single_multi_inference(
             conf, ckpt = download_model(MODELS_CACHE_DIR, model_name, model_type, checkpoint_url, config_url)
             
             if call_method == "cli":
-                # Создаем команду для custom VR через CLI
-                cmd = [
-                    "python",
-                    "-m",
-                    "separator.uvr_sep custom_vr",
-                    f"--input_file \"{input_file}\"",
-                    f"--ckpt_path \"{ckpt}\"",
-                    f"--config_path \"{conf}\"",
-                    f"--bitrate \"{output_bitrate}\"",
-                    f"--model_name \"{model_name}\"",
-                    f"--template \"{template}\"",
-                    f"--output_format \"{output_format}\"",
-                    f"--primary_stem \"{primary_stem}\"",
-                    f"--aggression {vr_aggr}",
-                    f"--output_dir \"{output_dir}\"",
-                ]
+                cmd = ["python", "-m", "separator.uvr_sep custom_vr", f"--input_file \"{input_file}\"", f"--ckpt_path \"{ckpt}\"", f"--config_path \"{conf}\"", f"--bitrate \"{output_bitrate}\"", f"--model_name \"{model_name}\"", f"--template \"{template}\"", f"--output_format \"{output_format}\"", f"--primary_stem \"{primary_stem}\"", f"--aggression {vr_aggr}", f"--output_dir \"{output_dir}\"",]
                 if selected_stems:
                     instruments = " ".join(f'"{stem}"' for stem in selected_stems)
                     cmd.append(f'--selected_instruments {instruments}')
@@ -212,37 +516,11 @@ def single_multi_inference(
                 
             elif call_method == "direct":
                 from separator.uvr_sep import custom_vr_separate
-                return custom_vr_separate(
-                    input_file=input_file, 
-                    ckpt_path=ckpt, 
-                    config_path=conf,
-                    bitrate=output_bitrate,
-                    model_name=model_name,
-                    template=template,
-                    output_format=output_format,
-                    primary_stem=primary_stem, 
-                    aggression=vr_aggr,
-                    output_dir=output_dir,
-                    selected_instruments=selected_stems
-                )
+                return custom_vr_separate(input_file=input_file, ckpt_path=ckpt, config_path=conf, bitrate=output_bitrate, model_name=model_name, template=template, output_format=output_format, primary_stem=primary_stem, aggression=vr_aggr, output_dir=output_dir, selected_instruments=selected_stems)
                                     
         else:
             if call_method == "cli":
-                # Создаем команду для non-custom UVR через CLI
-                cmd = [
-                    "python",
-                    "-m",
-                    "separator.uvr_sep uvr",
-                    f"--input_file \"{input_file}\"",
-                    f"--output_dir \"{output_dir}\"",
-                    f"--template \"{template}\"",
-                    f"--bitrate \"{output_bitrate}\"",
-                    f"--model_dir \"{MODELS_CACHE_DIR}\"",
-                    f"--model_type \"{model_type}\"",
-                    f"--model_name \"{model_name}\"",
-                    f"--output_format \"{output_format}\"",
-                    f"--aggression {vr_aggr}",
-                ]
+                cmd = ["python", "-m", "separator.uvr_sep uvr", f"--input_file \"{input_file}\"", f"--output_dir \"{output_dir}\"", f"--template \"{template}\"", f"--bitrate \"{output_bitrate}\"", f"--model_dir \"{MODELS_CACHE_DIR}\"",  f"--model_type \"{model_type}\"", f"--model_name \"{model_name}\"", f"--output_format \"{output_format}\"", f"--aggression {vr_aggr}",]
                 if selected_stems:
                     instruments = " ".join(f'"{stem}"' for stem in selected_stems)
                     cmd.append(f'--selected_instruments {instruments}')
@@ -260,23 +538,9 @@ def single_multi_inference(
 
             elif call_method == "direct":
                 from separator.uvr_sep import non_custom_uvr_inference
-                return non_custom_uvr_inference(
-                    input_file=input_file, 
-                    output_dir=output_dir, 
-                    template=template, 
-                    bitrate=output_bitrate, 
-                    model_dir=MODELS_CACHE_DIR, 
-                    model_type=model_type, 
-                    model_name=model_name, 
-                    output_format=output_format, 
-                    aggression=vr_aggr, 
-                    selected_instruments=selected_stems
-                )
+                return non_custom_uvr_inference(input_file=input_file, output_dir=output_dir, template=template, bitrate=output_bitrate, model_dir=MODELS_CACHE_DIR, model_type=model_type, model_name=model_name, output_format=output_format, aggression=vr_aggr, selected_instruments=selected_stems)
 
-
-##############
-
-
+########### Обёртка для инференса в Gradio #1 (Одиночная и пакетная обработка)
 
 def mvsepless(
     input_audio="test.mp3", # Путь к аудио / Список путей к аудио
@@ -296,6 +560,10 @@ def mvsepless(
     # "direct" - напрямую через функцию (Высокий риск преждевременного закрытия программы)
     selected_stems=[] # Выбранные стемы
 ):
+
+    if not "STEM" in template:
+        template = template + "_STEM"
+
     if not input_audio or input_audio == "":
         print(t("no_audio"))
         output_text = t("no_audio")
@@ -341,229 +609,64 @@ def mvsepless(
             
         return output_text, batch_results
 
+########### Дополнительная обёртка для инференса в Gradio #2
 
-def analyze_sample_rate(files):
-    """
-    Анализирует частоту дискретизации для списка аудиофайлов
-    Возвращает форматированную строку с результатами
-    """
-    if not files:
-        return t("error_no_files")
-    
-    results = []
-    common_rate = None
-    all_same = True
-    
-    for file_info in files:
-        try:
-            # Создаем аудиосегмент из файла
-            audio = AudioSegment.from_file(file_info.name)
-            rate = audio.frame_rate
-            
-            # Проверяем единообразие частоты
-            if common_rate is None:
-                common_rate = rate
-            elif common_rate != rate:
-                all_same = False
-                
-            results.append(f"{file_info.name.split('/')[-1]}: {rate} Hz")
-            
-        except CouldntDecodeError:
-            results.append(f"{file_info.name.split('/')[-1]}: {t('error_unsupported_format')}")
-        except Exception as e:
-            results.append(f"{file_info.name.split('/')[-1]}: {t('error_general', error=str(e))}")
-    
-    # Форматируем итоговый результат
-    header = t("analyze_title") + "\n" + "-" * 50 + "\n"
-    body = "\n".join(results)
-    footer = "\n" + "-" * 50 + "\n"
-    
-    if all_same and common_rate is not None:
-        footer += f"\n{t('all_same_rate', rate=common_rate)}"
-    elif common_rate is not None:
-        footer += f"\n{t('different_rates')}"
-    
-    return header + body + footer
+def mvsepless_sep_gradio(a1, a2, b, c, d, e, f, g, h, i_stem, batch, local_check):
+    if local_check == False:
+        if not a1:
+            text, output = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            if batch == True:
+                return text, None
+            else:
+                results = []
+                for i in range(20):
+                    results.append(gr.update(visible=False, label=None, value=None))
+                return (gr.update(value=text),) + tuple(results)
+        elif a1 is not None and isinstance(a1, list):
+            text, batch_separated = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            return text, batch_separated        
+        elif a1 is not None and isinstance(a1, str):
+            text, output_audio = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            results = []
+            if output_audio is not None:
+                for i, (stem, output_file) in enumerate(output_audio[:20]):
+                    results.append(gr.update(
+                        visible=True,
+                        label=stem,
+                        value=output_file
+                    ))
+            while len(results) < 20:
+                results.append(gr.update(visible=False, label=None, value=None))
+            return (gr.update(value=text),) + tuple(results)
 
+    if local_check == True:
+        if not a2:
+            text, output = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            if batch == True:
+                return text, None
+            else:
+                results = []
+                for i in range(20):
+                    results.append(gr.update(visible=False, label=None, value=None))
+                return (gr.update(value=text),) + tuple(results)
+        elif a2 is not None and isinstance(a2, list):
+            text, batch_separated = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            return text, batch_separated        
+        elif a2 is not None and isinstance(a2, str):
+            text, output_audio = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            results = []
+            if output_audio is not None:
+                for i, (stem, output_file) in enumerate(output_audio[:20]):
+                    results.append(gr.update(
+                        visible=True,
+                        label=stem,
+                        value=output_file
+                    ))
+            while len(results) < 20:
+                results.append(gr.update(visible=False, label=None, value=None))
+            return (gr.update(value=text),) + tuple(results)
 
-def manual_ensem(input_audios, method, weights, out_format):
-    temp_dir = tempfile.mkdtemp()
-    weights = [float(x) for x in weights.split(",")]
-    padded_files = []
-
-    audio_data = []
-    max_length = 0
-    for file in input_audios:
-        
-        data, sr = librosa.load(file, sr=None, mono=False)
-        if data.ndim == 1:
-            data = np.stack([data, data])
-        elif data.shape[0] != 2:
-            data = data.T
-        audio_data.append([file, data])
-        max_length = max(max_length, data.shape[1])
-                          
-    for i, [file, data] in enumerate(audio_data):
-        if data.shape[1] < max_length:
-            pad_width = ((0, 0), (0, max_length - data.shape[1]))
-            padded_data = np.pad(data, pad_width, mode='constant')
-        else:
-            padded_data = data
-        sf.write(f"{file}.wav", padded_data.T, sr)
-        padded_files.append(f"{file}.wav")
-    a1, a2 = ensemble_audio_files(padded_files, output=os.path.join(temp_dir, f"ensemble_{method}"), ensemble_type=method, weights=weights, out_format=out_format)
-    return a1, a2
-    
-
-# Фиксированные параметры для STFT
-N_FFT = 2048
-WIN_LENGTH = 2048
-HOP_LENGTH = WIN_LENGTH // 4
-
-
-def load_audio(filepath):
-    """Загрузка аудиофайла с помощью librosa"""
-    if filepath is None:
-        return None, None
-    try:
-        return librosa.load(filepath, sr=None, mono=False)
-    except Exception as e:
-        print(f"Ошибка загрузки аудио: {e}")
-        return None, None
-
-def process_channel(y1_ch, y2_ch, sr, method):
-    """Обработка одного аудиоканала"""
-    if method == "waveform":
-        return y1_ch - y2_ch
-    
-    elif method == "spectrogram":
-        # Вычисляем спектрограммы
-        S1 = librosa.stft(y1_ch, n_fft=N_FFT, hop_length=HOP_LENGTH, win_length=WIN_LENGTH)
-        S2 = librosa.stft(y2_ch, n_fft=N_FFT, hop_length=HOP_LENGTH, win_length=WIN_LENGTH)
-        
-        # Амплитудные спектрограммы
-        mag1 = np.abs(S1)
-        mag2 = np.abs(S2)
-        
-        # Спектральное вычитание
-        mag_result = np.maximum(mag1 - mag2, 0)
-        
-        # Сохраняем фазовую информацию исходного сигнала
-        phase = np.angle(S1)
-        
-        # Комбинируем амплитуду результата с фазой
-        S_result = mag_result * np.exp(1j * phase)
-        
-        # Обратное преобразование
-        return librosa.istft(
-            S_result,
-            n_fft=N_FFT,
-            hop_length=HOP_LENGTH,
-            win_length=WIN_LENGTH,
-            length=len(y1_ch)
-        )
-
-def process_audio(audio1_path, audio2_path, out_format, method):
-    # Загрузка аудиофайлов
-    y1, sr1 = load_audio(audio1_path)
-    y2, sr2 = load_audio(audio2_path)
-    
-    if sr1 is None or sr2 is None:
-        raise gr.Error(t("error_both_audio"))
-    
-    # Определяем количество каналов
-    channels1 = 1 if y1.ndim == 1 else y1.shape[0]
-    channels2 = 1 if y2.ndim == 1 else y2.shape[0]
-    
-    # Преобразование в форму (samples, channels)
-    if channels1 > 1:
-        y1 = y1.T  # (channels, samples) -> (samples, channels)
-    else:
-        y1 = y1.reshape(-1, 1)
-    
-    if channels2 > 1:
-        y2 = y2.T  # (channels, samples) -> (samples, channels)
-    else:
-        y2 = y2.reshape(-1, 1)
-    
-    # Ресемплинг до одинаковой частоты дискретизации
-    if sr1 != sr2:
-        if channels2 > 1:
-            # Ресемплинг для каждого канала отдельно
-            y2_resampled = np.zeros((len(y2), channels2), dtype=np.float32)
-            for c in range(channels2):
-                y2_resampled[:, c] = librosa.resample(
-                    y2[:, c], 
-                    orig_sr=sr2, 
-                    target_sr=sr1
-                )
-            y2 = y2_resampled
-        else:
-            y2 = librosa.resample(y2[:, 0], orig_sr=sr2, target_sr=sr1)
-            y2 = y2.reshape(-1, 1)
-        sr2 = sr1
-    
-    # Приводим к одинаковой длине
-    min_len = min(len(y1), len(y2))
-    y1 = y1[:min_len]
-    y2 = y2[:min_len]
-    
-    # Обрабатываем каждый канал отдельно
-    result_channels = []
-    
-    # Если основной сигнал моно, а удаляемый стерео - преобразуем удаляемый в моно
-    if channels1 == 1 and channels2 > 1:
-        y2 = y2.mean(axis=1, keepdims=True)
-        channels2 = 1
-    
-    for c in range(channels1):
-        # Выбираем канал для основного сигнала
-        y1_ch = y1[:, c]
-        
-        # Выбираем канал для удаляемого сигнала
-        if channels2 == 1:
-            y2_ch = y2[:, 0]
-        else:
-            # Если каналов удаляемого сигнала больше, используем соответствующий канал
-            y2_ch = y2[:, min(c, channels2-1)]
-        
-        # Обрабатываем канал
-        result_ch = process_channel(y1_ch, y2_ch, sr1, method)
-        result_channels.append(result_ch)
-    
-    # Собираем каналы в один массив
-    if len(result_channels) > 1:
-        result = np.column_stack(result_channels)
-    else:
-        result = np.array(result_channels[0])
-    
-    # Нормализация (предотвращение клиппинга)
-    if result.ndim > 1:
-        # Для многоканального аудио нормализуем каждый канал отдельно
-        for c in range(result.shape[1]):
-            channel = result[:, c]
-            max_val = np.max(np.abs(channel))
-            if max_val > 0:
-                result[:, c] = channel * 0.9 / max_val
-    else:
-        max_val = np.max(np.abs(result))
-        if max_val > 0:
-            result = result * 0.9 / max_val
-
-    folder_path = os.path.dirname(audio2_path)
-
-    # Сохраняем временный файл для вывода
-    inverted_wav = os.path.join(folder_path, "inverted.wav")
-    sf.write(inverted_wav, result, sr1)
-    inverted = os.path.join(folder_path, f"inverted_ensemble.{out_format}")
-    write_audio_file(inverted, result.T, sr1, out_format, "320k")
-    return inverted, inverted_wav
-
-
-
-
-
-
+########### Авто-ансамбль
 
 def ensembless(input_audio, input_settings, type, out_format):
 
@@ -625,44 +728,8 @@ def ensembless(input_audio, input_settings, type, out_format):
 
     return output, output_wav, source_files
 
+########### Менеджер для авто-ансамбля
 
-
-
-
-
-def resample_audio(audio, file_path):
-    if not audio and not file_path:
-        gr.Warning(t("error_no_audio"))
-        return None
-    if isinstance(file_path, list) and not audio:
-        audio = file_path[0]
-    if isinstance(audio, str) and not file_path:
-        audio = audio
-    if isinstance(file_path, str) and not audio:
-        audio = file_path
-
-    original_name = os.path.splitext(os.path.basename(audio))[0]
-    folder_path = os.path.dirname(audio)
-    audio = AudioSegment.from_file(audio)
-    audio_resampled = audio.set_frame_rate(44100)
-    resampled_audio = os.path.join(folder_path, f"resampled_{original_name}.wav")
-    audio_resampled.export(resampled_audio, format="wav")
-    gr.Warning(message=t("resample_warning"))
-    return resampled_audio
-
-# Вспомогательные функции для обработки данных
-def get_model_types():
-    return list(models_data.keys())
-
-def get_models_by_type(model_type):
-    return list(models_data[model_type].keys()) if model_type in models_data else []
-
-def get_stems_by_model(model_type, model_name):
-    if model_type in models_data and model_name in models_data[model_type]:
-        return models_data[model_type][model_name]['stems']
-    return []
-
-# Класс для управления состоянием ансамбля
 class EnsembleManager:
     def __init__(self):
         self.models = []
@@ -706,24 +773,14 @@ class EnsembleManager:
     def get_settings(self):
         return [(f"{m['type']} / {m['name']}", m['weight'], m['stem']) for m in self.models]
 
-# Создаем экземпляр менеджера
 manager = EnsembleManager()
-
-# Функции обработчики для Gradio
-def update_model_dropdown(model_type):
-    models = get_models_by_type(model_type)
-    return gr.Dropdown(choices=models, value=models[0] if models else None)
-
-def update_stem_dropdown(model_type, model_name):
-    stems = get_stems_by_model(model_type, model_name)
-    return gr.Dropdown(choices=stems, value=stems[0] if stems else None)
 
 def add_model(model_type, model_name, stem, weight):
     return manager.add_model(model_type, model_name, stem, weight)
 
 def remove_model(index):
     if index >= 0:
-        return manager.remove_model(index-1)  # Пользователь вводит начиная с 1, а индекс с 0
+        return manager.remove_model(index-1)  
     return manager.get_df()
 
 def clear_all_models():
@@ -746,177 +803,12 @@ def run_ensemble(input_audio, ensemble_type, output_format):
     )
     return output, output_wav, result_source
 
-##############
-
-def mvsepless_sep_gradio(a1, a2, b, c, d, e, f, g, h, i_stem, batch, local_check):
-    if local_check == False:
-        if not a1:
-            text, output = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-            if batch == True:
-                return text, None
-            else:
-                results = []
-                for i in range(20):
-                    results.append(gr.update(visible=False, label=None, value=None))
-                return (gr.update(value=text),) + tuple(results)
-        elif a1 is not None and isinstance(a1, list):
-            text, batch_separated = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-            return text, batch_separated        
-        elif a1 is not None and isinstance(a1, str):
-            text, output_audio = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-            results = []
-            if output_audio is not None:
-                for i, (stem, output_file) in enumerate(output_audio[:20]):
-                    results.append(gr.update(
-                        visible=True,
-                        label=stem,
-                        value=output_file
-                    ))
-            while len(results) < 20:
-                results.append(gr.update(visible=False, label=None, value=None))
-            return (gr.update(value=text),) + tuple(results)
-
-    if local_check == True:
-        if not a2:
-            text, output = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-            if batch == True:
-                return text, None
-            else:
-                results = []
-                for i in range(20):
-                    results.append(gr.update(visible=False, label=None, value=None))
-                return (gr.update(value=text),) + tuple(results)
-        elif a2 is not None and isinstance(a2, list):
-            text, batch_separated = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-            return text, batch_separated        
-        elif a2 is not None and isinstance(a2, str):
-            text, output_audio = mvsepless(a2, b, c, d, e, f, g, "320k", h, "cli", i_stem)
-            results = []
-            if output_audio is not None:
-                for i, (stem, output_file) in enumerate(output_audio[:20]):
-                    results.append(gr.update(
-                        visible=True,
-                        label=stem,
-                        value=output_file
-                    ))
-            while len(results) < 20:
-                results.append(gr.update(visible=False, label=None, value=None))
-            return (gr.update(value=text),) + tuple(results)
-
-##############
-        
-def batch_show_names(out):
-    names = []
-    for name, (stems) in out:
-        names.append(name)
-    return gr.update(choices=names, value=None, visible=True)
-    
-def batch_show_results(out, namefile):
-        batch_names = []
-        if namefile is not None:
-            for name, (stems) in out:
-                if name == namefile:
-                    for i, (stem, output_file) in enumerate(stems[:20]):
-                        batch_names.append(gr.update(
-                            visible=True,
-                            label=stem,
-                            value=output_file
-                        ))
-                    # Заполняем оставшиеся слоты невидимыми элементами
-                    while len(batch_names) < 20:
-                        batch_names.append(gr.update(visible=False, label=None, value=None))
-                    return tuple(batch_names)                         
-        else:
-            for i in range(20):
-                batch_names.append(gr.update(visible=(i == 0), label=None, value=None))
-            return tuple(batch_names)
-
-##############
-
-
-
-
-
-def mvsepless_theme(font="Tektur"):
-    theme = gr.themes.Default(
-        primary_hue="violet",
-        secondary_hue="cyan",
-        neutral_hue="blue",
-        spacing_size="sm",
-        font=[gr.themes.GoogleFont('Tektur'), 'ui-sans-serif', 'system-ui', 'sans-serif'],
-    ).set(
-        body_text_color='*neutral_950',
-        body_text_color_subdued='*neutral_500',
-        background_fill_primary='*neutral_200',
-        background_fill_primary_dark='*neutral_800',
-        border_color_accent='*primary_950',
-        border_color_accent_dark='*neutral_700',
-        border_color_accent_subdued='*primary_500',
-        border_color_primary='*primary_800',
-        border_color_primary_dark='*neutral_400',
-        color_accent_soft='*primary_100',
-        color_accent_soft_dark='*neutral_800',
-        link_text_color='*secondary_700',
-        link_text_color_active='*secondary_700',
-        link_text_color_hover='*secondary_800',
-        link_text_color_visited='*secondary_600',
-        link_text_color_visited_dark='*secondary_700',
-        block_background_fill='*background_fill_secondary',
-        block_background_fill_dark='*neutral_950',
-        block_label_background_fill='*secondary_400',
-        block_label_text_color='*neutral_800',
-        panel_background_fill='*background_fill_primary',
-        checkbox_background_color='*background_fill_secondary',
-        checkbox_label_background_fill_dark='*neutral_900',
-        input_background_fill_dark='*neutral_900',
-        input_background_fill_focus='*neutral_100',
-        input_background_fill_focus_dark='*neutral_950',
-        button_small_radius='*radius_sm',
-        button_secondary_background_fill='*neutral_400',
-        button_secondary_background_fill_dark='*neutral_500',
-        button_secondary_background_fill_hover_dark='*neutral_950'
-    )
-    
-    return theme
-
-
-
-
-
-def load_ui(mvsepless_ui):
-    mvsepless_ui.launch(        
-        server_name=GRADIO_HOST,
-        server_port=GRADIO_PORT,
-        share=GRADIO_SHARE,
-        debug=GRADIO_DEBUG,
-        auth=GRADIO_AUTH,
-        ssl_keyfile=GRADIO_SSL_KEYFILE,
-        ssl_certfile=GRADIO_SSL_CERTFILE,
-        max_file_size=GRADIO_MAX_FILE_SIZE,
-        allowed_paths=["/content", OUTPUT_DIR, MODELS_CACHE_DIR],
-        favicon_path=FAVICON_PATH
-    )
-
-def restart_ui():
-    python = sys.executable
-    os.execl(python, python, *sys.argv)
-
-def upload_plugin_list(files):
-    if not files:
-        return 
-    if files is not None:
-        for file in files:
-            shutil.copy(file, os.path.join(plugins_dir, os.path.basename(file)))    
-
-        gr.Warning(t("restart_warning"))
-        time.sleep(5)
-        restart_ui()
-
+########### Создание интерфейса в Gradio
 
 def create_mvsepless_app(lang):
-    # Добавляем переключатель языка
     gr.HTML(f"<h1><center> {t('app_title')} </center></h1>")
     with gr.Tabs():
+        ########### Разделение
         with gr.Tab(t("separation")):
             with gr.Column():
                 with gr.Group(visible=True) as upload_group:
@@ -925,36 +817,33 @@ def create_mvsepless_app(lang):
                 input_file_explorer = gr.FileExplorer(show_label=False, root_dir="/content", file_count="single", visible=False)
                 local_check = gr.Checkbox(label=t("local_path"), value=False, interactive=True)
                 batch_separation = gr.Checkbox(label=t("batch_processing"), value=False, interactive=True, info=t("batch_info"))
+            ########### Основной инференс
             with gr.Tab(t("inference")):
                 output_dir = gr.Text(value="/content/output/", visible=False)
                 batch_results_state = gr.State()
                 with gr.Row(equal_height=False):
-                    with gr.Column():
-                        with gr.Row():
-                            model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
-                            model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
-                        ext_inst = gr.Checkbox(label=t("extract_instrumental"), visible=True, value=True, interactive=True, info=t("extract_info"))
-                        vr_aggr_slider = gr.Slider(label=t("vr_aggressiveness"), minimum=0, maximum=100, step=1, visible=False, interactive=True, value=5)
-                        stems = gr.CheckboxGroup(label=t("stems_list"), choices=models_data[list(models_data.keys())[0]][list(models_data[list(models_data.keys())[0]].keys())[0]]["stems"], value=None, interactive=False, info=t("stems_info", target_instrument="vocals"))
-                        with gr.Row():
-                            template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True, info=t("template_info"))
-                            output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False)
-                        single_separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True, size="lg")
-                        batch_separate_btn = gr.Button(t("separate_btn"), variant="primary", visible=False, interactive=True, size="lg")
-                with gr.Tab(t("model_loading")):
-                    dw_m_model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
-                    dw_m_model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
-                    dw_m_btn = gr.Button(t("download_model_btn"))
-
-                with gr.Tab(t("results")):
-                    output_info = gr.Textbox(label=t("separation_info"))
-                    batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
-                    output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
-
+                    with gr.Column(variant="panel"):
+                        with gr.Group():
+                            with gr.Row():
+                                model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
+                                model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
+                            ext_inst = gr.Checkbox(label=t("extract_instrumental"), visible=True, value=True, interactive=True, info=t("extract_info"))
+                            vr_aggr_slider = gr.Slider(label=t("vr_aggressiveness"), minimum=0, maximum=100, step=1, visible=False, interactive=True, value=5)
+                            stems = gr.CheckboxGroup(label=t("stems_list"), choices=models_data[list(models_data.keys())[0]][list(models_data[list(models_data.keys())[0]].keys())[0]]["stems"], value=None, interactive=False, info=t("stems_info", target_instrument="vocals"))
+                            with gr.Row():
+                                template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True, info=t("template_info"))
+                                output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False)
+                            single_separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True, size="lg")
+                            batch_separate_btn = gr.Button(t("separate_btn"), variant="primary", visible=False, interactive=True, size="lg")
+                    with gr.Column(variant="panel"):
+                        with gr.Group():
+                            output_info = gr.Textbox(label=t("separation_info"), lines=3)
+                            batch_select_dir = gr.Dropdown(label=t("select_file"), visible=False, interactive=True, filterable=False)
+                            output_stems = [gr.Audio(visible=(i == 0), interactive=False, type="filepath", show_download_button=True) for i in range(20)]
+            ########### Авто-ансамбль
             with gr.Tab(t("auto_ensemble")):
                 with gr.Row():
                     with gr.Column(scale=1):
-                        # Секция добавления моделей
                         gr.Markdown(f"### {t('model_selection')}")
                         e_model_type = gr.Dropdown(
                             choices=get_model_types(),
@@ -983,21 +872,8 @@ def create_mvsepless_app(lang):
                             step=0.1
                         )
                         e_add_btn = gr.Button(t("add_button"), variant="primary")
-                        
-                        # Обновляем модели и стемы при изменении типа
-                        e_model_type.change(
-                            update_model_dropdown,
-                            inputs=e_model_type,
-                            outputs=e_model_name
-                        )
-                        e_model_name.change(
-                            update_stem_dropdown,
-                            inputs=[e_model_type, e_model_name],
-                            outputs=e_stem
-                        )
             
                     with gr.Column(scale=2):
-                        # Секция управления ансамблем
                         gr.Markdown(f"### {t('current_ensemble')}")
                         ensemble_df = gr.Dataframe(
                             value=manager.get_df(),
@@ -1017,12 +893,11 @@ def create_mvsepless_app(lang):
                                 remove_btn = gr.Button(t("remove_button"), variant="stop")
                                 clear_btn = gr.Button(t("clear_button"), variant="stop")
                 
-                # Секция запуска обработки
                 with gr.Row():
                     with gr.Column():
                         gr.Markdown(f"### {t('input_audio')}")
                         resample_local_btn = gr.Button(t("resample"))
-                        e_input_audio_resampled = gr.Text(label=t("resampled_path"), interactive=False)
+                        e_input_audio_resampled = gr.Textbox(label=t("resampled_path"), interactive=False, lines=3, max_length=25)
                         
                         gr.Markdown(f"### {t('settings')}")
                         ensemble_type = gr.Dropdown(
@@ -1060,56 +935,61 @@ def create_mvsepless_app(lang):
                     with gr.Tab(t('result_source')):
                         result_source = gr.Files(interactive=False, label=t('result_source'))
 
-                
-                # Обработчики событий
+        ########### Преобразование голоса
+        try:
+            from vbach.demo.app import create_demo as vbach_ui
+            with gr.Tab(t("transform")):
+                vbach_ui(lang)
+        except ImportError:
+            pass
+        ########### Плагины
+        with gr.Tab(t("plugins")):
+            plugins = [] 
 
-                invert_btn.click(
-                    process_audio,
-                    inputs=[e_input_audio_resampled, e_output_wav, e_output_format, invert_method],
-                    outputs=[inverted_output_audio, inverted_wav]
-                )
-                
-                input_audio.upload(
-                    resample_audio,
-                    inputs=input_audio,
-                    outputs=e_input_audio_resampled
-                )
-                
-                resample_local_btn.click(
-                    resample_audio,
-                    inputs=[input_audio, input_file_explorer],
-                    outputs=e_input_audio_resampled
-                )
-                
-                e_add_btn.click(
-                    add_model,
-                    inputs=[e_model_type, e_model_name, e_stem, e_weight],
-                    outputs=ensemble_df
-                )
-                
-                remove_btn.click(
-                    remove_model,
-                    inputs=remove_idx,
-                    outputs=ensemble_df
-                )
-                
-                clear_btn.click(
-                    clear_all_models,
-                    outputs=ensemble_df
-                )
-                
-                e_run_btn.click(
-                    fn=(lambda: (gr.update(value=None), gr.update(value=None))),
-                    inputs=None,
-                    outputs=[inverted_output_audio, inverted_wav]
-                ).then(
-                    run_ensemble,
-                    inputs=[e_input_audio_resampled, ensemble_type, output_format],
-                    outputs=[e_output_audio, e_output_wav, result_source]
-                )
+            with gr.Tab(t('upload')):
+                with gr.Blocks():
+                    upload_plugin_files = gr.Files(label=t('upload'), file_types=[".py"])
+                    upload_btn = gr.Button(t('upload_btn'))
 
-            
-        with gr.Tab(t("ensemble")):
+            if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
+              try:
+                for filename in os.listdir(plugins_dir):
+                    if filename.endswith(".py") and filename != "__init__.py":
+                        file_path = os.path.join(plugins_dir, filename)
+                        module_name = filename[:-3]
+                        spec = importlib.util.spec_from_file_location(module_name, file_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+
+                        plugin_func = None
+                        name_func = None
+
+                        for attr_name in dir(module):
+                            attr = getattr(module, attr_name)
+                            if callable(attr):
+                                if attr_name.endswith("plugin"):
+                                    plugin_func = attr
+                                elif attr_name.endswith("plugin_name"):
+                                    name_func = attr
+
+                        if plugin_func is not None:
+                            plugin_name = name_func() if name_func is not None else module_name
+                            plugins.append((plugin_name, plugin_func))
+
+              except SyntaxError as e:
+                print(e)
+
+            for name, func in plugins:
+                try:
+                    print(t("loading_plugin", name=name))
+                    with gr.Tab(name):
+                        func(lang)
+                except Exception as e:
+                    print(t("error_loading_plugin", e=e))
+                    pass
+        ########### Extra
+        with gr.Tab("Extra"):
+            ########### Ручной ансамбль
             with gr.Tab(t("manual_ensemble")):
                 with gr.Row(equal_height=True):
                     input_files = gr.Files(show_label=False, type="filepath", file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
@@ -1137,19 +1017,7 @@ def create_mvsepless_app(lang):
                 output_man_audio = gr.Audio(label=t("results"), type="filepath", interactive=False, show_download_button=True)
                 output_man_wav = gr.Text(label="Результат в WAV", interactive=False, visible=False)
                 
-                
-                input_files.upload(
-                    fn=analyze_sample_rate,
-                    inputs=input_files,
-                    outputs=info_audios
-                )
-                            
-                
-                run_man_btn.click(
-                    manual_ensem,
-                    inputs=[input_files, man_method, weights_input, output_man_format],
-                    outputs=[output_man_audio, output_man_wav]               
-                )
+            ########### Инвертер
             with gr.Tab(t("inverter")):
                 with gr.Row():
                     audio1 = gr.Audio(label=t("main_audio"), type="filepath")
@@ -1170,124 +1038,61 @@ def create_mvsepless_app(lang):
                 with gr.Column():
                     invert_man_output = gr.Audio(label=t("results"), interactive=False, show_download_button=True)
                     invert_man_output_wav = gr.Text(interactive=False, visible=False)
-                    
-                invert_man_btn.click(
-                    process_audio,
-                    inputs=[audio1, audio2, output_man_i_format, invert_man_method],
-                    outputs=[invert_man_output, invert_man_output_wav]               
-                )
 
+            with gr.Tab(t("model_loading")):
+                dw_m_model_type = gr.Dropdown(label=t("model_type"), choices=list(models_data.keys()), value=list(models_data.keys())[0], interactive=True, filterable=False)
+                dw_m_model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
+                dw_m_btn = gr.Button(t("download_model_btn"))
 
+        with gr.Tab("Settings"):
 
-
-
-        try:
-            from vbach.demo.app import create_demo as vbach_ui
-            with gr.Tab(t("transform")):
-                vbach_ui(lang)
-        except ImportError:
-            pass
-
-        with gr.Tab(t("plugins")):
-            plugins = []  # будем хранить кортежи (name, function)
-
-            with gr.Tab(t('upload')):
-                with gr.Blocks():
-                    upload_plugin_files = gr.Files(label=t('upload'), file_types=[".py"])
-                    upload_btn = gr.Button(t('upload_btn'))
-                    upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
-
-            if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
-              try:
-                for filename in os.listdir(plugins_dir):
-                    if filename.endswith(".py") and filename != "__init__.py":
-                        file_path = os.path.join(plugins_dir, filename)
-                        module_name = filename[:-3]
-                        spec = importlib.util.spec_from_file_location(module_name, file_path)
-                        module = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(module)
-
-                        # Ищем функцию плагина и функцию имени в этом модуле
-                        plugin_func = None
-                        name_func = None
-
-                        for attr_name in dir(module):
-                            attr = getattr(module, attr_name)
-                            if callable(attr):
-                                if attr_name.endswith("plugin"):
-                                    plugin_func = attr
-                                elif attr_name.endswith("plugin_name"):
-                                    name_func = attr
-
-                        # Если нашли функцию плагина, то добавляем
-                        if plugin_func is not None:
-                            # Если есть функция имени, вызываем ее для получения имени, иначе используем имя модуля
-                            plugin_name = name_func() if name_func is not None else module_name
-                            plugins.append((plugin_name, plugin_func))
-
-              except SyntaxError as e:
-                print(e)
-
-            # Теперь создаем вкладки для каждого плагина
-            for name, func in plugins:
-                try:
-                    print(t("loading_plugin", name=name))
-                    with gr.Tab(name):
-                        func(lang)
-                except Exception as e:
-                    print(t("error_loading_plugin", e=e))
-                    pass
-
-        with gr.Tab("Extra"):
             restart_btn = gr.Button(t("restart_btn"), variant="stop")
 
+    ########### Обработчики событий
 
+    upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
     restart_btn.click(restart_ui)
-
     local_check.change(fn=(lambda x:(gr.update(visible=False if x == True else True), gr.update(value=None), gr.update(value=None), gr.update(visible=True if x == True else False))), inputs=local_check, outputs={upload_group, input_audio, input_audios, input_file_explorer})
-
-    dw_m_btn.click(fn=downloader_models, inputs=[dw_m_model_type, dw_m_model_name], outputs=None)
-        
+    dw_m_btn.click(fn=downloader_models, inputs=[dw_m_model_type, dw_m_model_name], outputs=None)   
     batch_separation.change(fn=(lambda x: (gr.update(visible=True if x == True else False, value=None), gr.update(visible=True if x == True else False), gr.update(visible=False if x == True else True, value=None), gr.update(visible=False if x == True else True))), inputs=batch_separation, outputs=[input_audios, batch_separate_btn, input_audio, single_separate_btn]).then(fn=(lambda x: gr.update(file_count="multiple" if x == True else "single", value=None)), inputs=batch_separation, outputs=input_file_explorer)
-
     model_type.change(fn=lambda x: gr.update(visible=True if x == "vr" else False), inputs=model_type, outputs=vr_aggr_slider).then(
         fn=lambda x: gr.update(choices=list(models_data[x].keys()), value=list(models_data[x].keys())[0]), inputs=model_type, outputs=model_name).then(fn=(lambda x: gr.update(visible=False if x in ["vr", "mdx"] else True)), inputs=model_type, outputs=ext_inst)
-
     dw_m_model_type.change(fn=lambda x: gr.update(choices=[model for model in list(models_data[x].keys()) if (models_data[x][model]["checkpoint_url"] if x not in ["vr", "mdx"] else None) or (models_data[x][model]["custom_vr"] if x == "vr" else None)], value=None if not [model for model in list(models_data[x].keys()) if (models_data[x][model]["checkpoint_url"] if x not in ["vr", "mdx"] else None) or (models_data[x][model]["custom_vr"] if x == "vr" else None)] else [model for model in list(models_data[x].keys()) if (models_data[x][model]["checkpoint_url"] if x not in ["vr", "mdx"] else None) or (models_data[x][model]["custom_vr"] if x == "vr" else None)][0]), inputs=dw_m_model_type, outputs=dw_m_model_name)
-
     model_name.change(fn=lambda x, y: gr.update(choices=list(models_data[x][y]["stems"]), value=None, interactive=True if models_data[x][y]["target_instrument"] == None else False, info=t("stems_info", target_instrument=models_data[x][y]["target_instrument"]) if models_data[x][y]["target_instrument"] != None else t("stems_info2")), inputs=[model_type, model_name], outputs=stems).then(fn=(lambda x, y: gr.update(value=False if models_data[x][y]["target_instrument"] == None else True) ), inputs=[model_type, model_name], outputs=ext_inst)
-
     single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, *output_stems])
-    
     batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
-    
     batch_select_dir.change(fn=batch_show_results, inputs=[batch_results_state, batch_select_dir], outputs=[*output_stems])
-
-
+    e_model_type.change(update_model_dropdown, inputs=e_model_type, outputs=e_model_name)
+    e_model_name.change(update_stem_dropdown, inputs=[e_model_type, e_model_name], outputs=e_stem)
+    invert_btn.click(process_audio, inputs=[e_input_audio_resampled, e_output_wav, e_output_format, invert_method], outputs=[inverted_output_audio, inverted_wav])
+    input_audio.upload(resample_audio, inputs=[input_audio, input_file_explorer], outputs=e_input_audio_resampled)
+    resample_local_btn.click(resample_audio, inputs=[input_audio, input_file_explorer], outputs=e_input_audio_resampled)
+    e_add_btn.click(add_model, inputs=[e_model_type, e_model_name, e_stem, e_weight], outputs=ensemble_df)
+    remove_btn.click(remove_model, inputs=remove_idx, outputs=ensemble_df)
+    clear_btn.click(clear_all_models, outputs=ensemble_df)
+    e_run_btn.click(fn=(lambda: (gr.update(value=None), gr.update(value=None))), inputs=None, outputs=[inverted_output_audio, inverted_wav]).then(run_ensemble, inputs=[e_input_audio_resampled, ensemble_type, output_format], outputs=[e_output_audio, e_output_wav, result_source])
+    invert_man_btn.click(process_audio, inputs=[audio1, audio2, output_man_i_format, invert_man_method], outputs=[invert_man_output, invert_man_output_wav])
+    input_files.upload(fn=analyze_sample_rate, inputs=input_files, outputs=info_audios)                
+    run_man_btn.click(manual_ensem, inputs=[input_files, man_method, weights_input, output_man_format], outputs=[output_man_audio, output_man_wav])
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Базовый интерфейс для разделения музыки и вокала")
     
-    # Основные параметры запуска
     parser.add_argument("--host", type=str, default="0.0.0.0", help="IP-адрес (по умолчанию: 0.0.0.0)")
     parser.add_argument("--server_port", type=int, default=7860, help="Порт (по умолчанию: 7860)")
     parser.add_argument("--share", action="store_true", help="")
     parser.add_argument("--debug", action="store_true", help="Включить отладку")
     parser.add_argument("--ngrok_token", type=str, help="Аутентификация (формат: username:password)")
-    # Настройки безопасности
     parser.add_argument("--auth", type=str, help="Аутентификация (формат: username:password)")
     parser.add_argument("--ssl-keyfile", type=str, help="Путь к SSL ключу")
     parser.add_argument("--ssl-certfile", type=str, help="Путь к SSL сертификату")
     
-    # Производительность
     parser.add_argument("--max-file-size", type=str, default="10000MB", help="Максимальный лимит загрузки файлов в интерфейс")
     
-    # Пути
     parser.add_argument("--output-dir", type=str, default="/content/output", help="Путь к директории вывода")
     parser.add_argument("--models-cache-dir", type=str, default=None, help="Путь к кэшу моделей")
     parser.add_argument("--language", type=str, choices=["ru", "en"], default="ru", help="Язык интерфейса")
     
-    # Шрифт в интерфейсе
     parser.add_argument("--google_font", type=str, default="Montserrat", help="Шрифт в интерфейсе")
     
     return parser.parse_args()
