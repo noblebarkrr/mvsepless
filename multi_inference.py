@@ -831,7 +831,8 @@ def create_mvsepless_app(lang):
                             vr_aggr_slider = gr.Slider(label=t("vr_aggressiveness"), minimum=0, maximum=100, step=1, visible=False, interactive=True, value=5)
                             stems = gr.CheckboxGroup(label=t("stems_list"), choices=models_data[list(models_data.keys())[0]][list(models_data[list(models_data.keys())[0]].keys())[0]]["stems"], value=None, interactive=False, info=t("stems_info", target_instrument="vocals"))
                             with gr.Row():
-                                template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True, info=t("template_info"))
+                                template_info = gr.Markdown(t("template_info"))
+                                template = gr.Text(label=t("template"), value="NAME_(STEM)_MODEL", interactive=True)
                                 output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False)
                             single_separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True, size="lg")
                             batch_separate_btn = gr.Button(t("separate_btn"), variant="primary", visible=False, interactive=True, size="lg")
