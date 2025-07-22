@@ -936,13 +936,6 @@ def create_mvsepless_app(lang):
                     with gr.Tab(t('result_source')):
                         result_source = gr.Files(interactive=False, label=t('result_source'))
 
-        ########### Преобразование голоса
-        try:
-            from vbach.demo.app import create_demo as vbach_ui
-            with gr.Tab(t("transform")):
-                vbach_ui(lang)
-        except ImportError:
-            pass
         ########### Плагины
         with gr.Tab(t("plugins")):
             plugins = [] 
