@@ -7,6 +7,8 @@ from pyngrok import ngrok
 import gradio as gr
 from datetime import datetime
 import importlib.util
+import base64
+
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
@@ -32,27 +34,112 @@ from pydub.exceptions import CouldntDecodeError
 
 ########### Константы
 
+LANGS = ["ru", "en"]
+FONTS_DIR = os.sep.join([SCRIPT_DIR, "assets", "fonts"])
+CONFIG_UI_PATH = os.path.join(SCRIPT_DIR, "config.json")
 FAVICON_PATH = os.path.join(SCRIPT_DIR, os.path.join("assets", "mvsepless.png"))
 MODELS_CACHE_DIR = os.path.join(SCRIPT_DIR, os.path.join("separator", "models_cache"))
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 OUTPUT_DIR = "/content/output"
 ENSEMBLESS_OUTPUT_DIR = "/content/ensembless_output"
-GOOGLE_FONT = "Tektur"
 GRADIO_HOST = "0.0.0.0"
-GRADIO_PORT = 7860
-GRADIO_SHARE = True
-GRADIO_DEBUG = True
-GRADIO_AUTH = None
 GRADIO_SSL_KEYFILE = None
 GRADIO_SSL_CERTFILE = None
-GRADIO_MAX_FILE_SIZE = "10000MB"
-CURRENT_LANG = "ru"
 MVSEPLESS_UI = None
 N_FFT = 2048
 WIN_LENGTH = 2048
 HOP_LENGTH = WIN_LENGTH // 4
 plugins_dir = os.path.join(SCRIPT_DIR, "plugins")
 os.makedirs(plugins_dir, exist_ok=True)
+os.makedirs(FONTS_DIR, exist_ok=True)
+
+GOOGLE_FONT = "Tektur"
+GRADIO_PORT = 7860
+GRADIO_SHARE = True
+GRADIO_DEBUG = True
+GRADIO_AUTH = None
+CURRENT_LANG = "ru"
+GRADIO_MAX_FILE_SIZE = "10000MB"
+
+CONFIG = {
+    "settings": {
+        "font": GOOGLE_FONT,
+        "auth": GRADIO_AUTH,
+        "language": CURRENT_LANG,
+        "max_file_size": GRADIO_MAX_FILE_SIZE,
+        "port": GRADIO_PORT,
+        "debug": GRADIO_DEBUG,
+        "share": GRADIO_SHARE
+    }
+}
+
+########### Сохранить в конфиг
+
+def write_UI_settings():
+    with open(file=CONFIG_UI_PATH, mode="w") as f:
+        json.dump(CONFIG, f, indent=2)
+
+def read_UI_settings():
+    global GOOGLE_FONT, GRADIO_PORT, GRADIO_SHARE, GRADIO_DEBUG, GRADIO_AUTH, CURRENT_LANG, GRADIO_MAX_FILE_SIZE, CONFIG
+    with open(file=CONFIG_UI_PATH, mode="r") as f:
+        config = json.load(f)
+
+    GOOGLE_FONT = config["settings"]["font"]
+    GRADIO_PORT = config["settings"]["port"]
+    GRADIO_SHARE = config["settings"]["share"]
+    GRADIO_DEBUG = config["settings"]["debug"]
+    GRADIO_AUTH = config["settings"]["auth"]
+    CURRENT_LANG = config["settings"]["language"]
+    GRADIO_MAX_FILE_SIZE = config["settings"]["max_file_size"]
+    CONFIG = {
+        "settings": {
+            "font": GOOGLE_FONT,
+            "auth": GRADIO_AUTH,
+            "language": CURRENT_LANG,
+            "max_file_size": GRADIO_MAX_FILE_SIZE,
+            "port": GRADIO_PORT,
+            "debug": GRADIO_DEBUG,
+            "share": GRADIO_SHARE
+        }
+    }
+
+def write_FONT_config(font):
+    global CONFIG
+    CONFIG["settings"]["font"] = font
+    write_UI_settings()
+
+def write_SHARE_config(share):
+    global CONFIG
+    CONFIG["settings"]["share"] = share
+    write_UI_settings()
+
+def write_DEBUG_config(debug):
+    global CONFIG
+    CONFIG["settings"]["debug"] = debug
+    write_UI_settings()
+
+def write_LANG_config(lang):
+    global CONFIG
+    CONFIG["settings"]["language"] = lang
+    write_UI_settings()
+
+def get_font_files():
+    fonts = []
+    for filename in os.listdir(FONTS_DIR):
+        path = os.path.join(FONTS_DIR, filename)  # Нужно объединить с базовой директорией
+        if os.path.isfile(path):
+            if filename.lower().endswith((".ttf", ".otf", ".woff", ".eot")):
+                fonts.append(os.path.abspath(path))  # Исправлено asbpath на abspath
+    return fonts  # Не забываем вернуть результат
+
+def write_fonts(files):
+    for file in files:
+        shutil.copy(file, os.path.join(FONTS_DIR, os.path.basename(file)))
+    gr.Warning("Uploading fonts...")
+
+########### CSS
+
+css = None
 
 ########### Код для перевода на нужный язык
 
@@ -795,9 +882,9 @@ def create_mvsepless_app(lang):
         with gr.Tab(t("separation")):
             with gr.Column():
                 with gr.Group(visible=True) as upload_group:
-                    input_audio = gr.Audio(show_label=False, type="filepath", interactive=True)
-                    input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"])
-                input_file_explorer = gr.FileExplorer(show_label=False, root_dir="/content", file_count="single", visible=False)
+                    input_audio = gr.Audio(show_label=False, type="filepath", interactive=True, elem_classes="fixed-height", sources="upload")
+                    input_audios = gr.Files(show_label=False, type="filepath", visible=False, interactive=True, file_types=[".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff"], elem_classes="fixed-height")
+                input_file_explorer = gr.FileExplorer(show_label=False, root_dir="/content", file_count="single", visible=False, elem_classes="fixed-height")
                 local_check = gr.Checkbox(label=t("local_path"), value=False, interactive=True)
                 batch_separation = gr.Checkbox(label=t("batch_processing"), value=False, interactive=True, info=t("batch_info"))
             ########### Основной инференс
@@ -895,7 +982,7 @@ def create_mvsepless_app(lang):
                                 clear_btn = gr.Button(t("clear_button"), variant="stop")
                 
                 with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=1):
                         gr.Markdown(f"### {t('input_audio')}")
                         resample_local_btn = gr.Button(t("resample"))
                         e_input_audio_resampled = gr.Textbox(label=t("resampled_path"), interactive=False, lines=3, max_length=25)
@@ -915,26 +1002,27 @@ def create_mvsepless_app(lang):
                             filterable=False
                         )
                         e_run_btn = gr.Button(t("run_button"), variant="primary")
-
-                    with gr.Tab(t('results')):
+                    with gr.Column(scale=2):
+    
+                        with gr.Tab(t('results')):
+                        
+                            with gr.Column():
+                                e_output_audio = gr.Audio(label=t("results"), type="filepath", interactive=False, show_download_button=True)
+                                e_output_wav = gr.Text(label="Результат в WAV", interactive=False, visible=False)
                     
-                        with gr.Column():
-                            e_output_audio = gr.Audio(label=t("results"), type="filepath", interactive=False, show_download_button=True)
-                            e_output_wav = gr.Text(label="Результат в WAV", interactive=False, visible=False)
-                
-                            gr.Markdown(f"###### {t('inverted_result')}")
-                
-                            invert_method = gr.Radio(
-                                choices=["waveform", "spectrogram"],
-                                label=t("invert_method"),
-                                value="waveform"
-                            )
-                            invert_btn = gr.Button(t("invert_button"))
-                            inverted_output_audio = gr.Audio(label=t("inverted_result"), type="filepath", interactive=False, show_download_button=True)
-                            inverted_wav = gr.Text(label="Инвертированный результат в WAV", interactive=False, visible=False)
-
-                    with gr.Tab(t('result_source')):
-                        result_source = gr.Files(interactive=False, label=t('result_source'))
+                                gr.Markdown(f"###### {t('inverted_result')}")
+                    
+                                invert_method = gr.Radio(
+                                    choices=["waveform", "spectrogram"],
+                                    label=t("invert_method"),
+                                    value="waveform"
+                                )
+                                invert_btn = gr.Button(t("invert_button"))
+                                inverted_output_audio = gr.Audio(label=t("inverted_result"), type="filepath", interactive=False, show_download_button=True)
+                                inverted_wav = gr.Text(label="Инвертированный результат в WAV", interactive=False, visible=False)
+    
+                        with gr.Tab(t('result_source')):
+                            result_source = gr.Files(interactive=False, label=t('result_source'))
 
         ########### Плагины
         with gr.Tab(t("plugins")):
@@ -970,7 +1058,7 @@ def create_mvsepless_app(lang):
                             plugin_name = name_func() if name_func is not None else module_name
                             plugins.append((plugin_name, plugin_func))
 
-              except SyntaxError as e:
+              except Exception as e:
                 print(e)
 
             for name, func in plugins:
@@ -1014,8 +1102,8 @@ def create_mvsepless_app(lang):
             ########### Инвертер
             with gr.Tab(t("inverter")):
                 with gr.Row():
-                    audio1 = gr.Audio(label=t("main_audio"), type="filepath")
-                    audio2 = gr.Audio(label=t("audio_to_remove"), type="filepath")
+                    audio1 = gr.Audio(label=t("main_audio"), type="filepath", elem_classes="fixed-height", sources="upload")
+                    audio2 = gr.Audio(label=t("audio_to_remove"), type="filepath", elem_classes="fixed-height", sources="upload")
                 invert_man_method = gr.Radio(
                     choices=["waveform", "spectrogram"],
                     label=t("processing_method"),
@@ -1030,7 +1118,7 @@ def create_mvsepless_app(lang):
                 invert_man_btn = gr.Button(t("invert_button"))
                 
                 with gr.Column():
-                    invert_man_output = gr.Audio(label=t("results"), interactive=False, show_download_button=True)
+                    invert_man_output = gr.Audio(label=t("results"), interactive=False, show_download_button=True, elem_classes="fixed-height2")
                     invert_man_output_wav = gr.Text(interactive=False, visible=False)
 
             with gr.Tab(t("model_loading")):
@@ -1038,11 +1126,32 @@ def create_mvsepless_app(lang):
                 dw_m_model_name = gr.Dropdown(label=t("model_name"), choices=list(models_data[list(models_data.keys())[0]].keys()), value=list(models_data[list(models_data.keys())[0]].keys())[0], interactive=True, filterable=False)
                 dw_m_btn = gr.Button(t("download_model_btn"))
 
-        with gr.Tab("Settings"):
-
+        with gr.Tab(t("settings_tab")):
+            config_preview = gr.Code(label=t("settings_config"), value=json.dumps(CONFIG, indent=4, ensure_ascii=False))
+            with gr.Column(variant="panel"):
+                local_font = gr.Dropdown(label=t("settings_select_local_font"), choices=get_font_files())
+                upload_local_font = gr.File(label=t("settings_upload_fonts"), interactive=True, file_count="multiple", file_types=[".ttf", ".otf", ".woff", ".eot"], elem_classes="fixed-height")
+                get_list_fonts = gr.Button(t("settings_get_list_fonts"))
+            with gr.Column(variant="panel"):
+                google_font_info = gr.Markdown(t("settings_info_font"))
+                google_font = gr.Text(label=t("settings_google_font"))
+            set_font_btn = gr.Button(t("settings_set_font"), variant="primary")
+            with gr.Column(variant="panel"):
+                language = gr.Radio(label=t("settings_language"), choices=LANGS, value=CURRENT_LANG)
+                server_share = gr.Checkbox(label=t("settings_share"), value=GRADIO_SHARE)
+                server_debug = gr.Checkbox(label=t("settings_debug"), value=GRADIO_DEBUG)
             restart_btn = gr.Button(t("restart_btn"), variant="stop")
 
     ########### Обработчики событий
+
+    language.change(fn=write_LANG_config, inputs=language).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    server_share.change(fn=write_SHARE_config, inputs=server_share).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    server_debug.change(fn=write_DEBUG_config, inputs=server_debug).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    set_font_btn.click(fn=(lambda x, y: write_FONT_config(y if y != "" else x) ), inputs=[local_font, google_font], outputs=None).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    get_list_fonts.click(fn=(lambda: gr.update(choices=get_font_files())), inputs=None, outputs=local_font)
+    upload_local_font.upload(fn=write_fonts, inputs=upload_local_font, outputs=None)
+
+
 
     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
     restart_btn.click(restart_ui)
@@ -1072,53 +1181,69 @@ def create_mvsepless_app(lang):
 def parse_args():
     parser = argparse.ArgumentParser(description="Базовый интерфейс для разделения музыки и вокала")
     
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="IP-адрес (по умолчанию: 0.0.0.0)")
-    parser.add_argument("--server_port", type=int, default=7860, help="Порт (по умолчанию: 7860)")
-    parser.add_argument("--share", action="store_true", help="")
-    parser.add_argument("--debug", action="store_true", help="Включить отладку")
     parser.add_argument("--ngrok_token", type=str, help="Аутентификация (формат: username:password)")
-    parser.add_argument("--auth", type=str, help="Аутентификация (формат: username:password)")
     parser.add_argument("--ssl-keyfile", type=str, help="Путь к SSL ключу")
     parser.add_argument("--ssl-certfile", type=str, help="Путь к SSL сертификату")
     
-    parser.add_argument("--max-file-size", type=str, default="10000MB", help="Максимальный лимит загрузки файлов в интерфейс")
-    
     parser.add_argument("--output-dir", type=str, default="/content/output", help="Путь к директории вывода")
     parser.add_argument("--models-cache-dir", type=str, default=None, help="Путь к кэшу моделей")
-    parser.add_argument("--language", type=str, choices=["ru", "en"], default="ru", help="Язык интерфейса")
-    
-    parser.add_argument("--google_font", type=str, default="Montserrat", help="Шрифт в интерфейсе")
     
     return parser.parse_args()
 
 if __name__ == "__main__":
 
+    if not os.path.exists(CONFIG_UI_PATH):
+        write_UI_settings()
+    else:
+        read_UI_settings()
+
     args = parse_args()
-    if args.google_font:
-        GOOGLE_FONT = args.google_font
+
     if args.models_cache_dir:
         MODELS_CACHE_DIR = args.models_cache_dir
     if args.output_dir:
         OUTPUT_DIR = args.output_dir
 
-    GRADIO_HOST = args.host
-    GRADIO_PORT = args.server_port
-    GRADIO_SHARE = args.share
-    GRADIO_DEBUG = args.debug
-    GRADIO_AUTH = args.auth.split(":") if args.auth else None
     GRADIO_SSL_KEYFILE = args.ssl_keyfile
     GRADIO_SSL_CERTFILE = args.ssl_certfile
-    GRADIO_MAX_FILE_SIZE = args.max_file_size
 
-    set_language(args.language)
+    css = """
+.fixed-height {
+    height: 160px !important;  /* Фиксируем высоту */
+    min-height: 160px !important; /* Запрещаем уменьшение */
+}
+.fixed-height2 {
+    height: 250px !important;  /* Фиксируем высоту */
+    min-height: 250px !important; /* Запрещаем уменьшение */
+}
+    """
+    if GOOGLE_FONT.endswith((".ttf", ".otf", ".woff", ".eot")):
 
-    with gr.Blocks(title="Разделение музыки и вокала", theme=mvsepless_theme(GOOGLE_FONT)) as MVSEPLESS_UI:
+        # Кодирование шрифта в Base64
+        with open(GOOGLE_FONT, "rb") as font_file:
+            base64_font = base64.b64encode(font_file.read()).decode("utf-8")
+
+        # CSS с встроенным шрифтом
+        css_font = f"""
+        @font-face {{
+            font-family: 'CustomFont';
+            src: url(data:font/truetype;charset=utf-8;base64,{base64_font}) format('truetype');
+        }}
+        body, .gradio-container, .input, .output, .button, .textbox, .label, .title, .description {{
+            font-family: 'CustomFont', sans-serif !important;
+        }}
+        """
+        css = css_font + css
+
+    print(GOOGLE_FONT)
+
+    with gr.Blocks(title="Разделение музыки и вокала", theme=mvsepless_theme(GOOGLE_FONT if GOOGLE_FONT.endswith((".ttf", ".otf", ".woff", ".eot")) == False else "Roboto"), css=css) as MVSEPLESS_UI:
         create_mvsepless_app(CURRENT_LANG)
 
     if args.ngrok_token:
         ngrok.set_auth_token(args.ngrok_token)
         ngrok.kill()
-        tunnel = ngrok.connect(args.server_port)
+        tunnel = ngrok.connect(GRADIO_PORT)
         print(f"Публичная ссылка - {tunnel.public_url}")
 
     load_ui(MVSEPLESS_UI)
