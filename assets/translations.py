@@ -96,7 +96,20 @@ MVSEPLESS_TRANSLATIONS = {
         "process4": "Создание ансамбля",
         "result_source": "Промежуточные файлы",
         "resample": "Ресэмпл",
-        "resampled_path": "Путь к ресэмпленному аудио"
+        "resampled_path": "Путь к ресэмпленному аудио",
+        "settings_tab": "Настройки",
+        "settings_select_local_font": "Загруженные шрифты",
+        "settings_upload_fonts": "Загрузить шрифты",
+        "settings_get_list_fonts": "Обновить",
+        "settings_google_font": "Шрифт из Google Font",
+        "settings_set_font": "Установить шрифт",
+        "settings_language": "Язык",
+        "settings_share": "Общий доступ",
+        "settings_debug": "Отладка",
+        "settings_config": "Превью конфига",
+        "settings_info_font": "Если не указано название шрифта из Google Font, то будут использованы загруженные шрифты"
+
+
     },
     "en": {
         "app_title": "MVSEPLESS",
@@ -195,6 +208,17 @@ MVSEPLESS_TRANSLATIONS = {
         "process4": "Build ensemble",
         "result_source": "Intermediate files",
         "resample": "Resample",
-        "resampled_path": "Resampled input audio path"
+        "resampled_path": "Resampled input audio path",
+        "settings_tab": "Settings",
+        "settings_select_local_font": "Loaded fonts",
+        "settings_upload_fonts": "Upload fonts",
+        "settings_get_list_fonts": "Refresh",
+        "settings_google_font": "Google Font",
+        "settings_set_font": "Set font",
+        "settings_language": "Language",
+        "settings_share": "Share",
+        "settings_debug": "Debug",
+        "settings_config": "Config preview",
+        "settings_info_font": "If no Google Font name is specified, the uploaded fonts will be used instead"
     }
 }
