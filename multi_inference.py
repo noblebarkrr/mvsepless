@@ -1027,7 +1027,7 @@ def create_mvsepless_app():
     )
 
     model_name.change(
-        fn=lambda x, y: gr.update(choices=list(models_data[x][y]["stems"]), value=[], interactive=(models_data[x][y]["target_instrument"] is None)),
+        fn=lambda x, y: gr.update(choices=list(models_data[x][y]["stems"]), value=[], interactive=(models_data[x][y]["target_instrument"] is None), info=t("stems_info", target_instrument=models_data[x][y]["target_instrument"]) if models_data[x][y]["target_instrument"] != None else t("stems_info2")),
         inputs=[model_type, model_name],
         outputs=stems
     ).then(
