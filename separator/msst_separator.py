@@ -23,6 +23,13 @@ from renamer_stems import output_file_template
 
 from msst_utils import prefer_target_instrument, demix, get_model_from_config, demix_demucs
 
+def normalize_peak(audio, peak):
+    current_peak = np.max(np.abs(audio))
+    if current_peak == 0:
+        return audio  # избегаем деления на ноль
+    scale_factor = peak / current_peak
+    return audio * scale_factor
+
 gc.enable()
 
 def cleanup_model(model):
@@ -152,6 +159,30 @@ def once_inference(
                     waveforms['inverted +'] += waveforms[stem]   # стем "inverted +": сложение не выбранных инструментов в один стем
             if 'inverted +' not in instruments:
                 instruments.append('inverted +')
+
+        peak = np.max(np.abs(waveforms['inverted -']))
+        waveforms['inverted +'] = normalize_peak(waveforms['inverted +'], peak)
+
+    elif extract_instrumental and not selected_instruments and config.training.target_instrument is None and ["bass", "drums", "other", "vocals"] or ["bass", "drums", "other", "vocals", "piano", "guitar"]  in config.training.instruments: # Если включен "Extract Instrumental / Извлечь инструментал" и модель делит аудио на 4 - 6 стемов, то создаются стемы "instrumental -" и "instrumental +" (если не найден целевой инструмент)
+
+        waveforms['instrumental -'] = mix_orig.copy()
+        waveforms['instrumental -'] -= waveforms["vocals"]   # стем "inverted -": вычитание выбранного стема из оригинального сигнала (не всегда хорошо)
+
+        if 'instrumental -' not in instruments:
+            instruments.append('instrumental -')
+
+        all_instruments = config.training.instruments
+        non_vocal_stems = [s for s in all_instruments if s not in ["vocals"]]
+        if non_vocal_stems:
+            waveforms['instrumental +'] = np.zeros_like(mix_orig)
+            for stem in non_vocal_stems:
+                if stem in waveforms:
+                    waveforms['instrumental +'] += waveforms[stem]   # стем "inverted +": сложение не выбранных инструментов в один стем
+            if 'instrumental +' not in instruments:
+                instruments.append('instrumental +')
+
+        peak = np.max(np.abs(waveforms['instrumental -']))
+        waveforms['instrumental +'] = normalize_peak(waveforms['instrumental +'], peak)
 
     for instr in instruments:
         try:
