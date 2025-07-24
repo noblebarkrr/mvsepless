@@ -2,7 +2,6 @@ import os
 import sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
-os.chdir(SCRIPT_DIR)
 
 import argparse
 import gradio as gr
