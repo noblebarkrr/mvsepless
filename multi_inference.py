@@ -39,6 +39,7 @@ FONTS_DIR = os.sep.join([SCRIPT_DIR, "assets", "fonts"])
 CONFIG_UI_PATH = os.path.join(SCRIPT_DIR, "config.json")
 FAVICON_PATH = os.path.join(SCRIPT_DIR, os.path.join("assets", "mvsepless.png"))
 MODELS_CACHE_DIR = os.path.join(SCRIPT_DIR, os.path.join("separator", "models_cache"))
+OUTPUT_BITRATE = "320k"
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 OUTPUT_DIR = "/content/output"
 ENSEMBLESS_OUTPUT_DIR = "/content/ensembless_output"
@@ -52,7 +53,8 @@ HOP_LENGTH = WIN_LENGTH // 4
 plugins_dir = os.path.join(SCRIPT_DIR, "plugins")
 os.makedirs(plugins_dir, exist_ok=True)
 os.makedirs(FONTS_DIR, exist_ok=True)
-
+CALL_METHODS = ["cli", "direct"]
+CALL_METHOD = "cli"
 GOOGLE_FONT = "Tektur"
 GRADIO_PORT = 7860
 GRADIO_SHARE = True
@@ -62,6 +64,12 @@ CURRENT_LANG = "ru"
 GRADIO_MAX_FILE_SIZE = "10000MB"
 
 CONFIG = {
+    "inference": {
+        "output_dir": OUTPUT_DIR,
+        "models_cache_dir": MODELS_CACHE_DIR,
+        "output_bitrate": OUTPUT_BITRATE,
+        "call_method": CALL_METHOD
+    },
     "settings": {
         "font": GOOGLE_FONT,
         "auth": GRADIO_AUTH,
@@ -80,10 +88,14 @@ def write_UI_settings():
         json.dump(CONFIG, f, indent=2)
 
 def read_UI_settings():
-    global GOOGLE_FONT, GRADIO_PORT, GRADIO_SHARE, GRADIO_DEBUG, GRADIO_AUTH, CURRENT_LANG, GRADIO_MAX_FILE_SIZE, CONFIG
+    global GOOGLE_FONT, GRADIO_PORT, GRADIO_SHARE, GRADIO_DEBUG, GRADIO_AUTH, CURRENT_LANG, GRADIO_MAX_FILE_SIZE, OUTPUT_DIR, MODELS_CACHE_DIR, OUTPUT_BITRATE, CALL_METHOD, CONFIG
     with open(file=CONFIG_UI_PATH, mode="r") as f:
         config = json.load(f)
 
+    CALL_METHOD = config["inference"]["call_method"]
+    OUTPUT_BITRATE = config["inference"]["output_bitrate"]
+    OUTPUT_DIR = config["inference"]["output_dir"]
+    MODELS_CACHE_DIR = config["inference"]["models_cache_dir"]
     GOOGLE_FONT = config["settings"]["font"]
     GRADIO_PORT = config["settings"]["port"]
     GRADIO_SHARE = config["settings"]["share"]
@@ -92,6 +104,12 @@ def read_UI_settings():
     CURRENT_LANG = config["settings"]["language"]
     GRADIO_MAX_FILE_SIZE = config["settings"]["max_file_size"]
     CONFIG = {
+        "inference": {
+            "output_dir": OUTPUT_DIR,
+            "models_cache_dir": MODELS_CACHE_DIR,
+            "output_bitrate": OUTPUT_BITRATE,
+            "call_method": CALL_METHOD
+        },
         "settings": {
             "font": GOOGLE_FONT,
             "auth": GRADIO_AUTH,
@@ -102,6 +120,7 @@ def read_UI_settings():
             "share": GRADIO_SHARE
         }
     }
+
 
 def write_FONT_config(font):
     global CONFIG
@@ -121,6 +140,32 @@ def write_DEBUG_config(debug):
 def write_LANG_config(lang):
     global CONFIG
     CONFIG["settings"]["language"] = lang
+    write_UI_settings()
+
+def write_OUTPUT_DIR_config(output_dir):
+    global CONFIG, OUTPUT_DIR
+    CONFIG["inference"]["output_dir"] = output_dir
+    OUTPUT_DIR = output_dir
+    write_UI_settings()
+
+def write_MODELS_CACHE_DIR_config(cache_dir):
+    global CONFIG, MODELS_CACHE_DIR
+    CONFIG["inference"]["models_cache_dir"] = cache_dir
+    MODELS_CACHE_DIR = cache_dir
+    write_UI_settings()
+
+def write_CALL_METHOD_config(method):
+    global CONFIG, CALL_METHOD
+    CONFIG["inference"]["call_method"] = method
+    CALL_METHOD = method
+    write_UI_settings()
+
+
+def write_OUTPUT_BITRATE_config(output_bitrate):
+    bitrate = f"{int(output_bitrate)}k"
+    global CONFIG, OUTPUT_BITRATE
+    CONFIG["inference"]["output_bitrate"] = bitrate
+    OUTPUT_BITRATE = bitrate
     write_UI_settings()
 
 def get_font_files():
@@ -684,7 +729,7 @@ def mvsepless(
 def mvsepless_sep_gradio(a1, a2, b, c, d, e, f, g, h, i_stem, batch, local_check):
     if local_check == False:
         if not a1:
-            text, output = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            text, output = mvsepless(a1, b, c, d, e, f, g, OUTPUT_BITRATE, h, CALL_METHOD, i_stem)
             if batch == True:
                 return text, None
             else:
@@ -693,10 +738,10 @@ def mvsepless_sep_gradio(a1, a2, b, c, d, e, f, g, h, i_stem, batch, local_check
                     results.append(gr.update(visible=False, label=None, value=None))
                 return (gr.update(value=text),) + tuple(results)
         elif a1 is not None and isinstance(a1, list):
-            text, batch_separated = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            text, batch_separated = mvsepless(a1, b, c, d, e, f, g, OUTPUT_BITRATE, h, CALL_METHOD, i_stem)
             return text, batch_separated        
         elif a1 is not None and isinstance(a1, str):
-            text, output_audio = mvsepless(a1, b, c, d, e, f, g, "320k", h, "cli", i_stem)
+            text, output_audio = mvsepless(a1, b, c, d, e, f, g, OUTPUT_BITRATE, h, CALL_METHOD, i_stem)
             results = []
             if output_audio is not None:
                 for i, (stem, output_file) in enumerate(output_audio[:20]):
@@ -889,7 +934,6 @@ def create_mvsepless_app(lang):
                 batch_separation = gr.Checkbox(label=t("batch_processing"), value=False, interactive=True, info=t("batch_info"))
             ########### Основной инференс
             with gr.Tab(t("inference")):
-                output_dir = gr.Text(value="/content/output/", visible=False)
                 batch_results_state = gr.State()
                 with gr.Row(equal_height=False):
                     with gr.Column(variant="panel"):
@@ -1128,21 +1172,35 @@ def create_mvsepless_app(lang):
 
         with gr.Tab(t("settings_tab")):
             config_preview = gr.Code(label=t("settings_config"), value=json.dumps(CONFIG, indent=4, ensure_ascii=False))
-            with gr.Column(variant="panel"):
-                local_font = gr.Dropdown(label=t("settings_select_local_font"), choices=get_font_files())
-                upload_local_font = gr.File(label=t("settings_upload_fonts"), interactive=True, file_count="multiple", file_types=[".ttf", ".otf", ".woff", ".eot"], elem_classes="fixed-height")
-                get_list_fonts = gr.Button(t("settings_get_list_fonts"))
-            with gr.Column(variant="panel"):
-                google_font_info = gr.Markdown(t("settings_info_font"))
-                google_font = gr.Text(label=t("settings_google_font"))
-            set_font_btn = gr.Button(t("settings_set_font"), variant="primary")
-            with gr.Column(variant="panel"):
-                language = gr.Radio(label=t("settings_language"), choices=LANGS, value=CURRENT_LANG)
-                server_share = gr.Checkbox(label=t("settings_share"), value=GRADIO_SHARE)
-                server_debug = gr.Checkbox(label=t("settings_debug"), value=GRADIO_DEBUG)
             restart_btn = gr.Button(t("restart_btn"), variant="stop")
+            with gr.Tab("UI"):
+                with gr.Column(variant="panel"):
+                    local_font = gr.Dropdown(label=t("settings_select_local_font"), choices=get_font_files())
+                    upload_local_font = gr.File(label=t("settings_upload_fonts"), interactive=True, file_count="multiple", file_types=[".ttf", ".otf", ".woff", ".eot"], elem_classes="fixed-height")
+                    get_list_fonts = gr.Button(t("settings_get_list_fonts"))
+                with gr.Column(variant="panel"):
+                    google_font_info = gr.Markdown(t("settings_info_font"))
+                    google_font = gr.Text(label=t("settings_google_font"))
+                set_font_btn = gr.Button(t("settings_set_font"), variant="primary")
+                with gr.Column(variant="panel"):
+                    language = gr.Radio(label=t("settings_language"), choices=LANGS, value=CURRENT_LANG)
+                    server_share = gr.Checkbox(label=t("settings_share"), value=GRADIO_SHARE)
+                    server_debug = gr.Checkbox(label=t("settings_debug"), value=GRADIO_DEBUG)
+            with gr.Tab("Inference_settings"):
+                with gr.Column(variant="panel"):
+                    current_output_dir = gr.Text(label="Current output directory", value=OUTPUT_DIR)
+                    output_dir = gr.Text(label="Output Directory", value=OUTPUT_DIR)
+                    models_cache_dir = gr.Text(label="Cache model dir", value=MODELS_CACHE_DIR)
+                    output_bitrate = gr.Slider(label="Bitrate", minimum=32, maximum=320, value=320, step=1)
+                    call_method = gr.Radio(label="Call method", choices=CALL_METHODS, value=CALL_METHOD)
+                   
 
     ########### Обработчики событий
+
+    output_dir.change(fn=write_OUTPUT_DIR_config, inputs=output_dir).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    models_cache_dir.change(fn=write_MODELS_CACHE_DIR_config, inputs=models_cache_dir).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    output_bitrate.change(fn=write_OUTPUT_BITRATE_config, inputs=output_bitrate).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
+    call_method.change(fn=write_CALL_METHOD_config, inputs=call_method).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
 
     language.change(fn=write_LANG_config, inputs=language).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
     server_share.change(fn=write_SHARE_config, inputs=server_share).then(fn=(lambda: gr.update(value=json.dumps(CONFIG, indent=4, ensure_ascii=False))), inputs=None, outputs=config_preview)
@@ -1162,8 +1220,8 @@ def create_mvsepless_app(lang):
         fn=lambda x: gr.update(choices=list(models_data[x].keys()), value=list(models_data[x].keys())[0]), inputs=model_type, outputs=model_name).then(fn=(lambda x: gr.update(visible=False if x in ["vr", "mdx"] else True)), inputs=model_type, outputs=ext_inst)
     dw_m_model_type.change(fn=lambda x: gr.update(choices=[model for model in list(models_data[x].keys()) if (models_data[x][model]["checkpoint_url"] if x not in ["vr", "mdx"] else None) or (models_data[x][model]["custom_vr"] if x == "vr" else None)], value=None if not [model for model in list(models_data[x].keys()) if (models_data[x][model]["checkpoint_url"] if x not in ["vr", "mdx"] else None) or (models_data[x][model]["custom_vr"] if x == "vr" else None)] else [model for model in list(models_data[x].keys()) if (models_data[x][model]["checkpoint_url"] if x not in ["vr", "mdx"] else None) or (models_data[x][model]["custom_vr"] if x == "vr" else None)][0]), inputs=dw_m_model_type, outputs=dw_m_model_name)
     model_name.change(fn=lambda x, y: gr.update(choices=list(models_data[x][y]["stems"]), value=None, interactive=True if models_data[x][y]["target_instrument"] == None else False, info=t("stems_info", target_instrument=models_data[x][y]["target_instrument"]) if models_data[x][y]["target_instrument"] != None else t("stems_info2")), inputs=[model_type, model_name], outputs=stems).then(fn=(lambda x, y: gr.update(value=False if models_data[x][y]["target_instrument"] == None else True) ), inputs=[model_type, model_name], outputs=ext_inst)
-    single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, *output_stems])
-    batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
+    single_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=current_output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audio, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, *output_stems])
+    batch_separate_btn.click(fn=(lambda : gr.update(choices=None, visible=False, value=None)), inputs=None, outputs=batch_select_dir).then(fn=(lambda x: os.path.join(OUTPUT_DIR, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{x}')), inputs=model_name, outputs=current_output_dir).then(fn=mvsepless_sep_gradio, inputs=[input_audios, input_file_explorer, output_dir, model_type, model_name, ext_inst, vr_aggr_slider, output_format, template, stems, batch_separation, local_check], outputs=[output_info, batch_results_state]).then(fn=batch_show_names, inputs=batch_results_state, outputs=batch_select_dir)
     batch_select_dir.change(fn=batch_show_results, inputs=[batch_results_state, batch_select_dir], outputs=[*output_stems])
     e_model_type.change(update_model_dropdown, inputs=e_model_type, outputs=e_model_name)
     e_model_name.change(update_stem_dropdown, inputs=[e_model_type, e_model_name], outputs=e_stem)
@@ -1185,9 +1243,6 @@ def parse_args():
     parser.add_argument("--ssl-keyfile", type=str, help="Путь к SSL ключу")
     parser.add_argument("--ssl-certfile", type=str, help="Путь к SSL сертификату")
     
-    parser.add_argument("--output-dir", type=str, default="/content/output", help="Путь к директории вывода")
-    parser.add_argument("--models-cache-dir", type=str, default=None, help="Путь к кэшу моделей")
-    
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -1198,11 +1253,6 @@ if __name__ == "__main__":
         read_UI_settings()
 
     args = parse_args()
-
-    if args.models_cache_dir:
-        MODELS_CACHE_DIR = args.models_cache_dir
-    if args.output_dir:
-        OUTPUT_DIR = args.output_dir
 
     GRADIO_SSL_KEYFILE = args.ssl_keyfile
     GRADIO_SSL_CERTFILE = args.ssl_certfile
