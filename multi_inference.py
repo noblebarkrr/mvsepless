@@ -727,6 +727,12 @@ def mvsepless(
 ########### Дополнительная обёртка для инференса в Gradio #2
 
 def mvsepless_sep_gradio(a1, a2, b, c, d, e, f, g, h, i_stem, batch, local_check):
+    print(f"""
+    Отладка
+    Выходная папка - {b},
+    Битрейт - {OUTPUT_BITRATE}
+    Метод вызова - {CALL_METHOD}
+    """)
     if local_check == False:
         if not a1:
             text, output = mvsepless(a1, b, c, d, e, f, g, OUTPUT_BITRATE, h, CALL_METHOD, i_stem)
