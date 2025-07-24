@@ -1188,7 +1188,7 @@ def create_mvsepless_app(lang):
                     server_debug = gr.Checkbox(label=t("settings_debug"), value=GRADIO_DEBUG)
             with gr.Tab("Inference_settings"):
                 with gr.Column(variant="panel"):
-                    current_output_dir = gr.Text(label="Current output directory", value=OUTPUT_DIR)
+                    current_output_dir = gr.Text(label="Current output directory", value=OUTPUT_DIR, interactive=False)
                     output_dir = gr.Text(label="Output Directory", value=OUTPUT_DIR)
                     models_cache_dir = gr.Text(label="Cache model dir", value=MODELS_CACHE_DIR)
                     output_bitrate = gr.Slider(label="Bitrate", minimum=32, maximum=320, value=320, step=1)
