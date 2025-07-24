@@ -85,10 +85,12 @@ MVSEPLESS_TRANSLATIONS = {
         "different_rates": "⚠️ Файлы имеют РАЗНУЮ частоту дискретизации",
         "resample_warning": "К загруженному аудио автоматически применён ресэмплинг для лучшего инвертирования",
         "error_no_files": "Ошибка: файлы не загружены",
-        "error_unsupported_format": "не поддерживаемый формат",
+        "error_unsupported_format": "Не поддерживаемый формат",
+        "error_no_stems": "Нет стемов",
         "error_general": "ошибка ({error})",
         "error_no_models": "Добавьте хотя бы одну модель для создания ансамбля",
         "error_no_audio": "Сначала загрузите аудио",
+        "error_input_data": "Сначала загрузите аудио",
         "error_both_audio": "Пожалуйста, загрузите оба аудиофайла",
         "process1": "Начало обработки",
         "process2": "Модель",
@@ -107,8 +109,28 @@ MVSEPLESS_TRANSLATIONS = {
         "settings_share": "Общий доступ",
         "settings_debug": "Отладка",
         "settings_config": "Превью конфига",
-        "settings_info_font": "Если не указано название шрифта из Google Font, то будут использованы загруженные шрифты"
+        "settings_info_font": "Если не указано название шрифта из Google Font, то будут использованы загруженные шрифты",
+        "ui_settings": "Интерфейс",
+        "infer_settings": "Инференс",
+        "last_output_directory": "Последняя выходная директория",
+        "infer_output_dir": "Базовая выходная директория",
+        "infer_models_cache_dir": "Путь к кэшу моделей",
+        "infer_bitrate": "Битрейт",
+        "infer_call_method": "Метод вызова инференса",
+        "infer_call_method_info": """# Методы вызова инференса
+                                  cli - через командную строку
+                                  + Оперативная память чистится после разделения
+                                  + Подходит для ансамблей
+                                  - Прогресс не отображается в интерфейсе, приходится смотреть в консоль
+                                  - Результаты возвращются не напрямую, а из json-файла с списком кортежей
 
+                                  direct - напрямую через функцию
+                                  + Результаты возвращаются напрямую
+                                  + Прогресс отображается в интерфейсе
+                                  - Оперативная память не чистится после разделения, что критично при использовании больших моделей
+                                  - Велик риск закрытия интерфейса из-за переполнения оперативной памяти""",
+        "fonts_uploaded": "Шрифты загружены",
+        "resample_errror": "Произошла ошибка при ресэмплинге"
 
     },
     "en": {
@@ -198,9 +220,11 @@ MVSEPLESS_TRANSLATIONS = {
         "resample_warning": "Resampling applied automatically for better inversion",
         "error_no_files": "Error: no files uploaded",
         "error_unsupported_format": "unsupported format",
+        "error_no_stems": "No stems",
         "error_general": "error ({error})",
         "error_no_models": "Add at least one model to create an ensemble",
         "error_no_audio": "Please upload audio first",
+        "error_input_data": "Please upload audio first",
         "error_both_audio": "Please upload both audio files",
         "process1": "Start process",
         "process2": "Model",
@@ -219,6 +243,28 @@ MVSEPLESS_TRANSLATIONS = {
         "settings_share": "Share",
         "settings_debug": "Debug",
         "settings_config": "Config preview",
-        "settings_info_font": "If no Google Font name is specified, the uploaded fonts will be used instead"
+        "settings_info_font": "If no Google Font name is specified, the uploaded fonts will be used instead",
+        "ui_settings": "UI",
+        "infer_settings": "Inference",
+        "last_output_directory": "Last output directory",
+        "infer_output_dir": "Base output directory",
+        "infer_models_cache_dir": "Models cache path",
+        "infer_bitrate": "Bitrate",
+        "infer_call_method": "Call method",
+        "infer_call_method_info": """# Methods call inference
+                                  cli - via command line
+                                  + RAM is cleared after audio separation
+                                  + Suitable for ensembles
+                                  - Progress not displayed in the interface; must be monitored in console
+                                  - Results aren't returned directly, but via JSON file containing list of tuples
+
+                                  direct - directly through function
+                                  + Results returned directly
+                                  + Progress displayed in interface
+                                  - RAM not cleared after audio separation (critical for large models)
+                                  - High risk of interface crash due to RAM overflow""",
+        "fonts_uploaded": "Fonts uploaded",
+        "resample_error": "Error an occured resampling"
     }
 }
+
