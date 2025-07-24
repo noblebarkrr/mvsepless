@@ -150,13 +150,13 @@ def write_OUTPUT_DIR_config(output_dir):
 
 def write_MODELS_CACHE_DIR_config(cache_dir):
     global CONFIG, MODELS_CACHE_DIR
-    CONFIG["inference"]["output_dir"] = cache_dir
+    CONFIG["inference"]["models_cache_dir"] = cache_dir
     MODELS_CACHE_DIR = cache_dir
     write_UI_settings()
 
 def write_CALL_METHOD_config(method):
     global CONFIG, CALL_METHOD
-    CONFIG["inference"]["output_dir"] = method
+    CONFIG["inference"]["call_method"] = method
     CALL_METHOD = method
     write_UI_settings()
 
