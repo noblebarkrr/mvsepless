@@ -162,7 +162,9 @@ def once_inference(
         peak = np.max(np.abs(waveforms['inverted -']))
         waveforms['inverted +'] = normalize_peak(waveforms['inverted +'], peak)
 
-    elif extract_instrumental and not selected_instruments and config.training.target_instrument is None and ["bass", "drums", "other", "vocals"] or ["bass", "drums", "other", "vocals", "piano", "guitar"]  in config.training.instruments: # Если включен "Extract Instrumental / Извлечь инструментал" и модель делит аудио на 4 - 6 стемов, то создаются стемы "instrumental -" и "instrumental +" (если не найден целевой инструмент)
+    elif (extract_instrumental and not selected_instruments and config.training.target_instrument is None and 
+      (all(instr in config.training.instruments for instr in ["bass", "drums", "other", "vocals"]) or
+       all(instr in config.training.instruments for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"]))):
 
         waveforms['instrumental -'] = mix_orig.copy()
         waveforms['instrumental -'] -= waveforms["vocals"]   # стем "inverted -": вычитание выбранного стема из оригинального сигнала (не всегда хорошо)
