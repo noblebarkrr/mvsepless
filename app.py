@@ -184,6 +184,7 @@ def parse_args():
     parser.add_argument("--ngrok_token", type=str)
     parser.add_argument("--share", action="store_true")
     parser.add_argument("--port", type=int, default=7860)
+    return parser.parse_args()
 if __name__ == "__main__":
     args = parse_args()
     if args.ngrok_token:
