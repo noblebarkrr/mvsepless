@@ -5,6 +5,7 @@ import argparse
 from datetime import datetime
 import gradio as gr
 from pyngrok import ngrok
+import importlib.util
 from multi_inference import MVSEPLESS, OUTPUT_FORMATS
 from assets.translations import TRANSLATIONS, TRANSLATIONS_STEMS
 
