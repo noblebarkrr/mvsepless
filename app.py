@@ -102,7 +102,7 @@ theme = gr.themes.Default(
     )
 
 
-with gr.Blocks(theme=theme) as app:
+def create_app():
     with gr.Tab(t("separation")):
         with gr.Row():
             with gr.Column():
@@ -184,12 +184,35 @@ def parse_args():
     parser.add_argument("--ngrok_token", type=str)
     parser.add_argument("--share", action="store_true")
     parser.add_argument("--port", type=int, default=7860)
+    parser.add_argument("--font", type=str)
+    parser.add_argument("--lang", type=str, default="ru", choices=["ru", "en"])
     return parser.parse_args()
 if __name__ == "__main__":
     args = parse_args()
+    CURRENT_LANG = args.lang
+    css = """
+    .fixed-height { height: 160px !important; min-height: 160px !important; }
+    .fixed-height2 { height: 250px !important; min-height: 250px !important; }
+    """
+    font = args.font
+    if font and os.path.isfile(font) and font.lower().endswith((".ttf", ".otf", ".woff", ".eot")):
+        with open(font, "rb") as font_file:
+            base64_font = base64.b64encode(font_file.read()).decode("utf-8")
+        css += f"""
+        @font-face {{
+            font-family: 'CustomFont';
+            src: url(data:font/truetype;charset=utf-8;base64,{base64_font}) format('truetype');
+        }}
+        body, .gradio-container {{ font-family: 'CustomFont', sans-serif !important; }}
+        """
+
+    with gr.Blocks(theme=theme, css=css) as app:
+        create_app()
+
     if args.ngrok_token:
         ngrok.set_auth_token(args.ngrok_token)
         ngrok.kill()
         tunnel = ngrok.connect(CONFIG["settings"]["port"])
         print(f"Публичная ссылка: {tunnel.public_url}")
+
     app.launch(allowed_paths=["/"], server_port=args.port, share=args.share)
