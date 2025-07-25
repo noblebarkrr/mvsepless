@@ -215,7 +215,7 @@ if __name__ == "__main__":
     if args.ngrok_token:
         ngrok.set_auth_token(args.ngrok_token)
         ngrok.kill()
-        tunnel = ngrok.connect(CONFIG["settings"]["port"])
+        tunnel = ngrok.connect(args.port)
         print(f"Публичная ссылка: {tunnel.public_url}")
 
     app.launch(allowed_paths=["/"], server_port=args.port, share=args.share)
