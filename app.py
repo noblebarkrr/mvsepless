@@ -113,7 +113,7 @@ with gr.Blocks(theme=theme) as app:
                 target_instrument = gr.Textbox(label=t("target_instrument"), value=mvsepless.get_tgt_inst(mvsepless.get_mt()[0], mvsepless.get_mn(mvsepless.get_mt()[0])[0]), interactive=False)
                 vr_aggr = gr.Slider(0, 100, step=1, label=t("vr_aggressiveness"), visible=False, value=5, interactive=True)
                 extract_instrumental = gr.Checkbox(label=t("extract_instrumental"), value=True, interactive=True)
-                stems_list = gr.CheckboxGroup(label=t("stems_list"), info=t("stems_info", target_instrument="vocals") choices=mvsepless.get_stems(mvsepless.get_mt()[0], mvsepless.get_mn(mvsepless.get_mt()[0])[0]), value=None, interactive=False)
+                stems_list = gr.CheckboxGroup(label=t("stems_list"), info=t("stems_info", target_instrument="vocals"), choices=mvsepless.get_stems(mvsepless.get_mt()[0], mvsepless.get_mn(mvsepless.get_mt()[0])[0]), value=None, interactive=False)
                 with gr.Row():
                     output_format, output_bitrate = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True), gr.Slider(32, 320, step=1, label=t("bitrate"), value=320, interactive=True)
                 separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True)
