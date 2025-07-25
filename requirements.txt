@@ -38,7 +38,7 @@ torch_log_wmse==0.3.0
 rotary_embedding_torch==0.6.5
 local-attention==1.11.1
 tenacity==9.1.2
-gradio==5.38.0
+gradio==5.38.2
 omegaconf==2.3.0
 beartype==0.18.5
 spafe==0.3.2
