@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import datetime
 import gradio as gr
+from pyngrok import ngrok
 from multi_inference import MVSEPLESS, OUTPUT_FORMATS
 from assets.translations import TRANSLATIONS, TRANSLATIONS_STEMS
 
@@ -177,4 +178,16 @@ with gr.Blocks(theme=theme) as app:
 
     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
 
-app.launch(allowed_paths=["/"], share=True)
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ngrok_token", type=str)
+    parser.add_argument("--share", action="store_true")
+    parser.add_argument("--port", type=int, default=7860)
+if __name__ == "__main__":
+    args = parse_args()
+    if args.ngrok_token:
+        ngrok.set_auth_token(args.ngrok_token)
+        ngrok.kill()
+        tunnel = ngrok.connect(CONFIG["settings"]["port"])
+        print(f"Публичная ссылка: {tunnel.public_url}")
+    app.launch(allowed_paths=["/"], server_port=args.port, share=args.share)
