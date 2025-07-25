@@ -167,7 +167,7 @@ def create_app():
             try:
                 print(t("loading_plugin", name=name))
                 with gr.Tab(name):
-                    func(lang)
+                    func(CURRENT_LANG)
             except Exception as e:
                 print(t("error_loading_plugin", e=e))
                 pass
