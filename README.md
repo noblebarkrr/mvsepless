@@ -16,7 +16,9 @@
 
 # Рабочая среда
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/beta/Mvsepless_Beta.ipynb)
+Google Colab - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/beta/Mvsepless_Beta.ipynb)
+
+HF Spaces CPU (Без плагинов) - [![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_cpu_beta)
 
 ### Требования для установки
 
