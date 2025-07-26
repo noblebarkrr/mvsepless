@@ -20,6 +20,9 @@ Google Colab - [![Open In Colab](https://colab.research.google.com/assets/colab-
 
 HF Spaces CPU (Без плагинов) - [![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_cpu_beta)
 
+HF Spaces Zero GPU (Без плагинов) - [![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_zero_gpu)
+
+
 ### Требования для установки
 
 - Python 3.11
