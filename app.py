@@ -1,6 +1,14 @@
 import os
 import sys
 import time
+try:
+    import yt_dlp
+    import validators
+except ImportError:
+    os.system("pip install validators")
+    os.system("pip install yt-dlp")
+    import validators
+    
 import shutil
 import argparse
 from datetime import datetime
@@ -14,9 +22,16 @@ def restart_ui():
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
+COOKIE_FILE = None
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
+DOWNLOAD_DIR = os.path.join(os.getcwd(), "downloaded")
 plugins_dir = os.path.join(os.getcwd(), "plugins")
 os.makedirs(plugins_dir, exist_ok=True)
+
+def load_cookie(file):
+    global COOKIE_FILE
+    COOKIE_FILE = file
+    gr.Warning(t("cookie_loaded"))
 
 def upload_plugin_list(files):
     if not files:
@@ -28,6 +43,43 @@ def upload_plugin_list(files):
             print(f"Error copying plugin: {e}")
     time.sleep(2)
     restart_ui()
+
+def download_file(url):
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s'),
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '320',
+        }],
+        'noplaylist': True,  # Скачивать только одно видео, не плейлист
+        'quiet': True,       # Отключить вывод в консоль
+        'no_warnings': True, # Скрыть предупреждения
+    }
+    
+    # Добавляем cookies если указаны
+    if COOKIE_FILE and os.path.exists(COOKIE_FILE):
+        ydl_opts['cookiefile'] = COOKIE_FILE
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        
+        # Получаем имя файла из метаданных
+        if '_type' in info and info['_type'] == 'playlist':
+            # Для плейлистов берем первое видео
+            entry = info['entries'][0]
+            filename = ydl.prepare_filename(entry)
+        else:
+            # Для одиночного видео
+            filename = ydl.prepare_filename(info)
+        
+        # Заменяем оригинальное расширение на .mp3
+        base, _ = os.path.splitext(filename)
+        audio_file = base + '.mp3'
+        
+        return os.path.abspath(audio_file)
 
 CURRENT_LANG = "ru"
 
@@ -49,6 +101,10 @@ def gen_out_dir():
 mvsepless = MVSEPLESS()
 
 def sep_wrapper(a, b, c, d, e, f, g, h):
+    if a is not None:
+        if validators.url(a) and not os.path.exists(a):
+            a = download_file(a)
+    
     if not g:
         g = 128
     results = mvsepless.separator(input_file=a, output_dir=gen_out_dir(), model_type=b, model_name=c, ext_inst=d, vr_aggr=e, output_format=f, output_bitrate=f'{g}k', call_method="cli", selected_stems=h)
@@ -113,6 +169,8 @@ def create_app():
             with gr.Column():
                 input_audio = gr.Audio(label=t("select_file"), interactive=True, type="filepath")
                 input_audio_path = gr.Textbox(label=t("audio_path"), info=t("audio_path_info"), interactive=True)
+                use_cookies = gr.UploadButton(label=t("use_cookies"), size="sm", file_count="single", file_types=[".txt"])
+                
             with gr.Column():
                 with gr.Row():
                     model_type = gr.Dropdown(label=t("model_type"), choices=mvsepless.get_mt(), value=mvsepless.get_mt()[0], interactive=True, filterable=False)
@@ -181,6 +239,8 @@ def create_app():
     model_type.change(fn=(lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0])), inputs=model_type, outputs=model_name).then(fn=(lambda x: (gr.update(visible=False if x in ["vr", "mdx"] else True), gr.update(visible=True if x == "vr" else False))), inputs=model_type, outputs=[extract_instrumental, vr_aggr])
     model_name.change(fn=(lambda x, y: gr.update(choices=mvsepless.get_stems(x, y), value=None)), inputs=[model_type, model_name], outputs=stems_list).then(fn=(lambda x, y: (gr.update(interactive=True if mvsepless.get_tgt_inst(x, y) == None else None, info=t("stems_info", target_instrument=mvsepless.get_tgt_inst(x, y)) if mvsepless.get_tgt_inst(x, y) is not None else t("stems_info2")), gr.update(value=mvsepless.get_tgt_inst(x, y)), gr.update(value=True if mvsepless.get_tgt_inst(x, y) is not None else False))), inputs=[model_type, model_name], outputs=[stems_list, target_instrument, extract_instrumental])
     separate_btn.click(fn=sep_wrapper, inputs=[input_audio_path, model_type, model_name, extract_instrumental, vr_aggr, output_format, output_bitrate, stems_list], outputs=output_stems, show_progress_on=input_audio)
+
+    use_cookies.upload(fn=load_cookie, inputs=use_cookies)
 
     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
 
