@@ -49,6 +49,8 @@ def gen_out_dir():
 mvsepless = MVSEPLESS()
 
 def sep_wrapper(a, b, c, d, e, f, g, h):
+    if not g:
+        g = 128
     results = mvsepless.separator(input_file=a, output_dir=gen_out_dir(), model_type=b, model_name=c, ext_inst=d, vr_aggr=e, output_format=f, output_bitrate=f'{g}k', call_method="cli", selected_stems=h)
     stems = []
     if results:
