@@ -82,6 +82,10 @@ class MVSEPLESS:
         selected_stems: list = None
     ):
 
+        if output_format not in OUTPUT_FORMATS or not output_format:
+            print("Warning: Specified format not exist.")
+            output_format = "flac"
+            
         if output_dir is None:
             output_dir = os.getcwd()
         
