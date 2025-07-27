@@ -81,19 +81,25 @@ class MVSEPLESS:
         call_method: str = "cli",
         selected_stems: list = None
     ):
+
+        if output_dir is None:
+            output_dir = os.getcwd()
+        
         if selected_stems is None:
             selected_stems = []
             
         if not input_file:
             print("Please, input path to input file")
-            return [("None", "/none/none.mp3")]
+            return [("Input path is none", "/none/none.mp3")]
     
         if not os.path.exists(input_file):
             print("Input file not exist")
-            return [("None", "/none/none.mp3")]
+            return [("Input file not exist", "/none/none.mp3")]
     
-        if "STEM" not in template:
-            template = template + "_STEM"
+        if "STEM" not in template and template is not None:
+            template = template + "_STEM_"
+        if not template:
+            template = "mvsepless_NAME_(STEM)"
     
         print(f"Starting inference: {model_type}/{model_name}, bitrate={output_bitrate}, method={call_method}, stems={selected_stems}")
         os.makedirs(output_dir, exist_ok=True)
@@ -103,7 +109,7 @@ class MVSEPLESS:
                 info = models_data[model_type][model_name]
             except KeyError:
                 print("Model not exist")
-                return [("None", "/none/none.mp3")]
+                return [("Model not exist", "/none/none.mp3")]
                 
             conf, ckpt = download_model(self.models_cache_dir, model_name, model_type, 
                                       info["checkpoint_url"], info["config_url"])
@@ -122,13 +128,18 @@ class MVSEPLESS:
                 if selected_stems:
                     instruments = " ".join(f'"{s}"' for s in selected_stems)
                     cmd.append(f'--selected_instruments {instruments}')
-                subprocess.run(" ".join(cmd), shell=True, check=True)
+                try:
+                    subprocess.run(" ".join(cmd), shell=True, check=True)
+                except Exception as e:
+                    print(e)
+                    return [("Error", "/none/none.mp3")]
+                    
     
                 results_path = os.path.join(output_dir, "results.json")
                 if os.path.exists(results_path):
                     with open(results_path, encoding="utf-8") as f:
                         return json.load(f)
-                return [("None", "/none/none.mp3")]
+                return [("Error", "/none/none.mp3")]
     
             elif call_method == "direct":
                 from separator.msst_separator import mvsep_offline
@@ -141,14 +152,14 @@ class MVSEPLESS:
                     )
                 except Exception as e:
                     print(e)
-                    return [("None", "/none/none.mp3")]
+                    return [("Error", "/none/none.mp3")]
     
         elif model_type in ["vr", "mdx"]:
             try:
                 info = models_data[model_type][model_name]
             except KeyError:
                 print("Model not exist")
-                return [("None", "/none/none.mp3")]
+                return [("Model not exist", "/none/none.mp3")]
                 
             if model_type == "vr" and info.get("custom_vr", False):
                 conf, ckpt = download_model(self.models_cache_dir, model_name, model_type, 
@@ -165,13 +176,16 @@ class MVSEPLESS:
                     if selected_stems:
                         instruments = " ".join(f'"{s}"' for s in selected_stems)
                         cmd.append(f'--selected_instruments {instruments}')
-                    subprocess.run(" ".join(cmd), shell=True, check=True)
-    
+                    try:
+                        subprocess.run(" ".join(cmd), shell=True, check=True)
+                    except Exception as e:
+                        print(e)
+                        return [("Error", "/none/none.mp3")]
                     results_path = os.path.join(output_dir, "results.json")
                     if os.path.exists(results_path):
                         with open(results_path, encoding="utf-8") as f:
                             return json.load(f)
-                    return [("None", "/none/none.mp3")]
+                    return [("Error", "/none/none.mp3")]
     
                 elif call_method == "direct":
                     from separator.uvr_sep import custom_vr_separate
@@ -185,7 +199,7 @@ class MVSEPLESS:
                         )
                     except Exception as e:
                         print(e)
-                        return [("None", "/none/none.mp3")]
+                        return [("Error", "/none/none.mp3")]
             else:
                 if call_method == "cli":
                     cmd = ["python", "-m", "separator.uvr_sep", "uvr", 
@@ -197,13 +211,17 @@ class MVSEPLESS:
                     if selected_stems:
                         instruments = " ".join(f'"{s}"' for s in selected_stems)
                         cmd.append(f'--selected_instruments {instruments}')
-                    subprocess.run(" ".join(cmd), shell=True, check=True)
+                    try:
+                        subprocess.run(" ".join(cmd), shell=True, check=True)
+                    except Exception as e:
+                        print(e)
+                        return [("Error", "/none/none.mp3")]
     
                     results_path = os.path.join(output_dir, "results.json")
                     if os.path.exists(results_path):
                         with open(results_path, encoding="utf-8") as f:
                             return json.load(f)
-                    return [("None", "/none/none.mp3")]
+                    return [("Error", "/none/none.mp3")]
     
                 elif call_method == "direct":
                     from separator.uvr_sep import non_custom_uvr_inference
@@ -217,10 +235,10 @@ class MVSEPLESS:
                         )
                     except Exception as e:
                         print(e)
-                        return [("None", "/none/none.mp3")]
+                        return [("Error", "/none/none.mp3")]
     
         print("Unsupported model type")
-        return [("None", "/none/none.mp3")]
+        return [("Unsupported model type", "/none/none.mp3")]
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Multi-inference for separation audio in Google Colab")
