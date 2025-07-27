@@ -8,6 +8,7 @@ except ImportError:
     os.system("pip install validators")
     os.system("pip install yt-dlp")
     import validators
+    import yt_dlp
     
 import shutil
 import argparse
