@@ -20,7 +20,9 @@ TRANSLATIONS = {
         "target_instrument": "Целевой инструмент",
         "stems_info": "Выбор стемов недоступен\nДля извлечения второго стема включите \"Извлечь инструментал\"",
         "stems_info2": "Для получения остатка (при выбранных стемах), включите \"Извлечь инструментал\"",
-        "bitrate": "Битрейт (Кбит/сек)"
+        "bitrate": "Битрейт (Кбит/сек)",
+        "use_cookies": "Загрузить куки",
+        "cookie_loaded": "Куки загружены"
     },
     "en": {
         "app_title": "MVSEPLESS",
@@ -43,7 +45,10 @@ TRANSLATIONS = {
         "target_instrument": "Target instrument",
         "stems_info": "Stem selection unavailable\nEnable \"Extract Instrumental\" to extract the second stem",
         "stems_info2": "To extract the residual (with selected_stems), enable \"Extract Instrumental\"",
-        "bitrate": "Bitrate (Kbit/sec)"
+        "bitrate": "Bitrate (Kbit/sec)",
+        "use_cookies": "Upload cookies",
+        "cookie_loaded": "Cookies uploaded"
+
     }
 }
 
@@ -106,7 +111,12 @@ TRANSLATIONS_STEMS = {
         "effects": "Эффекты",
         "sfx": "Звуковые эффекты",
         "inverted +": "Инверсия +",
-        "inverted -": "Инверсия -"
+        "inverted -": "Инверсия -",
+        "Unsupported model type": "Данный тип модели не поддерживается",
+        "Error": "Ошибка",
+        "Model not exist": "Данной модели не существует",
+        "Input file not exist": "Указанного файла не существует",
+        "Input path is none": "Не указан путь к файлу"
     },
     "en": {
         "vocals": "Vocals",
@@ -166,6 +176,11 @@ TRANSLATIONS_STEMS = {
         "effects": "Effects",
         "sfx": "SFX",
         "inverted +": "Inverted +",
-        "inverted -": "Inverted -"
+        "inverted -": "Inverted -",
+        "Unsupported model type": "Current model type unsupported",
+        "Error": "Error",
+        "Model not exist": "Current model is not exist",
+        "Input file not exist": "Current file is not exist",
+        "Input path is none": "File path not specified"
     }
 }
