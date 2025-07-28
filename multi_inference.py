@@ -13,7 +13,11 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
 os.chdir(SCRIPT_DIR)
 
-from model_list import models_data
+# from model_list import models_data
+with open("models.json", "r", encoding="utf-8") as f:
+    models_data = json.load(f)
+
+
 from utils.preedit_config import conf_editor
 from utils.download_models import download_model
 
@@ -27,6 +31,23 @@ class MVSEPLESS:
         self.model_types = MODEL_TYPES
         self.output_formats = OUTPUT_FORMATS
 
+    def add_model(self, mt, mn, cat, full_name, stems, tgt_inst, ckpt, conf):
+        if not mt or not mt or not cat or not full_name or not stems or not ckpt or not ckpt:
+            return
+        
+        global models_data
+        if mt in ["mel_band_roformer", "bs_roformer", "mdx23c", "scnet", "htdemucs", "bandit", "bandit_v2"]:
+            models_data[mt][mn] = {
+                "category": cat,
+                "full_name": full_name,
+                "stems": stems,
+                "target_instrument": tgt_inst,
+                "checkpoint_url": ckpt,
+                "config_url": conf
+            }
+            with open("models.json", "w", encoding="utf-8") as f:
+                json.dump(models_data, f, indent=4, ensure_ascii=False)
+    
     def get_mt(self):
         return list(models_data.keys())
        
