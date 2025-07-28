@@ -1,4 +1,4 @@
-models_data = {
+{
 
     "mel_band_roformer": {
 
@@ -15,7 +15,7 @@ models_data = {
             "category": "Инструментал и вокал",
             "full_name": "Mel-Band Roformer InstVoc Duality v1 by Unwa",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/melband_roformer_instvoc_duality_v1.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/config_melbandroformer_instvoc_duality.yaml?download=true"
         },
@@ -24,7 +24,7 @@ models_data = {
             "category": "Инструментал и вокал",
             "full_name": "Mel-Band Roformer InstVoc Duality v2 by Unwa",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/melband_roformer_instvox_duality_v2.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/config_melbandroformer_instvoc_duality.yaml?download=true"
         },
@@ -213,7 +213,7 @@ models_data = {
             "category": "Караоке",
             "full_name": "Mel-Band Roformer Karaoke by Becruily",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-karaoke/resolve/main/mel_band_roformer_karaoke_becruily.ckpt?download=true",
             "config_url": "https://huggingface.co/becruily/mel-band-roformer-karaoke/resolve/main/config_karaoke_becruily.yaml?download=true"
         },
@@ -312,7 +312,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "Mel-Band Roformer 4 Stems FT Large v1 by SYH99999",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/MelBandRoformer4StemFTLarge.ckpt?download=true",
             "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
         },
@@ -321,7 +321,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "Mel-Band Roformer 4 Stems FT Large v2 by SYH99999",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/ver2.ckpt?download=true",
             "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
         },
@@ -672,7 +672,7 @@ models_data = {
             "category": "Дыхание",
             "full_name": "Mel-Band Roformer Aspiration by Sucial",
             "stems": ["aspiration", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/Aspiration_Mel_Band_Roformer/resolve/main/aspiration_mel_band_roformer_less_aggr_sdr_18.1201.ckpt?download=true",
             "config_url": "https://huggingface.co/Sucial/Aspiration_Mel_Band_Roformer/resolve/main/config_aspiration_mel_band_roformer.yaml?download=true"
         },
@@ -681,7 +681,7 @@ models_data = {
             "category": "Реверб и эхо",
             "full_name": "Mel-Band Roformer DeReverb-Echo by Sucial",
             "stems": ["dry", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb-echo_mel_band_roformer_sdr_10.0169.ckpt?download=true",
             "config_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb-echo_mel_band_roformer.yaml?download=true"
         },
@@ -825,7 +825,7 @@ models_data = {
             "category": "Вокал",
             "full_name": "Mel-Band Roformer Small by Aname",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/resolve/main/mel_band_roformer_small.ckpt?download=true",
             "config_url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/resolve/main/config.yaml?download=true"
         },
@@ -834,7 +834,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "Mel-Band Roformer 4 Stems Large by Aname",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/mel_band_roformer_4stems_large_ver1.ckpt?download=true",
             "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
         },
@@ -843,7 +843,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "Mel-Band Roformer 4 Stems v2 Large by Aname",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/4stemsver2.ckpt?download=true",
             "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
         },
@@ -852,7 +852,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "Mel-Band Roformer 4 Stems XL by Aname",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/mel_band_roformer_4stems_xl_ver1.ckpt?download=true",
             "config_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/config_xl.yaml?download=true"
         },
@@ -966,7 +966,7 @@ models_data = {
             "category": "6 стемов",
             "full_name": "BS Roformer SW",
             "stems": ["bass", "drums", "other", "piano", "guitar", "vocals"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/undef13/splifft/releases/download/v0.0.1/roformer-fp16.pt",
             "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/BS-Roformer_SW_config.yaml?download=true"
         },
@@ -975,7 +975,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "BS Roformer 4 Stems by ZFTurbo",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.12/model_bs_roformer_ep_17_sdr_9.6568.ckpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.12/config_bs_roformer_384_8_2_485100.yaml"
         },
@@ -984,7 +984,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "BS Roformer 4 Stems FT by SYH99999",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/SYH99999/bs_roformer_4stems_ft/resolve/main/bs_roformer_4stems_ft.pth?download=true",
             "config_url": "https://huggingface.co/SYH99999/bs_roformer_4stems_ft/resolve/main/config.yaml?download=true"
         },
@@ -993,7 +993,7 @@ models_data = {
             "category": "Мужской/Женский вокал",
             "full_name": "BS Roformer Male-Female (ep 146) by Sucial",
             "stems": ["male", "female"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/model_chorus_bs_roformer_ep_146_sdr_23.8613.ckpt?download=true",
             "config_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/config_chorus_male_female_bs_roformer.yaml?download=true"
         },
@@ -1002,7 +1002,7 @@ models_data = {
             "category": "Мужской/Женский вокал",
             "full_name": "BS Roformer Male-Female (ep 267) by Sucial",
             "stems": ["male", "female"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/model_chorus_bs_roformer_ep_267_sdr_24.1275.ckpt?download=true",
             "config_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/config_chorus_male_female_bs_roformer.yaml?download=true"
         },
@@ -1011,7 +1011,7 @@ models_data = {
             "category": "Мужской/Женский вокал",
             "full_name": "BS Roformer Male-Female by Aufr33",
             "stems": ["male", "female"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/bs_roformer_male_female_by_aufr33_sdr_7.2889.ckpt",
             "config_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/config_chorus_male_female_bs_roformer.yaml"
         },
@@ -1038,7 +1038,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "BS Roformer 4 stems by Aname",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/Amane4stem_bs_roformer.ckpt",
             "config_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/Amane4stem_bs_roformer.yaml"
         }
@@ -1050,7 +1050,7 @@ models_data = {
             "category": "Инструментал и вокал",
             "full_name": "MDX23C Inst-Voc HQ by ZFTurbo",
             "stems": ["vocals", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.0/model_vocals_mdx23c_sdr_10.17.ckpt",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_vocals_mdx23c.yaml"
         },
@@ -1059,7 +1059,7 @@ models_data = {
             "category": "Инструментал и вокал",
             "full_name": "MDX23C 8k FFT Inst-Voc HQ v1",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/MDX23C-8KFFT-InstVoc_HQ.ckpt?download=true",
             "config_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/model_2_stem_full_band_8k.yaml?download=true"
         },
@@ -1068,7 +1068,7 @@ models_data = {
             "category": "Инструментал и вокал",
             "full_name": "MDX23C 8k FFT Inst-Voc HQ v2",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/MDX23C-8KFFT-InstVoc_HQ_2.ckpt?download=true",
             "config_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/model_2_stem_full_band_8k.yaml?download=true"
         },
@@ -1077,7 +1077,7 @@ models_data = {
             "category": "Инструментал и вокал",
             "full_name": "MDX23C D1581",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/MDX23C_D1581.ckpt?download=true",
             "config_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/model_2_stem_061321.yaml?download=true"
         },
@@ -1087,7 +1087,7 @@ models_data = {
             "category": "DrumSep",
             "full_name": "MDX23C DrumSep by Aufr33 & Jarredou",
             "stems": ["kick", "snare", "toms", "hh", "ride", "crash"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/jarredou/models/releases/download/aufr33-jarredou_MDX23C_DrumSep_model_v0.1/aufr33-jarredou_DrumSep_model_mdx23c_ep_141_sdr_10.8059.ckpt",
             "config_url": "https://github.com/jarredou/models/releases/download/aufr33-jarredou_MDX23C_DrumSep_model_v0.1/aufr33-jarredou_DrumSep_model_mdx23c_ep_141_sdr_10.8059.yaml"
         },
@@ -1114,7 +1114,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "MDX23C 4 Stems by ZFTurbo",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.1/model_mdx23c_ep_168_sdr_7.0207.ckpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.1/config_musdb18_mdx23c.yaml"
         },
@@ -1136,7 +1136,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "SCNet 4 Stems by ZFTurbo",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.9/SCNet-large_starrytong_fixed.ckpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.9/config_musdb18_scnet_large_starrytong.yaml"
         },
@@ -1145,7 +1145,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "SCNet XL IHF 4 Stems by ZFTurbo",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.15/model_scnet_ep_36_sdr_10.0891.ckpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.15/config_musdb18_scnet_xl_more_wide_v5.yaml"
         },
@@ -1155,7 +1155,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "SCNet 4 Stems XL by StarryTong",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.13/model_scnet_ep_54_sdr_9.8051.ckpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.13/config_musdb18_scnet_xl.yaml"
         },
@@ -1164,7 +1164,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "SCNet 4 Stems XL by ZFTurbo",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/scnet_checkpoint_musdb18.ckpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/config_musdb18_scnet.yaml"
         },
@@ -1173,7 +1173,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "SCNet Large Jazz model by Joris Vaneyghen",
             "stems": ["piano", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/jorisvaneyghen/SCNet/resolve/main/model_jazz_scnet_large.ckpt?download=true",
             "config_url": "https://huggingface.co/spaces/jorisvaneyghen/jazz_playalong/resolve/main/configs/config_jazz_scnet_large.yaml?download=true"
         },
@@ -1182,7 +1182,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "SCNet XL Jazz model by Joris Vaneyghen",
             "stems": ["piano", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/jorisvaneyghen/SCNet/resolve/main/model_jazz_scnet_xl.ckpt?download=true",
             "config_url": "https://huggingface.co/spaces/jorisvaneyghen/jazz_playalong/resolve/main/configs/config_jazz_scnet_xl.yaml?download=true"
         }
@@ -1196,7 +1196,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 1_HP-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "2_HP-UVR": {
@@ -1204,7 +1204,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 2_HP-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "3_HP-Vocal-UVR": {
@@ -1212,7 +1212,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 3_HP-Vocal-UVR",
             "stems": ["Vocals", "Instrumental"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "4_HP-Vocal-UVR": {
@@ -1220,7 +1220,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 4_HP-Vocal-UVR",
             "stems": ["Vocals", "Instrumental"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "5_HP-Karaoke-UVR": {
@@ -1228,7 +1228,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 5_HP-Karaoke-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "6_HP-Karaoke-UVR": {
@@ -1236,7 +1236,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 6_HP-Karaoke-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "7_HP2-UVR": {
@@ -1244,7 +1244,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 7_HP2-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "8_HP2-UVR": {
@@ -1252,7 +1252,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 8_HP2-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "9_HP2-UVR": {
@@ -1260,7 +1260,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 9_HP2-UVR",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "10_SP-UVR-2B-32000-1": {
@@ -1268,7 +1268,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 10_SP-UVR-2B-32000-1",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "11_SP-UVR-2B-32000-2": {
@@ -1276,7 +1276,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 11_SP-UVR-2B-32000-2",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "12_SP-UVR-3B-44100": {
@@ -1284,7 +1284,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 12_SP-UVR-3B-44100",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "13_SP-UVR-4B-44100-1": {
@@ -1292,7 +1292,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 13_SP-UVR-4B-44100-1",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "14_SP-UVR-4B-44100-2": {
@@ -1300,7 +1300,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 14_SP-UVR-4B-44100-2",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "15_SP-UVR-MID-44100-1": {
@@ -1308,7 +1308,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 15_SP-UVR-MID-44100-1",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "16_SP-UVR-MID-44100-2": {
@@ -1316,7 +1316,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 16_SP-UVR-MID-44100-2",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "17_HP-Wind_Inst-UVR": {
@@ -1324,7 +1324,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: 17_HP-Wind_Inst-UVR",
             "stems": ["No Woodwinds", "Woodwinds"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-De-Echo-Aggressive": {
@@ -1332,7 +1332,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: UVR-De-Echo-Aggressive by FoxJoy",
             "stems": ["No Echo", "Echo"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-De-Echo-Normal": {
@@ -1340,7 +1340,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: UVR-De-Echo-Normal by FoxJoy",
             "stems": ["No Echo", "Echo"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-DeEcho-DeReverb": {
@@ -1348,7 +1348,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: UVR-DeEcho-DeReverb by FoxJoy",
             "stems": ["No Reverb", "Reverb"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-DeNoise-Lite": {
@@ -1356,7 +1356,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: UVR-DeNoise-Lite by FoxJoy",
             "stems": ["Noise", "No Noise"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-DeNoise": {
@@ -1364,7 +1364,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: UVR-DeNoise by FoxJoy",
             "stems": ["Noise", "No Noise"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-BVE-4B_SN-44100-1": {
@@ -1372,7 +1372,7 @@ models_data = {
             "full_name": "VR Arch Single Model v5: UVR-BVE-4B_SN-44100",
             "stems": ["Vocals", "Instrumental"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-BVE-v2-4B-SN-44100": {
@@ -1381,7 +1381,7 @@ models_data = {
             "stems": ["Vocals", "Instrumental"],
             "custom_vr": True,
             "primary_stem": "Vocals",
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/UVR-5-1_4band_v4_ms_fullband_BVE_v2_by_aufr33.pth?download=true",
             "config_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/4band_v4_ms_fullband.yaml?download=true"
         },
@@ -1392,7 +1392,7 @@ models_data = {
             "stems": ["Vocals", "Instrumental"],
             "custom_vr": True,
             "primary_stem": "Instrumental",
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/lucassantilli/UVR-Colab-GUI/releases/download/m5.1/MGM-v5-KAROKEE-32000-BETA1.pth",
             "config_url": "https://github.com/lucassantilli/UVR-Colab-GUI/raw/refs/heads/main/modelparams/2band_32000.json"
         },
@@ -1403,7 +1403,7 @@ models_data = {
             "stems": ["Vocals", "Instrumental"],
             "custom_vr": True,
             "primary_stem": "Instrumental",
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/lucassantilli/UVR-Colab-GUI/releases/download/m5.1/MGM-v5-KAROKEE-32000-BETA2-AGR.pth",
             "config_url": "https://github.com/lucassantilli/UVR-Colab-GUI/raw/refs/heads/main/modelparams/2band_32000_agr.json"
         },
@@ -1416,7 +1416,7 @@ models_data = {
             "full_name": "VR Arch Single Model v4: MGM_HIGHEND_v4",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "MGM_LOWEND_A_v4": {
@@ -1424,7 +1424,7 @@ models_data = {
             "full_name": "VR Arch Single Model v4: MGM_LOWEND_A_v4",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "MGM_LOWEND_B_v4": {
@@ -1432,7 +1432,7 @@ models_data = {
             "full_name": "VR Arch Single Model v4: MGM_LOWEND_B_v4",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "MGM_MAIN_v4": {
@@ -1440,7 +1440,7 @@ models_data = {
             "full_name": "VR Arch Single Model v4: MGM_MAIN_v4",
             "stems": ["Instrumental", "Vocals"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-De-Reverb-aufr33-jarredou": {
@@ -1448,7 +1448,7 @@ models_data = {
             "full_name": "VR Arch Single Model v4: UVR-De-Reverb by aufr33-jarredou",
             "stems": ["Dry", "No Dry"],
             "custom_vr": False,
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-De-Breath-sucial-v1": {
@@ -1457,7 +1457,7 @@ models_data = {
             "stems": ["Breath", "No Breath"],
             "custom_vr": True,
             "primary_stem": "Breath",
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/UVR_De-Breathe_1band_sr44100_hl1024_Sucial_v1.pth?download=true",
             "config_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/1band_sr44100_hl1024.json?download=true"
         },
@@ -1468,7 +1468,7 @@ models_data = {
             "stems": ["Breath", "No Breath"],
             "custom_vr": True,
             "primary_stem": "Breath",
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/UVR_De-Breathe_1band_sr44100_hl1024_Sucial_v2.pth?download=true",
             "config_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/1band_sr44100_hl1024.json?download=true"
         },
@@ -1479,7 +1479,7 @@ models_data = {
             "stems": ["Noise", "No Noise"],
             "custom_vr": True,
             "primary_stem": "Noise",
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/MSST-WebUI/resolve/main/All_Models/VR_Models/Harmonic_Noise_Separation_yxlllc.pth?download=true",
             "config_url": "https://github.com/SUC-DriverOld/MSST-WebUI/raw/refs/heads/main/configs_backup/vr_modelparams/1band_sr44100_hl1024.json"
         }
@@ -1492,273 +1492,273 @@ models_data = {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 1",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_HQ_2": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 2",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_HQ_3": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 3",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_HQ_4": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 4",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_HQ_5": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 5",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_Main": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Main",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_Main": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst Main",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_1_9703": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model: UVR-MDX-NET 1",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_2_9682": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model: UVR-MDX-NET 2",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_3_9662": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model: UVR-MDX-NET 3",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_1": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst 1",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_2": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst 2",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_3": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst 3",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_KARA": {
             "category": "Караоке",
             "full_name": "MDX-Net Model: UVR-MDX-NET Karaoke",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_KARA_2": {
             "category": "Караоке",
             "full_name": "MDX-Net Model: UVR-MDX-NET Karaoke 2",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR_MDXNET_9482": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model: UVR_MDXNET_9482",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Voc_FT": {
             "category": "Вокал",
             "full_name": "MDX-Net Model: UVR-MDX-NET Voc FT",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "Kim_Vocal_1": {
             "category": "Вокал",
             "full_name": "MDX-Net Model: Kim Vocal 1",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "Kim_Vocal_2": {
             "category": "Вокал",
             "full_name": "MDX-Net Model: Kim Vocal 2",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "Kim_Inst": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model: Kim Inst",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "Reverb_HQ_By_FoxJoy": {
             "category": "Реверб",
             "full_name": "MDX-Net Model: Reverb HQ By FoxJoy",
             "stems": ["Reverb", "No Reverb"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Crowd_HQ_1": {
             "category": "Звуки толпы",
             "full_name": "MDX-Net Model: UVR-MDX-NET Crowd HQ 1 By Aufr33",
             "stems": ["No Crowd", "Crowd"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_a_vocals": {
             "category": "Вокал",
             "full_name": "MDX-Net Model: kuielab_a_vocals",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_a_other": {
             "category": "Прочее",
             "full_name": "MDX-Net Model: kuielab_a_other",
             "stems": ["Other", "No Other"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_a_bass": {
             "category": "Басс",
             "full_name": "MDX-Net Model: kuielab_a_bass",
             "stems": ["Bass", "No Bass"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_a_drums": {
             "category": "Ударные",
             "full_name": "MDX-Net Model: kuielab_a_drums",
             "stems": ["Drums", "No Drums"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_b_vocals": {
             "category": "Вокал",
             "full_name": "MDX-Net Model: kuielab_b_vocals",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_b_other": {
             "category": "Прочее",
             "full_name": "MDX-Net Model: kuielab_b_other",
             "stems": ["Other", "No Other"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_b_bass": {
             "category": "Басс",
             "full_name": "MDX-Net Model: kuielab_b_bass",
             "stems": ["Bass", "No Bass"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "kuielab_b_drums": {
             "category": "Ударные",
             "full_name": "MDX-Net Model: kuielab_b_drums",
             "stems": ["Drums", "No Drums"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Main_340": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_340",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Main_390": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_390",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Main_406": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_406",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Main_427": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_427",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Main_438": {
             "category": "Инструментал и вокал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_438",
             "stems": ["Vocals", "Instrumental"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Inst_82_beta": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Inst_82_beta",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Inst_90_beta": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Inst_90_beta",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET_Inst_187_beta": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Inst_187_beta",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         },
 
         "UVR-MDX-NET-Inst_full_292": {
             "category": "Инструментал",
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET-Inst_full_292",
             "stems": ["Instrumental", "Vocals"],
-            "target_instrument": None
+            "target_instrument": null
         }
 
     },
@@ -1769,7 +1769,7 @@ models_data = {
             "category": "Вокал",
             "full_name": "HTDemucs4 (MVSep finetuned)",
             "stems": ["vocals", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.0/model_vocals_htdemucs_sdr_8.78.ckpt",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_vocals_htdemucs.yaml"
         },
@@ -1778,7 +1778,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "HTDemucs4",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
         },
@@ -1787,7 +1787,7 @@ models_data = {
             "category": "6 стемов",
             "full_name": "HTDemucs4 (6 stems)",
             "stems": ["vocals", "drums", "bass", "other", "guitar", "piano"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_htdemucs_6stems.yaml"
         },
@@ -1796,7 +1796,7 @@ models_data = {
             "category": "4 стема",
             "full_name": "Demucs3 mmi",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/75fc33f5-1941ce65.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_demucs3_mmi.yaml"
         },
@@ -1805,7 +1805,7 @@ models_data = {
             "category": "Басс",
             "full_name": "HTDemucs4 FT Bass",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/d12395a8-e57c48e6.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
         },
@@ -1814,7 +1814,7 @@ models_data = {
             "category": "Ударные",
             "full_name": "HTDemucs4 FT Drums",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/f7e0c4bc-ba3fe64a.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
         },
@@ -1823,7 +1823,7 @@ models_data = {
             "category": "Вокал",
             "full_name": "HTDemucs4 FT Vocals",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/04573f0d-f3cf25b2.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
         },
@@ -1832,7 +1832,7 @@ models_data = {
             "category": "Прочее",
             "full_name": "HTDemucs4 FT Other",
             "stems": ["vocals", "drums", "bass", "other"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/92cfc3b6-ef3bcb9c.th",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
         },
@@ -1841,7 +1841,7 @@ models_data = {
             "category": "Фантомный центр",
             "full_name": "HTDemucs4 MId-Side by wesleyr36",
             "stems": ["similarity", "difference"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/jarredou/HTDemucs_Similarity_Extractor_by_wesleyr36/resolve/main/model_htdemucs_ep_21_sdr_13.6970.ckpt?download=true",
             "config_url": "https://huggingface.co/jarredou/HTDemucs_Similarity_Extractor_by_wesleyr36/resolve/main/config_htdemucs_similarity.yaml?download=true"
         }
@@ -1854,7 +1854,7 @@ models_data = {
             "category": "Кинематограф",
             "full_name": "Bandit Plus: Cinematic Bandit Plus (by kwatcharasupat)",
             "stems": ["speech", "music", "effects"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.3/model_bandit_plus_dnr_sdr_11.47.chpt",
             "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.3/config_dnr_bandit_bsrnn_multi_mus64.yaml"
         },
@@ -1867,7 +1867,7 @@ models_data = {
             "category": "Кинематограф",
             "full_name": "Bandit v2: Cinematic Bandit v2 Multilang (by kwatcharasupat)",
             "stems": ["speech", "music", "sfx"],
-            "target_instrument": None,
+            "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/jarredou/banditv2_state_dicts_only/resolve/main/checkpoint-multi_state_dict.ckpt",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/refs/heads/main/configs/config_dnr_bandit_v2_mus64.yaml"
         },
@@ -1875,68 +1875,3 @@ models_data = {
     }
 
 }
-
-medley_vox_models = {
-
-    "multi_singing_librispeech": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech/vocals.json?download=true"
-    },
-
-    "multi_singing_librispeech_138": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech_138/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/multi_singing_librispeech_138/vocals.json?download=true"
-    },
-
-    "singing_librispeech_ft_isrnet": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_ft_iSRNet/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_ft_iSRNet/vocals.json?download=true"
-    },
-
-    "singing_librispeech_isrnet": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_iSRNet/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/singing_librispeech_iSRNet/vocals.json?download=true"
-    },
-
-    "vocal_231": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocal%20231/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocal%20231/vocals.json?download=true"
-    },
-
-    "vocals_135": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20135/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20135/vocals.json?download=true"
-    },
-
-    "vocals_163": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20163/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20163/vocals.json?download=true"
-    },
-
-    "vocals_188": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20188/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20188/vocals.json?download=true"
-    },
-
-    "vocals_200": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20200/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20200/vocals.json?download=true"
-    },
-
-    "vocals_238": {
-        "checkpoint_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20238/vocals.pth?download=true",
-        "config_url": "https://huggingface.co/Cyru5/MedleyVox/resolve/main/vocals%20238/vocals.json?download=true"
-    }
-
-}
-
-
-
-
-
-
-
-
-
-
-
