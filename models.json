@@ -774,6 +774,39 @@
             "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_aggressive.ckpt?download=true",
             "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/melband_karaokefusion_gonza.yaml?download=true"
         },
+        "Mel-Band-Roformer_BVE_gonzaluigi": {
+            "category": "Караоке",
+            "full_name": "Mel-Band Roformer BVE by Gonzaluigi",
+            "stems": [
+                "Lead",
+                "Back"
+            ],
+            "target_instrument": "Lead",
+            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Roformer-BVE-Gonzaluigi/resolve/main/mel_band_roformer_bve_gonza.ckpt?download=true",
+            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Roformer-BVE-Gonzaluigi/resolve/main/config_bve_gonza.yaml?download=true"
+        },
+        "Mel-Band-Roformer_Karaoke_Fusion_v2_Aggr_gonzaluigi": {
+            "category": "Караоке",
+            "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
+            "stems": [
+                "Vocals",
+                "Instrumental"
+            ],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_agg_v2.ckpt?download=true",
+            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/karaoke_fusion_v2_config.yaml?download=true"
+        },
+        "Mel-Band-Roformer_Karaoke_Fusion_Total_gonzaluigi": {
+            "category": "Караоке",
+            "full_name": "Mel-Band Roformer Karaoke Fusion Total by Gonzaluigi",
+            "stems": [
+                "Vocals",
+                "Instrumental"
+            ],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_total.ckpt?download=true",
+            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/karaoke_fusion_total_config.yaml?download=true"
+        },
         "Mel-Band-Roformer_DeReverb_anvuew": {
             "category": "Реверб",
             "full_name": "Mel-Band Roformer DeReverb by Anvuew",
@@ -1065,39 +1098,6 @@
             "target_instrument": "other",
             "checkpoint_url": "https://huggingface.co/meskvlla33/metal_roformer_preview/resolve/main/metal_roformer_inst_mesk_preview.ckpt?download=true",
             "config_url": "https://huggingface.co/meskvlla33/metal_roformer_preview/resolve/main/config_inst_metal_roformer_mesk.yaml?download=true"
-        },
-        "Mel-Band-Roformer_BVE_gonzaluigi": {
-            "category": "Караоке",
-            "full_name": "Mel-Band Roformer BVE by Gonzaluigi",
-            "stems": [
-                "Lead",
-                "Back"
-            ],
-            "target_instrument": "Lead",
-            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Roformer-BVE-Gonzaluigi/resolve/main/mel_band_roformer_bve_gonza.ckpt?download=true",
-            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Roformer-BVE-Gonzaluigi/resolve/main/config_bve_gonza.yaml?download=true"
-        },
-        "Mel-Band-Roformer_Karaoke_Fusion_v2_Aggr_gonzaluigi": {
-            "category": "Караоке",
-            "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
-            "stems": [
-                "Vocals",
-                "Instrumental"
-            ],
-            "target_instrument": "Vocals",
-            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_agg_v2.ckpt?download=true",
-            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/karaoke_fusion_v2_config.yaml?download=true"
-        },
-        "Mel-Band-Roformer_Karaoke_Fusion_Total_gonzaluigi": {
-            "category": "Караоке",
-            "full_name": "Mel-Band Roformer Karaoke Fusion Total by Gonzaluigi",
-            "stems": [
-                "Vocals",
-                "Instrumental"
-            ],
-            "target_instrument": "Vocals",
-            "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_total.ckpt?download=true",
-            "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/karaoke_fusion_total_config.yaml?download=true"
         }
     },
     "bs_roformer": {
