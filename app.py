@@ -191,6 +191,17 @@ def create_app():
                 audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
                 output_stems.extend([audio1, audio2])
 
+    with gr.Tab("Add models"):
+        mt = gr.Dropdown(label="Model_type", choices=mvsepless.get_mt(), value=mvsepless.get_mt()[0], interactive=True, filterable=False)
+        mn = gr.Textbox(label="Model_name", value="New_model", interactive=True)
+        cat = gr.Textbox(label="Category", value="Вокал" ,interactive=True)
+        fl_name = gr.Textbox(label="Fullname", value="Вокал" ,interactive=True)
+        stems = gr.Textbox(label="List stems (['stem', 'stem'])", value="['stem', 'stem']" ,interactive=True)
+        tgt_inst = gr.Textbox(label="Target_instruent", value=None ,interactive=True)
+        link_to_ckpt = gr.Textbox(label="Link to ckpt",interactive=True)
+        link_to_conf = gr.Textbox(label="Link to config",interactive=True)
+        add_model_btn = gr.Button("Add model")
+        
     with gr.Tab(t("plugins")):
         plugins = [] 
 
@@ -244,6 +255,9 @@ def create_app():
     use_cookies.upload(fn=load_cookie, inputs=use_cookies)
 
     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
+    add_model_btn.click(lambda a, b, c, d, e, f, g, h: mvsepless.add_model(a, b, c, d, ast.literal_eval(e), f, g, h), inputs=[mt, mn, cat, fl_name, stems, tgt_inst, link_to_ckpt, link_to_conf]).then(lambda: gr.update(choices=mvsepless.get_mt()), outputs=model_type)
+    
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
