@@ -32,10 +32,8 @@ class MVSEPLESS:
         self.output_formats = OUTPUT_FORMATS
 
     def add_model(self, mt, mn, cat, full_name, stems, tgt_inst, ckpt, conf):
-
-        
-        
-        
+        if not mt or not mt or not cat or not full_name or not stems or not ckpt or not ckpt:
+            return
         
         global models_data
         if mt in ["mel_band_roformer", "bs_roformer", "mdx23c", "scnet", "htdemucs", "bandit", "bandit_v2"]:
