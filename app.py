@@ -1,7 +1,8 @@
 import os
 import sys
-import time
+import ast
 import base64
+import time
 try:
     import yt_dlp
     import validators
@@ -256,7 +257,7 @@ def create_app():
     use_cookies.upload(fn=load_cookie, inputs=use_cookies)
 
     upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
-    add_model_btn.click(lambda a, b, c, d, e, f, g, h: mvsepless.add_model(a, b, c, d, ast.literal_eval(e), f, g, h), inputs=[mt, mn, cat, fl_name, stems, tgt_inst, link_to_ckpt, link_to_conf]).then(lambda: gr.update(choices=mvsepless.get_mt()), outputs=model_type)
+    add_model_btn.click(lambda a, b, c, d, e, f, g, h: mvsepless.add_model(a, b, c, d, ast.literal_eval(e), f, g, h), inputs=[mt, mn, cat, fl_name, stems, tgt_inst, link_to_ckpt, link_to_conf]).success(lambda: gr.update(choices=mvsepless.get_mt()), outputs=model_type)
     
 
 
