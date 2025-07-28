@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import base64
 import shutil
 import argparse
 from datetime import datetime
