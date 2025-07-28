@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import base64
 try:
     import yt_dlp
     import validators
