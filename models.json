@@ -1195,7 +1195,7 @@
             "category": "Инструментал",
             "full_name": "VR Arch Single Model v5: 1_HP-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1203,7 +1203,7 @@
             "category": "Инструментал",
             "full_name": "VR Arch Single Model v5: 2_HP-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1211,7 +1211,7 @@
             "category": "Вокал",
             "full_name": "VR Arch Single Model v5: 3_HP-Vocal-UVR",
             "stems": ["Vocals", "Instrumental"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1219,7 +1219,7 @@
             "category": "Вокал",
             "full_name": "VR Arch Single Model v5: 4_HP-Vocal-UVR",
             "stems": ["Vocals", "Instrumental"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1227,7 +1227,7 @@
             "category": "Караоке",
             "full_name": "VR Arch Single Model v5: 5_HP-Karaoke-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1235,7 +1235,7 @@
             "category": "Караоке",
             "full_name": "VR Arch Single Model v5: 6_HP-Karaoke-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1243,7 +1243,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 7_HP2-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1251,7 +1251,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 8_HP2-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1259,7 +1259,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 9_HP2-UVR",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1267,7 +1267,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 10_SP-UVR-2B-32000-1",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1275,7 +1275,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 11_SP-UVR-2B-32000-2",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1283,7 +1283,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 12_SP-UVR-3B-44100",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1291,7 +1291,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 13_SP-UVR-4B-44100-1",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1299,7 +1299,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 14_SP-UVR-4B-44100-2",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1307,7 +1307,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 15_SP-UVR-MID-44100-1",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1315,7 +1315,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v5: 16_SP-UVR-MID-44100-2",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1323,7 +1323,7 @@
             "category": "Деревянные духовые",
             "full_name": "VR Arch Single Model v5: 17_HP-Wind_Inst-UVR",
             "stems": ["No Woodwinds", "Woodwinds"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1331,7 +1331,7 @@
             "category": "Эхо",
             "full_name": "VR Arch Single Model v5: UVR-De-Echo-Aggressive by FoxJoy",
             "stems": ["No Echo", "Echo"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1339,7 +1339,7 @@
             "category": "Эхо",
             "full_name": "VR Arch Single Model v5: UVR-De-Echo-Normal by FoxJoy",
             "stems": ["No Echo", "Echo"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1347,7 +1347,7 @@
             "category": "Реверб",
             "full_name": "VR Arch Single Model v5: UVR-DeEcho-DeReverb by FoxJoy",
             "stems": ["No Reverb", "Reverb"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1355,7 +1355,7 @@
             "category": "Шум",
             "full_name": "VR Arch Single Model v5: UVR-DeNoise-Lite by FoxJoy",
             "stems": ["Noise", "No Noise"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1363,7 +1363,7 @@
             "category": "Шум",
             "full_name": "VR Arch Single Model v5: UVR-DeNoise by FoxJoy",
             "stems": ["Noise", "No Noise"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1371,7 +1371,7 @@
             "category": "Караоке",
             "full_name": "VR Arch Single Model v5: UVR-BVE-4B_SN-44100",
             "stems": ["Vocals", "Instrumental"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1379,7 +1379,7 @@
             "category": "Караоке",
             "full_name": "VR Arch Single Model v4: UVR-BVE-v2-4B-SN-44100",
             "stems": ["Vocals", "Instrumental"],
-            "custom_vr": True,
+            "custom_vr": true,
             "primary_stem": "Vocals",
             "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/UVR-5-1_4band_v4_ms_fullband_BVE_v2_by_aufr33.pth?download=true",
@@ -1390,7 +1390,7 @@
             "category": "Караоке",
             "full_name": "VR Arch Single Model v5: MGM-v5-KAROKEE-32000-BETA1",
             "stems": ["Vocals", "Instrumental"],
-            "custom_vr": True,
+            "custom_vr": true,
             "primary_stem": "Instrumental",
             "target_instrument": null,
             "checkpoint_url": "https://github.com/lucassantilli/UVR-Colab-GUI/releases/download/m5.1/MGM-v5-KAROKEE-32000-BETA1.pth",
@@ -1401,7 +1401,7 @@
             "category": "Караоке",
             "full_name": "VR Arch Single Model v5: MGM-v5-KAROKEE-32000-BETA2-AGR.pth",
             "stems": ["Vocals", "Instrumental"],
-            "custom_vr": True,
+            "custom_vr": true,
             "primary_stem": "Instrumental",
             "target_instrument": null,
             "checkpoint_url": "https://github.com/lucassantilli/UVR-Colab-GUI/releases/download/m5.1/MGM-v5-KAROKEE-32000-BETA2-AGR.pth",
@@ -1415,7 +1415,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v4: MGM_HIGHEND_v4",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1423,7 +1423,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v4: MGM_LOWEND_A_v4",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1431,7 +1431,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v4: MGM_LOWEND_B_v4",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1439,7 +1439,7 @@
             "category": "Инструментал и вокал",
             "full_name": "VR Arch Single Model v4: MGM_MAIN_v4",
             "stems": ["Instrumental", "Vocals"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1447,7 +1447,7 @@
             "category": "Реверб",
             "full_name": "VR Arch Single Model v4: UVR-De-Reverb by aufr33-jarredou",
             "stems": ["Dry", "No Dry"],
-            "custom_vr": False,
+            "custom_vr": false,
             "target_instrument": null
         },
 
@@ -1455,7 +1455,7 @@
             "category": "Дыхание",
             "full_name": "VR Arch Single Model v4: UVR-De-Breath v1 by Sucial",
             "stems": ["Breath", "No Breath"],
-            "custom_vr": True,
+            "custom_vr": true,
             "primary_stem": "Breath",
             "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/UVR_De-Breathe_1band_sr44100_hl1024_Sucial_v1.pth?download=true",
@@ -1466,7 +1466,7 @@
             "category": "Дыхание",
             "full_name": "VR Arch Single Model v4: UVR-De-Breath v2 by Sucial",
             "stems": ["Breath", "No Breath"],
-            "custom_vr": True,
+            "custom_vr": true,
             "primary_stem": "Breath",
             "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/UVR_De-Breathe_1band_sr44100_hl1024_Sucial_v2.pth?download=true",
@@ -1477,7 +1477,7 @@
             "category": "Дыхание",
             "full_name": "VR Arch Single Model v5: Harmonic_Noise_Sep",
             "stems": ["Noise", "No Noise"],
-            "custom_vr": True,
+            "custom_vr": true,
             "primary_stem": "Noise",
             "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/Sucial/MSST-WebUI/resolve/main/All_Models/VR_Models/Harmonic_Noise_Separation_yxlllc.pth?download=true",
