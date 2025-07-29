@@ -45,6 +45,7 @@ spafe==0.3.2
 torch_audiomentations==0.12.0
 auraloss==0.4.0
 onnxruntime-gpu>=1.17
+ml_dtypes==0.5.1 # Фикс для MDX-моделей
 yt_dlp
 python-magic
 pyngrok
