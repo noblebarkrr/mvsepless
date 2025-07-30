@@ -1016,17 +1016,6 @@
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/model_kim_3.ckpt?download=true",
             "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true"
         },
-        "Mel-Band-Roformer_kapm_aname": {
-            "category": "Вокал",
-            "full_name": "Mel-Band Roformer kapm by Aname",
-            "stems": [
-                "vocals",
-                "other"
-            ],
-            "target_instrument": "vocals",
-            "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/kapm.ckpt?download=true",
-            "config_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/kapm.yaml?download=true"
-        },
         "Mel-Band-Roformer_Small_aname": {
             "category": "Вокал",
             "full_name": "Mel-Band Roformer Small by Aname",
