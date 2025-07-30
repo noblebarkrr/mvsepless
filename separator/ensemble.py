@@ -149,6 +149,10 @@ def ensemble_audio_files(files, output="res.wav", ensemble_type='avg_wave', weig
     
     data = []
     sr = None
+    max_length = 0
+    max_channels = 0
+    
+    # Первый проход: определяем максимальную длину и количество каналов
     for f in files:
         if not os.path.isfile(f):
             print('Error. Can\'t find file: {}. Check paths.'.format(f))
@@ -160,7 +164,41 @@ def ensemble_audio_files(files, output="res.wav", ensemble_type='avg_wave', weig
         elif sr != current_sr:
             print('Error: Sample rates must be equal for all files')
             exit()
+        
+        # Определяем количество каналов
+        if wav.ndim == 1:
+            channels = 1
+            length = len(wav)
+        else:
+            channels = wav.shape[0]
+            length = wav.shape[1]
+            
+        max_length = max(max_length, length)
+        max_channels = max(max_channels, channels)
         print("Waveform shape: {} sample rate: {}".format(wav.shape, sr))
+    
+    # Второй проход: обработка и выравнивание файлов
+    for f in files:
+        wav, current_sr = librosa.load(f, sr=None, mono=False)
+        
+        # Обработка каналов
+        if wav.ndim == 1:
+            # Моно -> стерео
+            wav = np.vstack([wav, wav])
+        elif wav.shape[0] == 1:
+            # Один канал -> стерео
+            wav = np.vstack([wav[0], wav[0]])
+        elif wav.shape[0] > 2:
+            # Более 2 каналов -> берем первые два
+            wav = wav[:2, :]
+        
+        # Выравнивание длины
+        if wav.shape[1] < max_length:
+            pad_width = ((0, 0), (0, max_length - wav.shape[1]))
+            wav = np.pad(wav, pad_width, mode='constant')
+        elif wav.shape[1] > max_length:
+            wav = wav[:, :max_length]
+        
         data.append(wav)
     
     data = np.array(data)
@@ -171,22 +209,11 @@ def ensemble_audio_files(files, output="res.wav", ensemble_type='avg_wave', weig
     output = f"{output}.{out_format}"
     
     if out_format in ["wav", "flac"]:
-    
         sf.write(output, res.T, sr, subtype='PCM_16')
         sf.write(output_wav, res.T, sr, subtype='PCM_16')
 
     elif out_format in ["mp3", "m4a", "aac", "ogg", "opus", "aiff"]:
-
         write_audio_file(output, res.T, sr, out_format, "320k")
         sf.write(output_wav, res.T, sr, subtype='PCM_16')
 
     return output, output_wav
-
-
-    
-# input_settings = [("demucs / v4", 1.0, "vocals"), ("mel_band_roformer / mel_4_stems", 0.5, "vocals")]
-
-# out, wav = ensembless(input_audio, input_settings, "max_fft", format)
-    
-    
-    
