@@ -13,10 +13,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
 os.chdir(SCRIPT_DIR)
 
-# from model_list import models_data
 with open("models.json", "r", encoding="utf-8") as f:
     models_data = json.load(f)
-
 
 from utils.preedit_config import conf_editor
 from utils.download_models import download_model
@@ -30,6 +28,15 @@ class MVSEPLESS:
         self.models_cache_dir = os.path.join(SCRIPT_DIR, "separator", "models_cache")
         self.model_types = MODEL_TYPES
         self.output_formats = OUTPUT_FORMATS
+
+    def delete_models_cache(self):
+        shutil.rmtree(self.models_cache_dir)
+        os.makedirs(self.models_cache_dir, exist_ok=True)
+
+    def update_models(self):
+        global models_data
+        with open("models.json", "r", encoding="utf-8") as f:
+            models_data = json.load(f)
 
     def add_model(self, mt, mn, cat, full_name, stems, tgt_inst, ckpt, conf):
         if not mt or not mt or not cat or not full_name or not stems or not ckpt or not ckpt:
@@ -45,6 +52,20 @@ class MVSEPLESS:
                 "checkpoint_url": ckpt,
                 "config_url": conf
             }
+            with open("models.json", "w", encoding="utf-8") as f:
+                json.dump(models_data, f, indent=4, ensure_ascii=False)
+
+    def remove_model(self, model_type, model_name):
+        global models_data
+        
+        if model_type in models_data and model_name in models_data[model_type]:
+            del models_data[model_type][model_name]
+            
+            # Clean up empty model types
+            if not models_data[model_type]:
+                del models_data[model_type]
+                
+            # Save changes back to file
             with open("models.json", "w", encoding="utf-8") as f:
                 json.dump(models_data, f, indent=4, ensure_ascii=False)
     
