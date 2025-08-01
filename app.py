@@ -105,7 +105,11 @@ mvsepless = MVSEPLESS()
 def sep_wrapper(a, b, c, d, e, f, g, h):
     if a is not None:
         if validators.url(a) and not os.path.exists(a):
-            a = download_file(a)
+            try:
+                a = download_file(a)
+            except Exception as e:
+                print(e)
+                a = None
     
     if not g:
         g = 128
@@ -165,86 +169,87 @@ theme = gr.themes.Default(
     )
 
 
-def create_app():
-    with gr.Tab(t("separation")):
-        with gr.Row():
-            with gr.Column():
-                input_audio = gr.Audio(label=t("select_file"), interactive=True, type="filepath")
-                input_audio_path = gr.Textbox(label=t("audio_path"), info=t("audio_path_info"), interactive=True)
-                use_cookies = gr.UploadButton(label=t("use_cookies"), size="sm", file_count="single", file_types=[".txt"])
-                
-            with gr.Column():
-                with gr.Row():
-                    model_type = gr.Dropdown(label=t("model_type"), choices=mvsepless.get_mt(), value=mvsepless.get_mt()[0], interactive=True, filterable=False)
-                    model_name = gr.Dropdown(label=t("model_name"), choices=mvsepless.get_mn(mvsepless.get_mt()[0]), value=mvsepless.get_mn(mvsepless.get_mt()[0])[0], interactive=True, filterable=False)
-                target_instrument = gr.Textbox(label=t("target_instrument"), value=mvsepless.get_tgt_inst(mvsepless.get_mt()[0], mvsepless.get_mn(mvsepless.get_mt()[0])[0]), interactive=False)
-                vr_aggr = gr.Slider(0, 100, step=1, label=t("vr_aggressiveness"), visible=False, value=5, interactive=True)
-                extract_instrumental = gr.Checkbox(label=t("extract_instrumental"), value=True, interactive=True)
-                stems_list = gr.CheckboxGroup(label=t("stems_list"), info=t("stems_info", target_instrument="vocals"), choices=mvsepless.get_stems(mvsepless.get_mt()[0], mvsepless.get_mn(mvsepless.get_mt()[0])[0]), value=None, interactive=False)
-                with gr.Row():
-                    output_format, output_bitrate = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False), gr.Slider(32, 320, step=1, label=t("bitrate"), value=320, interactive=True)
-                separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True)
-        download_via_zip_btn = gr.DownloadButton(label="Download via zip", visible=False, interactive=True)
-        output_stems = []
-        for _ in range(10):
+def create_app(css=None, theme=None):
+    with gr.Blocks(theme=theme, css=css) as app:
+        with gr.Tab(t("separation")):
             with gr.Row():
-                audio1 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
-                audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
-                output_stems.extend([audio1, audio2])
+                with gr.Column(scale=2):
+                    input_audio = gr.Audio(label=t("select_file"), interactive=True, type="filepath")
+                    input_audio_path = gr.Textbox(label=t("audio_path"), info=t("audio_path_info"), interactive=True)
+                    use_cookies = gr.UploadButton(label=t("use_cookies"), size="sm", file_count="single", file_types=[".txt"])
+                    
+                with gr.Column(scale=4):
+                    with gr.Row():
+                        model_type = gr.Dropdown(label=t("model_type"), interactive=True, filterable=False)
+                        model_name = gr.Dropdown(label=t("model_name"), interactive=True, filterable=False)
+                    target_instrument = gr.Textbox(label=t("target_instrument"), interactive=False)
+                    vr_aggr = gr.Slider(0, 100, step=1, label=t("vr_aggressiveness"), visible=False, value=5, interactive=True)
+                    extract_instrumental = gr.Checkbox(label=t("extract_instrumental"), value=False, interactive=True)
+                    stems_list = gr.CheckboxGroup(label=t("stems_list"), value=None, interactive=False)
+                    with gr.Row():
+                        output_format, output_bitrate = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False), gr.Slider(32, 320, step=1, label=t("bitrate"), value=320, interactive=True)
+                    separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True)
+            download_via_zip_btn = gr.DownloadButton(label="Download via zip", visible=False, interactive=True)
+            output_stems = []
+            for _ in range(10):
+                with gr.Row():
+                    audio1 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                    audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                    output_stems.extend([audio1, audio2])
 
-    with gr.Tab(t("plugins")):
-        plugins = [] 
+        with gr.Tab(t("plugins")):
+            plugins = [] 
 
-        with gr.Tab(t('upload')):
-            with gr.Blocks():
-                upload_plugin_files = gr.Files(label=t('upload'), file_types=[".py"], interactive=True)
-                upload_btn = gr.Button(t('upload_btn'), interactive=True)
+            with gr.Tab(t('upload')):
+                with gr.Blocks():
+                    upload_plugin_files = gr.Files(label=t('upload'), file_types=[".py"], interactive=True)
+                    upload_btn = gr.Button(t('upload_btn'), interactive=True)
 
-        if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
-          try:
-            for filename in os.listdir(plugins_dir):
-                if filename.endswith(".py") and filename != "__init__.py":
-                    file_path = os.path.join(plugins_dir, filename)
-                    module_name = filename[:-3]
-                    spec = importlib.util.spec_from_file_location(module_name, file_path)
-                    module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(module)
+            if os.path.exists(plugins_dir) and os.path.isdir(plugins_dir):
+              try:
+                for filename in os.listdir(plugins_dir):
+                    if filename.endswith(".py") and filename != "__init__.py":
+                        file_path = os.path.join(plugins_dir, filename)
+                        module_name = filename[:-3]
+                        spec = importlib.util.spec_from_file_location(module_name, file_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
 
-                    plugin_func = None
-                    name_func = None
+                        plugin_func = None
+                        name_func = None
 
-                    for attr_name in dir(module):
-                        attr = getattr(module, attr_name)
-                        if callable(attr):
-                            if attr_name.endswith("plugin"):
-                                plugin_func = attr
-                            elif attr_name.endswith("plugin_name"):
-                                name_func = attr
+                        for attr_name in dir(module):
+                            attr = getattr(module, attr_name)
+                            if callable(attr):
+                                if attr_name.endswith("plugin"):
+                                    plugin_func = attr
+                                elif attr_name.endswith("plugin_name"):
+                                    name_func = attr
 
-                    if plugin_func is not None:
-                        plugin_name = name_func() if name_func is not None else module_name
-                        plugins.append((plugin_name, plugin_func))
+                        if plugin_func is not None:
+                            plugin_name = name_func() if name_func is not None else module_name
+                            plugins.append((plugin_name, plugin_func))
 
-          except Exception as e:
-            print(e)
+              except Exception as e:
+                print(e)
 
-        for name, func in plugins:
-            try:
-                print(t("loading_plugin", name=name))
-                with gr.Tab(name):
-                    func(CURRENT_LANG)
-            except Exception as e:
-                print(t("error_loading_plugin", e=e))
-                pass
+            for name, func in plugins:
+                try:
+                    print(t("loading_plugin", name=name))
+                    with gr.Tab(name):
+                        func(CURRENT_LANG)
+                except Exception as e:
+                    print(t("error_loading_plugin", e=e))
+                    pass
 
-    input_audio.upload(fn=(lambda x: gr.update(value=x)), inputs=input_audio, outputs=input_audio_path)
-    model_type.change(fn=(lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0])), inputs=model_type, outputs=model_name).then(fn=(lambda x: (gr.update(visible=False if x in ["vr", "mdx"] else True), gr.update(visible=True if x == "vr" else False))), inputs=model_type, outputs=[extract_instrumental, vr_aggr])
-    model_name.change(fn=(lambda x, y: gr.update(choices=mvsepless.get_stems(x, y), value=None)), inputs=[model_type, model_name], outputs=stems_list).then(fn=(lambda x, y: (gr.update(interactive=True if mvsepless.get_tgt_inst(x, y) == None else None, info=t("stems_info", target_instrument=mvsepless.get_tgt_inst(x, y)) if mvsepless.get_tgt_inst(x, y) is not None else t("stems_info2")), gr.update(value=mvsepless.get_tgt_inst(x, y)), gr.update(value=True if mvsepless.get_tgt_inst(x, y) is not None else False))), inputs=[model_type, model_name], outputs=[stems_list, target_instrument, extract_instrumental])
-    separate_btn.click(fn=sep_wrapper, inputs=[input_audio_path, model_type, model_name, extract_instrumental, vr_aggr, output_format, output_bitrate, stems_list], outputs=output_stems, show_progress_on=input_audio)
-
-    use_cookies.upload(fn=load_cookie, inputs=use_cookies)
-
-    upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
+        app.load(fn=mvsepless.update_models).then(fn=(lambda: gr.update(choices=mvsepless.get_mt(), value=mvsepless.get_mt()[0])), inputs=None, outputs=model_type).then(fn=(lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0])), inputs=model_type, outputs=model_name).then(fn=(lambda x: (gr.update(visible=False if x in ["vr", "mdx"] else True), gr.update(visible=True if x == "vr" else False))), inputs=model_type, outputs=[extract_instrumental, vr_aggr]).then(fn=(lambda x, y: gr.update(choices=mvsepless.get_stems(x, y), value=None)), inputs=[model_type, model_name], outputs=stems_list).then(fn=(lambda x, y: (gr.update(interactive=True if mvsepless.get_tgt_inst(x, y) == None else None, info=t("stems_info", target_instrument=mvsepless.get_tgt_inst(x, y)) if mvsepless.get_tgt_inst(x, y) is not None else t("stems_info2")), gr.update(value=mvsepless.get_tgt_inst(x, y)), gr.update(value=True if mvsepless.get_tgt_inst(x, y) is not None else False))), inputs=[model_type, model_name], outputs=[stems_list, target_instrument, extract_instrumental])
+        input_audio.upload(fn=(lambda x: gr.update(value=x)), inputs=input_audio, outputs=input_audio_path)
+        model_type.change(fn=(lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0])), inputs=model_type, outputs=model_name).then(fn=(lambda x: (gr.update(visible=False if x in ["vr", "mdx"] else True), gr.update(visible=True if x == "vr" else False))), inputs=model_type, outputs=[extract_instrumental, vr_aggr])
+        model_name.change(fn=(lambda x, y: gr.update(choices=mvsepless.get_stems(x, y), value=None)), inputs=[model_type, model_name], outputs=stems_list).then(fn=(lambda x, y: (gr.update(interactive=True if mvsepless.get_tgt_inst(x, y) == None else None, info=t("stems_info", target_instrument=mvsepless.get_tgt_inst(x, y)) if mvsepless.get_tgt_inst(x, y) is not None else t("stems_info2")), gr.update(value=mvsepless.get_tgt_inst(x, y)), gr.update(value=True if mvsepless.get_tgt_inst(x, y) is not None else False))), inputs=[model_type, model_name], outputs=[stems_list, target_instrument, extract_instrumental])
+        separate_btn.click(fn=sep_wrapper, inputs=[input_audio_path, model_type, model_name, extract_instrumental, vr_aggr, output_format, output_bitrate, stems_list], outputs=output_stems, show_progress_on=input_audio)
+        use_cookies.upload(fn=load_cookie, inputs=use_cookies)
+        upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
+    return app
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -273,8 +278,7 @@ if __name__ == "__main__":
         body, .gradio-container {{ font-family: 'CustomFont', sans-serif !important; }}
         """
 
-    with gr.Blocks(theme=theme, css=css) as app:
-        create_app()
+    app = create_app(css=css, theme=theme)
 
     if args.ngrok_token:
         ngrok.set_auth_token(args.ngrok_token)
