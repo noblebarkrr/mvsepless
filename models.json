@@ -741,6 +741,28 @@
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/Karaoke_GaboxV1.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/karaokegabox_1750911344.yaml?download=true"
         },
+        "Mel-Band-Roformer_Karaoke_v2_gabox": {
+            "category": "Караоке",
+            "full_name": "Mel-Band Roformer Karaoke v2 by GaboxR67",
+            "stems": [
+                "Vocals",
+                "Instrumental"
+            ],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Karaoke_GaboxV2.ckpt?download=true",
+            "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/karaokegabox_1750911344.yaml?download=true"
+        },
+        "Mel-Band-Roformer_Lead_Vocals_DeReverb_gabox": {
+            "category": "Реверб",
+            "full_name": "Mel-Band Roformer Lead Vocals DeReverb by GaboxR67",
+            "stems": [
+                "Vocals",
+                "Instrumental"
+            ],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Lead_VocalDereverb.ckpt?download=true",
+            "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/karaokegabox_1750911344.yaml?download=true"
+        },
         "Mel-Band-Roformer_Denoise_DeBleed_gabox": {
             "category": "Шум",
             "full_name": "Mel-Band Roformer Denoise DeBleed by GaboxR67",
@@ -1181,6 +1203,17 @@
             "target_instrument": "vocals",
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Config.yaml?download=true"
+        },
+        "BS-Roformer_Resurrection_Inst_unwa": {
+            "category": "Инструментал",
+            "full_name": "BS Roformer Instrumental Resurrection by Unwa",
+            "stems": [
+                "vocals",
+                "other"
+            ],
+            "target_instrument": "vocals",
+            "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst.ckpt?download=true",
+            "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst-Config.yaml?download=true"
         },
         "BS-Roformer_VocTest_gabox": {
             "category": "Вокал",
