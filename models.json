@@ -642,17 +642,6 @@
             "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv3.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
         },
-        "Mel-Band-Roformer_Instrumental_small_gabox": {
-            "category": "Инструментал",
-            "full_name": "Mel-Band Roformer Instrumental Small by GaboxR67",
-            "stems": [
-                "Vocals",
-                "Instrumental"
-            ],
-            "target_instrument": "Instrumental",
-            "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/small_inst.ckpt?download=true",
-            "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
-        },
         "Mel-Band-Roformer_Vocals_Fv1_gabox": {
             "category": "Вокал",
             "full_name": "Mel-Band Roformer Vocals Fv1 by GaboxR67",
