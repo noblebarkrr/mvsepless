@@ -286,4 +286,4 @@ if __name__ == "__main__":
         tunnel = ngrok.connect(args.port)
         print(f"Публичная ссылка: {tunnel.public_url}")
 
-    app.launch(allowed_paths=["/"], server_port=args.port, share=args.share)
+    app.launch(allowed_paths=["/"], server_name="0.0.0.0", server_port=args.port, share=args.share)
