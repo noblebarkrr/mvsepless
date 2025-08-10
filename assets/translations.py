@@ -4,7 +4,7 @@ TRANSLATIONS = {
         "separation": "Разделение",
         "plugins": "Плагины",
         "select_file": "Выберите файл",
-        "audio_path": "Путь к файлу",
+        "audio_path": "... или вставьте ссылку на аудио (с интернета/локально)",
         "audio_path_info": "Здесь можно ввести путь к файлу, либо загрузить его выше и получить путь к загруженному файлу",
         "model_type": "Тип модели",
         "model_name": "Имя модели",
@@ -22,14 +22,39 @@ TRANSLATIONS = {
         "stems_info2": "Для получения остатка (при выбранных стемах), включите \"Извлечь инструментал\"",
         "bitrate": "Битрейт (Кбит/сек)",
         "use_cookies": "Загрузить куки",
-        "cookie_loaded": "Куки загружены"
+        "cookie_loaded": "Куки загружены",
+        "add_settings": "Дополнительные настройки",
+        "encoder_settings": "Настройки экспорта",
+        "results": "### Файлы после разделения",
+        "template": "Формат имени",
+        "template_help": """
+> Формат имени результатов в мульти-инференсе.
+
+> Доступные ключи для формата имени стемов:
+> (изменить формат имени стемов можно здесь)
+> * **NAME** - Имя входного файла
+> * **STEM** - Название стема (например, vocals, drums, bass)
+> * **MODEL** - Имя модели (например, Mel-Band-Roformer_Instrumental_FvX_gabox, UVR-MDX-NET-Inst_HQ_3)
+
+> Пример:
+> * **Шаблон:** NAME_STEM_MODEL
+> * **Результат:** test_vocals_Mel-Band-Roformer_Instrumental_FvX_gabox
+
+<div style="color: red; font-weight: bold; background-color: #ffecec; padding: 10px; border-left: 3px solid red; margin: 10px 0;">
+
+Используйте ТОЛЬКО указанные ключи (NAME, STEM, MODEL) во избежание повреждения файлов. 
+
+НЕ добавляйте дополнительный текст или символы вне этих ключей, либо делайте это с осторожностью.
+
+</div>
+        """
     },
     "en": {
         "app_title": "MVSEPLESS",
         "separation": "Separation",
         "plugins": "Plugins",
         "select_file": "Select File",
-        "audio_path": "Audio path",
+        "audio_path": "... or paste audio path (from internet/locally)",
         "audio_path_info": "You can enter the file path here, or upload it above and get the path to the uploaded file.",
         "model_type": "Model Type",
         "model_name": "Model Name",
@@ -47,7 +72,32 @@ TRANSLATIONS = {
         "stems_info2": "To extract the residual (with selected_stems), enable \"Extract Instrumental\"",
         "bitrate": "Bitrate (Kbit/sec)",
         "use_cookies": "Upload cookies",
-        "cookie_loaded": "Cookies uploaded"
+        "cookie_loaded": "Cookies uploaded",
+        "add_settings": "Additional settings",
+        "encoder_settings": "Export settings",
+        "results": "### Files after separation",
+        "template": "Name format",
+        "template_help": """
+> The format for naming results in multi-inference.
+
+> Available keys for stem name formatting:
+> (you can change the stem name format here)
+> * **NAME** - Input file name  
+> * **STEM** - Stem name (e.g., vocals, drums, bass)  
+> * **MODEL** - Model name (e.g., Mel-Band-Roformer_Instrumental_FvX_gabox, UVR-MDX-NET-Inst_HQ_3)  
+
+> Example:  
+> * **Template:** NAME_STEM_MODEL  
+> * **Result:** test_vocals_Mel-Band-Roformer_Instrumental_FvX_gabox  
+
+<div style="color: red; font-weight: bold; background-color: #ffecec; padding: 10px; border-left: 3px solid red; margin: 10px 0;">
+
+Use ONLY the specified keys (NAME, STEM, MODEL) to avoid file corruption.  
+
+DO NOT add extra text or symbols outside these keys, or do so with caution.  
+
+</div>
+        """
 
     }
 }
