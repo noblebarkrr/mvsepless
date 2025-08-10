@@ -1200,7 +1200,7 @@
                 "vocals",
                 "other"
             ],
-            "target_instrument": "vocals",
+            "target_instrument": "other",
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst-Config.yaml?download=true"
         },
