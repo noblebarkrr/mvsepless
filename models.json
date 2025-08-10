@@ -1105,27 +1105,23 @@
             "category": "Ударные",
             "full_name": "BS Roformer Drums Experimental by BeatLoo Labs",
             "stems": [
-                "vocals",
                 "drums",
-                "bass",
                 "other"
             ],
             "target_instrument": "drums",
             "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_drums_bs_roformer_ep_12_sdr_7.2279.ckpt?download=true",
-            "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_4_drums_bs_roformer.yaml?download=true"
+            "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/BS-Roformer_Drums_beatloo_labs_config.yaml?download=true"
         },
         "BS-Roformer_Bass_beatloo_labs": {
             "category": "Басс",
             "full_name": "BS Roformer Bass Experimental by BeatLoo Labs",
             "stems": [
-                "vocals",
-                "drums",
                 "bass",
                 "other"
             ],
             "target_instrument": "bass",
             "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_bass_bs_roformer_ep_10_sdr_5.7862.ckpt?download=true",
-            "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_4_bass_bs_roformer.yaml?download=true"
+            "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/BS-Roformer_Bass_beatloo_labs_config.yaml?download=true"
         },
         "BS-Roformer_Vocals_1296_viperx": {
             "category": "Вокал",
