@@ -48,40 +48,44 @@ def upload_plugin_list(files):
 
 def download_file(url):
 
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s'),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '320',
-        }],
-        'noplaylist': True,  # Скачивать только одно видео, не плейлист
-        'quiet': True,       # Отключить вывод в консоль
-        'no_warnings': True, # Скрыть предупреждения
-    }
-    
-    # Добавляем cookies если указаны
-    if COOKIE_FILE and os.path.exists(COOKIE_FILE):
-        ydl_opts['cookiefile'] = COOKIE_FILE
-    
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
+    if validators.url(url) and not os.path.exists(url):
+
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s'),
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '320',
+            }],
+            'noplaylist': True,  # Скачивать только одно видео, не плейлист
+            'quiet': True,       # Отключить вывод в консоль
+            'no_warnings': True, # Скрыть предупреждения
+        }
         
-        # Получаем имя файла из метаданных
-        if '_type' in info and info['_type'] == 'playlist':
-            # Для плейлистов берем первое видео
-            entry = info['entries'][0]
-            filename = ydl.prepare_filename(entry)
-        else:
-            # Для одиночного видео
-            filename = ydl.prepare_filename(info)
+        # Добавляем cookies если указаны
+        if COOKIE_FILE and os.path.exists(COOKIE_FILE):
+            ydl_opts['cookiefile'] = COOKIE_FILE
         
-        # Заменяем оригинальное расширение на .mp3
-        base, _ = os.path.splitext(filename)
-        audio_file = base + '.mp3'
-        
-        return os.path.abspath(audio_file)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            
+            # Получаем имя файла из метаданных
+            if '_type' in info and info['_type'] == 'playlist':
+                # Для плейлистов берем первое видео
+                entry = info['entries'][0]
+                filename = ydl.prepare_filename(entry)
+            else:
+                # Для одиночного видео
+                filename = ydl.prepare_filename(info)
+            
+            # Заменяем оригинальное расширение на .mp3
+            base, _ = os.path.splitext(filename)
+            audio_file = base + '.mp3'
+            
+            return os.path.abspath(audio_file)
+
+    return url
 
 CURRENT_LANG = "ru"
 
@@ -102,18 +106,11 @@ def gen_out_dir():
 
 mvsepless = MVSEPLESS()
 
-def sep_wrapper(a, b, c, d, e, f, g, h):
-    if a is not None:
-        if validators.url(a) and not os.path.exists(a):
-            try:
-                a = download_file(a)
-            except Exception as e:
-                print(e)
-                a = None
+def sep_wrapper(a, b, c, d, e, f, g, h, i):
     
     if not g:
         g = 128
-    results = mvsepless.separator(input_file=a, output_dir=gen_out_dir(), model_type=b, model_name=c, ext_inst=d, vr_aggr=e, output_format=f, output_bitrate=f'{g}k', call_method="cli", selected_stems=h)
+    results = mvsepless.separator(input_file=a, output_dir=gen_out_dir(), model_type=b, model_name=c, ext_inst=d, vr_aggr=e, output_format=f, output_bitrate=f'{g}k', call_method="cli", selected_stems=h, template=i)
     stems = []
     if results:
         for i, (stem, output_file) in enumerate(results[:20]):
@@ -172,30 +169,43 @@ theme = gr.themes.Default(
 def create_app(css=None, theme=None):
     with gr.Blocks(theme=theme, css=css) as app:
         with gr.Tab(t("separation")):
-            with gr.Row():
-                with gr.Column(scale=2):
-                    input_audio = gr.Audio(label=t("select_file"), interactive=True, type="filepath")
-                    input_audio_path = gr.Textbox(label=t("audio_path"), info=t("audio_path_info"), interactive=True)
-                    use_cookies = gr.UploadButton(label=t("use_cookies"), size="sm", file_count="single", file_types=[".txt"])
-                    
-                with gr.Column(scale=4):
+            with gr.Column(scale=4):
+                with gr.Group():
+                    input_audio = gr.File(label=t("select_file"), interactive=True, type="filepath", file_count="single", file_types=["audio"])
+                    with gr.Group():
+                        with gr.Row(equal_height=True):
+                            input_audio_path = gr.Textbox(show_label=False, placeholder=t("audio_path"), interactive=True, scale=12, lines=3, container=False, show_copy_button=True)
+                            use_cookies = gr.UploadButton(label=t("use_cookies"), size="sm", file_count="single", file_types=[".txt"], scale=2, min_width=80)
+                            dwn_audio_btn = gr.Button("↓", variant="primary", scale=1, min_width=40)
+                with gr.Group():
                     with gr.Row():
                         model_type = gr.Dropdown(label=t("model_type"), interactive=True, filterable=False)
                         model_name = gr.Dropdown(label=t("model_name"), interactive=True, filterable=False)
-                    target_instrument = gr.Textbox(label=t("target_instrument"), interactive=False)
-                    vr_aggr = gr.Slider(0, 100, step=1, label=t("vr_aggressiveness"), visible=False, value=5, interactive=True)
-                    extract_instrumental = gr.Checkbox(label=t("extract_instrumental"), value=False, interactive=True)
-                    stems_list = gr.CheckboxGroup(label=t("stems_list"), value=None, interactive=False)
-                    with gr.Row():
-                        output_format, output_bitrate = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False), gr.Slider(32, 320, step=1, label=t("bitrate"), value=320, interactive=True)
-                    separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True)
-            download_via_zip_btn = gr.DownloadButton(label="Download via zip", visible=False, interactive=True)
-            output_stems = []
-            for _ in range(10):
-                with gr.Row():
-                    audio1 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
-                    audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
-                    output_stems.extend([audio1, audio2])
+                with gr.Accordion(label=t("add_settings"), open=False):
+                    with gr.Column(variant="compact"):
+                        with gr.Row(equal_height=True):
+                            with gr.Column(scale=2):
+                                target_instrument = gr.Textbox(label=t("target_instrument"), interactive=False)
+                                vr_aggr = gr.Slider(0, 100, step=1, label=t("vr_aggressiveness"), visible=False, value=5, interactive=True)
+                                extract_instrumental = gr.Checkbox(label=t("extract_instrumental"), value=False, interactive=True)
+                            stems_list = gr.CheckboxGroup(label=t("stems_list"), value=None, interactive=False, scale=4)
+                        with gr.Accordion(label=t("encoder_settings"), open=False):
+                            with gr.Accordion(label=t("template"), open=False):
+                                gr.Markdown(t("template_help"))
+                                template = gr.Textbox(label=t("template"), value="NAME_MODEL_STEM")
+                            with gr.Row():
+                                output_format, output_bitrate = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", interactive=True, filterable=False), gr.Slider(32, 320, step=1, label=t("bitrate"), value=320, interactive=True)
+                separate_btn = gr.Button(t("separate_btn"), variant="primary", interactive=True)
+                with gr.Column(variant="compact"):
+                    with gr.Group():
+                        with gr.Column(variant="compact"):
+                            gr.Markdown(t("results"))
+                        output_stems = []
+                        for _ in range(10):
+                            with gr.Row():
+                                audio1 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                                audio2 = gr.Audio(visible=False, interactive=False, type="filepath", show_download_button=True)
+                                output_stems.extend([audio1, audio2])
 
         with gr.Tab(t("plugins")):
             plugins = [] 
@@ -242,11 +252,16 @@ def create_app(css=None, theme=None):
                     print(t("error_loading_plugin", e=e))
                     pass
 
+
+
+
+        output_format.change(lambda x: gr.update(visible=False if x in ["flac", "wav", "aiff"] else True), inputs=output_format, outputs=output_bitrate)
+        dwn_audio_btn.click(download_file, inputs=input_audio_path, outputs=input_audio_path)
         app.load(fn=mvsepless.update_models).then(fn=(lambda: gr.update(choices=mvsepless.get_mt(), value=mvsepless.get_mt()[0])), inputs=None, outputs=model_type).then(fn=(lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0])), inputs=model_type, outputs=model_name).then(fn=(lambda x: (gr.update(visible=False if x in ["vr", "mdx"] else True), gr.update(visible=True if x == "vr" else False))), inputs=model_type, outputs=[extract_instrumental, vr_aggr]).then(fn=(lambda x, y: gr.update(choices=mvsepless.get_stems(x, y), value=None)), inputs=[model_type, model_name], outputs=stems_list).then(fn=(lambda x, y: (gr.update(interactive=True if mvsepless.get_tgt_inst(x, y) == None else None, info=t("stems_info", target_instrument=mvsepless.get_tgt_inst(x, y)) if mvsepless.get_tgt_inst(x, y) is not None else t("stems_info2")), gr.update(value=mvsepless.get_tgt_inst(x, y)), gr.update(value=True if mvsepless.get_tgt_inst(x, y) is not None else False))), inputs=[model_type, model_name], outputs=[stems_list, target_instrument, extract_instrumental])
         input_audio.upload(fn=(lambda x: gr.update(value=x)), inputs=input_audio, outputs=input_audio_path)
         model_type.change(fn=(lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0])), inputs=model_type, outputs=model_name).then(fn=(lambda x: (gr.update(visible=False if x in ["vr", "mdx"] else True), gr.update(visible=True if x == "vr" else False))), inputs=model_type, outputs=[extract_instrumental, vr_aggr])
         model_name.change(fn=(lambda x, y: gr.update(choices=mvsepless.get_stems(x, y), value=None)), inputs=[model_type, model_name], outputs=stems_list).then(fn=(lambda x, y: (gr.update(interactive=True if mvsepless.get_tgt_inst(x, y) == None else None, info=t("stems_info", target_instrument=mvsepless.get_tgt_inst(x, y)) if mvsepless.get_tgt_inst(x, y) is not None else t("stems_info2")), gr.update(value=mvsepless.get_tgt_inst(x, y)), gr.update(value=True if mvsepless.get_tgt_inst(x, y) is not None else False))), inputs=[model_type, model_name], outputs=[stems_list, target_instrument, extract_instrumental])
-        separate_btn.click(fn=sep_wrapper, inputs=[input_audio_path, model_type, model_name, extract_instrumental, vr_aggr, output_format, output_bitrate, stems_list], outputs=output_stems, show_progress_on=input_audio)
+        separate_btn.click(fn=sep_wrapper, inputs=[input_audio_path, model_type, model_name, extract_instrumental, vr_aggr, output_format, output_bitrate, stems_list, template], outputs=output_stems, show_progress_on=input_audio)
         use_cookies.upload(fn=load_cookie, inputs=use_cookies)
         upload_btn.click(fn=upload_plugin_list, inputs=upload_plugin_files)
     return app
