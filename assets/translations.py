@@ -47,7 +47,8 @@ TRANSLATIONS = {
 НЕ добавляйте дополнительный текст или символы вне этих ключей, либо делайте это с осторожностью.
 
 </div>
-        """
+        """,
+        "downloader_settings": "Настройки загрузчика"
     },
     "en": {
         "app_title": "MVSEPLESS",
@@ -97,7 +98,8 @@ Use ONLY the specified keys (NAME, STEM, MODEL) to avoid file corruption.
 DO NOT add extra text or symbols outside these keys, or do so with caution.  
 
 </div>
-        """
+        """,
+        "downloader_settings": "Downloader settings"
 
     }
 }
