@@ -5,6 +5,7 @@ from datetime import datetime
 import yt_dlp
 from multi_inference import MVSEPLESS, OUTPUT_FORMATS
 from utils.download_audio import Downloader 
+
 from assets.translations import TRANSLATIONS, TRANSLATIONS_STEMS
 from assets.themes import THEMES
 from utils.plugin_manager import load_plugin_ui
@@ -40,6 +41,8 @@ def t_stem(key, **kwargs):
 
 def create_zip(output_audio, output_dir=".", zip_name="output.zip"):
     zip_path = os.path.join(output_dir, zip_name)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
 
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         for stem_name, audio_file in output_audio:
@@ -50,20 +53,14 @@ def create_zip(output_audio, output_dir=".", zip_name="output.zip"):
 
     return zip_path
 
+def download_wrapper(url, cookie):
+    t = downloader.dw_yt_dlp(url, cookie)
+    return gr.update(value=t), gr.update(value=t), gr.update(visible=True), gr.update(visible=False)
 
 def run_inference(input_audio, model_type, model_name, output_format):
     """Функция для запуска инференса"""
 
     temp_dir = os.path.join(CURRENT_DIR, "output", datetime.now().strftime("%Y%m%d_%H%M%S"))
-
-    if not input_audio:
-        raise ValueError(t("error_no_input"))
-
-    if not model_type or not model_name:
-        raise ValueError(t("error_no_model"))
-
-    if output_format not in OUTPUT_FORMATS:
-        raise ValueError(t("error_invalid_format"))
 
     output_audio = mvsepless.separator(
         input_file=input_audio,
@@ -107,21 +104,31 @@ if __name__ == "__main__":
             with gr.Row():
                 with gr.Column():
                     with gr.Group() as local:
-                        input_audio = gr.Audio(label=t("input_audio"), type="filepath", interactive=True)
-                        url_input_btn = gr.Button(t("input_url_btn"), visible=True)
+                        input_audio = gr.Audio(label=t("upload_label"), type="filepath", interactive=True)
+                        with gr.Row():
+                            path_0_btn = gr.Button(t("path_btn"))
+                            url_0_btn = gr.Button(t("url_btn"))
                     with gr.Group(visible=False) as url:
-                        input_link = gr.Textbox(label=t("input_url"), placeholder=t("audio_url"), )
-                        with gr.Column(variant="panel"):
+                        with gr.Column(variant="compact"):
                             with gr.Row(equal_height=True):
-                                upload_cookie = gr.UploadButton(label=t("upload_cookie"), file_types=[".txt"], file_count="single")
-                                download_audio_btn = gr.Button(t("download_audio_btn"))
-                        local_input_btn = gr.Button(t("input_local_btn"), variant="primary")
+                                upload_cookie = gr.UploadButton(label=t("upload_cookie"), file_types=[".txt"], file_count="single", scale=1, variant="primary")
+                                input_link = gr.Textbox(label=t("url_label"), placeholder=t("url_placeholder"), interactive=True, scale=10)
+                                download_audio_btn = gr.Button(t("download_audio_btn"), scale=1, variant="stop")
+                        with gr.Row(equal_height=True):
+                            path_1_btn = gr.Button(t("path_btn"))
+                            upload_0_btn = gr.Button(t("upload_btn"), variant="primary")
+                    with gr.Group(visible=False) as path:
+                        input_path = gr.Textbox(label=t("path_label"), placeholder=t("path_placeholder"), interactive=True)
+                        with gr.Row(equal_height=True):
+                            upload_1_btn = gr.Button(t("upload_btn"), variant="primary")
+                            url_1_btn = gr.Button(t("url_btn"))
+
                 with gr.Column():
                     with gr.Group():
                         model_type = gr.Dropdown(label=t("model_type"), choices=mvsepless.get_mt(), filterable=False, value=mvsepless.get_mt()[0])
                         model_name = gr.Dropdown(label=t("model_name"), choices=mvsepless.get_mn(mvsepless.get_mt()[0]), value=mvsepless.get_mn(mvsepless.get_mt()[0])[0], filterable=False)
                         output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", filterable=False)
-                        run_button = gr.Button(t("run_inference"), variant="primary")
+                        separate_btn = gr.Button(t("separate"), variant="primary")
 
             with gr.Group():
                 output_audio = [gr.Audio(interactive=False, type="filepath", visible=False, show_download_button=True) for _ in range(64)]
@@ -130,28 +137,46 @@ if __name__ == "__main__":
         if args.plugins:
             load_plugin_ui(lang=args.lang)
 
+        input_audio.change(
+            lambda x: gr.update(value=x),
+            inputs=input_audio,
+            outputs=input_path
+        )
 
+        path_0_btn.click(            
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[local, path]
+        )
 
-        url_input_btn.click(
+        path_1_btn.click(            
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[url, path]
+        )
+
+        url_0_btn.click(
             lambda: (gr.update(visible=False), gr.update(visible=True)),
             outputs=[local, url]
         )
-        local_input_btn.click(
+
+        url_1_btn.click(
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[path, url]
+        )
+
+        upload_0_btn.click(
             lambda: (gr.update(visible=True), gr.update(visible=False)),
             outputs=[local, url]
         )
 
+        upload_1_btn.click(
+            lambda: (gr.update(visible=True), gr.update(visible=False)),
+            outputs=[local, path]
+        )
+
         download_audio_btn.click(
-            lambda url, cookie:( 
-                gr.update(value=downloader.dw_yt_dlp(
-                url,
-                cookie=cookie
-            )), 
-                gr.update(visible=True),
-                gr.update(visible=False),
-            ),
+            download_wrapper,
             inputs=[input_link, upload_cookie],
-            outputs=[input_audio, local, url],
+            outputs=[input_audio, input_path, local, url],
             show_progress=True
         )
 
@@ -160,9 +185,10 @@ if __name__ == "__main__":
             inputs=model_type,
             outputs=model_name
         )
-        run_button.click(
+
+        separate_btn.click(
             run_inference,
-            inputs=[input_audio, model_type, model_name, output_format],
+            inputs=[input_path, model_type, model_name, output_format],
             outputs=[*output_audio, output_zip],
             show_progress_on=input_audio
         )
