@@ -17,7 +17,7 @@ praat-parselmouth==0.4.5
 webrtcvad==2.0.10
 edge-tts==7.0.2
 audiomentations==0.24.0
-pedalboard==0.8.1
+pedalboard==0.8.2
 ffmpeg-python==0.2.0
 faiss-cpu==1.11
 ml_collections==1.1.0
