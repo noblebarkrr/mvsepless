@@ -28,9 +28,6 @@
 
 Google Colab - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/gamma/Mvsepless_Gamma.ipynb)
 
-HF Spaces Zero GPU Gamma **(Без плагинов)** - [![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_gamma)
-
-
 ### Требования для установки
 
 - Python 3.11
