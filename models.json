@@ -1200,6 +1200,17 @@
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst-Config.yaml?download=true"
         },
+        "BS-Roformer_Karaoke_becruily": {
+            "category": "Караоке",
+            "full_name": "BS Roformer Karaoke by GaboxR67",
+            "stems": [
+                "Vocals",
+                "Instrumental"
+            ],
+            "target_instrument": "Vocals",
+            "checkpoint_url": "https://huggingface.co/becruily/bs-roformer-karaoke/resolve/main/bs_roformer_karaoke_frazer_becruily.ckpt?download=true",
+            "config_url": "https://huggingface.co/becruily/bs-roformer-karaoke/resolve/main/config_karaoke_frazer_becruily.yaml?download=true"
+        },
         "BS-Roformer_VocTest_gabox": {
             "category": "Вокал",
             "full_name": "BS Roformer Vocals by GaboxR67",
@@ -1207,7 +1218,7 @@
                 "Vocals",
                 "Instrumental"
             ],
-            "target_instrument": "vocals",
+            "target_instrument": "Vocals",
             "checkpoint_url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/resolve/main/voc_gaboxBSR.ckpt?download=true",
             "config_url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/resolve/main/voc_gaboxBSroformer.yaml?download=true"
         },
