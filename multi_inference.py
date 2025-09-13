@@ -7,6 +7,7 @@ import argparse
 import json
 import subprocess
 from datetime import datetime
+from typing import Literal
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
@@ -110,7 +111,7 @@ class MVSEPLESS:
         self,
         input_file: str = None,
         output_dir: str = None,
-        model_type: str = "mel_band_roformer",
+        model_type: Literal["mel_band_roformer", "bs_roformer", "mdx23c", "scnet", "htdemucs", "bandit", "bandit_v2", "vr", "mdx"] = "mel_band_roformer",
         model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
         ext_inst: bool = False,
         vr_aggr: int = 5,
