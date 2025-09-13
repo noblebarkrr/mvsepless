@@ -272,7 +272,7 @@ class MVSEPClient:
             
             task_hash = create_resp["data"]["hash"]
             self._log_debug(f"Created separation task: {task_hash}")
-            gr.Warning(title=t("separation_created"), message=f"{t("hash")}: {task_hash}")
+            gr.Warning(title=t("separation_created"), message=f"{t('hash')}: {task_hash}")
             
             while True:
                 status_resp = self.get_separation_status(task_hash)
