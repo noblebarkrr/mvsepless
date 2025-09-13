@@ -20,7 +20,34 @@ TRANSLATIONS = {
         "output_zip": "Скачать ZIP",
         "inference_tab": "Инференс",
         "results": "Результаты",
-        "vr_aggr_slider": "Агрессивность"
+        "extract_instrumental": "Извлечь инструментал",
+        "stems_list": "Список стемов",
+        "target_instrument": "Целевой инструмент",
+        "stems_info": "Выбор стемов недоступен\nДля извлечения второго стема включите \"Извлечь инструментал\"",
+        "stems_info2": "Для получения остатка (при выбранных стемах), включите \"Извлечь инструментал\"",
+        "add_settings": "Дополнительные настройки",
+        "template": "Формат имени",
+        "template_help": """
+> Формат имени результатов в мульти-инференсе.
+
+> Доступные ключи для формата имени стемов:
+> (изменить формат имени стемов можно здесь)
+> * **NAME** - Имя входного файла
+> * **STEM** - Название стема (например, vocals, drums, bass)
+> * **MODEL** - Имя модели (например, Mel-Band-Roformer_Instrumental_FvX_gabox, UVR-MDX-NET-Inst_HQ_3)
+
+> Пример:
+> * **Шаблон:** NAME_STEM_MODEL
+> * **Результат:** test_vocals_Mel-Band-Roformer_Instrumental_FvX_gabox
+
+<div style="color: red; font-weight: bold; background-color: #ffecec; padding: 10px; border-left: 3px solid red; margin: 10px 0;">
+
+Используйте ТОЛЬКО указанные ключи (NAME, STEM, MODEL) во избежание повреждения файлов. 
+
+НЕ добавляйте дополнительный текст или символы вне этих ключей, либо делайте это с осторожностью.
+
+</div>
+        """,
     },
     "en": {
         "upload_label": "Input audio",
@@ -43,7 +70,34 @@ TRANSLATIONS = {
         "output_zip": "Download ZIP",
         "inference_tab": "Inference",
         "results": "Results",
-        "vr_aggr_slider": "Aggressive"
+        "extract_instrumental": "Extract Instrumental",
+        "stems_list": "Stems List",
+        "target_instrument": "Target instrument",
+        "stems_info": "Stem selection unavailable\nEnable \"Extract Instrumental\" to extract the second stem",
+        "stems_info2": "To extract the residual (with selected_stems), enable \"Extract Instrumental\"",
+        "add_settings": "Additional settings",
+        "template": "Name format",
+        "template_help": """
+> The format for naming results in multi-inference.
+
+> Available keys for stem name formatting:
+> (you can change the stem name format here)
+> * **NAME** - Input file name  
+> * **STEM** - Stem name (e.g., vocals, drums, bass)  
+> * **MODEL** - Model name (e.g., Mel-Band-Roformer_Instrumental_FvX_gabox, UVR-MDX-NET-Inst_HQ_3)  
+
+> Example:  
+> * **Template:** NAME_STEM_MODEL  
+> * **Result:** test_vocals_Mel-Band-Roformer_Instrumental_FvX_gabox  
+
+<div style="color: red; font-weight: bold; background-color: #ffecec; padding: 10px; border-left: 3px solid red; margin: 10px 0;">
+
+Use ONLY the specified keys (NAME, STEM, MODEL) to avoid file corruption.  
+
+DO NOT add extra text or symbols outside these keys, or do so with caution.  
+
+</div>
+        """,
     }
 }
 
