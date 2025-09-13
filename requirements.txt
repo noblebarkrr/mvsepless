@@ -45,4 +45,4 @@ resampy
 yt_dlp
 python-magic
 pyngrok
-
+tabulate
