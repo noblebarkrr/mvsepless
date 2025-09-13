@@ -18,7 +18,7 @@
 
 # Доступные плагины:
 
-**Vbach** - Форк ***PolGen-RVC 1.2.0***, адаптированный под MVSepLess.<br>Позволяет обрабатывать автоматически стерео файлы *(левый/правый)* или *(фантомный центр/стерео база)*<br>*[(ссылка на плагин)](https://huggingface.co/noblebarkrr/mvsepless_plugins/blob/main/vbach_for_mvsepless_gamma.py)*
+**Vbach (для python 3.11)** - Форк ***PolGen-RVC 1.2.0***, адаптированный под MVSepLess.<br>Позволяет обрабатывать автоматически стерео файлы *(левый/правый)* или *(фантомный центр/стерео база)*<br>*[(ссылка на плагин)](https://huggingface.co/noblebarkrr/mvsepless_plugins/blob/main/vbach_for_mvsepless_gamma.py)*
 
 **EnsembLess** - Приложение для создания автоматических и ручных ансамблей моделей для улучшения результатов разделения.<br>*(Встроено в репозиторий, загружать его отдельно не требуется)*
 
@@ -30,7 +30,7 @@ Google Colab - [![Open In Colab](https://colab.research.google.com/assets/colab-
 
 ### Требования для установки
 
-- Python 3.11
+- Python 3.10 - 3.12 (для работы основного кода)
 - Актуальная версия Pytorch
 
 # Использование
