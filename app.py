@@ -57,7 +57,7 @@ def download_wrapper(url, cookie):
     t = downloader.dw_yt_dlp(url, cookie)
     return gr.update(value=t), gr.update(value=t), gr.update(visible=True), gr.update(visible=False)
 
-def run_inference(input_audio, model_type, model_name, output_format):
+def run_inference(input_audio, model_type, model_name, output_format, vr_aggr):
     """Функция для запуска инференса"""
 
     temp_dir = os.path.join(CURRENT_DIR, "output", datetime.now().strftime("%Y%m%d_%H%M%S"))
@@ -70,6 +70,7 @@ def run_inference(input_audio, model_type, model_name, output_format):
         output_format=output_format,
         ext_inst=True,
         call_method="cli",
+        vr_aggr=vr_aggr
     )
     audio_updates = [
         gr.update(
@@ -105,7 +106,7 @@ if __name__ == "__main__":
                 with gr.Column():
                     with gr.Group() as local:
                         input_audio = gr.Audio(label=t("upload_label"), type="filepath", interactive=True)
-                        with gr.Row():
+                        with gr.Row(equal_height=True):
                             path_0_btn = gr.Button(t("path_btn"))
                             url_0_btn = gr.Button(t("url_btn"))
                     with gr.Group(visible=False) as url:
@@ -127,6 +128,7 @@ if __name__ == "__main__":
                     with gr.Group():
                         model_type = gr.Dropdown(label=t("model_type"), choices=mvsepless.get_mt(), filterable=False, value=mvsepless.get_mt()[0])
                         model_name = gr.Dropdown(label=t("model_name"), choices=mvsepless.get_mn(mvsepless.get_mt()[0]), value=mvsepless.get_mn(mvsepless.get_mt()[0])[0], filterable=False)
+                        vr_aggr_slider = gr.Slider(label=t("vr_aggr_slider"), minimum=0, maximum=100, step=1, value=5, visible=False)
                         output_format = gr.Dropdown(label=t("output_format"), choices=OUTPUT_FORMATS, value="mp3", filterable=False)
                         separate_btn = gr.Button(t("separate"), variant="primary")
 
@@ -184,15 +186,18 @@ if __name__ == "__main__":
             lambda x: gr.update(choices=mvsepless.get_mn(x), value=mvsepless.get_mn(x)[0]),
             inputs=model_type,
             outputs=model_name
+        ).then(
+            lambda x: gr.update(visible=True if x == "vr" else False),
+            inputs=model_type,
+            outputs=vr_aggr_slider
         )
 
         separate_btn.click(
             run_inference,
-            inputs=[input_path, model_type, model_name, output_format],
+            inputs=[input_path, model_type, model_name, output_format, vr_aggr_slider],
             outputs=[*output_audio, output_zip],
-            show_progress_on=input_audio
+            show_progress_on=[input_audio, input_path]
         )
-
 
     lite_app.launch(
         server_name="0.0.0.0",
