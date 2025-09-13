@@ -42,6 +42,7 @@ onnx>=1.17
 onnx2torch>=0.3.0
 onnxruntime-gpu>=1.17
 ml_dtypes==0.5.1
+resampy
 yt_dlp
 python-magic
 pyngrok
