@@ -1,7 +1,5 @@
 # MVSepLess - */непростая обёртка*/ для audio-separator и Music-Source-Separation-Training
 
-Этот репозиторий работает только с Google Colab!
-
 # Фишки:
 
 - Динамическое отображение плееров с названиями стемов в Web-UI
@@ -18,7 +16,7 @@
 
 # Доступные плагины:
 
-**Vbach (для python 3.11)** - Форк ***PolGen-RVC 1.2.0***, адаптированный под MVSepLess.<br>Позволяет обрабатывать автоматически стерео файлы *(левый/правый)* или *(фантомный центр/стерео база)*<br>*[(ссылка на плагин)](https://huggingface.co/noblebarkrr/mvsepless_plugins/blob/main/vbach_for_mvsepless_gamma.py)*
+**Vbach** - Форк ***PolGen-RVC 1.2.0***, адаптированный под MVSepLess.<br>Позволяет обрабатывать автоматически стерео файлы *(левый/правый)* или *(фантомный центр/стерео база)*<br> <br>***Совместим только с Google Colab***<br> <br>*[(ссылка на плагин для python 3.11)](https://huggingface.co/noblebarkrr/mvsepless_plugins/resolve/main/vbach_for_mvsepless_gamma.py?download=true)*<br>*[(ссылка на плагин для python 3.12)](https://huggingface.co/noblebarkrr/mvsepless_plugins/resolve/main/vbach_for_mvsepless_gamma_py312.py?download=true)*<br> <br>
 
 **MVSEP API** - Приложение для разделения вокала через MVSEP API онлайн (без видеокарты).<br>*(Встроено в репозиторий, загружать его отдельно не требуется)*
 
@@ -34,6 +32,11 @@ Google Colab - [![Open In Colab](https://colab.research.google.com/assets/colab-
 
 - Python 3.10 - 3.12 (для работы основного кода)
 - Актуальная версия Pytorch
+
+### Совместимость
+
+- Основной код - Linux, Termux (в udroid)
+- Преобразование голоса - Linux x86/x64
 
 # Использование
 
