@@ -27,6 +27,7 @@ TRANSLATIONS = {
         "stems_info2": "Для получения остатка (при выбранных стемах), включите \"Извлечь инструментал\"",
         "add_settings": "Дополнительные настройки",
         "template": "Формат имени",
+        "vr_aggr_slider": "Агрессивность",
         "template_help": """
 > Формат имени результатов в мульти-инференсе.
 
@@ -77,6 +78,7 @@ TRANSLATIONS = {
         "stems_info2": "To extract the residual (with selected_stems), enable \"Extract Instrumental\"",
         "add_settings": "Additional settings",
         "template": "Name format",
+        "vr_aggr_slider": "Aggressive",
         "template_help": """
 > The format for naming results in multi-inference.
 
