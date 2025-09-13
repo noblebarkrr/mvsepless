@@ -7,7 +7,6 @@ import argparse
 import json
 import subprocess
 from datetime import datetime
-from tabulate import tabulate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
@@ -24,10 +23,11 @@ MODEL_TYPES = ["mel_band_roformer", "bs_roformer", "mdx23c", "scnet", "htdemucs"
 OUTPUT_FORMATS = ["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"]
 
 class MVSEPLESS:
-    def __init__(self):
+    def __init__(self, python_path: str = os.environ.get("MVSEPLESS_PYTHON_PATH", "python")):
         self.models_cache_dir = os.path.join(SCRIPT_DIR, "separator", "models_cache")
         self.model_types = MODEL_TYPES
         self.output_formats = OUTPUT_FORMATS
+        self.python_path = python_path
     
     def get_mt(self):
         return list(models_data.keys())
@@ -160,7 +160,7 @@ class MVSEPLESS:
                 conf_editor(conf)
     
             if call_method == "cli":
-                cmd = ["python", "-m", "separator.msst_separator", f'--input "{input_file}"', 
+                cmd = [self.python_path, "-m", "separator.msst_separator", f'--input "{input_file}"', 
                       f'--store_dir "{output_dir}"', f'--model_type "{model_type}"', 
                       f'--model_name "{model_name}"', f'--config_path "{conf}"', 
                       f'--start_check_point "{ckpt}"', f'--output_format "{output_format}"', 
@@ -209,7 +209,7 @@ class MVSEPLESS:
                 primary_stem = info["primary_stem"]
     
                 if call_method == "cli":
-                    cmd = ["python", "-m", "separator.uvr_sep", "custom_vr", 
+                    cmd = [self.python_path, "-m", "separator.uvr_sep", "custom_vr", 
                           f'--input_file "{input_file}"', f'--ckpt_path "{ckpt}"', 
                           f'--config_path "{conf}"', f'--bitrate "{output_bitrate}"', 
                           f'--model_name "{model_name}"', f'--template "{template}"', 
@@ -244,7 +244,7 @@ class MVSEPLESS:
                         return [("Error", "/none/none.mp3")]
             else:
                 if call_method == "cli":
-                    cmd = ["python", "-m", "separator.uvr_sep", "uvr", 
+                    cmd = [self.python_path, "-m", "separator.uvr_sep", "uvr", 
                           f'--input_file "{input_file}"', f'--output_dir "{output_dir}"', 
                           f'--template "{template}"', f'--bitrate "{output_bitrate}"', 
                           f'--model_dir "{self.models_cache_dir}"', f'--model_type "{model_type}"', 
