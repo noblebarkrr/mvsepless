@@ -20,6 +20,7 @@ TRANSLATIONS = {
         "output_zip": "Скачать ZIP",
         "inference_tab": "Инференс",
         "results": "Результаты",
+        "vr_aggr_slider": "Агрессивность"
     },
     "en": {
         "upload_label": "Input audio",
@@ -42,6 +43,7 @@ TRANSLATIONS = {
         "output_zip": "Download ZIP",
         "inference_tab": "Inference",
         "results": "Results",
+        "vr_aggr_slider": "Aggressive"
     }
 }
 
