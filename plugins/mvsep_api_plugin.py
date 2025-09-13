@@ -289,7 +289,7 @@ class MVSEPClient:
                 if status in ["waiting", "processing", "distributing", "merging"]:
                     self._log_debug(f"Current status: {status}, waiting {self.retry_interval}s")
                     if status == "waiting":
-                        progress(0.2, desc=f"{status_resp["data"]["current_order"]} | {status_resp["data"]["queue_count"]}")
+                        progress(0.2, desc=f'{status_resp["data"]["current_order"]} | {status_resp["data"]["queue_count"]}')
                     if status == "processing":
                         progress(0.5, desc=t("processing"))
                     time.sleep(self.retry_interval)
