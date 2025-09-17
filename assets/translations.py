@@ -1,5 +1,6 @@
 TRANSLATIONS = {
     "ru": {
+        "title": "Разделение музыки и вокала",
         "upload_label": "Входное аудио",
         "url_label": "Введите ссылку",
         "path_label": "Введите путь к аудиофайлу",
@@ -36,6 +37,7 @@ TRANSLATIONS = {
 > * **NAME** - Имя входного файла
 > * **STEM** - Название стема (например, vocals, drums, bass)
 > * **MODEL** - Имя модели (например, Mel-Band-Roformer_Instrumental_FvX_gabox, UVR-MDX-NET-Inst_HQ_3)
+> * **ID** - ID модели (например, BS-Roformer_SW: 217)
 
 > Пример:
 > * **Шаблон:** NAME_STEM_MODEL
@@ -51,6 +53,7 @@ TRANSLATIONS = {
         """,
     },
     "en": {
+        "title": "Separate music and vocals",
         "upload_label": "Input audio",
         "url_label": "Enter URL",
         "path_label": "Enter path to audio",
@@ -87,6 +90,7 @@ TRANSLATIONS = {
 > * **NAME** - Input file name  
 > * **STEM** - Stem name (e.g., vocals, drums, bass)  
 > * **MODEL** - Model name (e.g., Mel-Band-Roformer_Instrumental_FvX_gabox, UVR-MDX-NET-Inst_HQ_3)  
+> * **ID** - Model ID (e.g., BS-Roformer_SW: 217)
 
 > Example:  
 > * **Template:** NAME_STEM_MODEL  

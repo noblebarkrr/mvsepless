@@ -49,7 +49,8 @@ TRANSLATIONS = {
         "separation_success": "Разделение завершено",
         "separation_created": "Разделение создаётся...",
         "hash": "Хэш",
-        "error": "Ошибка"
+        "error": "Ошибка",
+        "mvsep_api_off": "<h1><center>Плагин MVSEP API неактивен</center></h1>"
 
     },
     "en": {
@@ -83,7 +84,8 @@ TRANSLATIONS = {
         "separation_success": "Separation success",
         "separation_created": "Separation creating...",
         "hash": "Hash",
-        "error": "Error"
+        "error": "Error",
+        "mvsep_api_off": "<h1><center>Plugin MVSEP API not active</center></h1>"
     }
 }
 
@@ -579,131 +581,141 @@ def update_add_opts(algorithm_name):
                gr.update(choices=[], interactive=False, value=None, visible=False)
 
 token = set_api_token(token="")
-algos_test = get_algos(token=token, names=True)
-algorithm_names = list(algos_test.keys())
-al_by_name = algos_test
 
-def plugin_name():
-    return "MVSEP API"
 
-def plugin(lang):
-    set_lang(lang)
-    with gr.Row():
-        with gr.Column():
-            with gr.Group() as local:
-                input_audio = gr.Audio(label=t("upload_label"), type="filepath", interactive=True)
-                with gr.Row(equal_height=True):
-                    path_0_btn = gr.Button(t("path_btn"))
-                    url_0_btn = gr.Button(t("url_btn"))
-            with gr.Group(visible=False) as url:
-                with gr.Column(variant="compact"):
+MVSEP_API = os.environ.get("MVSEP_API_PLUGIN", False)
+
+if MVSEP_API == "True":
+    algos_test = get_algos(token=token, names=True)
+    algorithm_names = list(algos_test.keys())
+    al_by_name = algos_test
+
+    def plugin_name():
+        return "MVSEP API"
+
+    def plugin(lang):
+        set_lang(lang)
+        with gr.Row():
+            with gr.Column():
+                with gr.Group() as local:
+                    input_audio = gr.Audio(label=t("upload_label"), type="filepath", interactive=True)
                     with gr.Row(equal_height=True):
-                        upload_cookie = gr.UploadButton(label=t("upload_cookie"), file_types=[".txt"], file_count="single", scale=1, variant="primary")
-                        input_link = gr.Textbox(label=t("url_label"), placeholder=t("url_placeholder"), interactive=True, scale=10)
-                        download_audio_btn = gr.Button(t("download_audio_btn"), scale=1, variant="stop")
-                with gr.Row(equal_height=True):
-                    path_1_btn = gr.Button(t("path_btn"))
-                    upload_0_btn = gr.Button(t("upload_btn"), variant="primary")
-            with gr.Group(visible=False) as path:
-                input_path = gr.Textbox(label=t("path_label"), placeholder=t("path_placeholder"), interactive=True)
-                with gr.Row(equal_height=True):
-                    upload_1_btn = gr.Button(t("upload_btn"), variant="primary")
-                    url_1_btn = gr.Button(t("url_btn"))
+                        path_0_btn = gr.Button(t("path_btn"))
+                        url_0_btn = gr.Button(t("url_btn"))
+                with gr.Group(visible=False) as url:
+                    with gr.Column(variant="compact"):
+                        with gr.Row(equal_height=True):
+                            upload_cookie = gr.UploadButton(label=t("upload_cookie"), file_types=[".txt"], file_count="single", scale=1, variant="primary")
+                            input_link = gr.Textbox(label=t("url_label"), placeholder=t("url_placeholder"), interactive=True, scale=10)
+                            download_audio_btn = gr.Button(t("download_audio_btn"), scale=1, variant="stop")
+                    with gr.Row(equal_height=True):
+                        path_1_btn = gr.Button(t("path_btn"))
+                        upload_0_btn = gr.Button(t("upload_btn"), variant="primary")
+                with gr.Group(visible=False) as path:
+                    input_path = gr.Textbox(label=t("path_label"), placeholder=t("path_placeholder"), interactive=True)
+                    with gr.Row(equal_height=True):
+                        upload_1_btn = gr.Button(t("upload_btn"), variant="primary")
+                        url_1_btn = gr.Button(t("url_btn"))
 
-        with gr.Column():
-            api_token = gr.Textbox(label=t("api_token"), value=API_TOKEN, type="password", interactive=True)
-            
-            algorithm_dropdown = gr.Dropdown(choices=algorithm_names, label=t("algo"))
+            with gr.Column():
+                api_token = gr.Textbox(label=t("api_token"), value=API_TOKEN, type="password", interactive=True)
+                
+                algorithm_dropdown = gr.Dropdown(choices=algorithm_names, label=t("algo"))
 
-            add_opt1_dropdown = gr.Dropdown(label=t("add_opt1"), interactive=True)
-            add_opt2_dropdown = gr.Dropdown(label=t("add_opt2"), interactive=True)
-            add_opt3_dropdown = gr.Dropdown(label=t("add_opt3"), interactive=True)
+                add_opt1_dropdown = gr.Dropdown(label=t("add_opt1"), interactive=True)
+                add_opt2_dropdown = gr.Dropdown(label=t("add_opt2"), interactive=True)
+                add_opt3_dropdown = gr.Dropdown(label=t("add_opt3"), interactive=True)
 
-            o_format = gr.Radio(choices=output_formats, label=t("output_format"), value="mp3")
+                o_format = gr.Radio(choices=output_formats, label=t("output_format"), value="mp3")
 
-            process_button = gr.Button(t("separate"))
-    with gr.Group():
-        output_stems = []
+                process_button = gr.Button(t("separate"))
+        with gr.Group():
+            output_stems = []
 
-        for i in range(64):
-            audio = gr.Audio(label=t("stem"), type="filepath", interactive=False, show_download_button=True, visible=False, scale=4)
-            output_stems.append(audio)
+            for i in range(64):
+                audio = gr.Audio(label=t("stem"), type="filepath", interactive=False, show_download_button=True, visible=False, scale=4)
+                output_stems.append(audio)
 
-    input_audio.change(
-        lambda x: gr.update(value=x),
-        inputs=input_audio,
-        outputs=input_path
-    )
+        input_audio.change(
+            lambda x: gr.update(value=x),
+            inputs=input_audio,
+            outputs=input_path
+        )
 
-    path_0_btn.click(            
-        lambda: (gr.update(visible=False), gr.update(visible=True)),
-        outputs=[local, path]
-    )
+        path_0_btn.click(            
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[local, path]
+        )
 
-    path_1_btn.click(            
-        lambda: (gr.update(visible=False), gr.update(visible=True)),
-        outputs=[url, path]
-    )
+        path_1_btn.click(            
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[url, path]
+        )
 
-    url_0_btn.click(
-        lambda: (gr.update(visible=False), gr.update(visible=True)),
-        outputs=[local, url]
-    )
+        url_0_btn.click(
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[local, url]
+        )
 
-    url_1_btn.click(
-        lambda: (gr.update(visible=False), gr.update(visible=True)),
-        outputs=[path, url]
-    )
+        url_1_btn.click(
+            lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[path, url]
+        )
 
-    upload_0_btn.click(
-        lambda: (gr.update(visible=True), gr.update(visible=False)),
-        outputs=[local, url]
-    )
+        upload_0_btn.click(
+            lambda: (gr.update(visible=True), gr.update(visible=False)),
+            outputs=[local, url]
+        )
 
-    upload_1_btn.click(
-        lambda: (gr.update(visible=True), gr.update(visible=False)),
-        outputs=[local, path]
-    )
+        upload_1_btn.click(
+            lambda: (gr.update(visible=True), gr.update(visible=False)),
+            outputs=[local, path]
+        )
 
-    download_audio_btn.click(
-        download_wrapper,
-        inputs=[input_link, upload_cookie],
-        outputs=[input_audio, input_path, local, url],
-        show_progress=True
-    )
+        download_audio_btn.click(
+            download_wrapper,
+            inputs=[input_link, upload_cookie],
+            outputs=[input_audio, input_path, local, url],
+            show_progress=True
+        )
 
-    algorithm_dropdown.change(
-        fn=update_add_opts,
-        inputs=algorithm_dropdown,
-        outputs=[add_opt1_dropdown, add_opt2_dropdown, add_opt3_dropdown]
-    )
+        algorithm_dropdown.change(
+            fn=update_add_opts,
+            inputs=algorithm_dropdown,
+            outputs=[add_opt1_dropdown, add_opt2_dropdown, add_opt3_dropdown]
+        )
 
-    process_button.click(
-        fn=process_audio,
-        inputs=[
-            input_path,
-            o_format,
-            algorithm_dropdown,
-            add_opt1_dropdown,
-            add_opt2_dropdown,
-            add_opt3_dropdown
-        ],
-        outputs=[*output_stems],
-        show_progress_on=[input_path, input_audio]
-    )
-    
-    api_token.change(
-        set_api_token,
-        inputs=api_token,
-        outputs=gr.State()
-    )
+        process_button.click(
+            fn=process_audio,
+            inputs=[
+                input_path,
+                o_format,
+                algorithm_dropdown,
+                add_opt1_dropdown,
+                add_opt2_dropdown,
+                add_opt3_dropdown
+            ],
+            outputs=[*output_stems],
+            show_progress_on=[input_path, input_audio]
+        )
+        
+        api_token.change(
+            set_api_token,
+            inputs=api_token,
+            outputs=gr.State()
+        )
 
-    gr.on(
-        fn=update_add_opts,
-        inputs=algorithm_dropdown,
-        outputs=[add_opt1_dropdown, add_opt2_dropdown, add_opt3_dropdown]
-    )
+        gr.on(
+            fn=update_add_opts,
+            inputs=algorithm_dropdown,
+            outputs=[add_opt1_dropdown, add_opt2_dropdown, add_opt3_dropdown]
+        )
 
+else:
+    def plugin_name():
+        return "MVSEP API (OFF)"
 
-
+    def plugin(lang):
+        set_lang(lang)
+        gr.Markdown(t("mvsep_api_off"))
 

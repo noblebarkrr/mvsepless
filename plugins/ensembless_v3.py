@@ -13,7 +13,6 @@ from utils.ensembless import ENSEMBLESS, INVERT_METHODS
 from utils.inverter import Inverter
 from utils.audio_editor import AudioEditor
 
-
 audioeditor = AudioEditor()
 ensembless = ENSEMBLESS()
 inverter = Inverter()

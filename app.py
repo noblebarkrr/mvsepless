@@ -146,7 +146,7 @@ if __name__ == "__main__":
     set_lang(args.lang)
     theme = THEMES[args.theme]
 
-    with gr.Blocks(theme=theme) as lite_app:
+    with gr.Blocks(theme=theme, title=t("title")) as lite_app:
         with gr.Tab(t("inference_tab")):
             with gr.Row():
                 with gr.Column():
@@ -323,6 +323,7 @@ if __name__ == "__main__":
         ).then(
             fn=(
                 lambda x, y: (
+                    gr.update(info=f"ID: {mvsepless.get_id(x, y)}"),
                     gr.update(
                         interactive=(
                             True if mvsepless.get_tgt_inst(x, y) == None else None
@@ -345,7 +346,7 @@ if __name__ == "__main__":
                 )
             ),
             inputs=[model_type, model_name],
-            outputs=[stems_list, target_instrument, extract_instrumental],
+            outputs=[model_name, stems_list, target_instrument, extract_instrumental],
         )
 
         separate_btn.click(
@@ -395,6 +396,7 @@ if __name__ == "__main__":
         ).then(
             fn=(
                 lambda x, y: (
+                    gr.update(info=f"ID: {mvsepless.get_id(x, y)}"),
                     gr.update(
                         interactive=(
                             True if mvsepless.get_tgt_inst(x, y) == None else None
@@ -417,7 +419,7 @@ if __name__ == "__main__":
                 )
             ),
             inputs=[model_type, model_name],
-            outputs=[stems_list, target_instrument, extract_instrumental],
+            outputs=[model_name, stems_list, target_instrument, extract_instrumental],
         )
 
     lite_app.launch(

@@ -1,12 +1,12 @@
 import os
 import sys
 import tempfile
+import json
 import gradio as gr
 from multi_inference import MVSEPLESS, OUTPUT_FORMATS
 from separator.ensemble import ensemble_audio_files
 from utils.inverter import Inverter
 
-mvsepless = MVSEPLESS()
 inverter = Inverter()
 
 INVERT_METHODS = {
@@ -20,33 +20,58 @@ INVERT_METHODS = {
     "avg_wave": "avg_wave"
 }
 
+class ModelParser:
+    def __init__(self):
+        with open("models.json", "r", encoding="utf-8") as f:
+            self.models_data = json.load(f) 
 
+    def get_mt(self):
+        return list(self.models_data.keys())
+       
+    def get_mn(self, model_type):
+        return list(self.models_data[model_type].keys())
+       
+    def get_stems(self, model_type, model_name):
+        stems = self.models_data[model_type][model_name]["stems"]
+        return stems
+
+    def get_id(self, model_type, model_name):
+        id = self.models_data[model_type][model_name]["id"]
+        return id
+
+    def get_tgt_inst(self, model_type, model_name):
+        target_instrument = self.models_data[model_type][model_name]["target_instrument"]
+        return target_instrument
 
 class ENSEMBLESS:
     def __init__(self):
-        self.mvsepless = mvsepless
+        self.mvsepless = MVSEPLESS()
+        self.mp = ModelParser()
 
     def get_model_types(self):
-        return mvsepless.get_mt()
+        return self.mp.get_mt()
     
     def get_models_by_type(self, model_type):
-        return mvsepless.get_mn(model_type)
+        return self.mp.get_mn(model_type)
     
     def get_stems_by_model(self, model_type, model_name):
-        stems = mvsepless.get_stems(model_type, model_name)
-        if set(stems) == {"bass", "drums", "vocals", "other"} or set(stems) == {"bass", "drums", "vocals", "other", "piano", "guitar"} and not mvsepless.get_tgt_inst(model_type, model_name):
-            stems.append("instrumental +")
-            stems.append("instrumental -")  
-        return stems
+        all_stems = []
+        stems = self.mp.get_stems(model_type, model_name)
+        for stem in stems:
+            all_stems.append(stem)
+        if set(stems) == {"bass", "drums", "vocals", "other"} or set(stems) == {"bass", "drums", "vocals", "other", "piano", "guitar"} and not self.mp.get_tgt_inst(model_type, model_name):
+            all_stems.append("instrumental +")
+            all_stems.append("instrumental -")
+        return all_stems
         
     def get_invert_stems_by_model(self, model_type, model_name, primary_stem):
         invert_stems = []
-        stems = mvsepless.get_stems(model_type, model_name)
+        stems = self.mp.get_stems(model_type, model_name)
         for stem in stems:
             if stem != primary_stem:
                 invert_stems.append(stem)
           
-        if not mvsepless.get_tgt_inst(model_type, model_name) and model_type not in ["vr", "mdx"]:
+        if not self.mp.get_tgt_inst(model_type, model_name) and model_type not in ["vr", "mdx"]:
         
             invert_stems.append("inverted +")
             invert_stems.append("inverted -")
@@ -83,7 +108,7 @@ class ENSEMBLESS:
             progress(i / block_count, desc=f"{i+1}/{block_count}")       
             model_type, model_name = input_model.split(" / ")
             output_dir_p = os.path.join(temp_dir, f"{model_type}_{model_name}_p_stems")
-            output_p = mvsepless.separator(input_file=input_audio, output_dir=output_dir_p, model_type=model_type, model_name=model_name, ext_inst=True, vr_aggr=10, output_format="wav", template="MODEL_STEM", call_method="cli")           
+            output_p = self.mvsepless.separator(input_file=input_audio, output_dir=output_dir_p, model_type=model_type, model_name=model_name, ext_inst=True, vr_aggr=10, output_format="wav", template="MODEL_STEM", call_method="cli")           
             for stem, file in output_p:       
                 source_files.append(file)
                 if stem == p_stem:
@@ -97,7 +122,7 @@ class ENSEMBLESS:
                 if not output_s_files[i]:
                 
                     output_dir_s = os.path.join(temp_dir, f"{model_type}_{model_name}_s_stems")
-                    output_s = mvsepless.separator(input_file=input_audio, output_dir=output_dir_s, model_type=model_type, model_name=model_name, ext_inst=True, vr_aggr=10, output_format="wav", template="MODEL_STEM", call_method="cli", selected_stems=[p_stem if not mvsepless.get_tgt_inst(model_type, model_name) else "both"])
+                    output_s = self.mvsepless.separator(input_file=input_audio, output_dir=output_dir_s, model_type=model_type, model_name=model_name, ext_inst=True, vr_aggr=10, output_format="wav", template="MODEL_STEM", call_method="cli", selected_stems=[p_stem if not mvsepless.get_tgt_inst(model_type, model_name) else "both"])
                     for stem, file in output_s:
                         source_files.append(file)
                         if stem == s_stem:

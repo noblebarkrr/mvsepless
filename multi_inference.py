@@ -39,36 +39,14 @@ class MVSEPLESS:
     def get_stems(self, model_type, model_name):
         stems = models_data[model_type][model_name]["stems"]
         return stems
-    
+
+    def get_id(self, model_type, model_name):
+        id = models_data[model_type][model_name]["id"]
+        return id
+
     def get_tgt_inst(self, model_type, model_name):
         target_instrument = models_data[model_type][model_name]["target_instrument"]
         return target_instrument
-
-    def display_models_info_json(self, filter: str = None):
-        output_data = {}
-
-        for model_type, models in models_data.items():
-            models_list = []
-
-            for model_name, model_info in models.items():
-                stems_list = model_info.get('stems', [])
-
-                # Фильтр (регистр не учитываем)
-                if filter and filter.lower() not in [s.lower() for s in stems_list]:
-                    continue
-
-                models_list.append({
-                    "model_name": model_name,
-                    "stems": stems_list or [],
-                    "target_instrument": model_info.get('target_instrument', None),
-                    "primary_stem": model_info.get('primary_stem', None)
-                })
-
-            if models_list:  # Записываем только если есть данные
-                output_data[model_type] = models_list
-
-        # Выводим как JSON с отступами
-        print(json.dumps(output_data, indent=4, ensure_ascii=False))
 
     def display_models_info(self, filter: str = None):
         try:
@@ -78,12 +56,12 @@ class MVSEPLESS:
             from tabulate import tabulate
         # Собираем данные для таблицы
         table_data = []
-        headers = ["Model Type", "Model Name", "Stems", "Target Instrument", "Primary Stem"]
+        headers = ["Model Type", "ID", "Model Name", "Stems", "Target Instrument"]
         
         for model_type, models in models_data.items():
             for model_name, model_info in models.items():
                 stems_list = model_info.get('stems', [])
-                
+                id = model_info.get('id', "No ID")
                 # Применяем фильтр (регистронезависимо)
                 if filter:
                     filter_lower = filter.lower()
@@ -93,10 +71,10 @@ class MVSEPLESS:
                 # Подготавливаем данные для строки таблицы
                 row = [
                     model_type,
+                    id,
                     model_name,
                     ", ".join(stems_list) or "N/A",
-                    model_info.get('target_instrument', "N/A"),
-                    model_info.get('primary_stem', "N/A")
+                    model_info.get('target_instrument', "N/A")
                 ]
                 table_data.append(row)
         
@@ -115,7 +93,7 @@ class MVSEPLESS:
         model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
         ext_inst: bool = False,
         vr_aggr: int = 5,
-        output_format: str = "wav",
+        output_format: Literal["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"] = "mp3",
         output_bitrate: str = "320k",
         template: str = "NAME_(STEM)_MODEL",
         call_method: str = "cli",
@@ -154,7 +132,8 @@ class MVSEPLESS:
             except KeyError:
                 print("Model not exist")
                 return [("Model not exist", "/none/none.mp3")]
-                
+            
+            id = self.get_id(model_type, model_name)
             conf, ckpt = download_model(self.models_cache_dir, model_name, model_type, 
                                       info["checkpoint_url"], info["config_url"])
             if model_type != "htdemucs":
@@ -163,7 +142,7 @@ class MVSEPLESS:
             if call_method == "cli":
                 cmd = [self.python_path, "-m", "separator.msst_separator", f'--input "{input_file}"', 
                       f'--store_dir "{output_dir}"', f'--model_type "{model_type}"', 
-                      f'--model_name "{model_name}"', f'--config_path "{conf}"', 
+                      f'--model_name "{model_name}"', f'--model_id {id}', f'--config_path "{conf}"', 
                       f'--start_check_point "{ckpt}"', f'--output_format "{output_format}"', 
                       f'--output_bitrate "{output_bitrate}"', f'--template "{template}"', 
                       "--save_results_info"]
@@ -191,7 +170,7 @@ class MVSEPLESS:
                         input_path=input_file, store_dir=output_dir, model_type=model_type, 
                         config_path=conf, start_check_point=ckpt, extract_instrumental=ext_inst, 
                         output_format=output_format, output_bitrate=output_bitrate, 
-                        model_name=model_name, template=template, selected_instruments=selected_stems
+                        model_name=model_name, template=template, selected_instruments=selected_stems, model_id=id
                     )
                 except Exception as e:
                     print(e)
@@ -203,7 +182,8 @@ class MVSEPLESS:
             except KeyError:
                 print("Model not exist")
                 return [("Model not exist", "/none/none.mp3")]
-                
+            
+            id = self.get_id(model_type, model_name)
             if model_type == "vr" and info.get("custom_vr", False):
                 conf, ckpt = download_model(self.models_cache_dir, model_name, model_type, 
                                           info["checkpoint_url"], info["config_url"])
@@ -213,7 +193,7 @@ class MVSEPLESS:
                     cmd = [self.python_path, "-m", "separator.uvr_sep", "custom_vr", 
                           f'--input_file "{input_file}"', f'--ckpt_path "{ckpt}"', 
                           f'--config_path "{conf}"', f'--bitrate "{output_bitrate}"', 
-                          f'--model_name "{model_name}"', f'--template "{template}"', 
+                          f'--model_name "{model_name}"', f'--model_id {id}', f'--template "{template}"', 
                           f'--output_format "{output_format}"', f'--primary_stem "{primary_stem}"', 
                           f'--aggression {vr_aggr}', f'--output_dir "{output_dir}"']
                     if selected_stems:
@@ -238,7 +218,7 @@ class MVSEPLESS:
                             bitrate=output_bitrate, model_name=model_name, template=template, 
                             output_format=output_format, primary_stem=primary_stem, 
                             aggression=vr_aggr, output_dir=output_dir, 
-                            selected_instruments=selected_stems
+                            selected_instruments=selected_stems, model_id=id
                         )
                     except Exception as e:
                         print(e)
@@ -249,7 +229,7 @@ class MVSEPLESS:
                           f'--input_file "{input_file}"', f'--output_dir "{output_dir}"', 
                           f'--template "{template}"', f'--bitrate "{output_bitrate}"', 
                           f'--model_dir "{self.models_cache_dir}"', f'--model_type "{model_type}"', 
-                          f'--model_name "{model_name}"', f'--output_format "{output_format}"', 
+                          f'--model_name "{model_name}"', f'--model_id {id}', f'--output_format "{output_format}"', 
                           f'--aggression {vr_aggr}']
                     if selected_stems:
                         instruments = " ".join(f'"{s}"' for s in selected_stems)
@@ -274,7 +254,7 @@ class MVSEPLESS:
                             bitrate=output_bitrate, model_dir=self.models_cache_dir, 
                             model_type=model_type, model_name=model_name, 
                             output_format=output_format, aggression=vr_aggr, 
-                            selected_instruments=selected_stems
+                            selected_instruments=selected_stems, model_id=id
                         )
                     except Exception as e:
                         print(e)
@@ -282,6 +262,35 @@ class MVSEPLESS:
     
         print("Unsupported model type")
         return [("Unsupported model type", "/none/none.mp3")]
+
+    def id_separator(
+        self,
+        input_file: str = None,
+        output_dir: str = None,
+        id: int = 217,
+        ext_inst: bool = False,
+        vr_aggr: int = 5,
+        output_format: str = "wav",
+        output_bitrate: str = "320k",
+        template: str = "NAME_(STEM)_MODEL",
+        call_method: str = "cli",
+        selected_stems: list = None
+    ):
+        m_type = None
+        m_name = None
+        for mt in self.get_mt():
+            for mn in self.get_mn(mt):
+                if self.get_id(mt, mn) == id:
+                    m_type = mt
+                    m_name = mn
+                    break
+
+        if m_type and m_name:
+            results = self.separator(input_file=input_file, output_dir=output_dir, model_type=m_type, model_name=m_name, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
+        else:
+            results = self.separator(input_file=input_file, output_dir=output_dir, model_type=None, model_name=None, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
+
+        return results
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Multi-inference for separation audio in Google Colab")
@@ -302,7 +311,19 @@ def parse_args():
     separate.add_argument("-vr_aggr", "--vr_arch_aggressive", type=int, default=5, help="Aggression for VR ARCH models")
     separate.add_argument('--template', type=str, default='NAME_STEM', help='Template naming of output files')
     separate.add_argument("-l_out", "--list_output", action='store_true', help="Show list output files")
-    
+
+    separate_id = subparsers.add_parser('id_separate', help='Separate I/O params (ID)')
+    separate_id.add_argument("-i", "--input", type=str, required=True, help="Input file or directory")
+    separate_id.add_argument("-o", "--output", type=str, required=True, help="Output directory")
+    separate_id.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
+    separate_id.add_argument("-inst", "--instrumental", action='store_true', help="Extract instrumental")
+    separate_id.add_argument("-stems", "--stems", nargs="+", help="Select output stems")
+    separate_id.add_argument("-bitrate", "--bitrate", type=str, default="320k", help="Output bitrate")
+    separate_id.add_argument("-of", "--format", type=str, default="mp3", help="Output format")
+    separate_id.add_argument("-vr_aggr", "--vr_arch_aggressive", type=int, default=5, help="Aggression for VR ARCH models")
+    separate_id.add_argument('--template', type=str, default='NAME_STEM', help='Template naming of output files')
+    separate_id.add_argument("-l_out", "--list_output", action='store_true', help="Show list output files")
+
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -362,3 +383,50 @@ if __name__ == "__main__":
                     for stem, path in stems:
                         print(f"  Stem - {stem}\n  Path - {path}\n")
 
+    elif args.command == 'id_separate':
+        if os.path.isfile(args.input):
+            results = mvsepless.id_separator(
+                input_file=args.input,
+                output_dir=args.output,
+                id=args.model_id,
+                ext_inst=args.instrumental,
+                vr_aggr=args.vr_arch_aggressive,
+                output_format=args.format,
+                output_bitrate=args.bitrate,
+                template=args.template,
+                call_method="cli",
+                selected_stems=args.stems
+            )
+            if args.list_output:
+                print("Results\n")
+                for stem, path in results:
+                    print(f"Stem - {stem}\nPath - {path}\n")
+                    
+        elif os.path.isdir(args.input):
+            batch_results = []
+            for file in os.listdir(args.input):
+                abs_path_file = os.path.join(args.input, file)
+                if os.path.isfile(abs_path_file):
+                    base_name = os.path.splitext(os.path.basename(abs_path_file))[0]
+                    output_subdir = os.path.join(args.output, base_name)
+                    
+                    results = mvsepless.id_separator(
+                        input_file=abs_path_file,
+                        output_dir=output_subdir,
+                        id=args.model_id,
+                        ext_inst=args.instrumental,
+                        vr_aggr=args.vr_arch_aggressive,
+                        output_format=args.format,
+                        output_bitrate=args.bitrate,
+                        template=args.template,
+                        call_method="cli",
+                        selected_stems=args.stems
+                    )
+                    batch_results.append((base_name, results))
+                    
+            if args.list_output:
+                print(" \nResults\n \n")
+                for name, stems in batch_results:
+                    print(f"Name - {name}")
+                    for stem, path in stems:
+                        print(f"  Stem - {stem}\n  Path - {path}\n")

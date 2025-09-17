@@ -1,6 +1,7 @@
 import os
 import argparse
 import sys
+from typing import Literal
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
 import json
@@ -15,17 +16,18 @@ def give_vr_params(file):
     return vr_param
 
 def custom_vr_separate(
-    input_file, 
-    ckpt_path, 
-    config_path,
-    bitrate,
-    model_name,
-    template,
-    output_format,
-    primary_stem="Vocals", 
-    aggression=5,
-    output_dir="./",
-    selected_instruments=[]
+    input_file: str = None, 
+    ckpt_path: str = None, 
+    config_path: str = None,
+    bitrate: str = "320k",
+    model_name: str = None,
+    template: str = "NAME_MODEL_STEM",
+    output_format: Literal["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"] = "mp3",
+    primary_stem: str = "Vocals", 
+    aggression: int = 5,
+    output_dir: str = "./",
+    selected_instruments: list = [],
+    model_id: int = 0
 ):
     
     separator = Separator(
@@ -35,7 +37,7 @@ def custom_vr_separate(
         output_format=output_format,
         output_single_stem=(selected_instruments[0] if len(selected_instruments) == 1 else None)
     )
-    output_names = audio_separator_rename_stems(input_file, template, model_name)
+    output_names = audio_separator_rename_stems(input_file, template, model_name, model_id)
 
     separator.load_custom_vr_model(
         model_path=ckpt_path,
@@ -54,7 +56,19 @@ def give_full_model_name(model_type, model_name):
         return f"{model_name}.pth"
 
 
-def non_custom_uvr_inference(input_file, output_dir, template, bitrate, model_dir, model_type, model_name, output_format, aggression, selected_instruments=[]):
+def non_custom_uvr_inference(
+    input_file: str = None, 
+    output_dir: str = None, 
+    template: str = "NAME_MODEL_STEM", 
+    bitrate: str = "320k",
+    model_dir: str = None,
+    model_type: str = None, 
+    model_name: str = None, 
+    output_format: Literal["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"] = "mp3", 
+    aggression: int = 5, 
+    selected_instruments: list = [],
+    model_id: int = 0
+):
        
     separator = Separator(
         output_dir=output_dir,
@@ -68,7 +82,7 @@ def non_custom_uvr_inference(input_file, output_dir, template, bitrate, model_di
         )
     separator.load_model(model_filename=give_full_model_name(model_type, model_name))
     
-    output_names = audio_separator_rename_stems(input_file, template, model_name)
+    output_names = audio_separator_rename_stems(input_file, template, model_name, model_id)
     
     output_files = separator.separate(input_file, output_names)
     
@@ -95,6 +109,7 @@ def main():
     custom_parser.add_argument('--config_path', required=True, help='Path to model config file')
     custom_parser.add_argument('--bitrate', type=str, default="320k", help='Output bitrate')
     custom_parser.add_argument('--model_name', required=True, help='Name of the model')
+    custom_parser.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
     custom_parser.add_argument('--template', default="{track_name}_{stem}_{model_name}", help='Output filename template')
     custom_parser.add_argument('--output_format', default="mp3", help='Output audio format')
     custom_parser.add_argument('--primary_stem', default="Vocals", help='Primary stem to separate')
@@ -111,6 +126,7 @@ def main():
     uvr_parser.add_argument('--model_dir', required=True, help='Directory containing model files')
     uvr_parser.add_argument('--model_type', required=True, choices=['mdx', 'vr'], help='Model type (mdx or vr)')
     uvr_parser.add_argument('--model_name', required=True, help='Name of the model')
+    uvr_parser.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
     uvr_parser.add_argument('--output_format', default="mp3", help='Output audio format')
     uvr_parser.add_argument('--aggression', type=int, default=5, help='Separation aggression level (for VR models)')
     uvr_parser.add_argument('--selected_instruments', nargs='*', default=[], help='List of instruments to separate')
@@ -130,7 +146,8 @@ def main():
             primary_stem=args.primary_stem,
             aggression=args.aggression,
             output_dir=args.output_dir,
-            selected_instruments=args.selected_instruments
+            selected_instruments=args.selected_instruments,
+            model_id=args.model_id
         )
         with open((os.path.join(args.output_dir, "results.json")), 'w') as f:
             json.dump(results, f)
@@ -147,7 +164,8 @@ def main():
             model_name=args.model_name,
             output_format=args.output_format,
             aggression=args.aggression,
-            selected_instruments=args.selected_instruments
+            selected_instruments=args.selected_instruments,
+            model_id=args.model_id
         )
         with open((os.path.join(args.output_dir, "results.json")), 'w') as f:
             json.dump(results, f)

@@ -2,6 +2,7 @@
     "mel_band_roformer": {
         "Mel-Band-Roformer_Vocals_kimberley_jensen": {
             "category": "Вокал",
+            "id": 1000,
             "full_name": "Mel-Band Roformer Vocals by Kimberley Jensen",
             "stems": [
                 "vocals",
@@ -13,6 +14,7 @@
         },
         "Mel-Band-Roformer_InstVoc_Duality_v1_unwa": {
             "category": "Инструментал и вокал",
+            "id": 1010,
             "full_name": "Mel-Band Roformer InstVoc Duality v1 by Unwa",
             "stems": [
                 "Vocals",
@@ -24,6 +26,7 @@
         },
         "Mel-Band-Roformer_InstVoc_Duality_v2_unwa": {
             "category": "Инструментал и вокал",
+            "id": 1011,
             "full_name": "Mel-Band Roformer InstVoc Duality v2 by Unwa",
             "stems": [
                 "Vocals",
@@ -35,6 +38,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v1_unwa": {
             "category": "Вокал",
+            "id": 1020,
             "full_name": "Mel-Band Roformer Kim FT v1 by Unwa",
             "stems": [
                 "Vocals",
@@ -46,6 +50,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v2_unwa": {
             "category": "Вокал",
+            "id": 1021,
             "full_name": "Mel-Band Roformer Kim FT v2 by Unwa",
             "stems": [
                 "vocals",
@@ -57,6 +62,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v2_bleedless_unwa": {
             "category": "Вокал",
+            "id": 1022,
             "full_name": "Mel-Band Roformer Kim FT v2 Bleedless by Unwa",
             "stems": [
                 "vocals",
@@ -68,6 +74,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v3_prev_unwa": {
             "category": "Вокал",
+            "id": 1023,
             "full_name": "Mel-Band Roformer Kim FT v3 preview by Unwa",
             "stems": [
                 "vocals",
@@ -79,6 +86,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v1_unwa": {
             "category": "Вокал",
+            "id": 1030,
             "full_name": "Mel-Band Roformer Big Beta v1 by Unwa",
             "stems": [
                 "vocals",
@@ -90,6 +98,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v2_unwa": {
             "category": "Вокал",
+            "id": 1031,
             "full_name": "Mel-Band Roformer Big Beta v2 by Unwa",
             "stems": [
                 "vocals",
@@ -101,6 +110,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v3_unwa": {
             "category": "Вокал",
+            "id": 1032,
             "full_name": "Mel-Band Roformer Big Beta v3 by Unwa",
             "stems": [
                 "vocals",
@@ -112,6 +122,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v4_unwa": {
             "category": "Вокал",
+            "id": 1033,
             "full_name": "Mel-Band Roformer Big Beta v4 by Unwa",
             "stems": [
                 "vocals",
@@ -123,6 +134,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v5e_unwa": {
             "category": "Вокал",
+            "id": 1034,
             "full_name": "Mel-Band Roformer Vocals Big Beta v5e by Unwa",
             "stems": [
                 "vocals",
@@ -134,6 +146,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v6_unwa": {
             "category": "Вокал",
+            "id": 1035,
             "full_name": "Mel-Band Roformer Big Beta v6 by Unwa",
             "stems": [
                 "vocals",
@@ -145,6 +158,7 @@
         },
         "Mel-Band-Roformer_Big_Beta_v6x_unwa": {
             "category": "Вокал",
+            "id": 1036,
             "full_name": "Mel-Band Roformer Big Beta v6x by Unwa",
             "stems": [
                 "vocals",
@@ -156,6 +170,7 @@
         },
         "Mel-Band-Roformer_Instrumental_v1_unwa": {
             "category": "Инструментал",
+            "id": 1040,
             "full_name": "Mel-Band Roformer Instrumental v1 by Unwa",
             "stems": [
                 "vocals",
@@ -167,6 +182,7 @@
         },
         "Mel-Band-Roformer_Instrumental_v1_plus_unwa": {
             "category": "Инструментал",
+            "id": 1041,
             "full_name": "Mel-Band Roformer Instrumental v1+ by Unwa",
             "stems": [
                 "vocals",
@@ -178,6 +194,7 @@
         },
         "Mel-Band-Roformer_Instrumental_v1e_unwa": {
             "category": "Инструментал",
+            "id": 1042,
             "full_name": "Mel-Band Roformer Instrumental v1e by Unwa",
             "stems": [
                 "vocals",
@@ -189,6 +206,7 @@
         },
         "Mel-Band-Roformer_Instrumental_v1e_plus_unwa": {
             "category": "Инструментал",
+            "id": 1043,
             "full_name": "Mel-Band Roformer Instrumental v1e Plus by Unwa",
             "stems": [
                 "vocals",
@@ -200,6 +218,7 @@
         },
         "Mel-Band-Roformer_Instrumental_v2_unwa": {
             "category": "Инструментал",
+            "id": 1044,
             "full_name": "Mel-Band Roformer Instrumental v2 by Unwa",
             "stems": [
                 "vocals",
@@ -211,6 +230,7 @@
         },
         "Mel-Band-Roformer_Small_v1_unwa": {
             "category": "Вокал",
+            "id": 1050,
             "full_name": "Mel-Band Roformer Small v1 by Unwa",
             "stems": [
                 "vocals",
@@ -222,6 +242,7 @@
         },
         "Mel-Band-Roformer_Bleed_Suppressor_v1_unwa_97chris": {
             "category": "Шум",
+            "id": 1051,
             "full_name": "Mel-Band Roformer Bleed Suppressor v1 by Unwa / 97chris",
             "stems": [
                 "Instrumental",
@@ -233,6 +254,7 @@
         },
         "Mel-Band-Roformer_Instrumental_becruliy": {
             "category": "Инструментал",
+            "id": 1060,
             "full_name": "Mel-Band Roformer Instrumental by Becruily",
             "stems": [
                 "Vocals",
@@ -244,6 +266,7 @@
         },
         "Mel-Band-Roformer_Guitar_becruily": {
             "category": "Гитара",
+            "id": 1061,
             "full_name": "Mel-Band Roformer Instrumental by Becruily",
             "stems": [
                 "Guitar",
@@ -255,6 +278,7 @@
         },
         "Mel-Band-Roformer_Karaoke_becruily": {
             "category": "Караоке",
+            "id": 1062,
             "full_name": "Mel-Band Roformer Karaoke by Becruily",
             "stems": [
                 "Vocals",
@@ -266,6 +290,7 @@
         },
         "Mel-Band-Roformer_Vocals_becruily": {
             "category": "Вокал",
+            "id": 1063,
             "full_name": "Mel-Band Roformer Vocals by Becruily",
             "stems": [
                 "vocals",
@@ -277,6 +302,7 @@
         },
         "Mel-Band-Roformer_SYHFT_v1_syh99999": {
             "category": "Вокал",
+            "id": 1070,
             "full_name": "Mel-Band Roformer SYHFT v1 by SYH99999",
             "stems": [
                 "vocals",
@@ -288,6 +314,7 @@
         },
         "Mel-Band-Roformer_SYHFT_v2_syh99999": {
             "category": "Вокал",
+            "id": 1071,
             "full_name": "Mel-Band Roformer SYHFT v2 by SYH99999",
             "stems": [
                 "vocals",
@@ -299,6 +326,7 @@
         },
         "Mel-Band-Roformer_SYHFT_v2.5_syh99999": {
             "category": "Вокал",
+            "id": 1072,
             "full_name": "Mel-Band Roformer SYHFT v2.5 by SYH99999",
             "stems": [
                 "vocals",
@@ -310,6 +338,7 @@
         },
         "Mel-Band-Roformer_SYHFT_v3_syh99999": {
             "category": "Вокал",
+            "id": 1073,
             "full_name": "Mel-Band Roformer SYHFT v3 by SYH99999",
             "stems": [
                 "vocals",
@@ -321,6 +350,7 @@
         },
         "Mel-Band-Roformer_BIG_SYHFT_v1_Fast_syh99999": {
             "category": "Вокал",
+            "id": 1074,
             "full_name": "Mel-Band Roformer Big SYHFT v1 Fast by SYH99999",
             "stems": [
                 "vocals",
@@ -332,6 +362,7 @@
         },
         "Mel-Band-Roformer_Merged_SYHFT_Beta_v1_syh99999": {
             "category": "Вокал",
+            "id": 1075,
             "full_name": "Mel-Band Roformer Merged Beta v1 by SYH99999",
             "stems": [
                 "vocals",
@@ -343,6 +374,7 @@
         },
         "Mel-Band-Roformer_SYHFT_B1_model1_syh99999": {
             "category": "Вокал",
+            "id": 1076,
             "full_name": "Mel-Band Roformer SYHFT B1 1 by SYH99999",
             "stems": [
                 "vocals",
@@ -354,6 +386,7 @@
         },
         "Mel-Band-Roformer_SYHFT_B1_model2_syh99999": {
             "category": "Вокал",
+            "id": 1077,
             "full_name": "Mel-Band Roformer SYHFT B1 2 by SYH99999",
             "stems": [
                 "vocals",
@@ -365,6 +398,7 @@
         },
         "Mel-Band-Roformer_SYHFT_B1_model3_syh99999": {
             "category": "Вокал",
+            "id": 1078,
             "full_name": "Mel-Band Roformer SYHFT B1 3 by SYH99999",
             "stems": [
                 "vocals",
@@ -376,6 +410,7 @@
         },
         "Mel-Band-Roformer_4_stems_FT_Large_v1_syh99999": {
             "category": "4 стема",
+            "id": 1079,
             "full_name": "Mel-Band Roformer 4 Stems FT Large v1 by SYH99999",
             "stems": [
                 "vocals",
@@ -389,6 +424,7 @@
         },
         "Mel-Band-Roformer_4_stems_FT_Large_v2_syh99999": {
             "category": "4 стема",
+            "id": 1080,
             "full_name": "Mel-Band Roformer 4 Stems FT Large v2 by SYH99999",
             "stems": [
                 "vocals",
@@ -402,6 +438,7 @@
         },
         "Mel-Band-Roformer_Instrumental_1652_essid": {
             "category": "Инструментал",
+            "id": 1085,
             "full_name": "Mel-Band Roformer Instrumental by Essid (sdr 16.52)",
             "stems": [
                 "Vocals",
@@ -413,6 +450,7 @@
         },
         "Mel-Band-Roformer_Instrumental_1681_essid": {
             "category": "Инструментал",
+            "id": 1086,
             "full_name": "Mel-Band Roformer Instrumental by Essid (sdr 16.81)",
             "stems": [
                 "Vocals",
@@ -424,6 +462,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv1_gabox": {
             "category": "Инструментал",
+            "id": 1100,
             "full_name": "Mel-Band Roformer Instrumental Fv1 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -435,6 +474,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv2_gabox": {
             "category": "Инструментал",
+            "id": 1101,
             "full_name": "Mel-Band Roformer Instrumental Fv2 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -446,6 +486,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv3_gabox": {
             "category": "Инструментал",
+            "id": 1102,
             "full_name": "Mel-Band Roformer Instrumental Fv3 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -457,6 +498,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv4N_gabox": {
             "category": "Инструментал",
+            "id": 1103,
             "full_name": "Mel-Band Roformer Instrumental Fv4 Noise by GaboxR67",
             "stems": [
                 "Vocals",
@@ -468,6 +510,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv5_gabox": {
             "category": "Инструментал",
+            "id": 1104,
             "full_name": "Mel-Band Roformer Instrumental Fv5 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -479,6 +522,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv5N_gabox": {
             "category": "Инструментал",
+            "id": 1105,
             "full_name": "Mel-Band Roformer Instrumental Fv5 Noise by GaboxR67",
             "stems": [
                 "Vocals",
@@ -490,6 +534,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv6_gabox": {
             "category": "Инструментал",
+            "id": 1106,
             "full_name": "Mel-Band Roformer Instrumental Fv6 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -501,6 +546,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv6N_gabox": {
             "category": "Инструментал",
+            "id": 1107,
             "full_name": "Mel-Band Roformer Instrumental Fv6 Noise by GaboxR67",
             "stems": [
                 "Vocals",
@@ -512,6 +558,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv7_gabox": {
             "category": "Инструментал",
+            "id": 1108,
             "full_name": "Mel-Band Roformer Instrumental Fv7 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -523,6 +570,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv7N_gabox": {
             "category": "Инструментал",
+            "id": 1109,
             "full_name": "Mel-Band Roformer Instrumental Fv7 Noise by GaboxR67",
             "stems": [
                 "Vocals",
@@ -534,6 +582,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv7_plus_gabox": {
             "category": "Инструментал",
+            "id": 1110,
             "full_name": "Mel-Band Roformer Instrumental Fv7+ by GaboxR67",
             "stems": [
                 "Vocals",
@@ -545,6 +594,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv7z_gabox": {
             "category": "Инструментал",
+            "id": 1111,
             "full_name": "Mel-Band Roformer Instrumental Fv7z by GaboxR67",
             "stems": [
                 "Vocals",
@@ -556,6 +606,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv8_gabox": {
             "category": "Инструментал",
+            "id": 1112,
             "full_name": "Mel-Band Roformer Instrumental Fv8 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -567,6 +618,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv8b_gabox": {
             "category": "Инструментал",
+            "id": 1113,
             "full_name": "Mel-Band Roformer Instrumental Fv8b by GaboxR67",
             "stems": [
                 "Vocals",
@@ -578,6 +630,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv9_gabox": {
             "category": "Инструментал",
+            "id": 1114,
             "full_name": "Mel-Band Roformer Instrumental Fv9 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -589,6 +642,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Fv10_gabox": {
             "category": "Инструментал",
+            "id": 1115,
             "full_name": "Mel-Band Roformer Instrumental Fv10 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -600,6 +654,7 @@
         },
         "Mel-Band-Roformer_Instrumental_FvX_gabox": {
             "category": "Инструментал",
+            "id": 1116,
             "full_name": "Mel-Band Roformer Instrumental FvX by GaboxR67",
             "stems": [
                 "Vocals",
@@ -611,6 +666,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Bv1_gabox": {
             "category": "Инструментал",
+            "id": 1120,
             "full_name": "Mel-Band Roformer Instrumental Bv1 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -622,6 +678,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Bv2_gabox": {
             "category": "Инструментал",
+            "id": 1121,
             "full_name": "Mel-Band Roformer Instrumental Bv2 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -633,6 +690,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Bv3_gabox": {
             "category": "Инструментал",
+            "id": 1122,
             "full_name": "Mel-Band Roformer Instrumental Bv3 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -644,6 +702,7 @@
         },
         "Mel-Band-Roformer_Vocals_Fv1_gabox": {
             "category": "Вокал",
+            "id": 1130,
             "full_name": "Mel-Band Roformer Vocals Fv1 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -655,6 +714,7 @@
         },
         "Mel-Band-Roformer_Vocals_Fv2_gabox": {
             "category": "Вокал",
+            "id": 1131,
             "full_name": "Mel-Band Roformer Vocals Fv2 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -666,6 +726,7 @@
         },
         "Mel-Band-Roformer_Vocals_Fv3_gabox": {
             "category": "Вокал",
+            "id": 1132,
             "full_name": "Mel-Band Roformer Vocals Fv3 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -677,6 +738,7 @@
         },
         "Mel-Band-Roformer_Vocals_Fv4_gabox": {
             "category": "Вокал",
+            "id": 1133,
             "full_name": "Mel-Band Roformer Vocals Fv4 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -688,6 +750,7 @@
         },
         "Mel-Band-Roformer_Vocals_Fv5_gabox": {
             "category": "Вокал",
+            "id": 1134,
             "full_name": "Mel-Band Roformer Vocals Fv5 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -699,6 +762,7 @@
         },
         "Mel-Band-Roformer_Karaoke_25_02_2025_gabox": {
             "category": "Караоке",
+            "id": 1140,
             "full_name": "Mel-Band Roformer Karaoke 25-02-2025 by GaboxR67",
             "stems": [
                 "karaoke",
@@ -710,6 +774,7 @@
         },
         "Mel-Band-Roformer_Karaoke_28_02_2025_gabox": {
             "category": "Караоке",
+            "id": 1141,
             "full_name": "Mel-Band Roformer Karaoke 28-02-2025 by GaboxR67",
             "stems": [
                 "karaoke",
@@ -721,6 +786,7 @@
         },
         "Mel-Band-Roformer_Karaoke_v1_gabox": {
             "category": "Караоке",
+            "id": 1142,
             "full_name": "Mel-Band Roformer Karaoke v1 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -732,6 +798,7 @@
         },
         "Mel-Band-Roformer_Karaoke_v2_gabox": {
             "category": "Караоке",
+            "id": 1143,
             "full_name": "Mel-Band Roformer Karaoke v2 by GaboxR67",
             "stems": [
                 "Vocals",
@@ -743,6 +810,7 @@
         },
         "Mel-Band-Roformer_Lead_Vocals_DeReverb_gabox": {
             "category": "Реверб",
+            "id": 1144,
             "full_name": "Mel-Band Roformer Lead Vocals DeReverb by GaboxR67",
             "stems": [
                 "Vocals",
@@ -754,6 +822,7 @@
         },
         "Mel-Band-Roformer_Denoise_DeBleed_gabox": {
             "category": "Шум",
+            "id": 1150,
             "full_name": "Mel-Band Roformer Denoise DeBleed by GaboxR67",
             "stems": [
                 "Vocals",
@@ -765,6 +834,7 @@
         },
         "Mel-Band-Roformer_Karaoke_Fusion_gonzaluigi": {
             "category": "Караоке",
+            "id": 1160,
             "full_name": "Mel-Band Roformer Karaoke Fusion by Gonzaluigi",
             "stems": [
                 "Vocals",
@@ -776,6 +846,7 @@
         },
         "Mel-Band-Roformer_Karaoke_Fusion_Aggr_gonzaluigi": {
             "category": "Караоке",
+            "id": 1161,
             "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
             "stems": [
                 "Vocals",
@@ -787,6 +858,7 @@
         },
         "Mel-Band-Roformer_BVE_gonzaluigi": {
             "category": "Караоке",
+            "id": 1162,
             "full_name": "Mel-Band Roformer BVE by Gonzaluigi",
             "stems": [
                 "Lead",
@@ -798,6 +870,7 @@
         },
         "Mel-Band-Roformer_Karaoke_Fusion_v2_Aggr_gonzaluigi": {
             "category": "Караоке",
+            "id": 1163,
             "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
             "stems": [
                 "Vocals",
@@ -809,6 +882,7 @@
         },
         "Mel-Band-Roformer_Karaoke_Fusion_Total_gonzaluigi": {
             "category": "Караоке",
+            "id": 1164,
             "full_name": "Mel-Band Roformer Karaoke Fusion Total by Gonzaluigi",
             "stems": [
                 "Vocals",
@@ -820,6 +894,7 @@
         },
         "Mel-Band-Roformer_DeReverb_anvuew": {
             "category": "Реверб",
+            "id": 1170,
             "full_name": "Mel-Band Roformer DeReverb by Anvuew",
             "stems": [
                 "reverb",
@@ -831,6 +906,7 @@
         },
         "Mel-Band-Roformer_DeReverb_Less_Aggr_anvuew": {
             "category": "Реверб",
+            "id": 1171,
             "full_name": "Mel-Band Roformer DeReverb Less Aggressive by Anvuew",
             "stems": [
                 "reverb",
@@ -842,6 +918,7 @@
         },
         "Mel-Band-Roformer_DeReverb_Mono_anvuew": {
             "category": "Реверб",
+            "id": 1172,
             "full_name": "Mel-Band Roformer DeReverb Mono by Anvuew",
             "stems": [
                 "reverb",
@@ -853,6 +930,7 @@
         },
         "Mel-Band-Roformer_Aspiration_sucial": {
             "category": "Дыхание",
+            "id": 1180,
             "full_name": "Mel-Band Roformer Aspiration by Sucial",
             "stems": [
                 "aspiration",
@@ -864,6 +942,7 @@
         },
         "Mel-Band-Roformer_DeReverb-Echo_v1_sucial": {
             "category": "Реверб и эхо",
+            "id": 1181,
             "full_name": "Mel-Band Roformer DeReverb-Echo by Sucial",
             "stems": [
                 "dry",
@@ -875,6 +954,7 @@
         },
         "Mel-Band-Roformer_DeBigReverb_sucial": {
             "category": "Реверб",
+            "id": 1182,
             "full_name": "Mel-Band Roformer DeBigReverb by Sucial",
             "stems": [
                 "dry",
@@ -886,6 +966,7 @@
         },
         "Mel-Band-Roformer_DeSuperBigReverb_sucial": {
             "category": "Реверб",
+            "id": 1183,
             "full_name": "Mel-Band Roformer Super Big DeReverb by Sucial",
             "stems": [
                 "dry",
@@ -897,6 +978,7 @@
         },
         "Mel-Band-Roformer_DeReverb-Echo_Fused_sucial": {
             "category": "Реверб и эхо",
+            "id": 1184,
             "full_name": "Mel-Band Roformer DeReverb-Echo Fused by Sucial",
             "stems": [
                 "dry",
@@ -908,6 +990,7 @@
         },
         "Mel-Band-Roformer_DeReverb-Echo_v2_sucial": {
             "category": "Реверб и эхо",
+            "id": 1185,
             "full_name": "Mel-Band Roformer DeReverb-Echo v2 by Sucial",
             "stems": [
                 "dry",
@@ -919,6 +1002,7 @@
         },
         "Mel-Band-Roformer_Karaoke_aufr33_viperx": {
             "category": "Караоке",
+            "id": 1190,
             "full_name": "Mel-Band Roformer Karaoke by Aufr33 & ViperX",
             "stems": [
                 "karaoke",
@@ -930,6 +1014,7 @@
         },
         "Mel-Band-Roformer_DeNoise_aufr33": {
             "category": "Шум",
+            "id": 1191,
             "full_name": "Mel-Band Roformer DeNoise by Aufr33",
             "stems": [
                 "dry",
@@ -941,6 +1026,7 @@
         },
         "Mel-Band-Roformer_Denoise_Aggr_aufr33": {
             "category": "Шум",
+            "id": 1192,
             "full_name": "Mel-Band Roformer DeNoise Aggressive by Aufr33",
             "stems": [
                 "dry",
@@ -952,6 +1038,7 @@
         },
         "Mel-Band-Roformer_Crowd_aufr33_viperx": {
             "category": "Звуки толпы",
+            "id": 1193,
             "full_name": "Mel-Band Roformer Crowd by Aufr33 & ViperX",
             "stems": [
                 "crowd",
@@ -963,6 +1050,7 @@
         },
         "Mel-Band-Roformer_Vocals_viperx": {
             "category": "Вокал",
+            "id": 1194,
             "full_name": "Mel-Band Roformer Vocals by ViperX",
             "stems": [
                 "vocals",
@@ -974,6 +1062,7 @@
         },
         "Mel-Band-Roformer_Vocals_Fullness_aname": {
             "category": "Вокал",
+            "id": 1200,
             "full_name": "Mel-Band Roformer Vocals Fullness by Aname",
             "stems": [
                 "vocals",
@@ -985,6 +1074,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v1_aname": {
             "category": "Вокал",
+            "id": 1201,
             "full_name": "Mel-Band Roformer Kim FT v1 by Aname",
             "stems": [
                 "vocals",
@@ -996,6 +1086,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v2_aname": {
             "category": "Вокал",
+            "id": 1202,
             "full_name": "Mel-Band Roformer Kim FT v2 by Aname",
             "stems": [
                 "vocals",
@@ -1007,6 +1098,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v2_Fullness_aname": {
             "category": "Вокал",
+            "id": 1203,
             "full_name": "Mel-Band Roformer Kim FT v2 Fullness by Aname",
             "stems": [
                 "vocals",
@@ -1018,6 +1110,7 @@
         },
         "Mel-Band-Roformer_Kim_FT_v3_aname": {
             "category": "Вокал",
+            "id": 1204,
             "full_name": "Mel-Band Roformer Kim FT v3 by Aname",
             "stems": [
                 "vocals",
@@ -1029,6 +1122,7 @@
         },
         "Mel-Band-Roformer_Small_aname": {
             "category": "Вокал",
+            "id": 1205,
             "full_name": "Mel-Band Roformer Small by Aname",
             "stems": [
                 "Vocals",
@@ -1040,6 +1134,7 @@
         },
         "Mel-Band-Roformer_4_stems_Large_aname": {
             "category": "4 стема",
+            "id": 1206,
             "full_name": "Mel-Band Roformer 4 Stems Large by Aname",
             "stems": [
                 "vocals",
@@ -1053,6 +1148,7 @@
         },
         "Mel-Band-Roformer_4_stems_v2_Large_aname": {
             "category": "4 стема",
+            "id": 1207,
             "full_name": "Mel-Band Roformer 4 Stems v2 Large by Aname",
             "stems": [
                 "vocals",
@@ -1066,6 +1162,7 @@
         },
         "Mel-Band-Roformer_4_stems_XL_aname": {
             "category": "4 стема",
+            "id": 1208,
             "full_name": "Mel-Band Roformer 4 Stems XL by Aname",
             "stems": [
                 "vocals",
@@ -1079,6 +1176,7 @@
         },
         "Mel-Band-Roformer_Drums_yolkispaliks": {
             "category": "Ударные",
+            "id": 1900,
             "full_name": "Mel-Band Roformer Drums Experimental by yolkispalkis",
             "stems": [
                 "percussions",
@@ -1090,6 +1188,7 @@
         },
         "Mel-Band-Roformer_Instrumental_Metal_Preview_meskvlla33": {
             "category": "Инструментал",
+            "id": 1901,
             "full_name": "Mel-Band Roformer Metal Inst Preview by Mesk",
             "stems": [
                 "vocals",
@@ -1103,6 +1202,7 @@
     "bs_roformer": {
         "BS-Roformer_Drums_beatloo_labs": {
             "category": "Ударные",
+            "id": 200,
             "full_name": "BS Roformer Drums Experimental by BeatLoo Labs",
             "stems": [
                 "drums",
@@ -1114,6 +1214,7 @@
         },
         "BS-Roformer_Bass_beatloo_labs": {
             "category": "Басс",
+            "id": 201,
             "full_name": "BS Roformer Bass Experimental by BeatLoo Labs",
             "stems": [
                 "bass",
@@ -1125,6 +1226,7 @@
         },
         "BS-Roformer_Vocals_1296_viperx": {
             "category": "Вокал",
+            "id": 202,
             "full_name": "BS Roformer Vocals (sdr 12.96) by ViperX",
             "stems": [
                 "Vocals",
@@ -1136,6 +1238,7 @@
         },
         "BS-Roformer_Other_viperx": {
             "category": "Прочее",
+            "id": 203,
             "full_name": "BS Roformer Other by ViperX",
             "stems": [
                 "vocals",
@@ -1147,6 +1250,7 @@
         },
         "BS-Roformer_Revive_v1_unwa": {
             "category": "Вокал",
+            "id": 210,
             "full_name": "BS Roformer Vocals Revive v1 by Unwa",
             "stems": [
                 "vocals",
@@ -1158,6 +1262,7 @@
         },
         "BS-Roformer_Revive_v2_unwa": {
             "category": "Вокал",
+            "id": 211,
             "full_name": "BS Roformer Vocals Revive v2 by Unwa",
             "stems": [
                 "vocals",
@@ -1169,6 +1274,7 @@
         },
         "BS-Roformer_Revive_v3e_unwa": {
             "category": "Вокал",
+            "id": 212,
             "full_name": "BS Roformer Vocals Revive v3e by Unwa",
             "stems": [
                 "vocals",
@@ -1180,6 +1286,7 @@
         },
         "BS-Roformer_Resurrection_unwa": {
             "category": "Вокал",
+            "id": 213,
             "full_name": "BS Roformer Vocals Resurrection by Unwa",
             "stems": [
                 "vocals",
@@ -1191,6 +1298,7 @@
         },
         "BS-Roformer_Resurrection_Inst_unwa": {
             "category": "Инструментал",
+            "id": 214,
             "full_name": "BS Roformer Instrumental Resurrection by Unwa",
             "stems": [
                 "vocals",
@@ -1202,6 +1310,7 @@
         },
         "BS-Roformer_Karaoke_becruily": {
             "category": "Караоке",
+            "id": 215,
             "full_name": "BS Roformer Karaoke by GaboxR67",
             "stems": [
                 "Vocals",
@@ -1213,6 +1322,7 @@
         },
         "BS-Roformer_VocTest_gabox": {
             "category": "Вокал",
+            "id": 216,
             "full_name": "BS Roformer Vocals by GaboxR67",
             "stems": [
                 "Vocals",
@@ -1224,6 +1334,7 @@
         },
         "BS-Roformer_SW": {
             "category": "6 стемов",
+            "id": 217,
             "full_name": "BS Roformer SW",
             "stems": [
                 "bass",
@@ -1239,6 +1350,7 @@
         },
         "BS-Roformer_4_stems_zfturbo": {
             "category": "4 стема",
+            "id": 218,
             "full_name": "BS Roformer 4 Stems by ZFTurbo",
             "stems": [
                 "vocals",
@@ -1252,6 +1364,7 @@
         },
         "BS-Roformer_4_stems_FT_syh99999": {
             "category": "4 стема",
+            "id": 219,
             "full_name": "BS Roformer 4 Stems FT by SYH99999",
             "stems": [
                 "vocals",
@@ -1265,6 +1378,7 @@
         },
         "BS-Roformer_Chorus_Male-Female_146_sucial": {
             "category": "Мужской/Женский вокал",
+            "id": 220,
             "full_name": "BS Roformer Male-Female (ep 146) by Sucial",
             "stems": [
                 "male",
@@ -1276,6 +1390,7 @@
         },
         "BS-Roformer_Chorus_Male-Female_267_sucial": {
             "category": "Мужской/Женский вокал",
+            "id": 221,
             "full_name": "BS Roformer Male-Female (ep 267) by Sucial",
             "stems": [
                 "male",
@@ -1287,6 +1402,7 @@
         },
         "BS-Roformer_Male-Female_aufr33": {
             "category": "Мужской/Женский вокал",
+            "id": 222,
             "full_name": "BS Roformer Male-Female by Aufr33",
             "stems": [
                 "male",
@@ -1298,6 +1414,7 @@
         },
         "BS-Roformer_Deverb_256_8_anvuew": {
             "category": "Реверб",
+            "id": 223,
             "full_name": "BS Roformer Deverb 256-8 by Anvuew",
             "stems": [
                 "reverb",
@@ -1309,6 +1426,7 @@
         },
         "BS-Roformer_Deverb_384_10_anvuew": {
             "category": "Реверб",
+            "id": 224,
             "full_name": "BS Roformer Deverb 384-10 by Anvuew",
             "stems": [
                 "reverb",
@@ -1320,6 +1438,7 @@
         },
         "BS-Roformer_4_stems_aname": {
             "category": "4 стема",
+            "id": 225,
             "full_name": "BS Roformer 4 stems by Aname",
             "stems": [
                 "vocals",
@@ -1335,6 +1454,7 @@
     "mdx23c": {
         "MDX23C_InstVoc_HQ_zfturbo": {
             "category": "Инструментал и вокал",
+            "id": 300,
             "full_name": "MDX23C Inst-Voc HQ by ZFTurbo",
             "stems": [
                 "vocals",
@@ -1346,6 +1466,7 @@
         },
         "MDX23C_8kFFT_InstVoc_HQ_v1": {
             "category": "Инструментал и вокал",
+            "id": 301,
             "full_name": "MDX23C 8k FFT Inst-Voc HQ v1",
             "stems": [
                 "Vocals",
@@ -1357,6 +1478,7 @@
         },
         "MDX23C_8kFFT_InstVoc_HQ_v2": {
             "category": "Инструментал и вокал",
+            "id": 302,
             "full_name": "MDX23C 8k FFT Inst-Voc HQ v2",
             "stems": [
                 "Vocals",
@@ -1368,6 +1490,7 @@
         },
         "MDX23C_D1581": {
             "category": "Инструментал и вокал",
+            "id": 303,
             "full_name": "MDX23C D1581",
             "stems": [
                 "Vocals",
@@ -1379,6 +1502,7 @@
         },
         "MDX23C_DrumSep_aufr33_jarredou": {
             "category": "DrumSep",
+            "id": 304,
             "full_name": "MDX23C DrumSep by Aufr33 & Jarredou",
             "stems": [
                 "kick",
@@ -1394,6 +1518,7 @@
         },
         "MDX23C_DeReverb_aufr33_jarredou": {
             "category": "Реверб",
+            "id": 305,
             "full_name": "MDX23C DeReverb by Aufr33 & Jarredou",
             "stems": [
                 "dry",
@@ -1405,6 +1530,7 @@
         },
         "MDX23C_Mid_Side_wesleyr36": {
             "category": "Фантомный центр",
+            "id": 306,
             "full_name": "MDX23C Mid-Side by WesleyR36",
             "stems": [
                 "similarity",
@@ -1416,6 +1542,7 @@
         },
         "MDX23C_4_stems_zfturbo": {
             "category": "4 стема",
+            "id": 307,
             "full_name": "MDX23C 4 Stems by ZFTurbo",
             "stems": [
                 "vocals",
@@ -1429,6 +1556,7 @@
         },
         "MDX23C_Orchestra_verosment": {
             "category": "Оркестр",
+            "id": 308,
             "full_name": "MDX23C Orchestra Experimental by Verosment",
             "stems": [
                 "inst",
@@ -1442,6 +1570,7 @@
     "scnet": {
         "SCNet_4_stems_zfturbo": {
             "category": "4 стема",
+            "id": 400,
             "full_name": "SCNet 4 Stems by ZFTurbo",
             "stems": [
                 "vocals",
@@ -1455,6 +1584,7 @@
         },
         "SCNet_XL_IHF_4_stems_zfturbo": {
             "category": "4 стема",
+            "id": 401,
             "full_name": "SCNet XL IHF 4 Stems by ZFTurbo",
             "stems": [
                 "vocals",
@@ -1468,6 +1598,7 @@
         },
         "SCNet_XL_4_stems_starrytong": {
             "category": "4 стема",
+            "id": 402,
             "full_name": "SCNet 4 Stems XL by StarryTong",
             "stems": [
                 "vocals",
@@ -1481,6 +1612,7 @@
         },
         "SCNet_XL_4_stems_zftrubo": {
             "category": "4 стема",
+            "id": 403,
             "full_name": "SCNet 4 Stems XL by ZFTurbo",
             "stems": [
                 "vocals",
@@ -1494,6 +1626,7 @@
         },
         "SCNet_Large_Jazz_4_stems_jorisvaneyghen": {
             "category": "4 стема",
+            "id": 404,
             "full_name": "SCNet Large Jazz model by Joris Vaneyghen",
             "stems": [
                 "piano",
@@ -1507,6 +1640,7 @@
         },
         "SCNet_XL_Jazz_4_stems_jorisvaneyghen": {
             "category": "4 стема",
+            "id": 405,
             "full_name": "SCNet XL Jazz model by Joris Vaneyghen",
             "stems": [
                 "piano",
@@ -1522,6 +1656,7 @@
     "vr": {
         "1_HP-UVR": {
             "category": "Инструментал",
+            "id": 500,
             "full_name": "VR Arch Single Model v5: 1_HP-UVR",
             "stems": [
                 "Instrumental",
@@ -1532,6 +1667,7 @@
         },
         "2_HP-UVR": {
             "category": "Инструментал",
+            "id": 501,
             "full_name": "VR Arch Single Model v5: 2_HP-UVR",
             "stems": [
                 "Instrumental",
@@ -1542,6 +1678,7 @@
         },
         "3_HP-Vocal-UVR": {
             "category": "Вокал",
+            "id": 502,
             "full_name": "VR Arch Single Model v5: 3_HP-Vocal-UVR",
             "stems": [
                 "Vocals",
@@ -1552,6 +1689,7 @@
         },
         "4_HP-Vocal-UVR": {
             "category": "Вокал",
+            "id": 503,
             "full_name": "VR Arch Single Model v5: 4_HP-Vocal-UVR",
             "stems": [
                 "Vocals",
@@ -1562,6 +1700,7 @@
         },
         "5_HP-Karaoke-UVR": {
             "category": "Караоке",
+            "id": 504,
             "full_name": "VR Arch Single Model v5: 5_HP-Karaoke-UVR",
             "stems": [
                 "Instrumental",
@@ -1572,6 +1711,7 @@
         },
         "6_HP-Karaoke-UVR": {
             "category": "Караоке",
+            "id": 505,
             "full_name": "VR Arch Single Model v5: 6_HP-Karaoke-UVR",
             "stems": [
                 "Instrumental",
@@ -1582,6 +1722,7 @@
         },
         "7_HP2-UVR": {
             "category": "Инструментал и вокал",
+            "id": 506,
             "full_name": "VR Arch Single Model v5: 7_HP2-UVR",
             "stems": [
                 "Instrumental",
@@ -1592,6 +1733,7 @@
         },
         "8_HP2-UVR": {
             "category": "Инструментал и вокал",
+            "id": 507,
             "full_name": "VR Arch Single Model v5: 8_HP2-UVR",
             "stems": [
                 "Instrumental",
@@ -1602,6 +1744,7 @@
         },
         "9_HP2-UVR": {
             "category": "Инструментал и вокал",
+            "id": 508,
             "full_name": "VR Arch Single Model v5: 9_HP2-UVR",
             "stems": [
                 "Instrumental",
@@ -1612,6 +1755,7 @@
         },
         "10_SP-UVR-2B-32000-1": {
             "category": "Инструментал и вокал",
+            "id": 509,
             "full_name": "VR Arch Single Model v5: 10_SP-UVR-2B-32000-1",
             "stems": [
                 "Instrumental",
@@ -1622,6 +1766,7 @@
         },
         "11_SP-UVR-2B-32000-2": {
             "category": "Инструментал и вокал",
+            "id": 510,
             "full_name": "VR Arch Single Model v5: 11_SP-UVR-2B-32000-2",
             "stems": [
                 "Instrumental",
@@ -1632,6 +1777,7 @@
         },
         "12_SP-UVR-3B-44100": {
             "category": "Инструментал и вокал",
+            "id": 511,
             "full_name": "VR Arch Single Model v5: 12_SP-UVR-3B-44100",
             "stems": [
                 "Instrumental",
@@ -1642,6 +1788,7 @@
         },
         "13_SP-UVR-4B-44100-1": {
             "category": "Инструментал и вокал",
+            "id": 512,
             "full_name": "VR Arch Single Model v5: 13_SP-UVR-4B-44100-1",
             "stems": [
                 "Instrumental",
@@ -1652,6 +1799,7 @@
         },
         "14_SP-UVR-4B-44100-2": {
             "category": "Инструментал и вокал",
+            "id": 513,
             "full_name": "VR Arch Single Model v5: 14_SP-UVR-4B-44100-2",
             "stems": [
                 "Instrumental",
@@ -1662,6 +1810,7 @@
         },
         "15_SP-UVR-MID-44100-1": {
             "category": "Инструментал и вокал",
+            "id": 514,
             "full_name": "VR Arch Single Model v5: 15_SP-UVR-MID-44100-1",
             "stems": [
                 "Instrumental",
@@ -1672,6 +1821,7 @@
         },
         "16_SP-UVR-MID-44100-2": {
             "category": "Инструментал и вокал",
+            "id": 515,
             "full_name": "VR Arch Single Model v5: 16_SP-UVR-MID-44100-2",
             "stems": [
                 "Instrumental",
@@ -1682,6 +1832,7 @@
         },
         "17_HP-Wind_Inst-UVR": {
             "category": "Деревянные духовые",
+            "id": 516,
             "full_name": "VR Arch Single Model v5: 17_HP-Wind_Inst-UVR",
             "stems": [
                 "No Woodwinds",
@@ -1692,6 +1843,7 @@
         },
         "UVR-De-Echo-Aggressive": {
             "category": "Эхо",
+            "id": 517,
             "full_name": "VR Arch Single Model v5: UVR-De-Echo-Aggressive by FoxJoy",
             "stems": [
                 "No Echo",
@@ -1702,6 +1854,7 @@
         },
         "UVR-De-Echo-Normal": {
             "category": "Эхо",
+            "id": 518,
             "full_name": "VR Arch Single Model v5: UVR-De-Echo-Normal by FoxJoy",
             "stems": [
                 "No Echo",
@@ -1712,6 +1865,7 @@
         },
         "UVR-DeEcho-DeReverb": {
             "category": "Реверб",
+            "id": 519,
             "full_name": "VR Arch Single Model v5: UVR-DeEcho-DeReverb by FoxJoy",
             "stems": [
                 "No Reverb",
@@ -1722,6 +1876,7 @@
         },
         "UVR-DeNoise-Lite": {
             "category": "Шум",
+            "id": 520,
             "full_name": "VR Arch Single Model v5: UVR-DeNoise-Lite by FoxJoy",
             "stems": [
                 "Noise",
@@ -1732,6 +1887,7 @@
         },
         "UVR-DeNoise": {
             "category": "Шум",
+            "id": 521,
             "full_name": "VR Arch Single Model v5: UVR-DeNoise by FoxJoy",
             "stems": [
                 "Noise",
@@ -1742,6 +1898,7 @@
         },
         "UVR-BVE-4B_SN-44100-1": {
             "category": "Караоке",
+            "id": 522,
             "full_name": "VR Arch Single Model v5: UVR-BVE-4B_SN-44100",
             "stems": [
                 "Vocals",
@@ -1752,6 +1909,7 @@
         },
         "UVR-BVE-v2-4B-SN-44100": {
             "category": "Караоке",
+            "id": 523,
             "full_name": "VR Arch Single Model v4: UVR-BVE-v2-4B-SN-44100",
             "stems": [
                 "Vocals",
@@ -1765,6 +1923,7 @@
         },
         "MGM-v5-KAROKEE-32000-BETA1": {
             "category": "Караоке",
+            "id": 524,
             "full_name": "VR Arch Single Model v5: MGM-v5-KAROKEE-32000-BETA1",
             "stems": [
                 "Vocals",
@@ -1778,6 +1937,7 @@
         },
         "MGM-v5-KAROKEE-32000-BETA2-AGR": {
             "category": "Караоке",
+            "id": 525,
             "full_name": "VR Arch Single Model v5: MGM-v5-KAROKEE-32000-BETA2-AGR.pth",
             "stems": [
                 "Vocals",
@@ -1791,6 +1951,7 @@
         },
         "MGM_HIGHEND_v4": {
             "category": "Инструментал и вокал",
+            "id": 526,
             "full_name": "VR Arch Single Model v4: MGM_HIGHEND_v4",
             "stems": [
                 "Instrumental",
@@ -1801,6 +1962,7 @@
         },
         "MGM_LOWEND_A_v4": {
             "category": "Инструментал и вокал",
+            "id": 527,
             "full_name": "VR Arch Single Model v4: MGM_LOWEND_A_v4",
             "stems": [
                 "Instrumental",
@@ -1811,6 +1973,7 @@
         },
         "MGM_LOWEND_B_v4": {
             "category": "Инструментал и вокал",
+            "id": 528,
             "full_name": "VR Arch Single Model v4: MGM_LOWEND_B_v4",
             "stems": [
                 "Instrumental",
@@ -1821,6 +1984,7 @@
         },
         "MGM_MAIN_v4": {
             "category": "Инструментал и вокал",
+            "id": 529,
             "full_name": "VR Arch Single Model v4: MGM_MAIN_v4",
             "stems": [
                 "Instrumental",
@@ -1831,6 +1995,7 @@
         },
         "UVR-De-Reverb-aufr33-jarredou": {
             "category": "Реверб",
+            "id": 530,
             "full_name": "VR Arch Single Model v4: UVR-De-Reverb by aufr33-jarredou",
             "stems": [
                 "Dry",
@@ -1841,6 +2006,7 @@
         },
         "UVR-De-Breath-sucial-v1": {
             "category": "Дыхание",
+            "id": 531,
             "full_name": "VR Arch Single Model v4: UVR-De-Breath v1 by Sucial",
             "stems": [
                 "Breath",
@@ -1854,6 +2020,7 @@
         },
         "UVR-De-Breath-sucial-v2": {
             "category": "Дыхание",
+            "id": 532,
             "full_name": "VR Arch Single Model v4: UVR-De-Breath v2 by Sucial",
             "stems": [
                 "Breath",
@@ -1867,6 +2034,7 @@
         },
         "VR_Harmonic_Noise_Sep": {
             "category": "Дыхание",
+            "id": 533,
             "full_name": "VR Arch Single Model v5: Harmonic_Noise_Sep",
             "stems": [
                 "Noise",
@@ -1882,6 +2050,7 @@
     "mdx": {
         "UVR-MDX-NET-Inst_HQ_1": {
             "category": "Инструментал",
+            "id": 600,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 1",
             "stems": [
                 "Instrumental",
@@ -1891,6 +2060,7 @@
         },
         "UVR-MDX-NET-Inst_HQ_2": {
             "category": "Инструментал",
+            "id": 601,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 2",
             "stems": [
                 "Instrumental",
@@ -1900,6 +2070,7 @@
         },
         "UVR-MDX-NET-Inst_HQ_3": {
             "category": "Инструментал",
+            "id": 602,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 3",
             "stems": [
                 "Instrumental",
@@ -1909,6 +2080,7 @@
         },
         "UVR-MDX-NET-Inst_HQ_4": {
             "category": "Инструментал",
+            "id": 603,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 4",
             "stems": [
                 "Instrumental",
@@ -1918,6 +2090,7 @@
         },
         "UVR-MDX-NET-Inst_HQ_5": {
             "category": "Инструментал",
+            "id": 604,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst HQ 5",
             "stems": [
                 "Instrumental",
@@ -1927,6 +2100,7 @@
         },
         "UVR_MDXNET_Main": {
             "category": "Инструментал и вокал",
+            "id": 605,
             "full_name": "MDX-Net Model: UVR-MDX-NET Main",
             "stems": [
                 "Vocals",
@@ -1936,6 +2110,7 @@
         },
         "UVR-MDX-NET-Inst_Main": {
             "category": "Инструментал",
+            "id": 606,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst Main",
             "stems": [
                 "Instrumental",
@@ -1945,6 +2120,7 @@
         },
         "UVR_MDXNET_1_9703": {
             "category": "Инструментал и вокал",
+            "id": 607,
             "full_name": "MDX-Net Model: UVR-MDX-NET 1",
             "stems": [
                 "Vocals",
@@ -1954,6 +2130,7 @@
         },
         "UVR_MDXNET_2_9682": {
             "category": "Инструментал и вокал",
+            "id": 608,
             "full_name": "MDX-Net Model: UVR-MDX-NET 2",
             "stems": [
                 "Vocals",
@@ -1963,6 +2140,7 @@
         },
         "UVR_MDXNET_3_9662": {
             "category": "Инструментал и вокал",
+            "id": 609,
             "full_name": "MDX-Net Model: UVR-MDX-NET 3",
             "stems": [
                 "Vocals",
@@ -1972,6 +2150,7 @@
         },
         "UVR-MDX-NET-Inst_1": {
             "category": "Инструментал",
+            "id": 610,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst 1",
             "stems": [
                 "Instrumental",
@@ -1981,6 +2160,7 @@
         },
         "UVR-MDX-NET-Inst_2": {
             "category": "Инструментал",
+            "id": 611,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst 2",
             "stems": [
                 "Instrumental",
@@ -1990,6 +2170,7 @@
         },
         "UVR-MDX-NET-Inst_3": {
             "category": "Инструментал",
+            "id": 612,
             "full_name": "MDX-Net Model: UVR-MDX-NET Inst 3",
             "stems": [
                 "Instrumental",
@@ -1999,6 +2180,7 @@
         },
         "UVR_MDXNET_KARA": {
             "category": "Караоке",
+            "id": 613,
             "full_name": "MDX-Net Model: UVR-MDX-NET Karaoke",
             "stems": [
                 "Vocals",
@@ -2008,6 +2190,7 @@
         },
         "UVR_MDXNET_KARA_2": {
             "category": "Караоке",
+            "id": 614,
             "full_name": "MDX-Net Model: UVR-MDX-NET Karaoke 2",
             "stems": [
                 "Instrumental",
@@ -2017,6 +2200,7 @@
         },
         "UVR_MDXNET_9482": {
             "category": "Инструментал и вокал",
+            "id": 615,
             "full_name": "MDX-Net Model: UVR_MDXNET_9482",
             "stems": [
                 "Vocals",
@@ -2026,6 +2210,7 @@
         },
         "UVR-MDX-NET-Voc_FT": {
             "category": "Вокал",
+            "id": 616,
             "full_name": "MDX-Net Model: UVR-MDX-NET Voc FT",
             "stems": [
                 "Vocals",
@@ -2035,6 +2220,7 @@
         },
         "Kim_Vocal_1": {
             "category": "Вокал",
+            "id": 617,
             "full_name": "MDX-Net Model: Kim Vocal 1",
             "stems": [
                 "Vocals",
@@ -2044,6 +2230,7 @@
         },
         "Kim_Vocal_2": {
             "category": "Вокал",
+            "id": 618,
             "full_name": "MDX-Net Model: Kim Vocal 2",
             "stems": [
                 "Vocals",
@@ -2053,6 +2240,7 @@
         },
         "Kim_Inst": {
             "category": "Инструментал",
+            "id": 619,
             "full_name": "MDX-Net Model: Kim Inst",
             "stems": [
                 "Instrumental",
@@ -2062,6 +2250,7 @@
         },
         "Reverb_HQ_By_FoxJoy": {
             "category": "Реверб",
+            "id": 620,
             "full_name": "MDX-Net Model: Reverb HQ By FoxJoy",
             "stems": [
                 "Reverb",
@@ -2071,6 +2260,7 @@
         },
         "UVR-MDX-NET_Crowd_HQ_1": {
             "category": "Звуки толпы",
+            "id": 621,
             "full_name": "MDX-Net Model: UVR-MDX-NET Crowd HQ 1 By Aufr33",
             "stems": [
                 "No Crowd",
@@ -2080,6 +2270,7 @@
         },
         "kuielab_a_vocals": {
             "category": "Вокал",
+            "id": 622,
             "full_name": "MDX-Net Model: kuielab_a_vocals",
             "stems": [
                 "Vocals",
@@ -2089,6 +2280,7 @@
         },
         "kuielab_a_other": {
             "category": "Прочее",
+            "id": 623,
             "full_name": "MDX-Net Model: kuielab_a_other",
             "stems": [
                 "Other",
@@ -2098,6 +2290,7 @@
         },
         "kuielab_a_bass": {
             "category": "Басс",
+            "id": 624,
             "full_name": "MDX-Net Model: kuielab_a_bass",
             "stems": [
                 "Bass",
@@ -2107,6 +2300,7 @@
         },
         "kuielab_a_drums": {
             "category": "Ударные",
+            "id": 625,
             "full_name": "MDX-Net Model: kuielab_a_drums",
             "stems": [
                 "Drums",
@@ -2116,6 +2310,7 @@
         },
         "kuielab_b_vocals": {
             "category": "Вокал",
+            "id": 626,
             "full_name": "MDX-Net Model: kuielab_b_vocals",
             "stems": [
                 "Vocals",
@@ -2125,6 +2320,7 @@
         },
         "kuielab_b_other": {
             "category": "Прочее",
+            "id": 627,
             "full_name": "MDX-Net Model: kuielab_b_other",
             "stems": [
                 "Other",
@@ -2134,6 +2330,7 @@
         },
         "kuielab_b_bass": {
             "category": "Басс",
+            "id": 628,
             "full_name": "MDX-Net Model: kuielab_b_bass",
             "stems": [
                 "Bass",
@@ -2143,6 +2340,7 @@
         },
         "kuielab_b_drums": {
             "category": "Ударные",
+            "id": 629,
             "full_name": "MDX-Net Model: kuielab_b_drums",
             "stems": [
                 "Drums",
@@ -2152,6 +2350,7 @@
         },
         "UVR-MDX-NET_Main_340": {
             "category": "Инструментал и вокал",
+            "id": 630,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_340",
             "stems": [
                 "Vocals",
@@ -2161,6 +2360,7 @@
         },
         "UVR-MDX-NET_Main_390": {
             "category": "Инструментал и вокал",
+            "id": 631,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_390",
             "stems": [
                 "Vocals",
@@ -2170,6 +2370,7 @@
         },
         "UVR-MDX-NET_Main_406": {
             "category": "Инструментал и вокал",
+            "id": 632,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_406",
             "stems": [
                 "Vocals",
@@ -2179,6 +2380,7 @@
         },
         "UVR-MDX-NET_Main_427": {
             "category": "Инструментал и вокал",
+            "id": 633,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_427",
             "stems": [
                 "Vocals",
@@ -2188,6 +2390,7 @@
         },
         "UVR-MDX-NET_Main_438": {
             "category": "Инструментал и вокал",
+            "id": 634,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Main_438",
             "stems": [
                 "Vocals",
@@ -2197,6 +2400,7 @@
         },
         "UVR-MDX-NET_Inst_82_beta": {
             "category": "Инструментал",
+            "id": 635,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Inst_82_beta",
             "stems": [
                 "Instrumental",
@@ -2206,6 +2410,7 @@
         },
         "UVR-MDX-NET_Inst_90_beta": {
             "category": "Инструментал",
+            "id": 636,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Inst_90_beta",
             "stems": [
                 "Instrumental",
@@ -2215,6 +2420,7 @@
         },
         "UVR-MDX-NET_Inst_187_beta": {
             "category": "Инструментал",
+            "id": 637,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET_Inst_187_beta",
             "stems": [
                 "Instrumental",
@@ -2224,6 +2430,7 @@
         },
         "UVR-MDX-NET-Inst_full_292": {
             "category": "Инструментал",
+            "id": 638,
             "full_name": "MDX-Net Model VIP: UVR-MDX-NET-Inst_full_292",
             "stems": [
                 "Instrumental",
@@ -2235,6 +2442,7 @@
     "htdemucs": {
         "HTDemucs4_MVSep_vocals": {
             "category": "Вокал",
+            "id": 2,
             "full_name": "HTDemucs4 (MVSep finetuned)",
             "stems": [
                 "vocals",
@@ -2246,6 +2454,7 @@
         },
         "HTDemucs4": {
             "category": "4 стема",
+            "id": 0,
             "full_name": "HTDemucs4",
             "stems": [
                 "vocals",
@@ -2259,6 +2468,7 @@
         },
         "HTDemucs4_6s": {
             "category": "6 стемов",
+            "id": 1,
             "full_name": "HTDemucs4 (6 stems)",
             "stems": [
                 "vocals",
@@ -2274,6 +2484,7 @@
         },
         "Demucs3_mmi": {
             "category": "4 стема",
+            "id": 3,
             "full_name": "Demucs3 mmi",
             "stems": [
                 "vocals",
@@ -2287,6 +2498,7 @@
         },
         "HTDemucs4_FT_Bass": {
             "category": "Басс",
+            "id": 4,
             "full_name": "HTDemucs4 FT Bass",
             "stems": [
                 "vocals",
@@ -2300,6 +2512,7 @@
         },
         "HTDemucs4_FT_Drums": {
             "category": "Ударные",
+            "id": 5,
             "full_name": "HTDemucs4 FT Drums",
             "stems": [
                 "vocals",
@@ -2313,6 +2526,7 @@
         },
         "HTDemucs4_FT_Vocals": {
             "category": "Вокал",
+            "id": 6,
             "full_name": "HTDemucs4 FT Vocals",
             "stems": [
                 "vocals",
@@ -2326,6 +2540,7 @@
         },
         "HTDemucs4_FT_Other": {
             "category": "Прочее",
+            "id": 7,
             "full_name": "HTDemucs4 FT Other",
             "stems": [
                 "vocals",
@@ -2339,6 +2554,7 @@
         },
         "HTDemucs4_Mid_Side_wesleyr36": {
             "category": "Фантомный центр",
+            "id": 8,
             "full_name": "HTDemucs4 MId-Side by wesleyr36",
             "stems": [
                 "similarity",
@@ -2352,6 +2568,7 @@
     "bandit": {
         "Bandit_Plus": {
             "category": "Кинематограф",
+            "id": 10,
             "full_name": "Bandit Plus: Cinematic Bandit Plus (by kwatcharasupat)",
             "stems": [
                 "speech",
@@ -2366,6 +2583,7 @@
     "bandit_v2": {
         "Bandit_v2_Multi": {
             "category": "Кинематограф",
+            "id": 11,
             "full_name": "Bandit v2: Cinematic Bandit v2 Multilang (by kwatcharasupat)",
             "stems": [
                 "speech",

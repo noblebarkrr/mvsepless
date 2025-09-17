@@ -19,6 +19,7 @@ import soundfile as sf
 import torch.nn as nn
 from audio_writer import write_audio_file
 from renamer_stems import output_file_template
+from typing import Literal
 
 from msst_utils import prefer_target_instrument, demix, get_model_from_config, demix_demucs
 
@@ -55,23 +56,24 @@ def cleanup_model(model):
         print(f"Ошибка при выгрузке модели: {str(e)}")
 
 def once_inference(
-    path, 
-    model, 
-    config, 
-    device, 
-    model_type, 
-    extract_instrumental,
-    detailed_pbar, 
-    output_format, 
-    output_bitrate,
-    use_tta, 
-    verbose, 
-    model_name,
-    sample_rate, 
-    instruments, 
-    store_dir, 
-    template, 
-    selected_instruments
+    path: str = None, 
+    model: any = None, 
+    config: any = None, 
+    device: any = None, 
+    model_type: str = None, 
+    extract_instrumental: bool = False,
+    detailed_pbar: bool = False, 
+    output_format: Literal["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"] = "mp3", 
+    output_bitrate: str = "320k",
+    use_tta: bool = False, 
+    verbose: bool = False, 
+    model_name: str = None,
+    sample_rate: int = 44100, 
+    instruments: list = [], 
+    store_dir: str = None, 
+    template: str = None, 
+    selected_instruments: list = [],
+    model_id: int = 0
 ):
     results = []
     progress = gr.Progress(track_tqdm=True)
@@ -192,7 +194,7 @@ def once_inference(
                 estimates = estimates * std + mean
 
             file_name = os.path.splitext(os.path.basename(path))[0]
-            custom_name = output_file_template(template, file_name, instr, model_name)
+            custom_name = output_file_template(template, file_name, instr, model_name, model_id)
             output_path = os.path.join(store_dir, f"{custom_name}.{output_format}")
             
             write_audio_file(output_path, estimates, sr, output_format, output_bitrate) # запись стема в аудио файл с помощью универсальной функции
@@ -210,21 +212,22 @@ def once_inference(
     return results
 
 def run_inference(
-    model, 
-    config, 
-    input_path, 
-    store_dir, 
-    device, 
-    model_type, 
-    extract_instrumental, 
-    disable_detailed_pbar, 
-    output_format, 
-    output_bitrate, 
-    use_tta, 
-    verbose, 
-    model_name, 
-    template='NAME_STEM', 
-    selected_instruments=None
+    model: any = None, 
+    config: any = None, 
+    input_path: str = None, 
+    store_dir: str = None, 
+    device: any = None, 
+    model_type: str = None, 
+    extract_instrumental: bool = False, 
+    disable_detailed_pbar: bool = False, 
+    output_format: Literal["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"] = "mp3", 
+    output_bitrate: str = "320k", 
+    use_tta: bool = False, 
+    verbose: bool = False, 
+    model_name: str = None, 
+    template: str = 'NAME_STEM', 
+    selected_instruments: list = [],
+    model_id: int = 0
 ):
     start_time = time.time()
     model.eval()
@@ -247,9 +250,9 @@ def run_inference(
     detailed_pbar = not disable_detailed_pbar
 
     results = once_inference(
-        input_path, model, config, device, model_type, extract_instrumental,
-        detailed_pbar, output_format, output_bitrate, use_tta, verbose,
-        model_name, sample_rate, instruments, store_dir, template, selected_instruments
+        path=input_path, model=model, config=config, device=device, model_type=model_type, extract_instrumental=extract_instrumental,
+        detailed_pbar=detailed_pbar, output_format=output_format, output_bitrate=output_bitrate, use_tta=use_tta, verbose=verbose,
+        model_name=model_name, sample_rate=sample_rate, instruments=instruments, store_dir=store_dir, template=template, selected_instruments=selected_instruments, model_id=model_id
     )
 
     time.sleep(1)
@@ -320,14 +323,15 @@ def mvsep_offline(
     force_cpu=False, 
     verbose=False,
     selected_instruments=None,
-    save_results_info=False
+    save_results_info=False,
+    model_id=0
 ):
     model, config, device = load_model(model_type, config_path, start_check_point, device_ids, force_cpu)
 
     results = run_inference(
-        model, config, input_path, store_dir, device, model_type, extract_instrumental,
-        disable_detailed_pbar, output_format, output_bitrate, use_tta, verbose,
-        model_name, template, selected_instruments
+        model=model, config=config, input_path=input_path, store_dir=store_dir, device=device, model_type=model_type, extract_instrumental=extract_instrumental,
+        disable_detailed_pbar=disable_detailed_pbar, output_format=output_format, output_bitrate=output_bitrate, use_tta=use_tta, verbose=verbose,
+        model_name=model_name, template=template, selected_instruments=selected_instruments, model_id=model_id
     )
 
     if save_results_info:
@@ -365,6 +369,7 @@ def parse_args():
     parser.add_argument('--extract_instrumental', action='store_true', help='Извлечь инструментальную версию')
     parser.add_argument('--template', type=str, default='NAME_STEM', help='Шаблон для имен выходных файлов')
     parser.add_argument('--model_name', type=str, default='model', help='Имя модели для шаблона имен файлов')
+    parser.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
     parser.add_argument('--device_ids', nargs='+', help='ID GPU устройств для использования')
     parser.add_argument('--force_cpu', action='store_true', help='Принудительно использовать CPU')
     parser.add_argument('--use_tta', action='store_true', help='Использовать тестовую аугментацию')
@@ -399,6 +404,7 @@ def main():
         verbose=args.verbose,
         selected_instruments=args.selected_instruments,
         save_results_info=args.save_results_info,
+        model_id=args.model_id
     )
 
 if __name__ == "__main__":
