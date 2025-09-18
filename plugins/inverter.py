@@ -68,7 +68,7 @@ def plugin(lang="ru"):
     invert_man_btn = gr.Button(t("invert_button"))
     
     with gr.Column():
-        invert_man_output = gr.Audio(label=t("results"), interactive=False)
+        invert_man_output = gr.Audio(label=t("results"), interactive=False, show_download_button=True)
         invert_man_output_wav = gr.Text(interactive=False, visible=False)
     
     invert_man_btn.click(
