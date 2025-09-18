@@ -71,7 +71,7 @@ class ENSEMBLESS:
             if stem != primary_stem:
                 invert_stems.append(stem)
           
-        if not self.mp.get_tgt_inst(model_type, model_name) and model_type not in ["vr", "mdx"]:
+        if not self.mp.get_tgt_inst(model_type, model_name) and model_type not in ["vr", "mdx"] and primary_stem not in ["instrumental -", "instrumental +"]:
         
             invert_stems.append("inverted +")
             invert_stems.append("inverted -")
