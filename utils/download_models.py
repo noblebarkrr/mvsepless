@@ -1,5 +1,18 @@
 import os
+from tqdm import tqdm
+import gradio as gr
 import urllib.request
+
+class TqdmUpTo(tqdm):
+    def update_to(self, b=1, bsize=1, tsize=None):
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)
+
+def download_file(url_model, local_path):
+    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1,
+                desc=os.path.basename(local_path)) as t:
+        urllib.request.urlretrieve(url_model, local_path, reporthook=t.update_to)
 
 def download_model(model_paths, model_name, model_type, ckpt_url, conf_url):
     model_dir = os.path.join(model_paths, model_type)
@@ -55,7 +68,7 @@ def download_model(model_paths, model_name, model_type, ckpt_url, conf_url):
             if not os.path.exists(local_path):
                 print(f"Downloading {local_path} from {url_model}")
 
-                urllib.request.urlretrieve(url_model, local_path)
+                download_file(url_model, local_path)
 
                 print(f"Downloaded to {local_path}")
 
