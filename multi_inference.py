@@ -935,13 +935,13 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
 
                 return results
 
-        self.seperator = Separator()
+        self.separator = Separator()
 
         class GradioHelper:
             def __init__(
                 self, 
                 I18N_helper=self.I18N_helper, 
-                separator=self.seperator, 
+                separator=self.separator, 
                 output_base_dir=self.output_app_base_dir, 
                 history_manager=self.history_manager,
                 dw=self.downloader_audio
@@ -1336,7 +1336,7 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                 I18N_helper=self.I18N_helper, 
                 formats=self.output_formats,
                 plugin_manager=self.gradio_plugin_helper,
-                separator=self.seperator,
+                separator=self.separator,
                 ui_helper=self.gradio_helper,
                 model_manager=self.model_manager,
                 history_manager=self.history_manager,
