@@ -9,8 +9,8 @@ import json
 import argparse
 import gradio as gr
 
-from utils.download_audio import Downloader 
-downloader = Downloader()
+from multi_inference import MVSEPLESS
+mvsepless = MVSEPLESS()
 
 API_TOKEN = ""
 algorithm_names = {}
@@ -107,7 +107,7 @@ def t(key, **kwargs):
     return translation.format(**kwargs) if kwargs else translation
 
 def download_wrapper(url, cookie):
-    t = downloader.dw_yt_dlp(url, cookie)
+    t = mvsepless.downloader_audio.dw_yt_dlp(url, cookie)
     return gr.update(value=t), gr.update(value=t), gr.update(visible=True), gr.update(visible=False)
 
 def set_api_token(token: str):
