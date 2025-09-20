@@ -1929,7 +1929,7 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                     debug=self.debug,
                     inline=self.inline,
                     favicon_path=os.path.join(SCRIPT_DIR, "assets", "mvsepless.png"),
-                    allowed_paths=[os.path.join(os.path.abspath(os.sep), "none"), SCRIPT_DIR, os.path.join(os.path.abspath(os.sep), "sdcard")],
+                    allowed_paths=[os.path.join(os.path.abspath(os.sep), "none"), SCRIPT_DIR, os.path.join(os.path.abspath(os.sep), "sdcard"), os.path.join(os.path.abspath(os.sep), "content"), os.path.join(os.path.abspath(os.sep), "root"), os.path.join(os.path.abspath(os.sep), "home")],
                 )
         self.gradio_app = GradioApp
 
