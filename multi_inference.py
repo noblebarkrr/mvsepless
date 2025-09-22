@@ -890,6 +890,7 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                 template: str = "NAME_(STEM)_MODEL",
                 call_method: str = "cli",
                 selected_stems: list = None,
+                save_to_history: bool = True,
                 progress: any = gr.Progress()
             ):
                 batch = {}
@@ -906,7 +907,8 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                             results = self.id_base(input_file=input_file, output_dir=output_dir_base, id=id, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
                         batch[base_name] = results
 
-                self.history_manager.add_history(type="batch", results=batch)
+                if save_to_history == True:
+                    self.history_manager.add_history(type="batch", results=batch)
 
                 return batch
 
@@ -924,14 +926,16 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                 output_bitrate: str = "320k",
                 template: str = "NAME_(STEM)_MODEL",
                 call_method: str = "cli",
-                selected_stems: list = None
+                selected_stems: list = None,
+                save_to_history: bool = True
             ):
                 if model_mode == "name":
                     results = self.base(input_file=input_file, output_dir=output_dir, model_type=model_type, model_name=model_name, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
                 elif model_mode == "id":
                     results = self.id_base(input_file=input_file, output_dir=output_dir, id=id, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
 
-                self.history_manager.add_history(type="single", results=results)
+                if save_to_history == True:
+                    self.history_manager.add_history(type="single", results=results)
 
                 return results
 
@@ -2010,7 +2014,8 @@ if __name__ == "__main__":
                 output_bitrate=args.bitrate,
                 template=args.template,
                 call_method="cli",
-                selected_stems=args.stems
+                selected_stems=args.stems,
+                save_to_history=False
             )
             if args.list_output:
                 print("Results\n")
@@ -2035,7 +2040,8 @@ if __name__ == "__main__":
                 output_bitrate=args.bitrate,
                 template=args.template,
                 call_method="cli",
-                selected_stems=args.stems
+                selected_stems=args.stems,
+                save_to_history=False
             )
 
             if args.list_output:
@@ -2058,7 +2064,8 @@ if __name__ == "__main__":
                 output_bitrate=args.bitrate,
                 template=args.template,
                 call_method="cli",
-                selected_stems=args.stems
+                selected_stems=args.stems,
+                save_to_history=False
             )
             if args.list_output:
                 print("Results\n")
@@ -2082,7 +2089,8 @@ if __name__ == "__main__":
                 output_bitrate=args.bitrate,
                 template=args.template,
                 call_method="cli",
-                selected_stems=args.stems
+                selected_stems=args.stems,
+                save_to_history=False
             )
                     
             if args.list_output:
