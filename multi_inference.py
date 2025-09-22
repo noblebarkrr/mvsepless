@@ -901,9 +901,9 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                         base_name = os.path.splitext(os.path.basename(input_file))[0]
                         output_dir_base = os.path.join(output_dir, base_name)
                         if model_mode == "name":
-                            results = self.base(input_file=input_file, output_dir=output_dir_base, model_type=model_type, model_name=model_name, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method)
+                            results = self.base(input_file=input_file, output_dir=output_dir_base, model_type=model_type, model_name=model_name, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
                         elif model_mode == "id":
-                            results = self.id_base(input_file=input_file, output_dir=output_dir_base, id=id, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method)
+                            results = self.id_base(input_file=input_file, output_dir=output_dir_base, id=id, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
                         batch[base_name] = results
 
                 self.history_manager.add_history(type="batch", results=batch)
@@ -927,9 +927,9 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                 selected_stems: list = None
             ):
                 if model_mode == "name":
-                    results = self.base(input_file=input_file, output_dir=output_dir, model_type=model_type, model_name=model_name, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method)
+                    results = self.base(input_file=input_file, output_dir=output_dir, model_type=model_type, model_name=model_name, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
                 elif model_mode == "id":
-                    results = self.id_base(input_file=input_file, output_dir=output_dir, id=id, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method)
+                    results = self.id_base(input_file=input_file, output_dir=output_dir, id=id, ext_inst=ext_inst, vr_aggr=vr_aggr, output_format=output_format, output_bitrate=output_bitrate, template=template, call_method=call_method, selected_stems=selected_stems)
 
                 self.history_manager.add_history(type="single", results=results)
 
