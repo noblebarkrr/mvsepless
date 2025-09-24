@@ -31,7 +31,7 @@ asteroid==0.7.0
 prodigyopt==1.1.2
 torch_log_wmse==0.3.0
 rotary_embedding_torch==0.6.5
-gradio==5.43.1
+gradio
 omegaconf==2.3.0
 beartype==0.18.5
 spafe==0.3.2
@@ -46,3 +46,4 @@ yt_dlp
 python-magic
 pyngrok
 tabulate
+neuraloperator

@@ -94,8 +94,11 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         model = MelBandRoformer(**dict(config.model))
     elif model_type == 'bs_roformer':
         if hasattr(config.model, 'use_shared_bias'):
-            from models.bs_roformer.bs_roformer_sw import BSRoformer_SW
+            from models.bs_roformer import BSRoformer_SW
             model = BSRoformer_SW(**dict(config.model))
+        elif hasattr(config.model, 'fno'):
+            from models.bs_roformer import BSRoformer_FNO
+            model = BSRoformer_FNO(**dict(config.model))
         else:
             from models.bs_roformer import BSRoformer
             model = BSRoformer(**dict(config.model))

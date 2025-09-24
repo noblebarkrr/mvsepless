@@ -1132,6 +1132,18 @@
             "checkpoint_url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/resolve/main/mel_band_roformer_small.ckpt?download=true",
             "config_url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/resolve/main/config.yaml?download=true"
         },
+        "Mel-Band-Roformer_Duality_v1_aname": {
+            "category": "Вокал",
+            "id": 1209,
+            "full_name": "Mel-Band Roformer Duality v1 by Aname",
+            "stems": [
+                "vocals",
+                "other"
+            ],
+            "target_instrument": "vocals",
+            "checkpoint_url": "https://huggingface.co/Aname-Tommy/Mel-Band-Roformer_Duality/resolve/main/duality_v1.ckpt?download=true",
+            "config_url": "https://huggingface.co/Aname-Tommy/Mel-Band-Roformer_Duality/resolve/main/config_v1.yaml?download=true"
+        },
         "Mel-Band-Roformer_4_stems_Large_aname": {
             "category": "4 стема",
             "id": 1206,
@@ -1307,6 +1319,18 @@
             "target_instrument": "other",
             "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst.ckpt?download=true",
             "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst-Config.yaml?download=true"
+        },
+        "BS-Roformer_Inst_FNO_unwa": {
+            "category": "Инструментал",
+            "id": 226,
+            "full_name": "BS Roformer Instrumental FNO by Unwa",
+            "stems": [
+                "vocals",
+                "other"
+            ],
+            "target_instrument": "other",
+            "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Inst-FNO/resolve/main/bs_roformer_fno.ckpt?download=true",
+            "config_url": "https://raw.githubusercontent.com/noblebarkrr/mvsepless/refs/heads/beta/fixed_configs/BS-Roformer_Inst_FNO_unwa_config.yaml"
         },
         "BS-Roformer_Karaoke_becruily": {
             "category": "Караоке",

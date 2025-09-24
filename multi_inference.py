@@ -709,7 +709,7 @@ DO NOT add extra text or symbols outside these keys, or do so with caution.
                 print(f"{self.I18N_helper.t('starting')}: {model_type}/{model_name}, {self.I18N_helper.t('bitrate')}={output_bitrate}, {self.I18N_helper.t('selected_stems')}={selected_stems}")
                 os.makedirs(output_dir, exist_ok=True)
             
-                if model_type in ["mel_band_roformer", "bs_roformer", "mdx23c", "scnet", "htdemucs", "bandit", "bandit_v2"]:
+                if model_type in ["mel_band_roformer", "mel_band_conformer", "bs_roformer", "mdx23c", "scnet", "htdemucs", "bandit", "bandit_v2"]:
                     try:
                         info = self.model_manager.models_info[model_type][model_name]
                     except KeyError:

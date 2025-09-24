@@ -293,8 +293,15 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
             if 'state_dict' in state_dict:
                 state_dict = state_dict['state_dict']
         else:
-            state_dict = torch.load(start_check_point, map_location=device, weights_only=True)
-        model.load_state_dict(state_dict)
+            try:
+                state_dict = torch.load(start_check_point, map_location=device, weights_only=True)
+            except torch.serialization.pickle.UnpicklingError:
+                with torch.serialization.safe_globals([torch._C._nn.gelu]):
+                    state_dict = torch.load(start_check_point, map_location=device, weights_only=True)
+        try:
+            model.load_state_dict(state_dict)
+        except RuntimeError:
+            model.load_state_dict(state_dict, strict=False)
     print(f"Стемы: {config.training.instruments}")
 
     if isinstance(device_ids, (list, tuple)) and len(device_ids) > 1 and not force_cpu and torch.cuda.is_available():
