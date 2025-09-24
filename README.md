@@ -91,8 +91,9 @@ output_files = mvsepless.separator.single(
      output_bitrate="320k", # Битрейт выходного аудио
      template="NAME (STEM)", # Шаблон имени выходного файла
      call_method="cli", # Метод вызова инференса в обёртке
-     selected_stems=["drums"]) # Выбранные стемы
-
+     selected_stems=["drums"], # Выбранные стемы
+     save_to_history=False, # Запись в историю разделений ("True - включено, False - выключено")
+)
 # Создание пакетного разделения
 output_files = mvsepless.separator.batch(
      input_list=["/content/test.mp3", "/content/song.mp3"], # Список путей к файлам
@@ -107,7 +108,9 @@ output_files = mvsepless.separator.batch(
      output_bitrate="320k", # Битрейт выходного аудио
      template="NAME (STEM)", # Шаблон имени выходного файла
      call_method="cli", # Метод вызова инференса в обёртке
-     selected_stems=["drums"]) # Выбранные стемы
+     selected_stems=["drums"], # Выбранные стемы
+     save_to_history=False, # Запись в историю разделений ("True - включено, False - выключено")
+)
 
 # Отображение списка кортежей
 print(output_files) # --> [
@@ -134,7 +137,8 @@ app = mvsepless.gradio_app(
     port=7860, # Порт сервера
     share=True, # Общий доступ
     debug=True, # Отладка (для градио)
-    plugins=True # Поддержка плагинов
+    plugins=True, # Поддержка плагинов
+    inline=False # Работа прямо в ячейке блокнота (в частности Google Colab)
 )
 app.launch()
 
