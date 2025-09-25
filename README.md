@@ -14,6 +14,10 @@
 - Использование шаблона для именования выходных файлов
 - Локализованные имена стемов (только в Web-UI)
 
+# Проблемы
+
+- модель BS-Roformer Inst FNO от unwa запустится только в Google Colab!
+
 # Рабочая среда
 
 Google Colab - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/beta/Mvsepless_Beta.ipynb)
