@@ -16,6 +16,10 @@
 - Встроенный audio-separator **(Только для VR и MDX моделей)**
 - Загрузка аудио из интернета (yt-dlp) прямо в интерфейсе
 
+# Проблемы
+
+- Модель BS-Roformer Inst FNO от unwa, добавленная недавно, сможет запустится только в Google Colab!
+
 # Доступные плагины:
 
 **Vbach** - Форк ***PolGen-RVC 1.2.0***, адаптированный под MVSepLess.<br>Позволяет обрабатывать автоматически стерео файлы *(левый/правый)* или *(фантомный центр/стерео база)*<br> <br>***Совместим только с Google Colab***<br> <br>*[(ссылка на плагин для python 3.11)](https://huggingface.co/noblebarkrr/mvsepless_plugins/resolve/main/vbach_for_mvsepless_gamma.py?download=true)*<br>*[(ссылка на плагин для python 3.12)](https://huggingface.co/noblebarkrr/mvsepless_plugins/resolve/main/vbach_for_mvsepless_gamma_py312.py?download=true)*<br> <br>
