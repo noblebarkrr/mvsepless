@@ -16,7 +16,7 @@
 
 # Проблемы
 
-- модель BS-Roformer Inst FNO от unwa запустится только в Google Colab!
+- Модель BS-Roformer Inst FNO от unwa запустится только в Google Colab!
 
 # Рабочая среда
 
