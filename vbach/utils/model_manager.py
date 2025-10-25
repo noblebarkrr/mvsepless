@@ -86,6 +86,9 @@ class ModelManager:
         self.write_voicemodels_info()
     
     def download_file(self, url_model, local_path):
+        dir_name = os.path.dirname(local_path)
+        if dir_name != "":
+            os.makedirs(dir_name, exist_ok=True)
         class TqdmUpTo(tqdm):
             def update_to(self, b=1, bsize=1, tsize=None):
                 if tsize is not None:
@@ -258,4 +261,5 @@ if __name__ == "__main__":
     elif args.command == "list":
       status = model_manager.parse_voice_models()
       status_str = '\n'.join(status)
+
       print(f"Установленные модели:\n\n{status_str}")
