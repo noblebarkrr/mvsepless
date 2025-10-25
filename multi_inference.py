@@ -1,4 +1,4 @@
-﻿import os
+import os
 import ast
 import time
 import re
@@ -236,7 +236,8 @@ class MVSEPLESS:
                 "confirm_delete_history": "Вы точно хотите очистить историю?<br>Действие необратимо",
                 "checking_id": "Идет поиск моделей с одинаковым ID",
                 "finded_dup_ids": "Были обнаружены модели с одинаковыми ID. Это может привести к проблемам, связанным с выбором модели по ID",
-                "no_finded_dup_ids": "Моделей с одинаковыми ID не обнаружено"
+                "no_finded_dup_ids": "Моделей с одинаковыми ID не обнаружено",
+                "reuse": "Снова использовать"
             },
             "en": {
                 "title": "Separate music and vocals",
@@ -343,7 +344,8 @@ The name of the input file is also shortened if the length of the output name ex
                 "confirm_delete_history": "Are you sure you want to clear history?<br>The action can't be undone",
                 "checking_id": "There is a search for models with the same ID",
                 "finded_dup_ids": "Models with the same ID were found. This may lead to problems related to selecting a model by ID",
-                "no_finded_dup_ids": "No models with the same ID were found"
+                "no_finded_dup_ids": "No models with the same ID were found",
+                "reuse": "Reuse"
             },
         }
         self.I18N_STEMS = {
@@ -1386,17 +1388,11 @@ The name of the input file is also shortened if the length of the output name ex
             def __init__(
                 self,
                 I18N_helper=self.I18N_helper,
-                separator=self.separator,
-                output_base_dir=self.output_app_base_dir,
-                history_manager=self.history_manager,
                 dw=self.downloader_audio,
                 md_cache=self.models_cache_dir,
             ):
                 self.BATCH_STATE = {}
                 self.I18N_helper = I18N_helper
-                self.history_manager = history_manager
-                self.separator = separator
-                self.output_base_dir = output_base_dir
                 self.downloader_audio = dw
                 self.models_cache_dir = md_cache
 
@@ -1433,321 +1429,6 @@ The name of the input file is also shortened if the length of the output name ex
                             zf.write(audio_file, arcname=arcname)
 
                 return zip_path
-
-            def run_inference(
-                self,
-                input_file: str = None,
-                model_type: str = "mel_band_roformer",
-                model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
-                ext_inst: bool = False,
-                vr_aggr: int = 5,
-                output_format: str = "wav",
-                template: str = "NAME_(STEM)_MODEL",
-                selected_stems: list = [],
-            ):
-                """Функция для запуска инференса"""
-
-                temp_dir = os.path.join(
-                    self.output_base_dir, datetime.now().strftime("%Y%m%d_%H%M%S")
-                )
-
-                output_audio = self.separator.single(
-                    input_file=input_file,
-                    output_dir=temp_dir,
-                    model_type=model_type,
-                    model_name=model_name,
-                    model_mode="name",
-                    output_format=output_format,
-                    ext_inst=ext_inst,
-                    call_method="cli",
-                    vr_aggr=vr_aggr,
-                    template=template,
-                    selected_stems=selected_stems,
-                )
-
-                output_audio_2 = []
-
-                for stem, path in output_audio:
-                    output_audio_2.append(
-                        (
-                            f"{os.path.splitext(os.path.basename(str(input_file)))[0]} - {stem}",
-                            path,
-                        )
-                    )
-
-                audio_updates = [
-                    gr.update(
-                        label=(
-                            self.I18N_helper.t_stem(output_audio[i][0])
-                            if i < len(output_audio)
-                            else ""
-                        ),
-                        value=output_audio[i][1] if i < len(output_audio) else None,
-                        visible=i < len(output_audio),
-                    )
-                    for i in range(64)
-                ]
-                zip_update = gr.update(
-                    value=self.create_zip(
-                        output_audio_2,
-                        output_dir=temp_dir,
-                        zip_name=f'mvsepless_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip',
-                    ),
-                    visible=True,
-                )
-                return audio_updates + [zip_update]
-
-            def run_inference_batch(
-                self,
-                input_file: str = None,
-                model_type: str = "mel_band_roformer",
-                model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
-                ext_inst: bool = False,
-                vr_aggr: int = 5,
-                output_format: str = "wav",
-                template: str = "NAME_(STEM)_MODEL",
-                selected_stems: list = [],
-            ):
-                """Функция для запуска инференса"""
-
-                self.BATCH_STATE = {}
-
-                temp_dir = os.path.join(
-                    self.output_base_dir, datetime.now().strftime("%Y%m%d_%H%M%S")
-                )
-
-                try:
-                    input_list = ast.literal_eval(input_file)
-                except:
-                    input_list = []
-
-                output_audio = self.separator.batch(
-                    input_list=input_list,
-                    output_dir=temp_dir,
-                    model_type=model_type,
-                    model_name=model_name,
-                    model_mode="name",
-                    output_format=output_format,
-                    ext_inst=ext_inst,
-                    call_method="cli",
-                    vr_aggr=vr_aggr,
-                    template=template,
-                    selected_stems=selected_stems,
-                )
-
-                self.BATCH_STATE = output_audio
-
-                list_dirs = []
-                output_audio_2 = []
-
-                for dir in list(self.BATCH_STATE.keys()):
-                    list_dirs.append(dir)
-                    for stem, path in self.BATCH_STATE[dir]:
-                        output_audio_2.append((f"{dir} - {stem}", path))
-
-                zip_update = gr.update(
-                    value=self.create_zip(
-                        output_audio_2,
-                        output_dir=temp_dir,
-                        zip_name=f'mvsepless_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip',
-                    ),
-                    visible=True,
-                )
-                return (
-                    gr.update(choices=list_dirs, value=None, visible=True),
-                    zip_update,
-                )
-
-            def batch_players(self, dir):
-                list_dirs = []
-                if self.BATCH_STATE:
-                    for dir_2 in list(self.BATCH_STATE.keys()):
-                        list_dirs.append(dir_2)
-                if dir in list_dirs:
-                    output_audio = self.BATCH_STATE[dir]
-                else:
-                    output_audio = None
-                if output_audio:
-                    audio_updates = [
-                        gr.update(
-                            label=(
-                                self.I18N_helper.t_stem(output_audio[i][0])
-                                if i < len(output_audio)
-                                else ""
-                            ),
-                            value=output_audio[i][1] if i < len(output_audio) else None,
-                            visible=i < len(output_audio),
-                        )
-                        for i in range(64)
-                    ]
-                else:
-                    audio_updates = [
-                        gr.update(
-                            label=None,
-                            value=None,
-                            visible=False,
-                        )
-                        for i in range(64)
-                    ]
-                return audio_updates
-
-            def history_send_player(self, type, dt, name=None, player_batch=False):
-
-                try:
-                    history_results = self.history_manager.parse_history_results(
-                        type=type, datetime=dt
-                    )
-                except KeyError:
-                    if type == "single":
-                        history_results = None
-                    elif type == "batch":
-                        history_results = None
-                if type == "single":
-
-                    if history_results:
-
-                        audio_updates = [
-                            gr.update(
-                                label=(
-                                    self.I18N_helper.t_stem(history_results[i][0])
-                                    if i < len(history_results)
-                                    else ""
-                                ),
-                                value=(
-                                    history_results[i][1]
-                                    if i < len(history_results)
-                                    else None
-                                ),
-                                visible=i < len(history_results),
-                            )
-                            for i in range(64)
-                        ]
-
-                    elif not history_results:
-
-                        audio_updates = [
-                            gr.update(
-                                label=None,
-                                value=None,
-                                visible=False,
-                            )
-                            for i in range(64)
-                        ]
-
-                    return audio_updates
-
-                if type == "batch":
-
-                    if player_batch == True:
-
-                        try:
-                            out_audio = history_results[name]
-                        except:
-                            out_audio = None
-
-                        if out_audio:
-                            audio_updates = [
-                                gr.update(
-                                    label=(
-                                        self.I18N_helper.t_stem(out_audio[i][0])
-                                        if i < len(out_audio)
-                                        else ""
-                                    ),
-                                    value=(
-                                        out_audio[i][1] if i < len(out_audio) else None
-                                    ),
-                                    visible=i < len(out_audio),
-                                )
-                                for i in range(64)
-                            ]
-
-                        elif not out_audio:
-
-                            audio_updates = [
-                                gr.update(
-                                    label=None,
-                                    value=None,
-                                    visible=False,
-                                )
-                                for i in range(64)
-                            ]
-
-                        return audio_updates
-                    else:
-                        try:
-                            list_dirs = list(history_results.keys())
-                        except:
-                            list_dirs = []
-                        return gr.update(choices=list_dirs, value=None)
-
-            def clear_players(self):
-                return (
-                    [gr.update(choices=[], visible=False, value=None)]
-                    + [gr.update(value=None, visible=False)]
-                    + [
-                        gr.update(visible=False, value=None, label=None)
-                        for i in range(64)
-                    ]
-                )
-
-            def history_player(self, type, dt, name=None):
-
-                try:
-                    history_results = self.history_manager.parse_history_results(
-                        type=type, datetime=dt
-                    )
-                except KeyError:
-                    if type == "single":
-                        history_results = [(None, None)]
-                    elif type == "multiple":
-                        history_results = {None: [(None, None)]}
-                if type == "single":
-
-                    audio_updates = [
-                        gr.update(
-                            label=(
-                                self.I18N_helper.t_stem(history_results[i][0])
-                                if i < len(history_results)
-                                else ""
-                            ),
-                            value=(
-                                history_results[i][1]
-                                if i < len(history_results)
-                                else None
-                            ),
-                            visible=i < len(history_results),
-                        )
-                        for i in range(64)
-                    ]
-
-                    return audio_updates
-
-                if type == "multiple":
-
-                    if name != "" or name is not None:
-
-                        try:
-                            out_audio = history_results[name]
-                        except KeyError:
-                            out_audio = [(None, None)]
-
-                        audio_updates = [
-                            gr.update(
-                                label=(
-                                    self.I18N_helper.t_stem(out_audio[i][0])
-                                    if i < len(out_audio)
-                                    else ""
-                                ),
-                                value=out_audio[i][1] if i < len(out_audio) else None,
-                                visible=i < len(out_audio),
-                            )
-                            for i in range(64)
-                        ]
-
-                        return audio_updates
-                    else:
-                        list_dirs = list(history_results.keys())
-                        return gr.update(choices=list_dirs, value=None)
 
             def clear_models_cache(self):
                 if os.path.exists(self.models_cache_dir):
@@ -1888,6 +1569,7 @@ The name of the input file is also shortened if the length of the output name ex
                 ui_helper=self.gradio_helper,
                 model_manager=self.model_manager,
                 history_manager=self.history_manager,
+                output_base_dir=self.output_app_base_dir,
                 plugins=True,
                 port=7860,
                 share=False,
@@ -1909,6 +1591,7 @@ The name of the input file is also shortened if the length of the output name ex
                 self.separator = separator
                 self.history_manager = history_manager
                 self.model_manager = model_manager
+                self.output_base_dir = output_base_dir
                 self.plugins = plugins
                 self.vbach = vbach
                 self.themes = {
@@ -2336,28 +2019,191 @@ The name of the input file is also shortened if the length of the output name ex
                                         interactive=True,
                                     )
 
-                        with gr.Group():
-                            separated_batch_base_dir = gr.Dropdown(
+                        with gr.Column() as single_separation_output:
+                            @gr.render(inputs=[single_separation_input_path, separation_model_type, separation_model_name, separation_extract_instrumental, separation_vr_aggr_slider, separation_output_format, template, separation_stems_list], triggers=[single_separate_btn.click], show_progress="full")
+                            def run_inference(
+                                input_file: str = None,
+                                model_type: str = "mel_band_roformer",
+                                model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
+                                ext_inst: bool = False,
+                                vr_aggr: int = 5,
+                                output_format: str = "wav",
+                                template: str = "NAME_(STEM)_MODEL",
+                                selected_stems: list = [],
+                            ):
+                                """Функция для запуска инференса"""
+
+                                temp_dir = os.path.join(
+                                    self.output_base_dir, datetime.now().strftime("%Y%m%d_%H%M%S")
+                                )
+
+                                output_audio = self.separator.single(
+                                    input_file=input_file,
+                                    output_dir=temp_dir,
+                                    model_type=model_type,
+                                    model_name=model_name,
+                                    model_mode="name",
+                                    output_format=output_format,
+                                    ext_inst=ext_inst,
+                                    call_method="cli",
+                                    vr_aggr=vr_aggr,
+                                    template=template,
+                                    selected_stems=selected_stems,
+                                )
+
+                                output_audio_2 = []
+
+                                for stem, path in output_audio:
+                                    output_audio_2.append(
+                                        (
+                                            f"{clean_filename(os.path.splitext(os.path.basename(str(input_file)))[0], length=120)} - {stem}",
+                                            path,
+                                        )
+                                    )
+
+                                with gr.Group():
+                                    for i, (stem, path) in enumerate(output_audio):
+                                        with gr.Row(equal_height=True):
+                                            audio = gr.Audio(label=self.I18N_helper.t_stem(output_audio[i][0]), value=output_audio[i][1], interactive=False, show_download_button=True, type="filepath", scale=15)
+                                            reuse_btn = gr.Button(self.I18N_helper.t("reuse"), scale=1)
+                                            reuse_btn.click(
+                                                lambda x: (gr.update(value=x), gr.update(value=x)),
+                                                inputs=audio,
+                                                outputs=[single_separation_input_path, single_separation_input_audio]
+                                            )
+                                    gr.DownloadButton(
+                                        value=self.gradio_helper.create_zip(
+                                            output_audio_2,
+                                            output_dir=temp_dir,
+                                            zip_name=f'mvsepless_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip',
+                                        ), label=self.I18N_helper.t("output_zip"),
+                                        visible=True
+                                    )
+
+                        with gr.Column(visible=False) as batch_separation_output:
+                            batch_separation_output_state = {}
+                            batch_separated_base_dir = gr.Dropdown(
                                 label=self.I18N_helper.t("batch_base_dir"),
                                 choices=[],
+                                value=None,
                                 interactive=True,
-                                visible=False,
+                                visible=False
                             )
-                            separated_output_audio = [
-                                gr.Audio(
-                                    interactive=False,
-                                    type="filepath",
-                                    visible=False,
-                                    show_download_button=True,
+
+                            def run_inference_batch(
+                                input_file: str = None,
+                                model_type: str = "mel_band_roformer",
+                                model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
+                                ext_inst: bool = False,
+                                vr_aggr: int = 5,
+                                output_format: str = "wav",
+                                template: str = "NAME_(STEM)_MODEL",
+                                selected_stems: list = [],
+                            ):
+                                """Функция для запуска инференса"""
+
+                                temp_dir = os.path.join(
+                                    self.output_base_dir, datetime.now().strftime("%Y%m%d_%H%M%S")
                                 )
-                                for _ in range(64)
-                            ]
-                            separated_output_zip = gr.DownloadButton(
-                                label=self.I18N_helper.t("output_zip"),
-                                visible=False,
-                                interactive=True,
+
+                                try:
+                                    input_list = ast.literal_eval(input_file)
+                                except:
+                                    input_list = []
+                                nonlocal batch_separation_output_state
+                                batch_separation_output_state = self.separator.batch(
+                                    input_list=input_list,
+                                    output_dir=temp_dir,
+                                    model_type=model_type,
+                                    model_name=model_name,
+                                    model_mode="name",
+                                    output_format=output_format,
+                                    ext_inst=ext_inst,
+                                    call_method="cli",
+                                    vr_aggr=vr_aggr,
+                                    template=template,
+                                    selected_stems=selected_stems,
+                                )
+
+                                list_dirs = []
+                                output_audio_2 = []
+
+                                for dir in list(batch_separation_output_state.keys()):
+                                    list_dirs.append(dir)
+                                    for stem, path in batch_separation_output_state[dir]:
+                                        output_audio_2.append((f"{clean_filename(dir, length=120)} - {stem}", path))
+
+                                zip_file = self.gradio_helper.create_zip(
+                                    output_audio_2,
+                                    output_dir=temp_dir,
+                                    zip_name=f'mvsepless_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip',
+                                )
+
+                                return gr.update(choices=list_dirs, value=None, visible=True), gr.update(value=zip_file, visible=True if zip_file else False)
+
+                            @gr.render(inputs=[batch_separated_base_dir], triggers=[batch_separated_base_dir.change], show_progress="full")
+                            def batch_players(dir):
+                                nonlocal batch_separation_output_state
+                                list_dirs = []
+                                if batch_separation_output_state:
+                                    for dir_2 in list(batch_separation_output_state.keys()):
+                                        list_dirs.append(dir_2)
+                                if dir in list_dirs:
+                                    output_audio_batch = batch_separation_output_state[dir]
+                                else:
+                                    output_audio_batch = None
+                                if output_audio_batch:
+                                    with gr.Group():
+                                        for i, (stem, path) in enumerate(output_audio_batch):
+                                            with gr.Row(equal_height=True):
+                                                audio = gr.Audio(label=self.I18N_helper.t_stem(output_audio_batch[i][0]), value=output_audio_batch[i][1], interactive=False, show_download_button=True, type="filepath", scale=15)
+                                                reuse_btn = gr.Button(self.I18N_helper.t("reuse"), scale=1)
+                                                reuse_btn.click(
+                                                    lambda x: (gr.update(value=x), gr.update(value=x)),
+                                                    inputs=audio,
+                                                    outputs=[single_separation_input_path, single_separation_input_audio]
+                                                ).then(
+                                                    fn=(
+                                                        lambda x: (
+                                                            gr.update(value=x)
+                                                        )
+                                                    ),
+                                                    inputs=gr.State(False),
+                                                    outputs=[
+                                                        separation_batch_toggle
+                                                    ],
+                                                )
+
+
+                            batch_separation_output_zip = gr.DownloadButton(
+                                value=None, label=self.I18N_helper.t("output_zip"),
+                                visible=False
                             )
+
+                            batch_separate_btn.click(run_inference_batch, inputs=[
+                                batch_separation_input_path,
+                                separation_model_type,
+                                separation_model_name,
+                                separation_extract_instrumental,
+                                separation_vr_aggr_slider,
+                                separation_output_format,
+                                template,
+                                separation_stems_list,
+                            ], outputs=[batch_separated_base_dir, batch_separation_output_zip], show_progress_on=[batch_separation_input_path, batch_separation_input_audio])
+
                     with gr.Tab(self.I18N_helper.t("history_tab")):
+                        def parse_history_batch_list(dt):
+                            list_dirs = []
+                            try:
+                                history_results = self.history_manager.parse_history_results(
+                                    type="batch", datetime=dt
+                                )
+                                list_dirs = list(history_results.keys())
+                            except KeyError:
+                                list_dirs = []
+
+                            return gr.update(choices=list_dirs)
+                        
                         with gr.Tab(self.I18N_helper.t("history_single_tab")):
 
                             with gr.Group():
@@ -2371,15 +2217,26 @@ The name of the input file is also shortened if the length of the output name ex
                                     value=None,
                                     interactive=True,
                                 )
-                                single_separation_history_output_audio = [
-                                    gr.Audio(
-                                        interactive=False,
-                                        type="filepath",
-                                        visible=False,
-                                        show_download_button=True,
-                                    )
-                                    for _ in range(64)
-                                ]
+                                @gr.render(inputs=[single_separation_history_list], triggers=[single_separation_history_list.change])
+                                def history_send_single_player(dt):
+
+                                    try:
+                                        history_results = self.history_manager.parse_history_results(
+                                            type="single", datetime=dt
+                                        )
+                                    except KeyError:
+                                        history_results = None
+
+                                    if history_results:
+
+                                        for i, (stem, path) in enumerate(history_results):
+                                            gr.Audio(
+                                                label=self.I18N_helper.t_stem(history_results[i][0]),
+                                                value=history_results[i][1],
+                                                type="filepath",
+                                                show_download_button=True,
+                                                interactive=False
+                                            )
 
                         with gr.Tab(self.I18N_helper.t("history_batch_tab")):
                             with gr.Group():
@@ -2399,15 +2256,28 @@ The name of the input file is also shortened if the length of the output name ex
                                     value=None,
                                     interactive=True,
                                 )
-                                batch_separation_history_output_audio = [
-                                    gr.Audio(
-                                        interactive=False,
-                                        type="filepath",
-                                        visible=False,
-                                        show_download_button=True,
-                                    )
-                                    for _ in range(64)
-                                ]
+                                @gr.render(inputs=[batch_separation_history_list, batch_separation_history_base_dir], triggers=[batch_separation_history_base_dir.change])
+                                def history_send_batch_player(dt, name=None):
+
+                                    try:
+                                        history_results = self.history_manager.parse_history_results(
+                                            type="batch", datetime=dt
+                                        )
+                                    except KeyError:
+                                        history_results = None
+
+                                    if history_results:
+                                        out_audio = history_results.get(name, None)
+
+                                        if out_audio:
+                                            for i, (stem, path) in enumerate(out_audio):
+                                                gr.Audio(
+                                                    label=self.I18N_helper.t_stem(out_audio[i][0]),
+                                                    value=out_audio[i][1],
+                                                    type="filepath",
+                                                    show_download_button=True,
+                                                    interactive=False
+                                                )
 
                     if self.vbach:
                         from vbach.app import vbach_app
@@ -2502,12 +2372,6 @@ The name of the input file is also shortened if the length of the output name ex
                         outputs=single_separation_history_list,
                     )
 
-                    single_separation_history_list.change(
-                        self.gradio_helper.history_send_player,
-                        inputs=[gr.State("single"), single_separation_history_list],
-                        outputs=[*single_separation_history_output_audio],
-                    )
-
                     batch_separation_history_refresh_btn.click(
                         lambda x: gr.update(
                             choices=self.history_manager.parse_history_list(type=x),
@@ -2518,25 +2382,11 @@ The name of the input file is also shortened if the length of the output name ex
                     )
 
                     batch_separation_history_list.change(
-                        self.gradio_helper.history_send_player,
+                        parse_history_batch_list,
                         inputs=[
-                            gr.State("batch"),
-                            batch_separation_history_list,
-                            gr.State(None),
-                            gr.State(False),
+                            batch_separation_history_list
                         ],
                         outputs=[batch_separation_history_base_dir],
-                    )
-
-                    batch_separation_history_base_dir.change(
-                        self.gradio_helper.history_send_player,
-                        inputs=[
-                            gr.State("batch"),
-                            batch_separation_history_list,
-                            batch_separation_history_base_dir,
-                            gr.State(True),
-                        ],
-                        outputs=[*batch_separation_history_output_audio],
                     )
 
                     single_separation_input_audio.change(
@@ -2696,54 +2546,11 @@ The name of the input file is also shortened if the length of the output name ex
                             separation_extract_instrumental,
                         ],
                     )
-
-                    batch_separate_btn.click(
-                        self.gradio_helper.clear_players,
-                        outputs=[separated_batch_base_dir, separated_output_zip, *separated_output_audio],
-                    ).then(
-                        self.gradio_helper.run_inference_batch,
-                        inputs=[
-                            batch_separation_input_path,
-                            separation_model_type,
-                            separation_model_name,
-                            separation_extract_instrumental,
-                            separation_vr_aggr_slider,
-                            separation_output_format,
-                            template,
-                            separation_stems_list,
-                        ],
-                        outputs=[separated_batch_base_dir, separated_output_zip],
-                        show_progress_on=[batch_separation_input_audio, batch_separation_input_path],
-                    )
-
-                    single_separate_btn.click(
-                        self.gradio_helper.clear_players,
-                        outputs=[separated_batch_base_dir, separated_output_zip, *separated_output_audio],
-                    ).then(
-                        self.gradio_helper.run_inference,
-                        inputs=[
-                            single_separation_input_path,
-                            separation_model_type,
-                            separation_model_name,
-                            separation_extract_instrumental,
-                            separation_vr_aggr_slider,
-                            separation_output_format,
-                            template,
-                            separation_stems_list,
-                        ],
-                        outputs=[*separated_output_audio, separated_output_zip],
-                        show_progress_on=[single_separation_input_audio, single_separation_input_path],
-                    )
-
-                    separated_batch_base_dir.change(
-                        self.gradio_helper.batch_players,
-                        inputs=separated_batch_base_dir,
-                        outputs=separated_output_audio,
-                    )
-
                     separation_batch_toggle.change(
                         fn=(
                             lambda x: (
+                                gr.update(visible=False if x == True else True),
+                                gr.update(visible=True if x == True else False),
                                 gr.update(visible=False if x == True else True),
                                 gr.update(visible=True if x == True else False),
                                 gr.update(visible=False if x == True else True),
@@ -2756,6 +2563,8 @@ The name of the input file is also shortened if the length of the output name ex
                             batch_separation,
                             single_separate_btn,
                             batch_separate_btn,
+                            single_separation_output,
+                            batch_separation_output
                         ],
                     )
 
