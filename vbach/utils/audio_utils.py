@@ -321,7 +321,7 @@ class Audio:
 
                     print(f"Частота дискретизации: {sr}")
                     
-                    return audio_array, sr
+                    return audio_array.copy(), sr
                 else:
                     raise TypeError("Указанный файл должен быть видео или аудио")
             else:
@@ -549,5 +549,6 @@ class Audio:
 
         if process.returncode != 0:
             raise RuntimeError(f"FFmpeg завершился с ошибкой (код: {process.returncode})")
+
 
         return os.path.abspath(o)
