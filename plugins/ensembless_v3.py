@@ -129,7 +129,12 @@ def analyze_sample_rate(files):
     for file_info in files:
         try:
             # Создаем аудиосегмент из файла
-            rate = audio.get_sr(file_info)
+            info = audio.get_info(file_info)
+            stream_0 = info.get(0, None)
+            if stream_0:
+                rate = stream_0["sample_rate"]
+            else:
+                rate = 0
 
             # Проверяем единообразие частоты
             if common_rate is None:
