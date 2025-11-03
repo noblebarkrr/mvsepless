@@ -12,17 +12,17 @@
             "checkpoint_url": "https://huggingface.co/KimberleyJSN/melbandroformer/resolve/main/MelBandRoformer.ckpt?download=true",
             "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/KimberleyJensen/config_vocals_mel_band_roformer_kj.yaml"
         },
-        "Mel-Band-Roformer_Vocals_smulelabs": {
+        "Mel-Band-Roformer_WSA_Vocals_smulelabs": {
             "category": "Вокал",
             "id": 1910,
-            "full_name": "Mel-Band Roformer Vocals by Smule Labs",
+            "full_name": "Windowed Sink Attention Mel-Band Roformer Vocals by Smule Labs",
             "stems": [
                 "vocals",
                 "other"
             ],
             "target_instrument": "vocals",
             "checkpoint_url": "https://huggingface.co/smulelabs/windowed-roformer/resolve/main/mbr-win10-sink8.ckpt?download=true",
-            "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/config_windowed_roformer_by_smulelabs.yaml?download=true"
+            "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/config_windowed_roformer_by_smulelabs_wsa.yaml?download=true"
         },       
         "Mel-Band-Roformer_InstVoc_Duality_v1_unwa": {
             "category": "Инструментал и вокал",
