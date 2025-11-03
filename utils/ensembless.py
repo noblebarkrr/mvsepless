@@ -188,7 +188,7 @@ class ENSEMBLESS:
 
         output_p, output_wav_p = ensemble_audio_files(
             files=output_p_files,
-            output=os.path.join(temp_dir, f"ensemble_{clean_filename(base_name, length=120)}_{type}"),
+            output=os.path.join(output_dir, f"ensemble_{clean_filename(base_name, length=120)}_{type}"),
             ensemble_type=type,
             weights=output_p_weights,
             out_format=out_format,
