@@ -94,9 +94,16 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         model = Torchseg_Net(config)
 
     elif model_type == "mel_band_roformer":
-        from models.bs_roformer import MelBandRoformer
+        if hasattr(config, "windowed"): # Это не нарушает совместимость со обычными моделями на Mel-Band Roformer 
+            from models.windowed_roformer.model import MelBandRoformerWSA
 
-        model = MelBandRoformer(**dict(config.model))
+            model = MelBandRoformerWSA(**dict(config.model))
+
+        else:
+            from models.bs_roformer import MelBandRoformer
+
+            model = MelBandRoformer(**dict(config.model))
+
     elif model_type == "bs_roformer":
         if hasattr(config.model, "use_shared_bias"):
             from models.bs_roformer import BSRoformer_SW
@@ -110,14 +117,12 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
             from models.bs_roformer import BSRoformer
 
             model = BSRoformer(**dict(config.model))
-    elif model_type == "swin_upernet":
-        from models.upernet_swin_transformers import Swin_UperNet_Model
 
-        model = Swin_UperNet_Model(config)
     elif model_type == "bandit":
         from models.bandit.core.model import MultiMaskMultiSourceBandSplitRNNSimple
 
         model = MultiMaskMultiSourceBandSplitRNNSimple(**config.model)
+
     elif model_type == "bandit_v2":
         from models.bandit_v2.bandit import Bandit
 
@@ -130,14 +135,6 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         from models.scnet import SCNet
 
         model = SCNet(**config.model)
-    elif model_type == "apollo":
-        from models.look2hear.models import BaseModel
-
-        model = BaseModel.apollo(**config.model)
-    elif model_type == "bs_mamba2":
-        from models.ts_bs_mamba2 import Separator
-
-        model = Separator(**config.model)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
@@ -341,7 +338,6 @@ def demix(
         return estimated_sources
     else:
         return ret_data
-
 
 def demix_demucs(config, model, mix, device, model_type, pbar=False):
     mix = torch.tensor(mix, dtype=torch.float32)
