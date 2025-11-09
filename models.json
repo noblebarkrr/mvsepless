@@ -1778,6 +1778,20 @@
             "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/jorisvaneyghen/SCNet/resolve/main/model_jazz_scnet_xl.ckpt?download=true",
             "config_url": "https://huggingface.co/spaces/jorisvaneyghen/jazz_playalong/resolve/main/configs/config_jazz_scnet_xl.yaml?download=true"
+        },
+        "SCNet_Choirsep_exp": {
+            "category": "Хор",
+            "id": 420,
+            "full_name": "SCNet Choirsep by concert.isolations.business@gmail.com",
+            "stems": [
+                "alto",
+                "bass",
+                "tenor",
+                "soprano"
+            ],
+            "target_instrument": null,
+            "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/scnet_choirsep/model_scnet_ep_36_sdr_5.4596.ckpt?download=true",
+            "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/scnet_choirsep/config_scnet_choirsep.yaml?download=true"
         }
     },
     "vr": {
@@ -2690,6 +2704,20 @@
             "target_instrument": null,
             "checkpoint_url": "https://huggingface.co/jarredou/HTDemucs_Similarity_Extractor_by_wesleyr36/resolve/main/model_htdemucs_ep_21_sdr_13.6970.ckpt?download=true",
             "config_url": "https://huggingface.co/jarredou/HTDemucs_Similarity_Extractor_by_wesleyr36/resolve/main/config_htdemucs_similarity.yaml?download=true"
+        },
+        "HTDemucs4_Choirsep_exp": {
+            "category": "Хор",
+            "id": 9,
+            "full_name": "HTDemucs4 Choirsep by concert.isolations.business@gmail.com",
+            "stems": [
+                "alto",
+                "bass",
+                "tenor",
+                "soprano"
+            ],
+            "target_instrument": null,
+            "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/demucs_choirsep/model_htdemucs_ep_94_sdr_5.2474.ckpt?download=true",
+            "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/demucs_choirsep/config_htdemucs_choirsep.yaml?download=true"
         }
     },
     "bandit": {
