@@ -1548,6 +1548,18 @@
             "checkpoint_url": "https://huggingface.co/anvuew/karaoke_bs_roformer/resolve/main/karaoke_bs_roformer_anvuew.ckpt?download=true",
             "config_url": "https://huggingface.co/anvuew/karaoke_bs_roformer/resolve/main/karaoke_bs_roformer_anvuew.yaml?download=true"
         },
+        "BS-Roformer_Vocals_anvuew": {
+            "category": "Вокал",
+            "id": 230,
+            "full_name": "BS Roformer Vocals by Anvuew",
+            "stems": [
+                "vocals",
+                "instrument"
+            ],
+            "target_instrument": "vocals",
+            "checkpoint_url": "https://huggingface.co/anvuew/BS-RoFormer/resolve/main/bs_roformer_anvuew_sdr_12.45.ckpt?download=true",
+            "config_url": "https://huggingface.co/anvuew/BS-RoFormer/resolve/main/config.yaml?download=true"
+        },
         "BS-Roformer_4_stems_aname": {
             "category": "4 стема",
             "id": 225,
