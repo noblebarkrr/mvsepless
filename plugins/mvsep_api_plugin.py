@@ -1,6 +1,7 @@
 import os
 import time
 import tempfile
+import re
 from datetime import datetime
 import requests
 from requests.exceptions import RequestException
@@ -8,15 +9,106 @@ from typing import Dict, List, Optional, Union
 import json
 import argparse
 import gradio as gr
-
-from multi_inference import MVSEPLESS
-
-mvsepless = MVSEPLESS()
+import yt_dlp
+import urllib.request
 
 API_TOKEN = ""
 algorithm_names = {}
 al_by_name = {}
 output_formats = ["mp3", "wav", "flac", "m4a"]
+
+MAX_LENGTH_NAME = 255
+
+def clean_filename(filename, length=240):
+    # Список символов, запрещенных в обеих системах
+    universal_forbidden = r"\\/*?:<>|"
+
+    # Дополнительные символы, запрещенные в Linux
+    linux_forbidden = r"&;~\'`()[]$#^%!"
+
+    # Создаем набор всех запрещенных символов
+    forbidden_chars = set(universal_forbidden + linux_forbidden)
+
+    # Удаляем запрещенные символы
+    cleaned = "".join(c for c in filename if c not in forbidden_chars)
+
+    # Удаляем пробелы в начале и конце
+    cleaned = cleaned.strip()
+
+    # Проверяем на зарезервированные имена Windows
+    reserved_windows = {
+        "CON",
+        "AUX",
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4",
+        "LPT1",
+        "LPT2",
+        "LPT3",
+        "PRN",
+        "NUL",
+    }
+
+    # Если имя файла зарезервировано, добавляем префикс
+    if cleaned.upper() in reserved_windows:
+        cleaned = f"file_{cleaned}"
+    if len(cleaned) > length:
+        return f"{cleaned[:length // 2]}...{cleaned[-(length // 3):]}"
+    return cleaned
+
+def remove_duplicate_keys(input_str, keys=("NAME", "STEM", "MODEL")):
+    # Создаем множество для отслеживания найденных ключей
+    seen = set()
+    # Шаблон для поиска любого из ключей
+    pattern = r"({})".format("|".join(re.escape(key) for key in keys))
+
+    def replace(match):
+        key = match.group(1)
+        if key in seen:
+            return ""  # Удаляем дубликат
+        seen.add(key)
+        return key  # Оставляем первое вхождение
+
+    # Заменяем дубликаты на пустую строку
+    result = re.sub(pattern, replace, input_str)
+    return result
+
+
+def shorter_name(template, file_name, stem, model):
+    # Удаляем дубликаты ключей в шаблоне перед расчетами
+    clean_template = remove_duplicate_keys(template)
+
+    template_no_keys_length = len(
+        clean_template.replace("NAME", "")
+        .replace("STEM", "")
+        .replace("MODEL", "")
+    )
+    key_values_length = (len(stem)
+            if "STEM" in clean_template
+            else 0 + len(model) if "MODEL" in clean_template else 0
+    )
+    free_length = MAX_LENGTH_NAME - (template_no_keys_length + key_values_length)
+    if len(file_name) > (free_length - 7):
+        shorted_name = f"{file_name[:(free_length // 2)]}...{file_name[-((free_length // 2) - 7):]}"
+        return shorted_name
+    else:
+        return file_name
+
+def output_file_template(template, input_file_name, stem, model):
+    # Удаляем дубликаты ключей перед заменой
+    clean_template = remove_duplicate_keys(template)
+
+    input_file_name = shorter_name(
+        clean_template, input_file_name, stem, model
+    )
+    template_name = (
+        clean_template.replace("STEM", f"{stem}")
+        .replace("MODEL", f"{model}")
+        .replace("NAME", f"{input_file_name}")
+    )
+    output_name = f"{template_name}"
+    return output_name
 
 TRANSLATIONS = {
     "ru": {
@@ -52,6 +144,10 @@ TRANSLATIONS = {
         "hash": "Хэш",
         "error": "Ошибка",
         "mvsep_api_off": "<h1><center>Плагин MVSEP API неактивен</center></h1>",
+        "template": "Формат имени",
+        "current_order": "Ваше задание",
+        "queue_count": "Файлы в очереди",
+        "reuse": "Использовать снова"
     },
     "en": {
         "upload_label": "Input audio",
@@ -86,6 +182,10 @@ TRANSLATIONS = {
         "hash": "Hash",
         "error": "Error",
         "mvsep_api_off": "<h1><center>Plugin MVSEP API not active</center></h1>",
+        "template": "Name format",
+        "current_order": "Your order",
+        "queue_count": "Files in Queue",
+        "reuse": "Reuse"
     },
 }
 
@@ -110,7 +210,8 @@ def t(key, **kwargs):
 
 
 def download_wrapper(url, cookie):
-    t = mvsepless.downloader_audio.dw_yt_dlp(url, cookie)
+    dw = Downloader()
+    t = dw.dw_yt_dlp(url, cookie)
     return (
         gr.update(value=t),
         gr.update(value=t),
@@ -118,28 +219,116 @@ def download_wrapper(url, cookie):
         gr.update(visible=False),
     )
 
-
 def set_api_token(token: str):
     global API_TOKEN
     API_TOKEN = token
     gr.Warning(f"API-KEY - {token}", duration=2, title="API TEST")
     return token
 
+class Downloader:
+    def __init__(self, output_dir=os.environ.get(
+            "MVSEPLESS_DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloaded")
+        )):
+        self.output_dir = output_dir
+        os.makedirs(self.output_dir, exist_ok=True)
+
+    def dw_yt_dlp(
+        self,
+        url,
+        cookie=None,
+        output_format="mp3",
+        output_bitrate="320",
+        title=None,
+    ):
+        # Подготовка шаблона имени файла
+        outtmpl = "%(title)s.%(ext)s" if title is None else f"{title}.%(ext)s"
+
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": os.path.join(self.output_dir, outtmpl),
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": output_format,
+                    "preferredquality": output_bitrate,
+                }
+            ],
+            "noplaylist": True,  # Скачивать только одно видео, не плейлист
+            "quiet": True,  # Отключить вывод в консоль
+            "no_warnings": True,  # Скрыть предупреждения
+        }
+
+        # Добавляем cookies если указаны
+        if cookie and os.path.exists(cookie):
+            ydl_opts["cookiefile"] = cookie
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                info = ydl.extract_info(url, download=True)
+                if "_type" in info and info["_type"] == "playlist":
+                    # Для плейлистов берем первое видео
+                    entry = info["entries"][0]
+                    filename = ydl.prepare_filename(entry)
+                else:
+                    # Для одиночного видео
+                    filename = ydl.prepare_filename(info)
+
+                # Заменяем оригинальное расширение на выбранный формат
+                base, _ = os.path.splitext(filename)
+                audio_file = base + f".{output_format}"
+
+                return os.path.join(self.output_dir, audio_file)
+            except Exception as e:
+                print(e)
+                gr.Warning(e)
+                return url
+
+    def dw_from_url(self, url, title=None):
+        try:
+            response = urllib.request.urlopen(url)
+            content_type = response.info().get_content_type()
+            if "audio" in content_type:
+                filename = os.path.join(
+                    self.output_dir, title or "downloaded_audio"
+                )
+                with open(filename, "wb") as f:
+                    f.write(response.read())
+                return filename
+            else:
+                raise ValueError("URL does not point to an audio file.")
+        except Exception as e:
+            print(e)
+            gr.Warning(e)
+            return url
 
 class MVSEPClient:
     def __init__(
         self,
         api_key: str,
-        retries: int = 9999,
-        retry_interval: int = 1,
+        retries: int = 999999999,
+        retry_interval: int = 5,
         debug: bool = True,
     ):
         self.api_key = api_key
         self.retries = retries
         self.retry_interval = retry_interval
         self.base_url = "https://mvsep.com/api"
-        self.headers = {"User-Agent": "MVSEP Python Client/0.1"}
+        self.headers = {"User-Agent": "MVSEP Python Client for MVSEPLESS"}
         self.debug = debug
+
+    def parse_model_from_output_filename(self, task_hash, stem, filename):
+
+        escaped_task_hash = re.escape(task_hash)
+        escaped_stem = re.escape(stem)
+
+        pattern = rf"^{escaped_task_hash}_([^_]+_.+?)_{escaped_stem}$"
+
+        match = re.match(pattern, filename)
+
+        if match:
+            return match.group(1)
+        else:
+            return ""
 
     def _log_debug(self, message: str) -> None:
         """Helper method for debug logging"""
@@ -294,7 +483,7 @@ class MVSEPClient:
 
     # Updated process_directory with debug logs
     def process_file(
-        self, input_file: str, output_dir: str, progress: any = gr.Progress(), **kwargs
+        self, input_file: str, output_dir: str, template: str = "MODEL - NAME - STEM", progress: any = gr.Progress(), **kwargs
     ) -> None:
         self._log_debug(f"Processing file: {input_file} -> {output_dir}")
         supported_ext = [
@@ -310,6 +499,10 @@ class MVSEPClient:
         os.makedirs(output_dir, exist_ok=True)
 
         filename = os.path.basename(input_file)
+
+        basename, _ = os.path.splitext(filename)
+
+        cleaned_basename = basename[-(160 / 3):(160 / 3)] if len(basename) > 160 else basename
 
         if os.path.splitext(filename)[1].lower() not in supported_ext:
             self._log_debug(f"Skipping unsupported file: {filename}")
@@ -338,6 +531,7 @@ class MVSEPClient:
                 if status == "done":
                     self._log_debug("Processing completed successfully")
                     progress(0.9, desc=t("separation_success"))
+                    gr.Warning(message="", title=t("separation_success"))
                     break
                 if status in ["failed", "error"]:
                     self._log_debug("Processing failed")
@@ -351,8 +545,10 @@ class MVSEPClient:
                             0.2,
                             desc=f'{status_resp["data"]["current_order"]} | {status_resp["data"]["queue_count"]}',
                         )
+                        gr.Warning(message=f'{t("current_order")}:{status_resp["data"]["current_order"]} \n {t("queue_count")}:{status_resp["data"]["queue_count"]}', title="", duration=self.retry_interval)
                     if status == "processing":
                         progress(0.5, desc=t("processing"))
+                        gr.Warning(title=t("processing"), message="")
                     time.sleep(self.retry_interval)
                 else:
                     self._log_debug(f"Unknown status: {status}")
@@ -361,15 +557,24 @@ class MVSEPClient:
             if status != "done":
                 pass
 
-            # FIXED: Use 'download' key instead of 'name'
+            output_audios = {"algorithm": None, "stems": []}
+
+            output_audios["algorithm"] = status_resp["data"]["algorithm"]
+
             for file_info in status_resp["data"]["files"]:
-                output_filename = file_info.get(
+                stem = file_info["type"]
+                download = file_info.get(
                     "download", f"unknown_{time.time()}.mp3"
                 )
-                output_path = os.path.join(output_dir, output_filename)
+                basename_from_task_hash = os.path.splitext(task_hash)[0].split('-', 2)[-1]
+                model_name = self.parse_model_from_output_filename(basename_from_task_hash, stem.lower(), os.path.splitext(download)[0])
+                output_filename = output_file_template(template, cleaned_basename, stem, model_name)
+                output_path = os.path.join(output_dir, f"{output_filename}{os.path.splitext(download)[1]}")
                 self._log_debug(f"Downloading {output_filename}")
-                # FIXED: Use 'url' key instead of 'link'
                 self.download_track(file_info["url"], output_path)
+                output_audios["stems"].append((stem, output_path))
+
+            return output_audios
 
         except Exception as e:
             self._log_debug(f"Exception during processing: {str(e)}")
@@ -439,6 +644,7 @@ def mvsep_api(
     ao2: int,
     ao3: int,
     token: str,
+    template: str = "MODEL - NAME - STEM",
     progress: any = gr.Progress(),
 ):
 
@@ -449,7 +655,7 @@ def mvsep_api(
     )  # USE DEBUG, ELSE NOTHING WILL BE PRINTED ON TERMINAL, normal prints are not done yet
 
     algos = client.get_algorithms()
-    print("Separate with algorithm: {}".format(st))
+    print("Разделение с алгоритмом: {}".format(st))
     print(algos[st])
 
     if of == "mp3":
@@ -464,9 +670,10 @@ def mvsep_api(
         of_bool == 1
 
     # Process directory example / need to check if retries are working correctly !!!
-    client.process_file(
+    output = client.process_file(
         input_file=i,
         output_dir=o,
+        template=template,
         progress=progress,
         output_format=of_bool,  # MP3=0, WAV=1, FLAC=2, M4A=3
         sep_type=st,  # use client.get_algorithms() or check documentation details https://mvsep.com/en/full_api for now
@@ -475,15 +682,8 @@ def mvsep_api(
         add_opt3=ao3,  # use client.get_algorithms() or check documentation details https://mvsep.com/en/full_api for now
     )
 
-    output_files = []
-
-    if os.listdir(o):
-        for file in os.listdir(o):
-            if os.path.exists(os.path.join(o, file)):
-                output_files.append(os.path.join(o, file))
-        return output_files
-    else:
-        return []
+    output_files = output["stems"]
+    return output_files
 
 
 def write_dict_algos(algos: dict):
@@ -578,78 +778,6 @@ def get_algos(token: str, names: bool = False):
     return full_algos_dict
 
 
-def process_audio(
-    audio_file,
-    output_format,
-    algorithm_name,
-    add_opt1_value=None,
-    add_opt2_value=None,
-    add_opt3_value=None,
-    progress=gr.Progress(),
-):
-    """
-    Processes an audio file using the MVSEP API based on the selected algorithm and options.
-
-    Args:
-        audio_file: The uploaded audio file path.
-        algorithm_name: The name of the selected algorithm.
-        add_opt1_value: The selected value for add_opt1.
-        add_opt2_value: The selected value for add_opt2.
-        add_opt3_value: The selected value for add_opt3.
-
-    Returns:
-        A list of paths to the separated audio files.
-    """
-    global al_by_name
-    global API_TOKEN
-
-    if algorithm_name not in al_by_name:
-        return f"Error: Algorithm '{algorithm_name}' not found."
-
-    algorithm_info = al_by_name[algorithm_name]
-    algorithm_id = algorithm_info.get("id")
-
-    if algorithm_id is None:
-        return f"Error: Algorithm '{algorithm_name}' does not have an ID."
-
-    add_opt1_int = -1
-    if add_opt1_value and "add_opt1" in algorithm_info:
-        add_opt1_int = algorithm_info["add_opt1"].get(add_opt1_value, -1)
-
-    add_opt2_int = -1
-    if add_opt2_value and "add_opt2" in algorithm_info:
-        add_opt2_int = algorithm_info["add_opt2"].get(add_opt2_value, -1)
-
-    add_opt3_int = -1
-    if add_opt3_value and "add_opt3" in algorithm_info:
-        add_opt3_int = algorithm_info["add_opt3"].get(add_opt3_value, -1)
-
-    temp_dir = tempfile.mkdtemp()
-
-    output_files = mvsep_api(
-        i=audio_file,
-        o=temp_dir,
-        of=output_format,
-        st=algorithm_id,
-        ao1=add_opt1_int,
-        ao2=add_opt2_int,
-        ao3=add_opt3_int,
-        token=API_TOKEN,
-        progress=progress,
-    )
-
-    audio_updates = [
-        gr.update(
-            label=os.path.basename(output_files[i]) if i < len(output_files) else None,
-            value=output_files[i] if i < len(output_files) else None,
-            visible=i < len(output_files),
-        )
-        for i in range(64)
-    ]
-
-    return tuple(audio_updates)
-
-
 def update_add_opts(algorithm_name):
     if algorithm_name in al_by_name:
         algorithm_info = al_by_name[algorithm_name]
@@ -684,13 +812,13 @@ def update_add_opts(algorithm_name):
             gr.update(choices=[], interactive=False, value=None, visible=False),
         )
 
+online = os.environ.get("MVSEP_API_OFF", True)
 
-token = set_api_token(token="")
+if online == True:
+    env_token = os.environ.get("MVSEP_API_TOKEN", None)
 
+    token = set_api_token(token=env_token if env_token else "")
 
-MVSEP_API = os.environ.get("MVSEP_API_PLUGIN", False)
-
-if MVSEP_API == "True":
     algos_test = get_algos(token=token, names=True)
     algorithm_names = list(algos_test.keys())
     al_by_name = algos_test
@@ -757,24 +885,96 @@ if MVSEP_API == "True":
                 mvsep_api_ui_add_opt2_dropdown = gr.Dropdown(label=t("add_opt2"), interactive=True)
                 mvsep_api_ui_add_opt3_dropdown = gr.Dropdown(label=t("add_opt3"), interactive=True)
 
+                mvsep_api_ui_template = gr.Textbox(label=t("template"), value="NAME_MODEL_STEM", interactive=True)
+
                 mvsep_api_ui_o_format = gr.Radio(
                     choices=output_formats, label=t("output_format"), value="mp3"
                 )
 
                 mvsep_api_ui_process_button = gr.Button(t("separate"))
         with gr.Group():
-            mvsep_api_ui_output_stems = []
+            @gr.render(inputs=[
+                mvsep_api_ui_input_path,
+                mvsep_api_ui_o_format,
+                mvsep_api_ui_algorithm_dropdown,
+                mvsep_api_ui_add_opt1_dropdown,
+                mvsep_api_ui_add_opt2_dropdown,
+                mvsep_api_ui_add_opt3_dropdown,
+                mvsep_api_ui_template
+            ], triggers=[mvsep_api_ui_process_button.click])
+            def process_audio(
+                audio_file,
+                output_format,
+                algorithm_name,
+                add_opt1_value=None,
+                add_opt2_value=None,
+                add_opt3_value=None,
+                template="MODEL - NAME - STEM",
+                progress=gr.Progress(),
+            ):
+                """
+                Processes an audio file using the MVSEP API based on the selected algorithm and options.
 
-            for i in range(64):
-                mvsep_api_ui_audio = gr.Audio(
-                    label=t("stem"),
-                    type="filepath",
-                    interactive=False,
-                    show_download_button=True,
-                    visible=False,
-                    scale=4,
+                Args:
+                    audio_file: The uploaded audio file path.
+                    algorithm_name: The name of the selected algorithm.
+                    add_opt1_value: The selected value for add_opt1.
+                    add_opt2_value: The selected value for add_opt2.
+                    add_opt3_value: The selected value for add_opt3.
+
+                Returns:
+                    A list of paths to the separated audio files.
+                """
+                template = clean_filename(template, length=40)
+                global al_by_name
+                global API_TOKEN
+
+                if algorithm_name not in al_by_name:
+                    return f"Error: Algorithm '{algorithm_name}' not found."
+
+                algorithm_info = al_by_name[algorithm_name]
+                algorithm_id = algorithm_info.get("id")
+
+                if algorithm_id is None:
+                    return f"Error: Algorithm '{algorithm_name}' does not have an ID."
+
+                add_opt1_int = -1
+                if add_opt1_value and "add_opt1" in algorithm_info:
+                    add_opt1_int = algorithm_info["add_opt1"].get(add_opt1_value, -1)
+
+                add_opt2_int = -1
+                if add_opt2_value and "add_opt2" in algorithm_info:
+                    add_opt2_int = algorithm_info["add_opt2"].get(add_opt2_value, -1)
+
+                add_opt3_int = -1
+                if add_opt3_value and "add_opt3" in algorithm_info:
+                    add_opt3_int = algorithm_info["add_opt3"].get(add_opt3_value, -1)
+
+                temp_dir = tempfile.mkdtemp()
+
+                output_files = mvsep_api(
+                    i=audio_file,
+                    o=temp_dir,
+                    of=output_format,
+                    st=algorithm_id,
+                    ao1=add_opt1_int,
+                    ao2=add_opt2_int,
+                    ao3=add_opt3_int,
+                    token=API_TOKEN,
+                    template=template,
+                    progress=progress,
                 )
-                mvsep_api_ui_output_stems.append(mvsep_api_ui_audio)
+
+                if output_files:
+                    for stem, path in output_files:
+                        with gr.Row(equal_height=True):
+                            audio = gr.Audio(label=stem, value=path, type="filepath", interactive=False, show_download_button=True, scale=15)
+                            reuse_btn = gr.Button(t("reuse"), scale=1)
+                            reuse_btn.click(
+                                lambda x: (gr.update(value=x), gr.update(value=x)),
+                                inputs=audio,
+                                outputs=[mvsep_api_ui_input_path, mvsep_api_ui_input_audio]
+                            )
 
         mvsep_api_ui_input_audio.change(
             lambda x: gr.update(value=x), inputs=mvsep_api_ui_input_audio, outputs=mvsep_api_ui_input_path
@@ -823,20 +1023,6 @@ if MVSEP_API == "True":
             outputs=[mvsep_api_ui_add_opt1_dropdown, mvsep_api_ui_add_opt2_dropdown, mvsep_api_ui_add_opt3_dropdown],
         )
 
-        mvsep_api_ui_process_button.click(
-            fn=process_audio,
-            inputs=[
-                mvsep_api_ui_input_path,
-                mvsep_api_ui_o_format,
-                mvsep_api_ui_algorithm_dropdown,
-                mvsep_api_ui_add_opt1_dropdown,
-                mvsep_api_ui_add_opt2_dropdown,
-                mvsep_api_ui_add_opt3_dropdown,
-            ],
-            outputs=[*mvsep_api_ui_output_stems],
-            show_progress_on=[mvsep_api_ui_input_path, mvsep_api_ui_input_audio],
-        )
-
         mvsep_api_ui_api_token.change(set_api_token, inputs=mvsep_api_ui_api_token, outputs=gr.State())
 
         gr.on(
@@ -846,10 +1032,56 @@ if MVSEP_API == "True":
         )
 
 else:
-
     def plugin_name():
         return "MVSEP API (OFF)"
-
     def plugin(lang):
-        set_lang(lang)
-        gr.Markdown(t("mvsep_api_off"))
+        pass
+
+if __name__ == "__main__":
+    theme = gr.themes.Base(  # Тема соответствующая цветовой стилистике MVSep.com
+        primary_hue="blue",
+        secondary_hue="gray",
+        neutral_hue="slate",
+        font=[
+            gr.themes.GoogleFont("Poppins"),
+            gr.themes.GoogleFont("Montserrat"),
+            "Arial",
+            "sans-serif",
+        ],
+        font_mono=[
+            gr.themes.GoogleFont("Roboto Mono"),
+            "Courier New",
+            "monospace",
+        ],
+    ).set(
+        button_primary_background_fill="#3a7bd5",
+        button_primary_background_fill_hover="#2c65c0",
+        button_primary_text_color="#ffffff",
+        input_background_fill="#ffffff",
+        input_border_color="#d0d0d6",
+        block_background_fill="#ffffff",
+        border_color_primary="#d0d0d6",
+    )
+
+    app = argparse.ArgumentParser(description='Vbach APP')
+    app.add_argument(
+        "--port",
+        type=int,
+        default=7860,
+        help="Port to run the Gradio app on (default: 7860)",
+    )
+    app.add_argument(
+        "--share", action="store_true", help="Share the Gradio app publicly"
+    )
+    app.add_argument("--debug", action="store_true", help="Run in debug mode")
+    args = app.parse_args()
+
+    with gr.Blocks(theme=theme) as demo:
+        plugin("ru")
+    demo.launch(server_port=args.port, share=args.share, debug=args.debug, allowed_paths=[
+                        os.path.join(os.path.abspath(os.sep), "none"),
+                        os.getcwd(),
+                        os.path.expanduser('~'),
+                        os.path.join(os.path.abspath(os.sep), "sdcard"),
+                        os.path.join(os.path.abspath(os.sep), "content"),
+                    ])
