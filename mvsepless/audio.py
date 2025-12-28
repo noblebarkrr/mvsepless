@@ -1,0 +1,184 @@
+import os
+import subprocess
+import numpy as np
+import audio
+import tempfile
+from numpy.typing import DTypeLike
+
+ffmpeg_path = "ffmpeg"
+ffprobe_path = "ffprobe"
+
+def check():
+    ffmpeg_version_output = subprocess.check_output(
+        [ffmpeg_path, "-version"], text=True
+    )
+
+    ffprobe_version_output = subprocess.check_output(
+        [ffprobe_path, "-version"], text=True
+    )
+
+SAMPLE_FORMATS_DICT = {
+    "int16": "s16le",
+    "int32": "s32le",
+    "float32": "f32le",
+    "float64": "f64le",
+    np.int16: "s16le",
+    np.int32: "s32le",
+    np.float32: "f32le",
+    np.float64: "f64le",
+}
+
+audio_formats = [
+    'aac',       # AAC (обычно в ADTS контейнере)
+    'ac3',       # Dolby Digital
+    'ac4',       # Dolby AC-4
+    'adts',      # ADTS AAC
+    'aiff',      # Audio Interchange File Format
+    'au',        # Sun AU
+    'caf',       # Apple Core Audio Format
+    'dts',       # DTS
+    'eac3',      # Dolby Digital Plus
+    'flac',      # Free Lossless Audio Codec
+    'm4a',       # MPEG-4 Audio (обычно AAC)
+    'mp3',       # MPEG Audio Layer 3
+    'mp2',       # MPEG Audio Layer 2
+    'ogg',       # Ogg Vorbis/Opus
+    'oga',       # Ogg Audio
+    'opus',      # Opus Audio
+    'ra',        # RealAudio
+    'raw',       # RAW PCM (различные типы)
+    'snd',       # Sound
+    'voc',       # Creative Voice
+    'wav',       # Waveform Audio
+    'wma',       # Windows Media Audio
+    'wv',        # WavPack
+]
+
+video_formats_with_audio = [
+    '3gp',       # 3GPP mobile video
+    '3g2',       # 3GPP2 mobile video
+    'asf',       # Advanced Systems Format
+    'avi',       # Audio Video Interleaved
+    'flv',       # Flash Video
+    'f4v',       # Flash Video
+    'm4v',       # MPEG-4 Video
+    'mkv',       # Matroska Video
+    'mov',       # QuickTime Movie
+    'mp4',       # MPEG-4 Part 14
+    'mpeg',      # MPEG-1/2
+    'mpg',       # MPEG-1/2
+    'mts',       # AVCHD
+    'mxf',       # Material Exchange Format
+    'ogv',       # Ogg Video
+    'rm',        # RealMedia
+    'rmvb',      # RealMedia Variable Bitrate
+    'ts',        # MPEG Transport Stream
+    'vob',       # DVD Video Object
+    'webm',      # WebM (VP8/VP9 + Vorbis/Opus)
+    'wmv',       # Windows Media Video
+]
+
+input_formats = video_formats_with_audio + audio_formats
+
+output_formats = [
+    "mp3",
+    "wav",
+    "flac",
+    "ogg",
+    "opus",
+    "m4a",
+    "aac",
+    "ac3",
+    "aiff",
+    "wma"
+]
+
+input_extensions = [f".{of}" for of in input_formats]
+
+output_extensions = [f".{of}" for of in output_formats]
+
+def get_sr(path: str, stream: int = 0):
+    cmd = [ffprobe_path, "-y", "-i", path, "-v", "quiet", "-hide_banner", "-show_entries", "stream=sample_rate", "-select_streams", f"a:{stream}", "-of", "compact=p=0:nk=1"]
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = process.communicate()
+    sample_rate = stdout.decode('utf-8').strip()
+    if sample_rate.isdigit():
+        return int(sample_rate.strip())
+    else:
+        return 0
+
+def get_channels(path: str, stream: int = 0):
+    cmd = [ffprobe_path, "-i", path, "-v", "quiet", "-hide_banner", "-show_entries", "stream=channels", "-select_streams", f"a:{stream}", "-of", "compact=p=0:nk=1"]
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = process.communicate()
+    channels = stdout.decode('utf-8').strip()
+    if channels.isdigit():
+        return int(channels.strip())
+    else:
+        return 0
+
+def check(path):
+    channels = get_channels(path)
+    sr = get_sr(path)
+    return channels !=0 and sr != 0
+
+def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike = "float32", multi_channel: bool = False, stream: int = 0):
+    output_format = SAMPLE_FORMATS_DICT.get(dtype)
+    if not sr:
+        sr = get_sr(path, stream)
+    channels = 1 if mono else get_channels(path, stream) if multi_channel else 2
+    cmd = [ffmpeg_path, "-i", path, "-map", f"0:a:{stream}", "-vn", "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
+    )
+    stdout, stderr = process.communicate()
+    y = np.frombuffer(stdout, dtype=dtype)
+    y = y.reshape((-1, channels)).T if not mono else y.flatten()
+    return y.copy(), sr
+
+def bitrate_to_int(a):
+    if isinstance(a, str):
+        if a.endswith(("k", "K")):
+            numeric_part = a[:-1]
+            if numeric_part.isdigit():
+                return int(numeric_part)
+            else:
+                return 320
+        else:
+            if a.isdigit():
+                return int(a)
+            else:
+                return 320
+    elif isinstance(a, (int, float)):
+        return int(a)
+    else:
+        return 320
+
+def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    dtype = y.dtype
+    channels = len(y.shape)
+    if channels == 1:
+        y = y.reshape(-1, 1)
+    elif channels == 2:
+        if y.shape[0] == 2:
+            y = y.T
+    y = np.nan_to_num(y, nan=0, posinf=0, neginf=0)
+    audio_bytes = y.tobytes()
+    sample_format = SAMPLE_FORMATS_DICT.get(str(dtype))
+    bitrate = bitrate_to_int(bitrate)
+    bitrate_fixed = 64 if bitrate < 64 else 320 if bitrate > 320 else bitrate
+    cmd = [ffmpeg_path, "-y", "-f", sample_format, "-ar", str(sr), "-ac", str(channels), "-i", "-", "-ab", f"{bitrate_fixed}k", path]
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        bufsize=10**8
+    )
+    process.stdin.write(audio_bytes)
+    process.stdin.close()
+    process.wait()
+    return path

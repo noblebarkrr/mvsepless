@@ -1,0 +1,594 @@
+import os, json, sys, subprocess, queue, threading, time, argparse, gradio as gr, yaml, tabulate
+from downloader import dw_file
+from audio import check, output_formats
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
+class MvseplessModelManager:
+    def __init__(
+        self,
+        models_info_path=os.path.join(script_dir, "models.json"),
+        cache_dir=os.path.join(script_dir, "mvsepless_models_cache"),
+    ):
+        self.models_cache_dir = cache_dir
+        self.models_info_path = models_info_path
+        with open(self.models_info_path, "r", encoding="utf-8") as f:
+            models_info = json.load(f)
+        self.models_info = models_info
+
+    def get_mt(self, model_name):
+        return self.models_info.get(model_name).get("model_type")
+
+    def get_mn(self):
+        return [mn for mn in self.models_info]
+
+    def get_stems(self, model_name):
+        return [
+            stem
+            for stem in self.models_info
+            .get(model_name)
+            .get("stems", [])
+        ]
+
+    def get_id(self, model_type, model_name):
+        return self.models_info.get(model_name).get("id", 0)
+
+    def get_tgt_inst(self, model_name):
+        return (
+            self.models_info
+            .get(model_name)
+            .get("target_instrument", None)
+        )
+
+    def get_category(self, model_name):
+        return self.models_info.get(model_name).get("category", "")
+
+    def get_list_mn_from_category(self, category: list, model_type: list | None = None):
+        list_models = []
+        if not model_type:
+            list_models = [model for model in self.get_mn() if self.get_category(model) in category]
+        else:
+            list_models = [model for model in self.get_mn() if self.get_category(model) in category and self.get_mt(model) in model_type]
+        return list_models
+
+
+    def download_model(self, model_paths, model_name, model_type, ckpt_url, conf_url):
+        model_dir = os.path.join(model_paths, model_type)
+        os.makedirs(model_dir, exist_ok=True)
+
+        config_path = os.path.join(model_dir, f"{model_name}_config.yaml")
+        checkpoint_path = os.path.join(
+            model_dir,
+            f"{model_name}.onnx" if model_type == "mdxnet" else f"{model_name}.ckpt",
+        )
+
+        if config_path is None or checkpoint_path is None:
+            raise RuntimeError()
+
+        if os.path.exists(checkpoint_path) and os.path.exists(config_path):
+            if (
+                os.path.getsize(checkpoint_path) == 0
+                or os.path.getsize(checkpoint_path) == 0
+            ):
+                for local_path, url_model in [
+                    (checkpoint_path, ckpt_url),
+                    (config_path, conf_url),
+                ]:
+                    if not os.path.exists(local_path):
+
+                        dw_file(url_model, local_path)
+            else:
+                pass
+        else:
+            for local_path, url_model in [
+                (checkpoint_path, ckpt_url),
+                (config_path, conf_url),
+            ]:
+                if not os.path.exists(local_path):
+
+                    dw_file(url_model, local_path)
+
+        return config_path, checkpoint_path
+
+    def conf_editor(self, config_path, mdx_denoise, vr_aggr, model_type):
+
+        class IndentDumper(yaml.Dumper):
+            def increase_indent(self, flow=False, indentless=False):
+                return super(IndentDumper, self).increase_indent(flow, False)
+
+        def tuple_constructor(loader, node):
+            values = loader.construct_sequence(node)
+            return tuple(values)
+
+        yaml.SafeLoader.add_constructor(
+            "tag:yaml.org,2002:python/tuple", tuple_constructor
+        )
+
+        def conf_edit(config_path, mdx_denoise, vr_aggr, model_type):
+            with open(config_path, "r") as f:
+                data = yaml.load(f, Loader=yaml.SafeLoader)
+
+            if "use_amp" not in data.keys():
+                data["training"]["use_amp"] = True
+
+            if model_type != "vr":
+                if data["inference"]["num_overlap"] != 2:
+                    data["inference"]["num_overlap"] = 2
+
+            if data["inference"]["batch_size"] != 1:
+                data["inference"]["batch_size"] = 1
+
+            if model_type == "mdxnet":
+                data["inference"]["denoise"] = mdx_denoise
+
+            elif model_type == "vr":
+                data["inference"]["aggression"] = vr_aggr
+
+            with open(config_path, "w") as f:
+                yaml.dump(
+                    data,
+                    f,
+                    default_flow_style=False,
+                    sort_keys=False,
+                    Dumper=IndentDumper,
+                    allow_unicode=True,
+                )
+
+        conf_edit(config_path, mdx_denoise, vr_aggr, model_type)
+
+    def install_model(
+        self,
+        model_type: str,
+        model_name: str,
+        mdx_denoise: bool = False,
+        vr_aggr: bool = 5,
+        progress: any = None,
+    ) -> tuple[int, str, str]:
+
+        if model_type in [
+            "mel_band_roformer",
+            "bs_roformer",
+            "mdx23c",
+            "mdxnet",
+            "vr",
+            "scnet",
+            "htdemucs",
+            "bandit",
+            "bandit_v2",
+        ]:
+            info = self.models_info.get(model_name, None)
+            if not info:
+                raise ValueError(
+                    f"Модель {model_name} не найдена"
+                )
+            id = self.get_id(model_type, model_name)
+            conf, ckpt = self.download_model(
+                self.models_cache_dir,
+                model_name,
+                model_type,
+                info["checkpoint_url"],
+                info["config_url"],
+            )
+            if model_type != "htdemucs":
+                self.conf_editor(conf, mdx_denoise, vr_aggr, model_type)
+
+            return id, conf, ckpt
+        else:
+            raise ValueError("Неподдерживаемый тип модели")
+
+
+class Separator(MvseplessModelManager):
+
+    def __init__(self):
+        super().__init__()
+
+    class OutputReader:
+        def __init__(self, debug=False):
+            self.debug = debug
+
+        def parse_json_line(self, line):
+            try:
+                return json.loads(line)
+            except json.JSONDecodeError:
+                return None
+
+        def reaction_line(self, line, progress, add_text):
+            _add_text = ""
+            if add_text != "" or add_text is not None:
+                _add_text = f"| {add_text}"
+
+            data = self.parse_json_line(line)
+            if data is None:
+                return None
+            elif "reading" in data:
+                progress(0.05, desc=f"Чтение файла {_add_text}")
+                print("Чтение файла")
+                return None
+            elif "processing" in data:
+                progress_a = data["processing"]
+                processed = progress_a.get("processed", 0)
+                total = progress_a.get("total", 1)
+                if total > 0:
+                    progress_ratio = min(0.89, 0.05 + (processed / total * 0.85))
+                    percent = int((processed / total) * 100)
+                    progress(progress_ratio, desc=f"Обработано: {percent}% {_add_text}")
+                    print(f"\rОбработано: {percent}%", end="")
+                return None
+            elif "writing" in data:
+                progress(0.9, desc="Запись результатов")
+                print(f"\rЗапись в файл {data['writing']}", end="")
+                return None
+            elif "done" in data:
+                progress(1.0, desc=f"Завершено {_add_text}")
+                print("\rЗавершено", end="\n")
+                return data["done"]
+            elif "error" in data:
+                raise Exception(data["error"])
+
+        def read_stream_to_queue(self, stream, queue_obj, stream_name):
+            try:
+                for line in iter(stream.readline, ""):
+                    line = line.strip()
+                    if line:
+                        if self.debug:
+                            print(f"[{stream_name}] {line}")
+                        queue_obj.put(line)
+                stream.close()
+            except Exception as e:
+                print(f"Error reading {stream_name}: {e}")
+
+    output_reader = OutputReader()
+
+    def separator_base(
+        self,
+        input_file: str,
+        output_dir: str,
+        model_type: str = "mel_band_roformer",
+        model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
+        ext_inst: bool = True,
+        output_format: str = "mp3",
+        output_bitrate: str = "320k",
+        template: str = "NAME_(STEM)_MODEL",
+        selected_stems: list = None,
+        ckpt: str = None,
+        conf: str = None,
+        id: int = None,
+        progress: any = None,
+        add_text_progress: str = "",
+    ) -> list[tuple[str, str]]:
+
+        if model_type in [
+            "mel_band_roformer",
+            "bs_roformer",
+            "mdx23c",
+            "mdxnet",
+            "vr",
+            "scnet",
+            "htdemucs",
+            "bandit",
+            "bandit_v2",
+        ]:
+
+            cmd = [
+                os.sys.executable,
+                "-m",
+                "infer",
+                "--input",
+                input_file,
+                "--store_dir",
+                output_dir,
+                "--model_type",
+                model_type,
+                "--model_name",
+                model_name,
+                "--model_id",
+                str(id),
+                "--config_path",
+                conf,
+                "--start_check_point",
+                ckpt,
+                "--output_format",
+                output_format,
+                "--output_bitrate",
+                str(output_bitrate),
+                "--template",
+                template,
+            ]
+            if ext_inst:
+                cmd.append("--extract_instrumental")
+            if selected_stems:
+                cmd.append("--selected_instruments")
+                cmd.extend(selected_stems)
+
+            try:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+
+                stdout_queue = queue.Queue()
+                stderr_queue = queue.Queue()
+
+                stdout_thread = threading.Thread(
+                    target=self.output_reader.read_stream_to_queue,
+                    args=(process.stdout, stdout_queue, "stdout"),
+                )
+                stderr_thread = threading.Thread(
+                    target=self.output_reader.read_stream_to_queue,
+                    args=(process.stderr, stderr_queue, "stderr"),
+                )
+
+                stdout_thread.daemon = True
+                stderr_thread.daemon = True
+
+                stdout_thread.start()
+                stderr_thread.start()
+
+                results = {"output": None, "error": None}
+                process_completed = False
+
+                while not process_completed:
+                    if process.poll() is not None:
+                        process_completed = True
+
+                    try:
+                        stdout_line = stdout_queue.get_nowait()
+                        result = self.output_reader.reaction_line(
+                            stdout_line, progress, add_text_progress
+                        )
+                        if result is not None:
+                            results["output"] = result
+                            break
+                    except queue.Empty:
+                        pass
+
+                    try:
+                        stderr_line = stderr_queue.get_nowait()
+                        result = self.output_reader.reaction_line(
+                            stderr_line, progress, add_text_progress
+                        )
+                        if result is not None:
+                            results["output"] = result
+                            break
+                    except queue.Empty:
+                        pass
+
+                    if not process_completed:
+                        time.sleep(0.1)
+
+                for _ in range(10):
+                    try:
+                        stdout_line = stdout_queue.get_nowait()
+                        result = self.output_reader.reaction_line(
+                            stdout_line, progress, add_text_progress
+                        )
+                        if result is not None:
+                            results["output"] = result
+                            break
+                    except queue.Empty:
+                        pass
+
+                    try:
+                        stderr_line = stderr_queue.get_nowait()
+                        result = self.output_reader.reaction_line(
+                            stderr_line, progress, add_text_progress
+                        )
+                        if result is not None:
+                            results["output"] = result
+                            break
+                    except queue.Empty:
+                        pass
+
+                    time.sleep(0.1)
+
+                if results.get("error"):
+                    raise Exception(results["error"])
+
+                if results.get("output"):
+                    return results["output"]
+
+                if process.returncode != 0:
+                    error_messages = []
+                    try:
+                        while True:
+                            error_msg = stderr_queue.get_nowait()
+                            error_messages.append(error_msg)
+                    except queue.Empty:
+                        pass
+
+                    error_text = "\n".join(error_messages[-5:])
+                    raise Exception(
+                        f"Процесс завершился с ошибкой. Код возврата: {process.returncode}. Сообщения об ошибках:\n{error_text}"
+                    )
+
+            except Exception as e:
+                raise e
+            finally:
+                try:
+                    if process.poll() is None:
+                        process.terminate()
+                        process.wait(timeout=5)
+                except:
+                    try:
+                        process.kill()
+                    except:
+                        pass
+        else:
+            raise ValueError("Неподдерживаемый тип модели")
+
+    def separate(
+        self,
+        input: str | list = None,
+        output_dir: str = None,
+        model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
+        ext_inst: bool = True,
+        output_format: str = "mp3",
+        output_bitrate: str = "320k",
+        template: str = "NAME_(STEM)_MODEL",
+        selected_stems: list = None,
+        add_settings: dict = {
+            "mdx_denoise": False,
+            "vr_aggr": 5,
+            "add_single_sep_text_progress": None,
+        },
+        progress: any = gr.Progress(track_tqdm=True),
+    ) -> list[tuple[str, str]] | list[str, list[tuple[str, str]]]:
+
+        progress(0, desc="Начало обработки")
+
+        if output_format not in output_formats:
+            output_format = "flac"
+
+        if output_dir is None:
+            output_dir = os.getcwd()
+
+        if output_dir:
+            output_dir = os.path.abspath(output_dir)
+
+        if selected_stems is None:
+            selected_stems = []
+
+        if not input:
+            raise ValueError("Входной файл не указан")
+
+        if "STEM" not in template and template is not None:
+            template = template + "_STEM_"
+        if not template:
+            template = "mvsepless_NAME_(STEM)"
+
+        model_type = self.get_mt(model_name)
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        mdx_denoise = add_settings.get("mdx_denoise", False)
+
+        vr_aggr = add_settings.get("vr_aggr", 5)
+
+        add_progress_text_custom = add_settings.get("add_single_sep_text_progress", "")
+        id, conf, ckpt = self.install_model(
+            model_type, model_name, mdx_denoise, vr_aggr, progress
+        )
+
+        if isinstance(input, str):
+            if not os.path.exists(input):
+                raise ValueError(f"Входной файл не найден: {input}")
+
+            if not check(input):
+                raise ValueError("Входной файл не содержит аудио")
+
+            basename = os.path.splitext(os.path.basename(input))[0]
+            seped = self.separator_base(
+                input_file=input,
+                output_dir=output_dir,
+                model_type=model_type,
+                model_name=model_name,
+                ext_inst=ext_inst,
+                output_format=output_format,
+                output_bitrate=output_bitrate,
+                template=template,
+                selected_stems=selected_stems,
+                ckpt=ckpt,
+                conf=conf,
+                id=id,
+                progress=progress,
+                add_text_progress=add_progress_text_custom,
+            )
+            return seped
+
+        elif isinstance(input, list):
+            results = []
+            for i, f in enumerate(input, 1):
+                print(f"Файл {i} из {len(input)}: {f}")
+                if os.path.exists(f):
+                    if check(f):
+                        basename = os.path.splitext(os.path.basename(f))[0]
+                        seped = self.separator_base(
+                            input_file=f,
+                            output_dir=output_dir,
+                            model_type=model_type,
+                            model_name=model_name,
+                            ext_inst=ext_inst,
+                            output_format=output_format,
+                            output_bitrate=output_bitrate,
+                            template=template,
+                            selected_stems=selected_stems,
+                            ckpt=ckpt,
+                            conf=conf,
+                            id=id,
+                            progress=progress,
+                            add_text_progress=f"({i} из {len(input)}) ",
+                        )
+                        results.append([basename, seped])
+            return results
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="MVSepless")
+    parser.add_argument(
+        "--input", type=str, required=True, help="Входной аудиофайл или каталог."
+    )
+    parser.add_argument(
+        "--output_dir", type=str, default=None, help="Каталог для выходных файлов."
+    )
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        default="Mel-Band-Roformer_Vocals_kimberley_jensen",
+        help="Имя модели разделения.",
+    )
+    parser.add_argument(
+        "--ext_inst", action="store_true", help="Извлечь инструментал."
+    )
+    parser.add_argument(
+        "--output_format",
+        type=str,
+        default="mp3",
+        choices=output_formats,
+        help="Формат выходного файла.",
+    )
+    parser.add_argument(
+        "--output_bitrate", type=str, default="320k", help="Битрейт выходного файла."
+    )
+    parser.add_argument(
+        "--template",
+        type=str,
+        default="NAME (STEM) MODEL",
+        help="Шаблон именования выходных файлов.",
+    )
+    parser.add_argument(
+        "--selected_stems",
+        type=str,
+        nargs="*",
+        default=None,
+        help="Выбранные стемы для разделения.",
+    )
+    args = parser.parse_args()
+    input_data = args.input
+    if os.path.isdir(input_data):
+        list_valid_files = []
+        for file in os.listdir(args.input):
+            if os.path.isfile(os.path.join(args.input, file)):
+                if check(os.path.join(args.input, file)):
+                    list_valid_files.append(os.path.join(args.input, file))
+
+        input_files = list_valid_files
+    else:
+        input_files = input_data
+
+    results = Separator().separate(
+        input=input_files,
+        output_dir=args.output_dir,
+        model_name=args.model_name,
+        ext_inst=args.ext_inst,
+        output_format=args.output_format,
+        output_bitrate=args.output_bitrate,
+        template=args.template,
+        selected_stems=args.selected_stems,
+    )
+    print("Разделение завершено.")
