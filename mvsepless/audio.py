@@ -104,7 +104,6 @@ def get_sr(path: str, stream: int = 0):
     )
     stdout, stderr = process.communicate()
     sample_rate = stdout.decode('utf-8').strip()
-    print(sample_rate)
     if sample_rate.isdigit():
         return int(sample_rate.strip())
     else:
@@ -131,7 +130,6 @@ def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike 
     output_format = SAMPLE_FORMATS_DICT.get(dtype)
     if not sr:
         sr = get_sr(path, stream)
-        print(sr)
     channels = 1 if mono else get_channels(path, stream) if multi_channel else 2
     cmd = [ffmpeg_path, "-i", path, "-map", f"0:a:{stream}", "-vn", "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
     process = subprocess.Popen(
