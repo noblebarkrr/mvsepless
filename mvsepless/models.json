@@ -337,6 +337,19 @@
         "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/mel_band_roformer_vocals_becruily.ckpt?download=true",
         "config_url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/config_vocals_becruily.yaml?download=true"
     },
+    "mbr_deux_becruily": {
+        "model_type": "mel_band_roformer",
+        "category": "Инструментал и вокал",
+        "id": 1064,
+        "full_name": "Mel-Band Roformer DeUX by Becruily",
+        "stems": [
+            "Vocals",
+            "Instrumental"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-deux/resolve/main/becruily_deux.ckpt?download=true",
+        "config_url": "https://huggingface.co/becruily/mel-band-roformer-deux/resolve/main/config_deux_becruily.yaml?download=true"
+    },
     "mbr_syhft1": {
         "model_type": "mel_band_roformer",
         "category": "Вокал",
@@ -3108,4 +3121,5 @@
         "checkpoint_url": "https://huggingface.co/jarredou/banditv2_state_dicts_only/resolve/main/checkpoint-multi_state_dict.ckpt",
         "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/refs/heads/main/configs/config_dnr_bandit_v2_mus64.yaml"
     }
+
 }
