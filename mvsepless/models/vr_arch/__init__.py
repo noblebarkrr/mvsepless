@@ -6,7 +6,6 @@ import torch
 import torch.nn as nn
 import librosa
 import numpy as np
-from tqdm import tqdm
 
 from . import spec_utils, nets, nets_new
 from .model_param_init import ModelParameters
@@ -107,7 +106,16 @@ class VRNet:
 
         audio_file = numpy_array
 
-        for d in tqdm(range(bands_n, 0, -1)):
+        for d in range(bands_n, 0, -1):
+            processed = min(d + self.batch_size, bands_n)
+            sys.stdout.write(
+                json.dumps(
+                    {"processing": {"processed": processed, "total": bands_n}},
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+            sys.stdout.flush()
             bp = self.model_params.param["band"][d]
 
             wav_resolution = bp["res_type"]
@@ -171,7 +179,7 @@ class VRNet:
             X_dataset = []
             patches = (X_mag_pad.shape[2] - 2 * self.model_run.offset) // roi_size
             total = patches
-            for i in tqdm(range(patches)):
+            for i in range(patches):
                 processed = min(i + self.batch_size, patches)
                 sys.stdout.write(
                     json.dumps(
@@ -180,6 +188,7 @@ class VRNet:
                     )
                     + "\n"
                 )
+                sys.stdout.flush()
                 start = i * roi_size
                 X_mag_window = X_mag_pad[:, :, start : start + self.window_size]
                 X_dataset.append(X_mag_window)
@@ -195,7 +204,7 @@ class VRNet:
             with torch.no_grad():
                 mask = []
 
-                for i in tqdm(range(0, patches, self.batch_size)):
+                for i in range(0, patches, self.batch_size):
                     processed = min(i + self.batch_size, patches)
                     sys.stdout.write(
                         json.dumps(
@@ -225,7 +234,7 @@ class VRNet:
         def postprocess(mask, X_mag, X_phase):
             is_non_accom_stem = False
             for stem in NON_ACCOM_STEMS:
-                if stem == self.primary_stem:
+                if stem == self.primary_stem.lower():
                     is_non_accom_stem = True
 
             mask = spec_utils.adjust_aggr(mask, is_non_accom_stem, aggressiveness)
@@ -321,13 +330,13 @@ class VRNet:
         primary_stem_array = librosa.resample(
             primary_stem_array.T,
             orig_sr=self.model_samplerate,
-            target_sr=44100,
+            target_sr=sr,
         ).T
         secondary_stem_array = self.spec_to_wav(v_spec).T
         secondary_stem_array = librosa.resample(
             secondary_stem_array.T,
             orig_sr=self.model_samplerate,
-            target_sr=44100,
+            target_sr=sr,
         ).T
         return {
             self.primary_stem: primary_stem_array,
