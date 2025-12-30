@@ -1,4 +1,4 @@
-import os, json, sys, subprocess, queue, threading, time, argparse, gradio as gr, yaml, tabulate
+import os, json, sys, subprocess, threading, time, argparse, gradio as gr, yaml, tabulate
 from downloader import dw_file
 from audio import check, output_formats
 
@@ -205,6 +205,10 @@ class Separator(MvseplessModelManager):
                 progress(0.05, desc=f"Чтение файла {_add_text}")
                 print("Чтение файла")
                 return None
+            elif "stems" in data:
+                progress(0.05, desc=f"Стемы: {','.join(data['stems'])} {_add_text}")
+                print(f"Стемы: {data['stems']}")
+                return None
             elif "processing" in data:
                 progress_a = data["processing"]
                 processed = progress_a.get("processed", 0)
@@ -225,18 +229,6 @@ class Separator(MvseplessModelManager):
                 return data["done"]
             elif "error" in data:
                 raise Exception(data["error"])
-
-        def read_stream_to_queue(self, stream, queue_obj, stream_name):
-            try:
-                for line in iter(stream.readline, ""):
-                    line = line.strip()
-                    if line:
-                        if self.debug:
-                            print(f"[{stream_name}] {line}")
-                        queue_obj.put(line)
-                stream.close()
-            except Exception as e:
-                print(f"Error reading {stream_name}: {e}")
 
     output_reader = OutputReader()
 
@@ -313,100 +305,51 @@ class Separator(MvseplessModelManager):
                     errors="replace",
                 )
 
-                stdout_queue = queue.Queue()
-                stderr_queue = queue.Queue()
+                result = None
+                error_lines = []
 
-                stdout_thread = threading.Thread(
-                    target=self.output_reader.read_stream_to_queue,
-                    args=(process.stdout, stdout_queue, "stdout"),
-                )
-                stderr_thread = threading.Thread(
-                    target=self.output_reader.read_stream_to_queue,
-                    args=(process.stderr, stderr_queue, "stderr"),
-                )
-
-                stdout_thread.daemon = True
-                stderr_thread.daemon = True
-
-                stdout_thread.start()
-                stderr_thread.start()
-
-                results = {"output": None, "error": None}
-                process_completed = False
-
-                while not process_completed:
-                    if process.poll() is not None:
-                        process_completed = True
-
-                    try:
-                        stdout_line = stdout_queue.get_nowait()
-                        result = self.output_reader.reaction_line(
-                            stdout_line, progress, add_text_progress
+                # Чтение stdout построчно
+                for line in process.stdout:
+                    line = line.strip()
+                    if line:
+                        if self.output_reader.debug:
+                            print(f"[stdout] {line}")
+                        
+                        # Обработка строки для получения прогресса и результата
+                        line_result = self.output_reader.reaction_line(
+                            line, progress, add_text_progress
                         )
-                        if result is not None:
-                            results["output"] = result
-                            break
-                    except queue.Empty:
-                        pass
+                        if line_result is not None:
+                            result = line_result
 
-                    try:
-                        stderr_line = stderr_queue.get_nowait()
-                        result = self.output_reader.reaction_line(
-                            stderr_line, progress, add_text_progress
+                # Чтение stderr построчно
+                for line in process.stderr:
+                    line = line.strip()
+                    if line:
+                        if self.output_reader.debug:
+                            print(f"[stderr] {line}")
+                        error_lines.append(line)
+                        
+                        # Также проверяем stderr на наличие JSON-сообщений
+                        line_result = self.output_reader.reaction_line(
+                            line, progress, add_text_progress
                         )
-                        if result is not None:
-                            results["output"] = result
-                            break
-                    except queue.Empty:
-                        pass
+                        if line_result is not None:
+                            result = line_result
 
-                    if not process_completed:
-                        time.sleep(0.1)
-
-                for _ in range(10):
-                    try:
-                        stdout_line = stdout_queue.get_nowait()
-                        result = self.output_reader.reaction_line(
-                            stdout_line, progress, add_text_progress
-                        )
-                        if result is not None:
-                            results["output"] = result
-                            break
-                    except queue.Empty:
-                        pass
-
-                    try:
-                        stderr_line = stderr_queue.get_nowait()
-                        result = self.output_reader.reaction_line(
-                            stderr_line, progress, add_text_progress
-                        )
-                        if result is not None:
-                            results["output"] = result
-                            break
-                    except queue.Empty:
-                        pass
-
-                    time.sleep(0.1)
-
-                if results.get("error"):
-                    raise Exception(results["error"])
-
-                if results.get("output"):
-                    return results["output"]
+                # Ожидание завершения процесса
+                process.wait()
 
                 if process.returncode != 0:
-                    error_messages = []
-                    try:
-                        while True:
-                            error_msg = stderr_queue.get_nowait()
-                            error_messages.append(error_msg)
-                    except queue.Empty:
-                        pass
-
-                    error_text = "\n".join(error_messages[-5:])
+                    error_text = "\n".join(error_lines[-5:]) if error_lines else "Неизвестная ошибка"
                     raise Exception(
                         f"Процесс завершился с ошибкой. Код возврата: {process.returncode}. Сообщения об ошибках:\n{error_text}"
                     )
+
+                if result is not None:
+                    return result
+                else:
+                    raise Exception("Процесс завершился без возврата результата")
 
             except Exception as e:
                 raise e

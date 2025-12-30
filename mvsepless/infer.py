@@ -52,20 +52,8 @@ def cleanup_model(model):
             torch.cuda.ipc_collect()
 
         gc.collect()
-        sys.stdout.write(
-            json.dumps({"cleanup": "Модель выгружена из памяти"}, ensure_ascii=False)
-            + "\n"
-        )
-        sys.stdout.flush()
     except Exception as e:
-        sys.stdout.write(
-            json.dumps(
-                {"error": f"Ошибка при выгрузке модели: {str(e)}"}, ensure_ascii=False
-            )
-            + "\n"
-        )
-        sys.stdout.flush()
-
+        pass
 
 def once_inference(
     path: str = None,
@@ -94,10 +82,6 @@ def once_inference(
     sys.stdout.flush()
     sys.stdout.write(
         json.dumps({"selected_stems": selected_instruments}, ensure_ascii=False) + "\n"
-    )
-    sys.stdout.flush()
-    sys.stdout.write(
-        json.dumps({"stems": list(instruments)}, ensure_ascii=False) + "\n"
     )
     sys.stdout.flush()
 
@@ -466,9 +450,14 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
                             start_check_point, map_location=device, weights_only=True
                         )
                 else:
-                    state_dict = torch.load(
-                        start_check_point, map_location=device, weights_only=True
-                    )
+                    try:
+                        state_dict = torch.load(
+                            start_check_point, map_location=device, weights_only=True
+                        )
+                    except torch.serialization.pickle.UnpicklingError:
+                        state_dict = torch.load(
+                            start_check_point, map_location=device, weights_only=False
+                        )
             try:
                 model.load_state_dict(state_dict)
             except RuntimeError:

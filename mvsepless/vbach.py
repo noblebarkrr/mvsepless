@@ -46,7 +46,7 @@ from multiprocessing import cpu_count
 from audio import check, read, write, output_formats
 from namer import Namer
 from downloader import dw_file
-from check_colab import full_check_is_colab
+from check_colab import easy_check_is_colab
 from vbach_lib.fairseq import load_model_ensemble_and_task, load_checkpoint_to_cpu
 from vbach_lib.algorithm.synthesizers import Synthesizer
 from vbach_lib.predictors.FCPE import FCPEF0Predictor
@@ -59,7 +59,7 @@ class UserDirectory:
         os.makedirs(dir, exist_ok=True)
     
 user_directory = UserDirectory()
-IS_COLAB = full_check_is_colab()
+IS_COLAB = easy_check_is_colab()
 
 if IS_COLAB:
 

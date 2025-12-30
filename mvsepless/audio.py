@@ -176,6 +176,8 @@ def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
     process = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         bufsize=10**8
     )
     process.stdin.write(audio_bytes)

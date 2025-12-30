@@ -1,7 +1,7 @@
 import os, sys, gradio as gr, tempfile, zipfile, ast, json, pickle, argparse, shutil, re, subprocess
 from separator import Separator, script_dir
 from downloader import dw_yt_dlp
-from check_colab import full_check_is_colab
+from check_colab import easy_check_is_colab
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 from audio import output_formats, input_extensions, check
@@ -15,7 +15,7 @@ class UserDirectory:
         os.makedirs(dir, exist_ok=True)
     
 user_directory = UserDirectory()
-IS_COLAB = full_check_is_colab()
+IS_COLAB = easy_check_is_colab()
 
 if IS_COLAB:
 
@@ -171,6 +171,7 @@ class SeparatorGradio(Separator, GradioHelper):
         self.output_base_dir = os.path.join(user_directory.path, "output")
         self.inputs_json_path = os.path.join(user_directory.path, "inputs.json")
         self.history = History()
+        self.output_reader.debug = True
         self.load_from_file()
 
     def _write_file(self):
