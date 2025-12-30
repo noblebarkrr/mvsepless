@@ -171,7 +171,6 @@ class SeparatorGradio(Separator, GradioHelper):
         self.output_base_dir = os.path.join(user_directory.path, "output")
         self.inputs_json_path = os.path.join(user_directory.path, "inputs.json")
         self.history = History()
-        self.output_reader.debug = True
         self.load_from_file()
 
     def _write_file(self):
@@ -625,4 +624,5 @@ if __name__ == "__main__":
             share=args.share,
             allowed_paths=["/"],
             debug=True,
+
         )
