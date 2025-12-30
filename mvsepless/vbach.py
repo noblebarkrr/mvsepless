@@ -51,6 +51,7 @@ from vbach_lib.fairseq import load_model_ensemble_and_task, load_checkpoint_to_c
 from vbach_lib.algorithm.synthesizers import Synthesizer
 from vbach_lib.predictors.FCPE import FCPEF0Predictor
 from vbach_lib.predictors.RMVPE import RMVPE0Predictor
+from vbach_lib.predictors.HPA_RMVPE import HPA_RMVPE
 
 class UserDirectory:
     path = script_dir
@@ -85,6 +86,7 @@ class VbachModelManager:
     def __init__(self, user_directory):
         self.user_directory = user_directory
         self.rmvpe_path = os.path.join(script_dir, "predictors", "rmvpe.pt")
+        self.hpa_rmvpe_path = os.path.join(script_dir, "predictors", "hpa_rmvpe.pt")
         self.fcpe_path = os.path.join(script_dir, "predictors", "fcpe.pt")
         self.custom_fairseq_huberts_dir = os.path.join(
             script_dir, "custom_fairseq_embedders"
@@ -226,6 +228,10 @@ class VbachModelManager:
             [
                 "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/rmvpe.pt",
                 self.rmvpe_path,
+            ],
+            [
+                "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/hpa-rmvpe.pt",
+                self.hpa_rmvpe_path,
             ],
             [
                 "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/fcpe.pt",
@@ -467,6 +473,7 @@ namer = Namer()
 
 f0_methods = (
     "rmvpe+",
+    "hpa-rmvpe",
     "fcpe",
     "mangio-crepe",
     "mangio-crepe-tiny",
@@ -474,7 +481,7 @@ f0_methods = (
     "pm",
     "pyin",
 )
-
+HPA_RMVPE_DIR = model_manager.hpa_rmvpe_path
 RMVPE_DIR = model_manager.rmvpe_path
 FCPE_DIR = model_manager.fcpe_path
 
@@ -691,6 +698,16 @@ class VC:
             x, thred=0.03, f0_min=f0_min, f0_max=f0_max
         )
         return f0
+    
+    def get_f0_hpa_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
+        if not hasattr(self, "model_hpa_rmvpe"):
+            self.model_hpa_rmvpe = HPA_RMVPE(
+                HPA_RMVPE_DIR, device=self.device, hpa=True
+            )
+        f0 = self.model_hpa_rmvpe.infer_from_audio_with_pitch(
+            x, thred=0.03, f0_min=f0_min, f0_max=f0_max
+        )
+        return f0
 
     def get_f0_librosa(self, x, p_len, f0_min=50, f0_max=1100, hop_length=160):
 
@@ -772,18 +789,10 @@ class VC:
                 )
 
         elif f0_method == "rmvpe+":
-            params = {
-                "x": x,
-                "p_len": p_len,
-                "pitch": pitch,
-                "f0_min": f0_min,
-                "f0_max": f0_max,
-                "time_step": self.time_step,
-                "filter_radius": filter_radius,
-                "crepe_hop_length": int(hop_length),
-                "model": "full",
-            }
-            f0 = self.get_f0_rmvpe(**params)
+            f0 = self.get_f0_rmvpe(x=x, f0_min=f0_min, f0_max=f0_max)
+
+        elif f0_method == "hpa-rmvpe":
+            f0 = self.get_f0_hpa_rmvpe(x=x, f0_min=f0_min, f0_max=f0_max)
 
         elif f0_method == "fcpe":
             self.model_fcpe = FCPEF0Predictor(
