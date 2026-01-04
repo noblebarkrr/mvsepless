@@ -8,7 +8,7 @@ from numpy.typing import DTypeLike
 ffmpeg_path = "ffmpeg"
 ffprobe_path = "ffprobe"
 
-def check():
+def check_installed():
     ffmpeg_version_output = subprocess.check_output(
         [ffmpeg_path, "-version"], text=True
     )
@@ -126,7 +126,7 @@ def check(path):
     sr = get_sr(path)
     return channels !=0 and sr != 0
 
-def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike = "float32", multi_channel: bool = False, stream: int = 0):
+def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike = "float32", multi_channel: bool = False, stream: int = 0, flatten=False):
     output_format = SAMPLE_FORMATS_DICT.get(dtype)
     if not sr:
         sr = get_sr(path, stream)
@@ -137,7 +137,7 @@ def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike 
     )
     stdout, stderr = process.communicate()
     y = np.frombuffer(stdout, dtype=dtype)
-    y = y.reshape((-1, channels)).T if not mono else y.flatten()
+    y = y.reshape((-1, channels)).T if not mono else y.flatten() if flatten else y.reshape((-1, 1)).T
     return y.copy(), sr
 
 def bitrate_to_int(a):
@@ -161,12 +161,15 @@ def bitrate_to_int(a):
 def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     dtype = y.dtype
-    channels = len(y.shape)
-    if channels == 1:
+    channels = 1
+    if y.ndim == 1:
         y = y.reshape(-1, 1)
-    elif channels == 2:
-        if y.shape[0] == 2:
+    elif y.ndim == 2:
+        if y.shape[0] < y.shape[1]:
+            channels = y.shape[0]
             y = y.T
+        else:
+            channels = y.shape[1]
     y = np.nan_to_num(y, nan=0, posinf=0, neginf=0)
     audio_bytes = y.tobytes()
     sample_format = SAMPLE_FORMATS_DICT.get(str(dtype))

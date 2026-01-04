@@ -95,8 +95,11 @@ def once_inference(
         )
         sys.stdout.flush()
 
+    mono_bool = False
+    if hasattr(config.model, "stereo"):
+        mono_bool = False if config.model.stereo else True
     try:
-        mix, sr = read(path=path, sr=sample_rate, mono=False)
+        mix, sr = read(path=path, sr=sample_rate, mono=mono_bool)
     except Exception as e:
         error_msg = f"Не удалось прочитать аудио: {path}\nОшибка: {e}"
         sys.stdout.write(json.dumps({"error": error_msg}, ensure_ascii=False) + "\n")
@@ -558,6 +561,8 @@ def parse_args():
             "bs_roformer",
             "mdx23c",
             "scnet",
+            "scnet_masked",
+            "scnet_tran",
             "htdemucs",
             "bandit",
             "bandit_v2",

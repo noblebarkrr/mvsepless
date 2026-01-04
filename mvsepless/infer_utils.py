@@ -54,6 +54,9 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         if hasattr(config, "windowed"):
             from models.windowed_roformer.model import MelBandRoformerWSA
             model = MelBandRoformerWSA(**dict(config.model))
+        elif hasattr(config, "conformer"):
+            from models.bs_roformer import MelBandConformer
+            model = MelBandConformer(**dict(config.model))
         else:
             from models.bs_roformer import MelBandRoformer
             model = MelBandRoformer(**dict(config.model))
@@ -70,6 +73,9 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         elif hasattr(config, "hyperace2"):
             from models.bs_roformer import BSRoformerHyperACE_2
             model = BSRoformerHyperACE_2(**dict(config.model))
+        elif hasattr(config, "conformer"):
+            from models.bs_roformer import BSConformer
+            model = BSConformer(**dict(config.model))
         else:
             from models.bs_roformer import BSRoformer
             model = BSRoformer(**dict(config.model))
@@ -85,6 +91,12 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
     elif model_type == "scnet":
         from models.scnet import SCNet
         model = SCNet(**config.model)
+    elif model_type == 'scnet_masked':
+        from models.scnet.scnet_masked import SCNet
+        model = SCNet(**config.model)
+    elif model_type == 'scnet_tran':
+        from models.scnet.scnet_tran import SCNet_Tran
+        model = SCNet_Tran(**config.model)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     return model, config

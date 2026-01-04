@@ -721,7 +721,7 @@
     "mbr_instfv9_gabox": {
         "model_type": "mel_band_roformer",
         "category": "Инструментал",
-        "id": 1114,
+        "id": 11140,
         "full_name": "Mel-Band Roformer Instrumental Fv9 by GaboxR67",
         "stems": [
             "Vocals",
@@ -729,6 +729,19 @@
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Inst_Fv9.ckpt?download=true",
+        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+    },
+    "mbr_instfv9_2_gabox": {
+        "model_type": "mel_band_roformer",
+        "category": "Инструментал",
+        "id": 11141,
+        "full_name": "Mel-Band Roformer Instrumental Fv9 by GaboxR67",
+        "stems": [
+            "Vocals",
+            "Instrumental"
+        ],
+        "target_instrument": "Instrumental",
+        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv9.ckpt?download=true",
         "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
     },
     "mbr_instfv10_gabox": {
@@ -872,6 +885,45 @@
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv6.ckpt?download=true",
+        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+    },
+    "mbr_vocalsfv7_beta1_gabox": {
+        "model_type": "mel_band_roformer",
+        "category": "Вокал",
+        "id": 1136,
+        "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
+        "stems": [
+            "Vocals",
+            "Instrumental"
+        ],
+        "target_instrument": "Vocals",
+        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/vocfv7beta1.ckpt?download=true",
+        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+    },
+    "mbr_vocalsfv7_beta2_gabox": {
+        "model_type": "mel_band_roformer",
+        "category": "Вокал",
+        "id": 1137,
+        "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
+        "stems": [
+            "Vocals",
+            "Instrumental"
+        ],
+        "target_instrument": "Vocals",
+        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/vocfv7beta2.ckpt?download=true",
+        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+    },
+    "mbr_vocalsfv7_beta3_gabox": {
+        "model_type": "mel_band_roformer",
+        "category": "Вокал",
+        "id": 1138,
+        "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
+        "stems": [
+            "Vocals",
+            "Instrumental"
+        ],
+        "target_instrument": "Vocals",
+        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/vocfv7beta3.ckpt?download=true",
         "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
     },
     "mbr_karaoke25022025_gabox": {
@@ -1374,6 +1426,21 @@
         "checkpoint_url": "https://huggingface.co/natanworkspace/melband_roformer/resolve/main/Neo_InstVFX.ckpt?download=true",
         "config_url": "https://huggingface.co/natanworkspace/melband_roformer/resolve/main/config_neo_inst.yaml?download=true"
     },
+    "bs_cr_4stem_zf_turbo": {
+        "model_type": "bs_roformer",
+        "category": "4 стема",
+        "id": 12081,
+        "full_name": "BS Conformer 4 Stems by ZFTurbo",
+        "stems": [
+            "vocals",
+            "drums",
+            "bass",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.18/fused_model_bs_conformer_sdr_9.18.ckpt",
+        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/bs_conformer_4_stems_zf_turbo.yaml?download=true"
+    },
     "bs_drums_beatloo_labs": {
         "model_type": "bs_roformer",
         "category": "Ударные",
@@ -1710,6 +1777,19 @@
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/anvuew/deverb_bs_roformer/resolve/main/deverb_bs_roformer_8_384dim_10depth.ckpt?download=true",
         "config_url": "https://huggingface.co/anvuew/deverb_bs_roformer/resolve/main/deverb_bs_roformer_8_384dim_10depth.yaml?download=true"
+    },
+    "bs_deverb_room_anvuew": {
+        "model_type": "bs_roformer",
+        "category": "Реверб",
+        "id": 231,
+        "full_name": "BS Roformer Deverb Roon by Anvuew",
+        "stems": [
+            "reverb",
+            "noreverb"
+        ],
+        "target_instrument": "noreverb",
+        "checkpoint_url": "https://huggingface.co/anvuew/dereverb_room/resolve/main/dereverb_room_anvuew_sdr_13.7432.ckpt?download=true",
+        "config_url": "https://huggingface.co/anvuew/dereverb_room/resolve/main/dereverb_room_anvuew.yaml?download=true"
     },
     "bs_karaoke_anvuew": {
         "model_type": "bs_roformer",
@@ -2899,6 +2979,51 @@
         "target_instrument": null,
         "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/scnet_checkpoint_musdb18.ckpt",
         "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/config_musdb18_scnet.yaml"
+    },
+    "scnet_masked_small_4stem_zftrubo": {
+        "model_type": "scnet_masked",
+        "category": "4 стема",
+        "id": 430,
+        "full_name": "SCNet Masked 4 Stems Small by ZFTurbo",
+        "stems": [
+            "vocals",
+            "drums",
+            "bass",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.16/model_scnet_masked_ep_156_sdr_8.8149.ckpt",
+        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.16/config_musdb18_scnet_small.yaml"
+    },
+    "scnet_masked_xl_ihf_4stem_zftrubo": {
+        "model_type": "scnet_masked",
+        "category": "4 стема",
+        "id": 431,
+        "full_name": "SCNet Masked 4 Stems XL IHF by ZFTurbo",
+        "stems": [
+            "vocals",
+            "drums",
+            "bass",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.17/model_scnet_masked_ep_111_sdr_9.8286.ckpt",
+        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.17/config_musdb18_scnet_xl_ihf.yaml"
+    },
+    "scnet_tran_4stem_zftrubo": {
+        "model_type": "scnet_tran",
+        "category": "4 стема",
+        "id": 432,
+        "full_name": "SCNet Tran 4 Stems by ZFTurbo",
+        "stems": [
+            "vocals",
+            "drums",
+            "bass",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.14/model_scnet_tran_sdr_8.9272.ckpt",
+        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.14/config_musdb18_scnet_tran.yaml"
     },
     "scnet_jazz_4stem_jorisvaneyghen": {
         "model_type": "scnet",

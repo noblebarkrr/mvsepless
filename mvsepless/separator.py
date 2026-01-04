@@ -146,37 +146,23 @@ class MvseplessModelManager:
         progress: any = None,
     ) -> tuple[int, str, str]:
 
-        if model_type in [
-            "mel_band_roformer",
-            "bs_roformer",
-            "mdx23c",
-            "mdxnet",
-            "vr",
-            "scnet",
-            "htdemucs",
-            "bandit",
-            "bandit_v2",
-        ]:
-            info = self.models_info.get(model_name, None)
-            if not info:
-                raise ValueError(
-                    f"Модель {model_name} не найдена"
-                )
-            id = self.get_id(model_type, model_name)
-            conf, ckpt = self.download_model(
-                self.models_cache_dir,
-                model_name,
-                model_type,
-                info["checkpoint_url"],
-                info["config_url"],
+        info = self.models_info.get(model_name, None)
+        if not info:
+            raise ValueError(
+                f"Модель {model_name} не найдена"
             )
-            if model_type != "htdemucs":
-                self.conf_editor(conf, mdx_denoise, vr_aggr, model_type)
+        id = self.get_id(model_type, model_name)
+        conf, ckpt = self.download_model(
+            self.models_cache_dir,
+            model_name,
+            model_type,
+            info["checkpoint_url"],
+            info["config_url"],
+        )
+        if model_type != "htdemucs":
+            self.conf_editor(conf, mdx_denoise, vr_aggr, model_type)
 
-            return id, conf, ckpt
-        else:
-            raise ValueError("Неподдерживаемый тип модели")
-
+        return id, conf, ckpt
 
 class Separator(MvseplessModelManager):
 
@@ -250,121 +236,107 @@ class Separator(MvseplessModelManager):
         add_text_progress: str = "",
     ) -> list[tuple[str, str]]:
 
-        if model_type in [
-            "mel_band_roformer",
-            "bs_roformer",
-            "mdx23c",
-            "mdxnet",
-            "vr",
-            "scnet",
-            "htdemucs",
-            "bandit",
-            "bandit_v2",
-        ]:
+        cmd = [
+            os.sys.executable,
+            "-m",
+            "infer",
+            "--input",
+            input_file,
+            "--store_dir",
+            output_dir,
+            "--model_type",
+            model_type,
+            "--model_name",
+            model_name,
+            "--model_id",
+            str(id),
+            "--config_path",
+            conf,
+            "--start_check_point",
+            ckpt,
+            "--output_format",
+            output_format,
+            "--output_bitrate",
+            str(output_bitrate),
+            "--template",
+            template,
+        ]
+        if ext_inst:
+            cmd.append("--extract_instrumental")
+        if selected_stems:
+            cmd.append("--selected_instruments")
+            cmd.extend(selected_stems)
 
-            cmd = [
-                os.sys.executable,
-                "-m",
-                "infer",
-                "--input",
-                input_file,
-                "--store_dir",
-                output_dir,
-                "--model_type",
-                model_type,
-                "--model_name",
-                model_name,
-                "--model_id",
-                str(id),
-                "--config_path",
-                conf,
-                "--start_check_point",
-                ckpt,
-                "--output_format",
-                output_format,
-                "--output_bitrate",
-                str(output_bitrate),
-                "--template",
-                template,
-            ]
-            if ext_inst:
-                cmd.append("--extract_instrumental")
-            if selected_stems:
-                cmd.append("--selected_instruments")
-                cmd.extend(selected_stems)
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+                encoding="utf-8",
+                errors="replace",
+            )
 
-            try:
-                process = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True,
-                    encoding="utf-8",
-                    errors="replace",
+            result = None
+            error_lines = []
+
+            # Чтение stdout построчно
+            for line in process.stdout:
+                line = line.strip()
+                if line:
+                    if self.output_reader.debug:
+                        print(f"[stdout] {line}")
+                    
+                    # Обработка строки для получения прогресса и результата
+                    line_result = self.output_reader.reaction_line(
+                        line, progress, add_text_progress
+                    )
+                    if line_result is not None:
+                        result = line_result
+
+            # Чтение stderr построчно
+            for line in process.stderr:
+                line = line.strip()
+                if line:
+                    if self.output_reader.debug:
+                        print(f"[stderr] {line}")
+                    error_lines.append(line)
+                    
+                    # Также проверяем stderr на наличие JSON-сообщений
+                    line_result = self.output_reader.reaction_line(
+                        line, progress, add_text_progress
+                    )
+                    if line_result is not None:
+                        result = line_result
+
+            # Ожидание завершения процесса
+            process.wait()
+
+            if process.returncode != 0:
+                error_text = "\n".join(error_lines[-5:]) if error_lines else "Неизвестная ошибка"
+                raise Exception(
+                    f"Процесс завершился с ошибкой. Код возврата: {process.returncode}. Сообщения об ошибках:\n{error_text}"
                 )
 
-                result = None
-                error_lines = []
+            if result is not None:
+                return result
+            else:
+                raise Exception("Процесс завершился без возврата результата")
 
-                # Чтение stdout построчно
-                for line in process.stdout:
-                    line = line.strip()
-                    if line:
-                        if self.output_reader.debug:
-                            print(f"[stdout] {line}")
-                        
-                        # Обработка строки для получения прогресса и результата
-                        line_result = self.output_reader.reaction_line(
-                            line, progress, add_text_progress
-                        )
-                        if line_result is not None:
-                            result = line_result
-
-                # Чтение stderr построчно
-                for line in process.stderr:
-                    line = line.strip()
-                    if line:
-                        if self.output_reader.debug:
-                            print(f"[stderr] {line}")
-                        error_lines.append(line)
-                        
-                        # Также проверяем stderr на наличие JSON-сообщений
-                        line_result = self.output_reader.reaction_line(
-                            line, progress, add_text_progress
-                        )
-                        if line_result is not None:
-                            result = line_result
-
-                # Ожидание завершения процесса
-                process.wait()
-
-                if process.returncode != 0:
-                    error_text = "\n".join(error_lines[-5:]) if error_lines else "Неизвестная ошибка"
-                    raise Exception(
-                        f"Процесс завершился с ошибкой. Код возврата: {process.returncode}. Сообщения об ошибках:\n{error_text}"
-                    )
-
-                if result is not None:
-                    return result
-                else:
-                    raise Exception("Процесс завершился без возврата результата")
-
-            except Exception as e:
-                raise e
-            finally:
+        except Exception as e:
+            raise e
+        finally:
+            try:
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=5)
+            except:
                 try:
-                    if process.poll() is None:
-                        process.terminate()
-                        process.wait(timeout=5)
+                    process.kill()
                 except:
-                    try:
-                        process.kill()
-                    except:
-                        pass
-        else:
-            raise ValueError("Неподдерживаемый тип модели")
+                    pass
 
     def separate(
         self,
