@@ -747,7 +747,7 @@
     "mbr_instfv10_gabox": {
         "model_type": "mel_band_roformer",
         "category": "Инструментал",
-        "id": 1115,
+        "id": 11150,
         "full_name": "Mel-Band Roformer Instrumental Fv10 by GaboxR67",
         "stems": [
             "Vocals",
@@ -756,6 +756,19 @@
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV10.ckpt?download=true",
         "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+    },
+    "mbr_instflowersv10_gabox": {
+        "model_type": "mel_band_roformer",
+        "category": "Инструментал",
+        "id": 11151,
+        "full_name": "Mel-Band Roformer Instrumental Flowers v10 by GaboxR67",
+        "stems": [
+            "vocals",
+            "other"
+        ],
+        "target_instrument": "other",
+        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFlowersV10.ckpt?download=true",
+        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/v10.yaml?download=true"
     },
     "mbr_instfvx_gabox": {
         "model_type": "mel_band_roformer",
@@ -3246,5 +3259,4 @@
         "checkpoint_url": "https://huggingface.co/jarredou/banditv2_state_dicts_only/resolve/main/checkpoint-multi_state_dict.ckpt",
         "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/refs/heads/main/configs/config_dnr_bandit_v2_mus64.yaml"
     }
-
 }
