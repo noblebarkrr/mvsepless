@@ -29,7 +29,7 @@ asteroid
 prodigyopt
 torch_log_wmse
 rotary_embedding_torch
-gradio<=6.0
+gradio<6.0
 omegaconf
 beartype
 spafe
@@ -50,4 +50,5 @@ faiss-cpu==1.11
 local-attention
 tenacity
 pyworld
+
 gdown
