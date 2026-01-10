@@ -819,7 +819,7 @@ class AutoEnsembless(Separator):
 
 class ManualEnsembless:
     def __init__(self, user_directory):
-        self.user_dirrectory = user_directory
+        self.user_directory = user_directory
     def UI(self):
         with gr.Row():
             with gr.Column():
@@ -1097,5 +1097,6 @@ class PluginManager(Separator):
                         print(f"Ошибка копирования файла {file}: {e}")
                 time.sleep(2)
                 self.restart_after_install_plugin()
+
 
         self.parse_plugins()
