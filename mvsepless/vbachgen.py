@@ -1454,7 +1454,7 @@ class VbachGen(Separator, GradioHelper):
                         vocal1_gain = gr.Slider(
                             -30,
                             30,
-                            value=-3,
+                            value=25,
                             step=1,
                             label="Вокал",
                             scale=3,
@@ -1463,7 +1463,7 @@ class VbachGen(Separator, GradioHelper):
                         vocal2_gain = gr.Slider(
                             -30,
                             30,
-                            value=-3,
+                            value=25,
                             step=1,
                             label="Бэк-вокал",
                             scale=3,
@@ -1612,21 +1612,21 @@ class VbachGen(Separator, GradioHelper):
                                     compressor_ratio = gr.Slider(
                                         1,
                                         20,
-                                        value=16,
+                                        value=20,
                                         label="Соотношение",
                                         interactive=True,
                                     )
                                     compressor_threshold = gr.Slider(
                                         -60,
                                         0,
-                                        value=-16,
+                                        value=-25,
                                         label="Порог",
                                         interactive=True,
                                     )
                                     compressor_attack = gr.Slider(
                                         0,
                                         2000,
-                                        value=40,
+                                        value=0,
                                         label="Время атаки (мс)",
                                         interactive=True,
                                     )
@@ -1925,4 +1925,5 @@ class VbachGen(Separator, GradioHelper):
                 noise_gate_release,
             ],
             outputs=[final_ai_cover],
+
         )
