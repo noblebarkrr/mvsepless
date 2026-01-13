@@ -1510,17 +1510,35 @@ def loadaudio(file_path: str, target_sr: int, stereo_mode: str) -> np.ndarray:
 
 class Config:
     def __init__(self, device):
-        self.device = device
+        self.device_str = device
+        self.set_device(self.device_str)
         self.is_half = self.device == "cpu"
         self.n_cpu = cpu_count()
         self.gpu_name = None
         self.gpu_mem = None
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
+    def set_device(self, device_str):
+        if "cuda" in device_str.lower():
+            # Извлекаем ID устройств для CUDA
+            if ":" in device_str:
+                device_spec = device_str.split(":")[1]
+                self.device_ids = [int(id) for id in device_spec.split(",") if id.isdigit()]
+            else:
+                # Если указано просто "cuda", используем все доступные GPU
+                self.device_ids = list(range(torch.cuda.device_count()))
+            self.device = torch.device("cuda" if not self.device_ids else f"cuda:{self.device_ids[0]}")
+        elif "mps" in device_str.lower():
+            self.device_ids = None
+            self.device = torch.device("mps")
+        else:
+            self.device_ids = None
+            self.device = torch.device("cpu")
+
     def device_config(self):
-        if "cuda" in self.device:
+        if self.device.type = :
             print("Используется устройство CUDA")
-            self._configure_gpu()
+            self.gpu_mem = self._configure_gpu(self.device_ids[0])
         elif "mps" in self.device:
             print("Используется устройство MPS")
         else:
@@ -1535,15 +1553,15 @@ class Config:
 
         return x_pad, x_query, x_center, x_max
 
-    def _configure_gpu(self):
-        self.gpu_name = torch.cuda.get_device_name(self.device)
+    def _configure_gpu(self, device_id):
+        self.gpu_name = torch.cuda.get_device_name(f"cuda:{device_id}")
         low_end_gpus = ["16", "P40", "P10", "1060", "1070", "1080"]
         if (
             any(gpu in self.gpu_name for gpu in low_end_gpus)
             and "V100" not in self.gpu_name.upper()
         ):
             self.is_half = False
-        self.gpu_mem = int(
+        return int(
             torch.cuda.get_device_properties(self.device).total_memory
             / 1024
             / 1024
