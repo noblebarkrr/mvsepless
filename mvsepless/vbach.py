@@ -32,7 +32,6 @@ import gradio as gr
 import subprocess
 from datetime import datetime, timezone, timedelta
 from functools import wraps
-tz = timezone(timedelta(hours=3))
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 FILTER_ORDER = 5
@@ -41,10 +40,11 @@ SAMPLE_RATE = 16000
 bh, ah = signal.butter(
     N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE
 )
-
+from device import all_ids, set_device
 from multiprocessing import cpu_count
 from audio import check, read, write, output_formats
 from namer import Namer
+from gradio_helper import GradioHelper, tz
 from downloader import dw_file
 from check_colab import easy_check_is_colab
 from vbach_lib.fairseq import load_model_ensemble_and_task, load_checkpoint_to_cpu
@@ -1509,32 +1509,22 @@ def loadaudio(file_path: str, target_sr: int, stereo_mode: str) -> np.ndarray:
 
 
 class Config:
-    def __init__(self):
-        self.device = self.get_device()
+    def __init__(self, device):
+        self.device = device
         self.is_half = self.device == "cpu"
         self.n_cpu = cpu_count()
         self.gpu_name = None
         self.gpu_mem = None
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
-    def get_device(self):
-        if torch.cuda.is_available():
-            return "cuda"
-        elif torch.backends.mps.is_available():
-            return "mps"
-        else:
-            return "cpu"
-
     def device_config(self):
-        if torch.cuda.is_available():
+        if "cuda" in self.device:
             print("Используется устройство CUDA")
             self._configure_gpu()
-        elif torch.backends.mps.is_available():
+        elif "mps" in self.device:
             print("Используется устройство MPS")
-            self.device = "mps"
         else:
             print("Используется CPU")
-            self.device = "cpu"
             self.is_half = True
 
         x_pad, x_query, x_center, x_max = (
@@ -1902,10 +1892,11 @@ def voice_conversion(
     stereo_mode,
     embedder_name="hubert_base",
     pipeline_mode="orig",
+    device="cpu"
 ):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
 
-    config = Config()
+    config = Config(device)
     hubert_path = model_manager.check_hubert(embedder_name)
     if not hubert_path:
         raise ValueError(
@@ -1967,10 +1958,11 @@ def voice_conversion_transformers(
     stereo_mode,
     embedder_name="contentvec",
     pipeline_mode="orig",
+    device="cpu"
 ):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
 
-    config = Config()
+    config = Config(device)
     hubert_path = model_manager.check_hubert_transformers(embedder_name)
     if not hubert_path:
         raise ValueError(
@@ -2038,6 +2030,7 @@ def vbach_inference(
         "f0_max": 1100,
         "stereo_mode": "mono",
     },
+    device: str = "cpu"
 ):
 
     if stack == "fairseq":
@@ -2108,6 +2101,7 @@ def vbach_inference(
         stereo_mode=stereo_mode,
         pipeline_mode=pipeline_mode,
         embedder_name=embedder_name,
+        device=device
     )
     print(f'Инференс завершен\nПуть к выходному файлу: "{output_converted_voice}"')
     return output_converted_voice
@@ -2156,8 +2150,10 @@ class History:
             with open(self.path, 'r', encoding='utf-8') as f:
                 self.info = json.load(f)
 
-class Vbach:
-    def __init__(self, user_directory):
+class Vbach(GradioHelper):
+    def __init__(self, user_directory, device):
+        super().__init__()
+        self.device = device
         self.pitch_methods = f0_methods
         self.hop_length_values = (8, 512)
         self.index_rates_values = (0, 1)
@@ -2522,6 +2518,7 @@ class Vbach:
                                     pipeline_mode="alt" if alt_pipeline == True else "orig",
                                     embedder_name=em_n,
                                     stack="transformers" if tr_m == True else "fairseq",
+                                    device=self.device
                                 )
                                 output_converted_files.append(out_conv)
                             except Exception as e:
@@ -2556,7 +2553,7 @@ class Vbach:
                                     basename = os.path.splitext(
                                         os.path.basename(conv_file)
                                     )[0]
-                                    gr.Audio(
+                                    self.define_audio_with_size(
                                         label=basename,
                                         value=conv_file,
                                         type="filepath",
@@ -2949,6 +2946,7 @@ if __name__ == "__main__":
                     pipeline_mode="alt" if args.alt_pipeline == True else "orig",
                     embedder_name=args.embedder_name,
                     stack="transformers" if args.use_transformers else "fairseq",
+                    device=set_device()
                 )
         elif os.path.exists(args.input) and os.path.isdir(args.input):
             list_valid_files = []
@@ -2984,6 +2982,7 @@ if __name__ == "__main__":
                         pipeline_mode="alt" if args.alt_pipeline == True else "orig",
                         embedder_name=args.embedder_name,
                         stack="transformers" if args.use_transformers else "fairseq",
+                        device=set_device()
                     )
             else:
                 print(f"В папке {args.input} не найдено подходящих файлов")
@@ -2991,7 +2990,7 @@ if __name__ == "__main__":
             print(f"Путь не существует: {args.input}")
     
     elif args.mode == "app":
-        Vbach(user_directory).UI().launch(
+        Vbach(user_directory, set_device()).UI().launch(
             server_name="0.0.0.0",
             server_port=args.port,
             share=args.share,

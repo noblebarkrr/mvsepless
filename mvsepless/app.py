@@ -4,9 +4,9 @@ from downloader import dw_yt_dlp
 from check_colab import easy_check_is_colab
 from datetime import datetime, timezone, timedelta
 from functools import wraps
+from device import all_ids, set_device
 from audio import output_formats, input_extensions, check
-
-tz = timezone(timedelta(hours=3))
+from gradio_helper import GradioHelper, tz
 
 class UserDirectory:
     path = script_dir
@@ -32,93 +32,6 @@ if IS_COLAB:
                 os.makedirs(user_directory.path, exist_ok=True)
                 print(f"Обнаружен привязанный Google Диск\nПуть к привязанному диску: {mount_point}")
                 break
-
-class GradioHelper:
-
-    def return_list(self, list, none=False, **kwargs):
-        if list:
-            return gr.update(choices=list, value=list[0] if not none else None, **kwargs)
-        else:
-            return gr.update(choices=[], value=None, **kwargs)
-
-    def return_audio(self, label, path):
-        return gr.update(label=label, value=path)
-
-    def create_archive_advanced(self, file_list, archive_name="archive.zip"):
-        try:
-            print("Генерация ZIP-архива с результатами разделения...")
-            with zipfile.ZipFile(
-                archive_name, "w", zipfile.ZIP_DEFLATED
-            ) as zipf:
-                successful_files = 0
-
-                for basename, stems in file_list:
-                    for stem_name, stem_path in stems:
-                        try:
-                            if os.path.exists(stem_path) and os.path.isfile(
-                                stem_path
-                            ):
-                                basename_ = os.path.basename(stem_path)
-                                zipf.write(stem_path, basename_)
-                                successful_files += 1
-                                print(
-                                    f"✓ Добавлен: {stem_path} -> {basename}"
-                                )
-                            else:
-                                print(
-                                    f"✗ Файл не найден или не является файлом: {stem_path}"
-                                )
-
-                        except Exception as e:
-                            print(
-                                f"✗ Ошибка при добавлении {stem_path}: {e}"
-                            )
-
-                print(f"\nАрхив создан: {archive_name}")
-                print(f"Успешно добавлено файлов: {successful_files}")
-                return os.path.abspath(archive_name)
-
-        except Exception as e:
-            print(f"Ошибка при создании архива: {e}")
-
-    def extract_zip(self, zip_file_path, output_dir=None):
-        """
-        Распаковывает ZIP-архив с обработкой ошибок
-        
-        Args:
-            zip_file_path: путь к ZIP-архиву
-            output_dir: папка для распаковки (по умолчанию - текущая директория)
-        """
-        
-        if output_dir is None:
-            output_dir = os.path.splitext(zip_file_path)[0]
-        
-        os.makedirs(output_dir, exist_ok=True)
-        
-        try:
-            with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-                if zip_ref.testzip() is not None:
-                    print("Предупреждение: архив может быть поврежден")
-                
-                zip_ref.extractall(output_dir)
-                
-                file_count = len(zip_ref.namelist())
-                print(f"Успешно распаковано {file_count} файлов в {output_dir}")                
-        except zipfile.BadZipFile:
-            print("Ошибка: файл не является ZIP-архивом или поврежден")
-            return []
-        except PermissionError:
-            print("Ошибка: нет прав на запись в указанную директорию")
-            return []
-        except Exception as e:
-            print(f"Неизвестная ошибка: {e}")
-            return []
-        finally:
-            input_files = []
-            for root, dirs, files in os.walk(output_dir):
-                for file in files:
-                    input_files.append(os.path.join(root, file))
-            return input_files
 
 class History:
     def __init__(self):
@@ -434,7 +347,7 @@ class SeparatorGradio(Separator, GradioHelper):
                                         gr.Markdown(f"<h4><center>{basename}</center></h4>")
                                         for stem_name, stem_path in stems:
                                             with gr.Row(equal_height=True):
-                                                output_stem = gr.Audio(
+                                                output_stem = self.define_audio_with_size(
                                                     value=stem_path,
                                                     label=stem_name,
                                                     type="filepath",
@@ -556,8 +469,8 @@ class SeparatorGradio(Separator, GradioHelper):
                 with gr.Tab("Ансамбль"):
                     
                     with gr.Tab("Авто-ансамбль"):
-                        AutoEnsembless(self.input_files, self.upload_files, user_directory).UI()
-
+                        _auto_ensembless = AutoEnsembless(self.input_files, self.upload_files, user_directory, device=self.device)
+                        _auto_ensembless.UI()
                     with gr.Tab("Ручной ансамбль"):
                         ManualEnsembless(user_directory).UI()
 
@@ -567,15 +480,35 @@ class SeparatorGradio(Separator, GradioHelper):
             if add_vbach:
                 from vbach import Vbach, vbach_inference, model_manager as voice_model_manager
                 with gr.Tab("Преобразование"):
-                    Vbach(user_directory).UI()
+                    _vbach = Vbach(user_directory, device=self.device)
+                    _vbach.UI()
                 if add_app:
                     with gr.Tab("Генерация каверов"):
                         from vbachgen import VbachGen
-                        VbachGen(voice_model_manager, self.input_files, self.upload_files, user_directory, vbach_inference).UI()
-
+                        _vbach_gen = VbachGen(voice_model_manager, self.input_files, self.upload_files, user_directory, vbach_inference, device=self.device)
+                        _vbach_gen.UI()
             if plugins:
                 with gr.Tab("Плагины"):
                     PluginManager().UI()
+            
+            with gr.Tab("Устройство"):
+                device_radio = gr.CheckboxGroup(label="ID устройств CUDA", choices=all_ids, interactive=True)
+                pref_cuda = gr.Checkbox(label="Отдать предпочтение устройствам CUDA (Если они есть)", value=True)
+                current_device = gr.Textbox(container=False, value=self.device)
+                gr.on(fn=lambda: (self.device, "cuda" in self.device), outputs=[current_device, pref_cuda])
+                def show_device(a1, a2):
+                    _device = set_device(a1, prefer_gpu=a2)
+                    self.device = _device
+                    if add_app:
+                        _auto_ensembless.device = _device
+                        if add_vbach:
+                            _vbach_gen.device = _device
+                    if add_vbach:
+                        _vbach.device = _device
+                    print(f"Выбранное устройство: {self.device}")
+                    return self.device
+                device_radio.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device)
+                pref_cuda.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device)
 
 
         return MVSEPLESS_LITE_UI

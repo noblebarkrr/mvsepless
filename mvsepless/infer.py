@@ -376,44 +376,40 @@ def run_inference(
     return results
 
 
-def load_model(model_type, config_path, start_check_point, device_ids, force_cpu=False):
-    device = "cpu"
-    if force_cpu:
-        device = "cpu"
-    elif torch.cuda.is_available():
-        sys.stdout.write(
-            json.dumps(
-                {
-                    "info": "Разделение выполняется на ядрах CUDA. Для выполнения на процессоре установите force_cpu=True."
-                },
-                ensure_ascii=False,
-            )
-            + "\n"
-        )
-        sys.stdout.flush()
-        device = "cuda"
-
-        if device_ids is None:
-            device = "cuda:0"
-        elif isinstance(device_ids, (list, tuple)):
-            device = f"cuda:{device_ids[0]}" if device_ids else "cuda:0"
-        elif isinstance(device_ids, bool):
-            device = "cuda:0"
-        else:
-            device = f"cuda:{int(device_ids)}"
-    elif torch.backends.mps.is_available():
-        device = "mps"
-
+def load_model(model_type, config_path, start_check_point, device: str):
     sys.stdout.write(json.dumps({"device": device}, ensure_ascii=False) + "\n")
     sys.stdout.flush()
-
+    
+    # Определяем тип устройства
+    if "cuda" in device.lower():
+        # Извлекаем ID устройств для CUDA
+        if ":" in device:
+            device_spec = device.split(":")[1]
+            device_ids = [int(id) for id in device_spec.split(",") if id.isdigit()]
+        else:
+            # Если указано просто "cuda", используем все доступные GPU
+            device_ids = list(range(torch.cuda.device_count()))
+        torch_device = torch.device("cuda" if not device_ids else f"cuda:{device_ids[0]}")
+    elif "mps" in device.lower():
+        device_ids = None
+        torch_device = torch.device("mps")
+    else:
+        # CPU
+        device_ids = None
+        torch_device = torch.device("cpu")
+    
     model_load_start_time = time.time()
-    torch.backends.cudnn.benchmark = True
-
+    
+    # Устанавливаем оптимизации только для CUDA
+    if torch_device.type == "cuda":
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+    
     model, config = get_model_from_config(model_type, config_path)
 
     if model_type == "vr":
-        model.load_checkpoint(start_check_point, device)
+        model.load_checkpoint(start_check_point, torch_device)
         model.settings(
             enable_post_process=False,
             post_process_threshold=config.inference.post_process_threshold,
@@ -423,15 +419,14 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
             primary_stem=config.training.instruments[0],
             secondary_stem=config.training.instruments[1],
         )
-        return model, config, device
+        return model, config, torch_device
 
     elif model_type == "mdxnet":
         if start_check_point != "":
             sys.stdout.write(json.dumps({"checkpoint": start_check_point}) + "\n")
             sys.stdout.flush()
-            model.init_onnx_session(start_check_point, device)
-
-        return model, config, device
+            model.init_onnx_session(start_check_point, torch_device, device_ids)
+        return model, config, torch_device
 
     else:
         if start_check_point != "":
@@ -440,7 +435,7 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
 
             if model_type in ["htdemucs", "apollo"]:
                 state_dict = torch.load(
-                    start_check_point, map_location=device, weights_only=False
+                    start_check_point, map_location=torch_device, weights_only=False
                 )
                 if "state" in state_dict:
                     state_dict = state_dict["state"]
@@ -450,20 +445,22 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
                 if hasattr(config, "fno"):
                     with torch.serialization.safe_globals([torch._C._nn.gelu]):
                         state_dict = torch.load(
-                            start_check_point, map_location=device, weights_only=True
+                            start_check_point, map_location=torch_device, weights_only=True
                         )
                 else:
                     try:
                         state_dict = torch.load(
-                            start_check_point, map_location=device, weights_only=True
+                            start_check_point, map_location=torch_device, weights_only=True
                         )
                     except torch.serialization.pickle.UnpicklingError:
                         state_dict = torch.load(
-                            start_check_point, map_location=device, weights_only=False
+                            start_check_point, map_location=torch_device, weights_only=False
                         )
+            
             try:
                 model.load_state_dict(state_dict)
-            except RuntimeError:
+            except RuntimeError as e:
+                print(f"Warning: Error loading state dict: {e}")
                 model.load_state_dict(state_dict, strict=False)
 
         sys.stdout.write(
@@ -471,17 +468,15 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
             + "\n"
         )
         sys.stdout.flush()
-
-        if (
-            isinstance(device_ids, (list, tuple))
-            and len(device_ids) > 1
-            and not force_cpu
-            and torch.cuda.is_available()
-        ):
-            model = nn.DataParallel(model, device_ids=[int(d) for d in device_ids])
-
-        model = model.to(device)
-
+        
+        # Перемещаем модель на устройство
+        model = model.to(torch_device)
+        
+        # Используем DataParallel только если есть несколько GPU и это не MPS
+        if torch_device.type == "cuda" and len(device_ids) > 1:
+            model = nn.DataParallel(model, device_ids=device_ids)
+            print(f"Using DataParallel on devices: {device_ids}")
+        
         load_time = time.time() - model_load_start_time
 
         sys.stdout.write(
@@ -490,7 +485,7 @@ def load_model(model_type, config_path, start_check_point, device_ids, force_cpu
         )
         sys.stdout.flush()
 
-        return model, config, device
+        return model, config, torch_device
 
 
 def mvsep_offline(
@@ -504,16 +499,15 @@ def mvsep_offline(
     output_bitrate,
     model_name,
     template,
-    device_ids=None,
+    device="cpu",
     disable_detailed_pbar=False,
     use_tta=False,
-    force_cpu=False,
     verbose=False,
     selected_instruments=None,
     model_id=0,
 ):
     model, config, device = load_model(
-        model_type, config_path, start_check_point, device_ids, force_cpu
+        model_type, config_path, start_check_point, device
     )
 
     results = run_inference(
@@ -616,10 +610,7 @@ def parse_args():
     )
     parser.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
     parser.add_argument(
-        "--device_ids", nargs="+", help="ID GPU устройств для использования"
-    )
-    parser.add_argument(
-        "--force_cpu", action="store_true", help="Принудительно использовать CPU"
+        "--device", type=str, help="Какой девайс используется для разделения", default="cuda:0"
     )
     parser.add_argument(
         "--use_tta", action="store_true", help="Использовать тестовую аугментацию"
@@ -637,10 +628,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    device_ids = None
-    if args.device_ids:
-        device_ids = [int(x) for x in args.device_ids]
-
     results = mvsep_offline(
         input_path=args.input,
         store_dir=args.store_dir,
@@ -652,10 +639,9 @@ def main():
         output_bitrate=args.output_bitrate,
         model_name=args.model_name,
         template=args.template,
-        device_ids=device_ids,
+        device=args.device,
         disable_detailed_pbar=args.disable_detailed_pbar,
         use_tta=args.use_tta,
-        force_cpu=args.force_cpu,
         verbose=args.verbose,
         selected_instruments=args.selected_instruments,
         model_id=args.model_id,

@@ -1,6 +1,7 @@
 import os, json, sys, subprocess, threading, time, argparse, gradio as gr, yaml, tabulate
 from downloader import dw_file
 from audio import check, output_formats
+from device import all_ids, set_device
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -168,6 +169,7 @@ class Separator(MvseplessModelManager):
 
     def __init__(self):
         super().__init__()
+        self.device = set_device()
 
     class OutputReader:
         def __init__(self, debug=False):
@@ -260,6 +262,8 @@ class Separator(MvseplessModelManager):
             str(output_bitrate),
             "--template",
             template,
+            "--device",
+            self.device
         ]
         if ext_inst:
             cmd.append("--extract_instrumental")

@@ -9,16 +9,18 @@ import tempfile
 import hashlib
 import json
 from pathlib import Path
-import datetime
+from datetime import datetime
 from audio import check, read, write, output_formats
 from namer import Namer
 from separator import Separator
 from vbach import f0_methods
 from downloader import dw_yt_dlp
+from gradio_helper import GradioHelper, tz
 
-class VbachGen(Separator):
-    def __init__(self, model_manager, input_files, upload_files, user_directory, vbach_inference):
+class VbachGen(Separator, GradioHelper):
+    def __init__(self, model_manager, input_files, upload_files, user_directory, vbach_inference, device):
         super().__init__()
+        self.device = device
         self.namer = Namer()
         self.processing_data = {}
         self.separation_stages = {}
@@ -46,7 +48,7 @@ class VbachGen(Separator):
         # Заменяем недопустимые символы в имени файла
         basename = "".join(c if c.isalnum() or c in " _-" else "_" for c in basename)
         
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
         
         if model_name:
             model_suffix = f"_{model_name}"
@@ -562,6 +564,7 @@ class VbachGen(Separator):
                     "f0_max": rvc_params["f0_max"],
                     "stereo_mode": "mono",
                 },
+                device=self.device
             )
             converted_vocals_list.append(full_vocals_converted_path)
 
@@ -589,6 +592,7 @@ class VbachGen(Separator):
                     "f0_max": rvc_params["f0_max"],
                     "stereo_mode": "mono",
                 },
+                device=self.device
             )
 
             back_vocals_converted_path = self.vbach_inference(
@@ -614,6 +618,7 @@ class VbachGen(Separator):
                     "f0_max": rvc_params["f0_max"],
                     "stereo_mode": "mono",
                 },
+                device=self.device
             )
 
             converted_vocals_list.append(back_vocals_converted_path)
@@ -643,6 +648,7 @@ class VbachGen(Separator):
                     "f0_max": rvc_params["f0_max"],
                     "stereo_mode": "mono",
                 },
+                device=self.device
             )
             converted_vocals_list.append(back_vocals_converted_path)
 
@@ -670,6 +676,7 @@ class VbachGen(Separator):
                     "f0_max": rvc_params["f0_max"],
                     "stereo_mode": "mono",
                 },
+                device=self.device
             )
             converted_vocals_list.append(lead_vocals_converted_path)
 
@@ -1043,7 +1050,7 @@ class VbachGen(Separator):
             progress=progress,
         )
 
-        return conversion_result["generated_files"], conversion_result["final_path"]
+        return conversion_result["generated_files"], self.return_audio_with_size(value=conversion_result["final_path"], label="Финальный результат")
 
     def regenerate_conversion(
         self,
@@ -1146,7 +1153,7 @@ class VbachGen(Separator):
             progress=progress,
         )
 
-        return conversion_result["generated_files"], conversion_result["final_path"]
+        return conversion_result["generated_files"], self.return_audio_with_size(value=conversion_result["final_path"], label="Финальный результат")
 
     def remix_cover(
         self,
@@ -1236,7 +1243,7 @@ class VbachGen(Separator):
             data["input_audio"],
         )
 
-        return final_path
+        return self.return_audio_with_size(value=final_path, label="Финальный результат")
 
     def UI(self):
 

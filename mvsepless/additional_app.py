@@ -21,6 +21,7 @@ import numpy as np
 import librosa
 from functools import wraps
 from separator import Separator, script_dir
+from gradio_helper import GradioHelper, tz
 from namer import Namer
 from audio import input_extensions, output_formats, check, read, write, get_sr
 from ensemble import ensemble_audio_files
@@ -188,13 +189,14 @@ class Inverter:
         return inverted
 
 
-class AutoEnsembless(Separator):
-    def __init__(self, input_files, upload_files, user_directory):
+class AutoEnsembless(Separator, GradioHelper):
+    def __init__(self, input_files, upload_files, user_directory, device):
         super().__init__()
         self.inverter = Inverter()
         self.input_files = input_files
         self.upload_files = upload_files
         self.user_directory = user_directory
+        self.device = device
         
     class ModelManager(Separator):
         def __init__(self):
@@ -645,7 +647,7 @@ class AutoEnsembless(Separator):
                             method=method,
                             output_path=output_path,
                         )
-                        return inverted
+                        return self.return_audio_with_size(value=inverted, label="Инверсия")
                     else:
                         return None
 
@@ -663,7 +665,7 @@ class AutoEnsembless(Separator):
             last_result_wav = state.get("last_result_wav")
             last_inverted_result = state.get("last_inverted_result")
             source = state.get("source", [])
-            return gr.update(value=input_file if input_file in self.input_files else None, choices=reversed(self.input_files)), gr.update(value=last_result), gr.update(value=last_result_wav), gr.update(value=last_inverted_result), gr.update(value=source)
+            return gr.update(value=input_file if input_file in self.input_files else None, choices=reversed(self.input_files)), self.return_audio_with_size(value=last_result, label="Результат"), gr.update(value=last_result_wav), self.return_audio_with_size(value=last_inverted_result, label="Инверсия"), gr.update(value=source)
 
         @run_btn.click(
             inputs=[
@@ -695,7 +697,7 @@ class AutoEnsembless(Separator):
             if not check(input_file):
                 return None, None, None, None, []
             
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
             o = os.path.join(self.user_directory.path, "ensembless_output", f"ensembless_outputs_{timestamp}")
             os.makedirs(o, exist_ok=True)
 
@@ -811,14 +813,15 @@ class AutoEnsembless(Separator):
                     )
             history.add(input_file, auto_ensemble_out_file, auto_ensemble_out_file_wav, auto_ensemble_invout_file, ensemble_sources_list, method, timestamp, ensemble_state)
             return (
-                auto_ensemble_out_file,
+                self.return_audio_with_size(value=auto_ensemble_out_file, label="Результат"),
                 auto_ensemble_out_file_wav,
-                auto_ensemble_invout_file,
+                self.return_audio_with_size(value=auto_ensemble_invout_file, label="Инверсия"),
                 ensemble_sources_list,
             )
 
-class ManualEnsembless:
+class ManualEnsembless(GradioHelper):
     def __init__(self, user_directory):
+        super().__init__()
         self.user_directory = user_directory
     def UI(self):
         with gr.Row():
@@ -948,7 +951,7 @@ class ManualEnsembless:
             o_filename,
             weights: str,
         ):
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
             o = os.path.join(self.user_directory.path, "manual_ensembless", f"ensembless_outputs_{timestamp}")
             os.makedirs(o, exist_ok=True)
 
@@ -962,10 +965,12 @@ class ManualEnsembless:
                 ensemble_type=method,
                 out_format=out_format,
             )
-            return output_file
+            return self.return_audio_with_size(value=output_file, label="Результат")
 
-class Inverter_UI:
-    inverter = Inverter()
+class Inverter_UI(GradioHelper):
+    def __init__(self):
+        super().__init__()
+        self.inverter = Inverter()
     def UI(self):
         with gr.Group():
             with gr.Row():
@@ -1021,7 +1026,7 @@ class Inverter_UI:
                     method=method,
                     output_path=output_path,
                 )
-                return inverted
+                return self.return_audio_with_size(value=inverted, label="Инверсия")
             else:
                 return None
 
