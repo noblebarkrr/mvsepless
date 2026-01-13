@@ -1536,10 +1536,10 @@ class Config:
             self.device = torch.device("cpu")
 
     def device_config(self):
-        if self.device.type = :
+        if self.device.type = "cuda":
             print("Используется устройство CUDA")
             self.gpu_mem = self._configure_gpu(self.device_ids[0])
-        elif "mps" in self.device:
+        elif self.device.type = "mps":
             print("Используется устройство MPS")
         else:
             print("Используется CPU")
@@ -3048,3 +3048,4 @@ if __name__ == "__main__":
         elif args.vbach_command == "remove":
             status = model_manager.del_voice_model(args.model_name)
             print(status)
+
