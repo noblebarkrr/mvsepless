@@ -1696,6 +1696,23 @@
         "checkpoint_url": "https://huggingface.co/jarredou/BS-ROFO-SW-Fixed/resolve/main/BS-Rofo-SW-Fixed.ckpt?download=true",
         "config_url": "https://huggingface.co/jarredou/BS-ROFO-SW-Fixed/resolve/main/BS-Rofo-SW-Fixed.yaml?download=true"
     },
+    "bs_logic_6stem": {
+        "model_type": "bs_roformer",
+        "category": "6 стемов",
+        "id": 2271,
+        "full_name": "BS Roformer Logic 6 stems by Chantrail",
+        "stems": [
+            "bass",
+            "drums",
+            "other",
+            "piano",
+            "guitar",
+            "vocals"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/ChanTrail/BS-RoFormer/resolve/main/logic_bs_roformer.ckpt?download=true",
+        "config_url": "https://huggingface.co/ChanTrail/BS-RoFormer/resolve/main/BS-Rofo-SW-Fixed.yaml?download=true"
+    },
     "bs_4stem_zfturbo": {
         "model_type": "bs_roformer",
         "category": "4 стема",
@@ -2992,6 +3009,21 @@
         "target_instrument": null,
         "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/scnet_checkpoint_musdb18.ckpt",
         "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/config_musdb18_scnet.yaml"
+    },
+    "scnet_huge_4stem_aname": {
+        "model_type": "scnet",
+        "category": "4 стема",
+        "id": 4903,
+        "full_name": "SCNet 4 Stems Huge by Aname",
+        "stems": [
+            "vocals",
+            "drums",
+            "bass",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Huge-SCNet-4stems/resolve/main/huge_scnet_4stems_v1.pt?download=true",
+        "config_url": "https://huggingface.co/Aname-Tommy/Huge-SCNet-4stems/resolve/main/config.yaml?download=true"
     },
     "scnet_masked_small_4stem_zftrubo": {
         "model_type": "scnet_masked",
