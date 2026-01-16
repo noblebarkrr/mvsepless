@@ -398,62 +398,64 @@ class AutoEnsembless(Separator, GradioHelper):
         gr.Markdown("<h3>Ансамбль</h3>")
         with gr.Row():
             with gr.Column(scale=3):
-                model_name = gr.Dropdown(
-                    label="Имя модели",
-                    choices=default_model["mn"],
-                    value=default_model["mn"][0],
-                    interactive=True,
-                    filterable=False,
-                )
-                primary_stem = gr.Dropdown(
-                    label="Основной стем",
-                    choices=default_model["stem"],
-                    value=default_model["stem"][0],
-                    interactive=True,
-                    filterable=False,
-                )
-                secondary_stem = gr.Dropdown(
-                    label="Инверсия",
-                    choices=default_model["invert_stem"],
-                    value=default_model["invert_stem"][0],
-                    interactive=True,
-                    filterable=False,
-                )
-                weight = gr.Slider(
-                    label="Вес",
-                    minimum=0,
-                    maximum=10,
-                    step=0.01,
-                    value=1,
-                    interactive=True,
-                )
-
-                @model_name.change(
-                    inputs=[model_name],
-                    outputs=[primary_stem, secondary_stem],
-                )
-                def update_stems_after_model_change(mn):
-                    stems = get_stems(mn)
-                    invert_stems = get_invert_stems(mn, stems[0]) if stems else []
-
-                    new_s_stem = stems[0] if stems else ""
-                    new_i_stem = invert_stems[0] if invert_stems else ""
-
-                    return (
-                        gr.update(choices=stems, value=new_s_stem),
-                        gr.update(choices=invert_stems, value=new_i_stem),
+                with gr.Group():
+                    model_name = gr.Dropdown(
+                        label="Имя модели",
+                        choices=default_model["mn"],
+                        value=default_model["mn"][0],
+                        interactive=True,
+                        filterable=False,
+                    )
+                    primary_stem = gr.Dropdown(
+                        label="Основной стем",
+                        choices=default_model["stem"],
+                        value=default_model["stem"][0],
+                        interactive=True,
+                        filterable=False,
+                    )
+                    secondary_stem = gr.Dropdown(
+                        label="Инверсия",
+                        choices=default_model["invert_stem"],
+                        value=default_model["invert_stem"][0],
+                        interactive=True,
+                        filterable=False,
+                    )
+                    weight = gr.Slider(
+                        label="Вес",
+                        minimum=0,
+                        maximum=10,
+                        step=0.01,
+                        value=1,
+                        interactive=True,
                     )
 
-                @primary_stem.change(
-                    inputs=[model_name, primary_stem],
-                    outputs=[secondary_stem],
-                )
-                def update_invert_stems(mn, s_stem):
-                    stems = get_invert_stems(mn, s_stem)
-                    new_i_stem = stems[0] if stems else ""
-                    return gr.update(choices=stems, value=new_i_stem)
+                    @model_name.change(
+                        inputs=[model_name],
+                        outputs=[primary_stem, secondary_stem],
+                    )
+                    def update_stems_after_model_change(mn):
+                        stems = get_stems(mn)
+                        invert_stems = get_invert_stems(mn, stems[0]) if stems else []
 
-                model_add_button = gr.Button("Добавить", interactive=True)
+                        new_s_stem = stems[0] if stems else ""
+                        new_i_stem = invert_stems[0] if invert_stems else ""
+
+                        return (
+                            gr.update(choices=stems, value=new_s_stem),
+                            gr.update(choices=invert_stems, value=new_i_stem),
+                        )
+
+                    @primary_stem.change(
+                        inputs=[model_name, primary_stem],
+                        outputs=[secondary_stem],
+                    )
+                    def update_invert_stems(mn, s_stem):
+                        stems = get_invert_stems(mn, s_stem)
+                        new_i_stem = stems[0] if stems else ""
+                        return gr.update(choices=stems, value=new_i_stem)
+
+                    model_add_button = gr.Button("Добавить", interactive=True)
+                    
             with gr.Column(scale=10):
                 df = gr.DataFrame(
                     value=ensemble_model_manager.get_df(),
@@ -826,16 +828,6 @@ class ManualEnsembless(GradioHelper):
     def UI(self):
         with gr.Row():
             with gr.Column():
-                with gr.Group(visible=False) as add_ensemble_inputs:
-                    input_ensemble_path = gr.Textbox(
-                        label="Путь к входному файлу", interactive=True
-                    )
-                    add_ensemble_inputs_btn = gr.Button(
-                        "Добавить файл", variant="primary"
-                    )
-                add_ensemble_path_btn = gr.Button(
-                    "Добавить файл по пути", variant="secondary"
-                )
                 input_ensemble_files = gr.File(
                     label="Входное аудио",
                     interactive=True,

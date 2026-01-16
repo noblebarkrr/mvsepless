@@ -54,7 +54,7 @@ class MvseplessModelManager:
         return list_models
 
 
-    def download_model(self, model_paths, model_name, model_type, ckpt_url, conf_url):
+    def download_model(self, model_paths, model_name, model_type, ckpt_url, conf_url, only_check_exists=False):
         model_dir = os.path.join(model_paths, model_type)
         os.makedirs(model_dir, exist_ok=True)
 
@@ -72,6 +72,22 @@ class MvseplessModelManager:
                 os.path.getsize(checkpoint_path) == 0
                 or os.path.getsize(checkpoint_path) == 0
             ):
+                if only_check_exists:
+                    return False
+                else:
+                    for local_path, url_model in [
+                        (checkpoint_path, ckpt_url),
+                        (config_path, conf_url),
+                    ]:
+                        if not os.path.exists(local_path):
+                            dw_file(url_model, local_path)
+            else:
+                if only_check_exists:
+                    return True
+        else:
+            if only_check_exists:
+                return False
+            else:
                 for local_path, url_model in [
                     (checkpoint_path, ckpt_url),
                     (config_path, conf_url),
@@ -79,16 +95,6 @@ class MvseplessModelManager:
                     if not os.path.exists(local_path):
 
                         dw_file(url_model, local_path)
-            else:
-                pass
-        else:
-            for local_path, url_model in [
-                (checkpoint_path, ckpt_url),
-                (config_path, conf_url),
-            ]:
-                if not os.path.exists(local_path):
-
-                    dw_file(url_model, local_path)
 
         return config_path, checkpoint_path
 
@@ -164,6 +170,31 @@ class MvseplessModelManager:
             self.conf_editor(conf, mdx_denoise, vr_aggr, model_type)
 
         return id, conf, ckpt
+    
+    def check_model(
+        self,
+        model_type: str,
+        model_name: str,
+        progress: any = None,
+    ) -> tuple[int, str, str]:
+
+        info = self.models_info.get(model_name, None)
+        if not info:
+            raise ValueError(
+                f"Модель {model_name} не найдена"
+            )
+        id = self.get_id(model_type, model_name)
+        return self.download_model(
+            self.models_cache_dir,
+            model_name,
+            model_type,
+            info["checkpoint_url"],
+            info["config_url"],
+            only_check_exists=True
+        )
+    
+    def get_mn_dwloaded(self):
+        return [model for model in self.get_mn() if self.check_model(self.get_mt(model), model)]
 
 class Separator(MvseplessModelManager):
 

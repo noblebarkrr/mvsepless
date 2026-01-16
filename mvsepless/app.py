@@ -76,7 +76,44 @@ class History:
             with open(self.path, 'r', encoding='utf-8') as f:
                 self.info = json.load(f)
 
-class SeparatorGradio(Separator, GradioHelper):
+class DownloadModelManager(Separator):
+    def __init__(self):
+        super().__init__()
+        self.dwm_preset_path = os.path.join(script_dir, "dwm_preset.json")
+        self.load_dwm_preset(self.dwm_preset_path)
+
+    def load_dwm_preset(self, path):
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                self.dwm_presets: dict = json.load(f)
+        else:
+            self.dwm_presets: dict = {"Все модели": self.get_mn()}
+
+    def parse_models_from_dwm_preset(self, key):
+        return self.dwm_presets.get(key, [])
+
+    def batch_download(self, keys, progress=gr.Progress()):
+        if keys:
+            total = len(keys)
+            for i, key in enumerate(keys, start=1):
+                progress(i / total, desc=f"Модель {i}/{total}")
+                print(f"Модель {i}/{total}")
+                if key in self.models_info:
+                    self.install_model(self.get_mt(key), key)
+                else:
+                    print(f"Указанной модели {key} не существует... Пропускаем")
+                    gr.Warning(message="", title=f"Указанной модели {key} не существует... Пропускаем")
+        print("Загрузка завершена")
+        gr.Warning(message="", title="Загрузка завершена")
+        return None
+    
+    def delete_models_cache(self):
+        shutil.rmtree(self.models_cache_dir, ignore_errors=True)
+        os.makedirs(self.models_cache_dir, exist_ok=True)
+        print("Все скачанные модели удалены из памяти!")
+        gr.Warning(message="", title="Все скачанные модели удалены из памяти!")
+
+class SeparatorGradio(GradioHelper, DownloadModelManager):
     def __init__(self):
         super().__init__()
         self.input_files = []
@@ -195,11 +232,55 @@ class SeparatorGradio(Separator, GradioHelper):
     
                     with gr.Column():
                         with gr.Group():
-                            model_name = gr.Dropdown(
-                                label="Имя модели", choices=default_model, value=default_model[0]
+                            with gr.Row(equal_height=True):
+                                model_name = gr.Dropdown(
+                                    label="Имя модели", choices=default_model, value=default_model[0], interactive=True, scale=9
+                                )
+                                model_name_refresh_btn = gr.Button("Обновить", size="sm", scale=2, interactive=True, min_width=50)
+
+                            show_only_downloaded_models = gr.Checkbox(
+                                label="Показать только загруженные модели", value=False, interactive=True
                             )
+                            @model_name_refresh_btn.click(inputs=[model_name, show_only_downloaded_models], outputs=model_name)
+                            def refresh_model_fn(name, only_downloaded):
+                                models = []
+                                if only_downloaded:
+                                    models = self.get_mn_dwloaded()
+                                else:
+                                    models = self.get_mn()
+
+                                if models:
+                                    first_value = models[0]
+                                else:
+                                    first_value = None
+
+                                if name in models:
+                                    value = name
+                                else:
+                                    value = first_value
+                                return gr.update(choices=models, value=value)
+
+                            @show_only_downloaded_models.change(inputs=[model_name, show_only_downloaded_models], outputs=model_name, trigger_mode="once")
+                            def refresh_model_fn2(name, only_downloaded):
+                                models = []
+                                if only_downloaded:
+                                    models = self.get_mn_dwloaded()
+                                else:
+                                    models = self.get_mn()
+
+                                if models:
+                                    first_value = models[0]
+                                else:
+                                    first_value = None
+
+                                if name in models:
+                                    value = name
+                                else:
+                                    value = first_value
+                                return gr.update(choices=models, value=value)
+
                             extract_instrumental = gr.Checkbox(
-                                label="Извлечь инструментал", value=True, interactive=True, scale=3
+                                label="Извлечь инструментал", value=True, interactive=True
                             )
                             stems = gr.CheckboxGroup(
                                 label="Выберите стемы",
@@ -374,72 +455,80 @@ class SeparatorGradio(Separator, GradioHelper):
 
             with gr.Tab("Загрузка аудио"):
                 with gr.Tab("С интернета"):
-                    input_url = gr.Textbox(
-                        label="URL входного файла", interactive=True
-                    )
-                    with gr.Row(equal_height=True):
-                        inputs_url_format = gr.Dropdown(
-                            label="Формат входного файла",
-                            interactive=True,
-                            choices=output_formats,
-                            value="mp3",
-                            filterable=False,
+                    with gr.Group():
+                        input_url = gr.Textbox(
+                            label="URL входного файла", interactive=True
                         )
-                        inputs_url_bitrate = gr.Slider(
-                            label="Битрейт входного файла",
-                            minimum=32,
-                            maximum=512,
-                            step=32,
-                            value=320,
-                            interactive=True,
-                        )
-                        inputs_url_format.change(
-                            lambda x: gr.update(
-                                visible=False if x in ["wav", "flac", "aiff"] else True
-                            ),
-                            inputs=inputs_url_format,
-                            outputs=inputs_url_bitrate,
-                        )
-                    with gr.Row(equal_height=True):
-                        inputs_url_cookie = gr.UploadButton(
-                            label="Файл cookie (необязательно)",
-                            interactive=True,
-                            type="filepath",
-                            file_count="single",
-                            file_types=[".txt", ".cookies"],
-                            variant="secondary",
-                        )
-                        add_inputs_url_btn = gr.Button(
-                            "Добавить файл", variant="primary"
-                        )
-                        @add_inputs_url_btn.click(
-                            inputs=[
-                                input_url,
-                                inputs_url_format,
-                                inputs_url_bitrate,
-                                inputs_url_cookie,
-                            ]
-                        )
-                        def add_inputs_from_url_fn(input_u, fmt, br, cookie):
-                            if input_u:
-                                downloaded_file = dw_yt_dlp(
-                                    url=input_u,
-                                    #output_dir=tempfile.mkdtemp(),
-                                    output_format=fmt,
-                                    output_bitrate=str(int(br)),
-                                    cookie=cookie,
-                                )
-                                if downloaded_file:
-                                    if os.path.exists(downloaded_file):
-                                        if check(downloaded_file):
-                                            self.upload_files([downloaded_file])
-                                            gr.Warning(title="Файл успешно загружен", message="")
+                        with gr.Row(equal_height=True):
+                            inputs_url_format = gr.Dropdown(
+                                label="Формат входного файла",
+                                interactive=True,
+                                choices=output_formats,
+                                value="mp3",
+                                filterable=False,
+                            )
+                            inputs_url_bitrate = gr.Slider(
+                                label="Битрейт входного файла",
+                                minimum=32,
+                                maximum=512,
+                                step=32,
+                                value=320,
+                                interactive=True,
+                            )
+                            inputs_url_format.change(
+                                lambda x: gr.update(
+                                    visible=False if x in ["wav", "flac", "aiff"] else True
+                                ),
+                                inputs=inputs_url_format,
+                                outputs=inputs_url_bitrate,
+                            )
+
+                        with gr.Row(equal_height=True):
+                            inputs_url_cookie = gr.UploadButton(
+                                label="Файл cookie (необязательно)",
+                                interactive=True,
+                                type="filepath",
+                                file_count="single",
+                                file_types=[".txt", ".cookies"],
+                                variant="secondary",
+                            )
+                            add_inputs_url_btn = gr.Button(
+                                "Добавить файл", variant="primary"
+                            )
+                            @add_inputs_url_btn.click(
+                                inputs=[
+                                    input_url,
+                                    inputs_url_format,
+                                    inputs_url_bitrate,
+                                    inputs_url_cookie,
+                                ]
+                            )
+                            def add_inputs_from_url_fn(input_u, fmt, br, cookie):
+                                if input_u:
+                                    downloaded_file = dw_yt_dlp(
+                                        url=input_u,
+                                        #output_dir=tempfile.mkdtemp(),
+                                        output_format=fmt,
+                                        output_bitrate=str(int(br)),
+                                        cookie=cookie,
+                                    )
+                                    if downloaded_file:
+                                        if os.path.exists(downloaded_file):
+                                            if check(downloaded_file):
+                                                self.upload_files([downloaded_file])
+                                                gr.Warning(title="Файл успешно загружен", message="")
 
                 with gr.Tab("С устройства"):
                     with gr.Row():
-                        add_inputs_from_device_directory = gr.File(label="Загрузить аудио (директория)", interactive=True, file_count="directory")
-                        add_inputs_from_device_files = gr.File(label="Загрузить аудио (файлы)", interactive=True, file_count="multiple")
-                        add_inputs_from_device_zip = gr.File(label="Загрузить аудио (ZIP-архив)", interactive=True, file_count="single", file_types=[".zip"])
+                        with gr.Group():
+                            gr.Markdown("<h3><center>Загрузить аудио-файлы из директории</h3></center>")
+                            add_inputs_from_device_directory = gr.File(show_label=False, label="Загрузить аудио (директория)", interactive=True, file_count="directory")
+                        with gr.Group():
+                            gr.Markdown("<h3><center>Загрузить аудио-файлы</h3></center>")
+                            add_inputs_from_device_files = gr.File(show_label=False, label="Загрузить аудио (файлы)", interactive=True, file_count="multiple")
+                        with gr.Group():
+                            gr.Markdown("<h3><center>Загрузить ZIP-архив с аудио</h3></center>")
+                            add_inputs_from_device_zip = gr.File(show_label=False, label="Загрузить аудио (ZIP-архив)", interactive=True, file_count="single", file_types=[".zip"])
                         @add_inputs_from_device_directory.upload(
                             inputs=[add_inputs_from_device_directory], outputs=[add_inputs_from_device_directory]
                         )
@@ -463,6 +552,32 @@ class SeparatorGradio(Separator, GradioHelper):
                                 files = self.upload_files(_files)
                                 gr.Warning(title="Файлы успешно загружены", message="")
                             return gr.update(value=None)
+
+            with gr.Tab("Менеджер моделей"):
+                with gr.Tab("Скачать модель"):
+                    with gr.Group():
+                        select_dwm_preset = gr.Dropdown(
+                            label="Выберите пресет",
+                            interactive=True,
+                            choices=self.dwm_presets,
+                            value=None,
+                        )
+                        select_dwm_names = gr.Dropdown(
+                            label="Выберите модели",
+                            interactive=True,
+                            choices=default_model, value=[],
+                            multiselect=True
+                        )
+                        dwm_status = gr.Textbox(
+                            container=False, lines=3, interactive=False, max_lines=3, visible=False
+                        )
+                        download_dwm_button = gr.Button("Скачать")
+                        select_dwm_preset.change(lambda x: gr.update(value=self.parse_models_from_dwm_preset(x)), inputs=select_dwm_preset, outputs=select_dwm_names)
+                        download_dwm_button.click(lambda: gr.update(visible=True), outputs=dwm_status).then(lambda x: (self.batch_download(x), gr.update(visible=False)), inputs=select_dwm_names, outputs=[gr.State(None), dwm_status])
+                with gr.Tab("Удалить все модели"):
+                    gr.Markdown("<h3><center>Это действие необратимо</center></h3>")
+                    delete_models_cache_btn = gr.Button("Удалить ВСЁ!")
+                    delete_models_cache_btn.click(self.delete_models_cache, inputs=None, outputs=None)
 
             from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI
             if add_app:
@@ -492,10 +607,11 @@ class SeparatorGradio(Separator, GradioHelper):
                     PluginManager().UI()
             
             with gr.Tab("Устройство"):
-                device_radio = gr.CheckboxGroup(label="ID устройств CUDA", choices=all_ids, interactive=True)
-                pref_cuda = gr.Checkbox(label="Отдать предпочтение устройствам CUDA (Если они есть)", value=True)
-                current_device = gr.Textbox(container=False, value=self.device)
-                gr.on(fn=lambda: (self.device, "cuda" in self.device), outputs=[current_device, pref_cuda])
+                with gr.Group():
+                    device_radio = gr.CheckboxGroup(label="ID устройств CUDA", choices=all_ids, interactive=True)
+                    pref_cuda = gr.Checkbox(label="Отдать предпочтение устройствам CUDA (Если они есть)", value=True)
+                    current_device = gr.Textbox(label="Текущее устройство", value=self.device)
+                gr.on(fn=lambda: (self.device), outputs=[current_device])
                 def show_device(a1, a2):
                     _device = set_device(a1, prefer_gpu=a2)
                     self.device = _device
@@ -507,8 +623,8 @@ class SeparatorGradio(Separator, GradioHelper):
                         _vbach.device = _device
                     print(f"Выбранное устройство: {self.device}")
                     return self.device
-                device_radio.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device)
-                pref_cuda.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device)
+                device_radio.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device, trigger_mode="once")
+                pref_cuda.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device, trigger_mode="once")
 
 
         return MVSEPLESS_LITE_UI

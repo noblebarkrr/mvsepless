@@ -2582,101 +2582,92 @@ class Vbach(GradioHelper):
             with gr.TabItem("Менеджер"):
                 with gr.TabItem("Загрузить по ссылке"):
                     with gr.TabItem("Через zip файл"):
-                        with gr.Row():
-                            with gr.Column(variant="panel"):
-                                url_zip = gr.Text(label="Ссылка на zip файл")
-                                with gr.Group():
-                                    url_zip_model_name = gr.Text(
-                                        label="Имя модели",
+                        with gr.Group():
+                            url_zip = gr.Text(label="Ссылка на zip файл", interactive=True)
+                            url_zip_model_name = gr.Text(
+                                label="Имя модели", interactive=True
+                            )
+                            url_zip_download_btn = gr.Button(
+                                "Загрузить", variant="primary", interactive=True
+                            )
+                            url_zip_output = gr.Text(
+                                label="Статус", interactive=False, lines=5
+                            )
+                            url_zip_download_btn.click(
+                                (
+                                    lambda x, y: model_manager.install_model_zip(
+                                        x,
+                                        namer.short(
+                                            namer.sanitize(y), length=40
+                                        ),
+                                        "url",
                                     )
-                                    url_zip_download_btn = gr.Button(
-                                        "Загрузить", variant="primary"
-                                    )
-
-                                url_zip_output = gr.Text(
-                                    label="Статус", interactive=False, lines=5
-                                )
-                                url_zip_download_btn.click(
-                                    (
-                                        lambda x, y: model_manager.install_model_zip(
-                                            x,
-                                            namer.short(
-                                                namer.sanitize(y), length=40
-                                            ),
-                                            "url",
-                                        )
-                                    ),
-                                    inputs=[url_zip, url_zip_model_name],
-                                    outputs=url_zip_output,
-                                )
+                                ),
+                                inputs=[url_zip, url_zip_model_name],
+                                outputs=url_zip_output,
+                            )
 
                     with gr.TabItem("Через отдельные файлы"):
-                        with gr.Row():
-                            with gr.Column(variant="panel"):
-                                url_pth = gr.Text(label="Ссылка на *.pth файл")
-                                url_index = gr.Text(
-                                    label="Ссылка на *.index файл (необязательно)"
-                                )
-                                with gr.Group():
-                                    url_file_model_name = gr.Text(
-                                        label="Имя модели",
+                        with gr.Group():
+                            url_pth = gr.Text(label="Ссылка на *.pth файл", interactive=True)
+                            url_index = gr.Text(
+                                label="Ссылка на *.index файл (необязательно)", interactive=True
+                            )
+                            url_file_model_name = gr.Text(
+                                label="Имя модели", interactive=True
+                            )
+                            url_file_download_btn = gr.Button(
+                                "Загрузить", variant="primary", interactive=True
+                            )
+                            url_file_output = gr.Text(
+                                label="Статус", interactive=False, lines=5
+                            )
+                            url_file_download_btn.click(
+                                (
+                                    lambda x, y, z: model_manager.install_model_files(
+                                        x,
+                                        y,
+                                        namer.short(
+                                            namer.sanitize(z), length=40
+                                        ),
+                                        "url",
                                     )
-                                    url_file_download_btn = gr.Button(
-                                        "Загрузить", variant="primary"
-                                    )
-
-                                url_file_output = gr.Text(
-                                    label="Статус", interactive=False, lines=5
-                                )
-                                url_file_download_btn.click(
-                                    (
-                                        lambda x, y, z: model_manager.install_model_files(
-                                            x,
-                                            y,
-                                            namer.short(
-                                                namer.sanitize(z), length=40
-                                            ),
-                                            "url",
-                                        )
-                                    ),
-                                    inputs=[url_index, url_pth, url_file_model_name],
-                                    outputs=url_file_output,
-                                )
+                                ),
+                                inputs=[url_index, url_pth, url_file_model_name],
+                                outputs=url_file_output,
+                            )
 
                 with gr.Tab("Загрузить с устройства"):
                     with gr.Tab("Через zip файл"):
-                        with gr.Row():
-                            with gr.Column():
-                                local_zip = gr.File(
-                                    label="zip файл",
-                                    file_types=[".zip"],
-                                    file_count="single",
-                                )
-                            with gr.Column(variant="panel"):
-                                with gr.Group():
-                                    local_zip_model_name = gr.Text(
-                                        label="Имя модели",
+                        with gr.Group():
+                            local_zip = gr.File(
+                                label="zip файл",
+                                file_types=[".zip"],
+                                file_count="single",
+                                interactive=True
+                            )
+                            local_zip_model_name = gr.Text(
+                                label="Имя модели", interactive=True
+                            )
+                            local_zip_upload_btn = gr.Button(
+                                "Загрузить", variant="primary", interactive=True
+                            )
+                            local_zip_output = gr.Text(
+                                label="Статус", interactive=False, lines=5
+                            )
+                            local_zip_upload_btn.click(
+                                (
+                                    lambda x, y: model_manager.install_model_zip(
+                                        x,
+                                        namer.short(
+                                            namer.sanitize(y), length=40
+                                        ),
+                                        "local",
                                     )
-                                    local_zip_upload_btn = gr.Button(
-                                        "Загрузить", variant="primary"
-                                    )
-
-                                local_zip_output = gr.Text(
-                                    label="Статус", interactive=False, lines=5
-                                )
-                                local_zip_upload_btn.click(
-                                    (
-                                        lambda x, y: model_manager.install_model_zip(
-                                            x,
-                                            namer.short(
-                                                namer.sanitize(y), length=40
-                                            ),
-                                            "local",
-                                        )
-                                    ),
-                                    inputs=[local_zip, local_zip_model_name],
-                                    outputs=local_zip_output,
-                                )
+                                ),
+                                inputs=[local_zip, local_zip_model_name],
+                                outputs=local_zip_output,
+                            )
 
                     with gr.TabItem("Через отдельные файлы"):
                         with gr.Group():
@@ -2685,70 +2676,67 @@ class Vbach(GradioHelper):
                                     label="*.pth файл",
                                     file_types=[".pth"],
                                     file_count="single",
+                                    interactive=True
                                 )
                                 local_index = gr.File(
                                     label="*.index файл (необязательно)",
                                     file_types=[".index"],
                                     file_count="single",
+                                    interactive=True
                                 )
-                            with gr.Column(variant="panel"):
-                                with gr.Group():
-                                    local_file_model_name = gr.Text(
-                                        label="Имя модели",
-                                    )
-                                    local_file_upload_btn = gr.Button(
-                                        "Загрузить", variant="primary"
-                                    )
-
-                                local_file_output = gr.Text(
-                                    label="Статус", interactive=False
-                                )
-                                local_file_upload_btn.click(
-                                    (
-                                        lambda x, y, z: model_manager.install_model_files(
-                                            x,
-                                            y,
-                                            namer.short(
-                                                namer.sanitize(z), length=40
-                                            ),
-                                            "local",
-                                        )
-                                    ),
-                                    inputs=[local_index, local_pth, local_file_model_name],
-                                    outputs=local_file_output,
-                                )
-
-                with gr.TabItem("Удалить модель"):
-                    with gr.Column(variant="panel"):
-                        with gr.Group():
-                            delete_model_name = gr.Dropdown(
-                                label="Имя модели",
-                                choices=model_manager.parse_voice_models(),
-                                interactive=True,
-                                filterable=False,
+                            local_file_model_name = gr.Text(
+                                label="Имя модели", interactive=True
                             )
-                            delete_refresh_btn = gr.Button("Обновить")
-
-                            @delete_refresh_btn.click(
-                                inputs=None, outputs=delete_model_name
+                            local_file_upload_btn = gr.Button(
+                                "Загрузить", variant="primary", interactive=True
                             )
-                            def refresh_list_voice_models():
-                                models = []
-                                models = model_manager.parse_voice_models()
-                                first_model = None
-                                if len(models) > 0:
-                                    first_model = models[0]
-                                return gr.update(choices=models, value=first_model)
-
-                            delete_output = gr.Text(
+                            local_file_output = gr.Text(
                                 label="Статус", interactive=False, lines=5
                             )
-                            delete_btn = gr.Button("Удалить")
-                            delete_btn.click(
-                                fn=model_manager.del_voice_model,
-                                inputs=delete_model_name,
-                                outputs=delete_output,
+                            local_file_upload_btn.click(
+                                (
+                                    lambda x, y, z: model_manager.install_model_files(
+                                        x,
+                                        y,
+                                        namer.short(
+                                            namer.sanitize(z), length=40
+                                        ),
+                                        "local",
+                                    )
+                                ),
+                                inputs=[local_index, local_pth, local_file_model_name],
+                                outputs=local_file_output,
                             )
+
+                with gr.TabItem("Удалить модель"):
+                    with gr.Group():
+                        delete_model_name = gr.Dropdown(
+                            label="Имя модели",
+                            choices=model_manager.parse_voice_models(),
+                            interactive=True,
+                            filterable=False,
+                        )
+                        delete_refresh_btn = gr.Button("Обновить", interactive=True)
+                        delete_btn = gr.Button("Удалить", variant="stop", interactive=True)
+                        @delete_refresh_btn.click(
+                            inputs=None, outputs=delete_model_name
+                        )
+                        def refresh_list_voice_models():
+                            models = []
+                            models = model_manager.parse_voice_models()
+                            first_model = None
+                            if len(models) > 0:
+                                first_model = models[0]
+                            return gr.update(choices=models, value=first_model)
+
+                        delete_output = gr.Text(
+                            label="Статус", interactive=False, lines=5
+                        )
+                        delete_btn.click(
+                            fn=model_manager.del_voice_model,
+                            inputs=delete_model_name,
+                            outputs=delete_output,
+                        )
 
                 @gr.on(fn="decorator", inputs=None, outputs=[delete_model_name, model_name])
                 def refresh_list_voice_models():
@@ -3048,5 +3036,3 @@ if __name__ == "__main__":
         elif args.vbach_command == "remove":
             status = model_manager.del_voice_model(args.model_name)
             print(status)
-
-
