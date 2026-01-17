@@ -97,6 +97,11 @@ input_extensions = [f".{of}" for of in input_formats]
 
 output_extensions = [f".{of}" for of in output_formats]
 
+allowed_chars = r".1234567890"
+
+def sanitize_output(output):
+    return "".join([char for char in output if char in allowed_chars])
+
 def get_sr(path: str, stream: int = 0):
     cmd = [ffprobe_path, "-i", path, "-v", "quiet", "-hide_banner", "-show_entries", "stream=sample_rate", "-select_streams", f"a:{stream}", "-of", "compact=p=0:nk=1"]
     process = subprocess.Popen(
@@ -104,8 +109,9 @@ def get_sr(path: str, stream: int = 0):
     )
     stdout, stderr = process.communicate()
     sample_rate = stdout.decode('utf-8').strip()
+    sample_rate = sanitize_output(sample_rate)
     if sample_rate.isdigit():
-        return int(sample_rate.strip())
+        return int(sample_rate)
     else:
         return 0
 
@@ -116,8 +122,9 @@ def get_channels(path: str, stream: int = 0):
     )
     stdout, stderr = process.communicate()
     channels = stdout.decode('utf-8').strip()
+    channels = sanitize_output(channels)
     if channels.isdigit():
-        return int(channels.strip())
+        return int(channels)
     else:
         return 0
 
