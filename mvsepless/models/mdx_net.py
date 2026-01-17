@@ -33,8 +33,11 @@ class MDXNet(nn.Module):
         self.ort_session = None
 
     def init_onnx_session(self, onnx_model_path: str, device: torch.device, device_ids: list):
+        provider_options = None
         if device.type == "cuda":
             providers = ["CUDAExecutionProvider"]
+            if device_ids:
+                provider_options = [{"device_id": device_ids[0]}]
         elif device.type == "mps":
             if "CoreMLExecutionProvider" in ort.get_available_providers():
                 providers = ["CoreMLExecutionProvider"]
@@ -42,7 +45,8 @@ class MDXNet(nn.Module):
                 providers = ["CPUExecutionProvider"]
         else:
             providers = ["CPUExecutionProvider"]
-        self.ort_session = ort.InferenceSession(onnx_model_path, providers=providers, provider_options={"device_id": device_ids[0]} if device_ids else None)
+            
+        self.ort_session = ort.InferenceSession(onnx_model_path, providers=providers, provider_options=provider_options)
 
         self.ort_session.run(
             None,
