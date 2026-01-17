@@ -215,12 +215,13 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                             refresh_input_btn = gr.Button("Обновить", variant="primary", interactive=True)
                             list_input_files = gr.Dropdown(
                                 label="Загрузить файлы",
-                                choices=self.input_files,
+                                choices=reversed(self.input_files),
                                 value=[],
                                 multiselect=True,
                                 interactive=True,
                                 filterable=False, scale=15
                             )
+                            gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=[]), outputs=list_input_files, trigger_mode="once")
                             refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=[]), outputs=list_input_files)
                                 
                             @upload.upload(inputs=[upload], outputs=[list_input_files, upload])

@@ -556,6 +556,7 @@ class AutoEnsembless(Separator, GradioHelper):
                             interactive=True,
                             filterable=False, scale=15
                         )
+                        gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=[]), outputs=list_input_files, trigger_mode="once")
                         refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files)
                             
                         @upload.upload(inputs=[upload], outputs=[list_input_files, upload])

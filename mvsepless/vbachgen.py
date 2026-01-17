@@ -1262,12 +1262,13 @@ class VbachGen(Separator, GradioHelper):
                         refresh_input_btn = gr.Button("Обновить", variant="primary", interactive=True)
                         list_input_files = gr.Dropdown(
                             label="Загрузить файлы",
-                            choices=self.input_files,
+                            choices=reversed(self.input_files),
                             value=None,
                             multiselect=False,
                             interactive=True,
                             filterable=False, scale=15
                         )
+                        gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=[]), outputs=list_input_files, trigger_mode="once")
                         refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files)
                             
                         @upload.upload(inputs=[upload], outputs=[list_input_files, upload])
@@ -1454,7 +1455,7 @@ class VbachGen(Separator, GradioHelper):
                         vocal1_gain = gr.Slider(
                             -30,
                             30,
-                            value=25,
+                            value=-3,
                             step=1,
                             label="Вокал",
                             scale=3,
@@ -1463,7 +1464,7 @@ class VbachGen(Separator, GradioHelper):
                         vocal2_gain = gr.Slider(
                             -30,
                             30,
-                            value=25,
+                            value=-3,
                             step=1,
                             label="Бэк-вокал",
                             scale=3,
@@ -1612,21 +1613,21 @@ class VbachGen(Separator, GradioHelper):
                                     compressor_ratio = gr.Slider(
                                         1,
                                         20,
-                                        value=20,
+                                        value=16,
                                         label="Соотношение",
                                         interactive=True,
                                     )
                                     compressor_threshold = gr.Slider(
                                         -60,
                                         0,
-                                        value=-25,
+                                        value=-16,
                                         label="Порог",
                                         interactive=True,
                                     )
                                     compressor_attack = gr.Slider(
                                         0,
                                         2000,
-                                        value=0,
+                                        value=40,
                                         label="Время атаки (мс)",
                                         interactive=True,
                                     )
@@ -1925,5 +1926,4 @@ class VbachGen(Separator, GradioHelper):
                 noise_gate_release,
             ],
             outputs=[final_ai_cover],
-
         )
