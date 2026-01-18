@@ -290,18 +290,19 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 interactive=False, scale=8
                             )
                             with gr.Accordion(label="Дополнительные настройки", open=False):
-                                vr_aggr, mdx_denoise = gr.Slider(
-                                    label="Сила подавления для VR моделей",
-                                    minimum=0,
-                                    maximum=100,
-                                    value=5,
-                                    step=1,
-                                    interactive=True,
-                                ), gr.Checkbox(
-                                    label="Включить шумоподавление для MDX-NET моделей",
-                                    value=False,
-                                    interactive=True,
-                                )
+                                with gr.Group():
+                                    vr_aggr, mdx_denoise = gr.Slider(
+                                        label="Сила подавления для VR моделей",
+                                        minimum=0,
+                                        maximum=100,
+                                        value=5,
+                                        step=1,
+                                        interactive=True,
+                                    ), gr.Checkbox(
+                                        label="Включить шумоподавление для MDX-NET моделей",
+                                        value=False,
+                                        interactive=True,
+                                    )
 
                             @model_name.change(
                                 inputs=[model_name], outputs=[extract_instrumental, stems]

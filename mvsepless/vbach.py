@@ -2277,186 +2277,193 @@ class Vbach(GradioHelper):
 
                     with gr.Column():
                         with gr.Group():
-                            model_name = gr.Dropdown(label="Имя модели", interactive=True)
-                            model_list_refresh_btn = gr.Button(
-                                "Обновить", variant="secondary", interactive=True
-                            )
-
-                            @model_list_refresh_btn.click(outputs=[model_name])
-                            def refresh_list_voice_models():
-                                models = []
-                                models = model_manager.parse_voice_models()
-                                first_model = None
-                                if len(models) > 0:
-                                    first_model = models[0]
-                                return gr.update(choices=models, value=first_model)
-
-                        with gr.Group():
-                            pitch_method = gr.Dropdown(
-                                label="Метод извлечения высоты тона",
-                                choices=self.pitch_methods,
-                                value=self.pitch_methods[0],
-                                interactive=True,
-                                filterable=False
-                            )
-                            pitch = gr.Slider(
-                                label="Высота тона",
-                                minimum=-48,
-                                maximum=48,
-                                step=0.5,
-                                value=0,
-                                interactive=True,
-                            )
-                            hop_length = gr.Slider(
-                                label="Длина шага",
-                                info="Длина шага влияет на точность передачи высоты тона\nЧем меньше длина шага - тем точнее будет передана высота тона",
-                                minimum=self.hop_length_values[0],
-                                maximum=self.hop_length_values[1],
-                                step=8,
-                                value=128,
-                                interactive=True,
-                                visible=False,
-                            )
-
-                            @pitch_method.change(
-                                inputs=[pitch_method], outputs=[hop_length]
-                            )
-                            def show_mangio_crepe_hop_length(pitch_method):
-                                return gr.update(
-                                    visible=(
-                                        True
-                                        if pitch_method
-                                        in ["mangio-crepe", "mangio-crepe-tiny", "pyin"]
-                                        else False
-                                    )
+                            with gr.Group():
+                                model_name = gr.Dropdown(label="Имя модели", interactive=True)
+                                model_list_refresh_btn = gr.Button(
+                                    "Обновить", variant="secondary", interactive=True
                                 )
 
-                        with gr.Accordion(label="Дополнительные настройки", open=False):
-                            with gr.Accordion(label="Обработка аудио", open=False):
-                                stereo_mode = gr.Radio(
-                                    choices=["mono", "left/right", "sim/dif"],
-                                    label="Стерео режим",
-                                    info="mono - монофоническая обработка аудио, \nleft/right - обработка левого и правого каналов отдельно, \nsim/dif - обработка фантомного центра и стерео-базы, разделенную на левый и правый каналы",
-                                    value="mono",
+                                @model_list_refresh_btn.click(outputs=[model_name])
+                                def refresh_list_voice_models():
+                                    models = []
+                                    models = model_manager.parse_voice_models()
+                                    first_model = None
+                                    if len(models) > 0:
+                                        first_model = models[0]
+                                    return gr.update(choices=models, value=first_model)
+
+                            with gr.Group():
+                                pitch_method = gr.Dropdown(
+                                    label="Метод извлечения высоты тона",
+                                    choices=self.pitch_methods,
+                                    value=self.pitch_methods[0],
+                                    interactive=True,
+                                    filterable=False
+                                )
+                                pitch = gr.Slider(
+                                    label="Высота тона",
+                                    minimum=-48,
+                                    maximum=48,
+                                    step=0.5,
+                                    value=0,
                                     interactive=True,
                                 )
-                                alt_pl = gr.Checkbox(
-                                    label="Альтернативный пайплайн",
-                                    info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 40% свободной видеопамяти",
-                                    value=False,
+                                hop_length = gr.Slider(
+                                    label="Длина шага",
+                                    info="Длина шага влияет на точность передачи высоты тона\nЧем меньше длина шага - тем точнее будет передана высота тона",
+                                    minimum=self.hop_length_values[0],
+                                    maximum=self.hop_length_values[1],
+                                    step=8,
+                                    value=128,
                                     interactive=True,
-                                )
-                            with gr.Accordion(label="Инференс", open=False):
-                                with gr.Row():
-                                    index_rate = gr.Slider(
-                                        label="Влияние индекса",
-                                        info="Чем ниже значение, тем больше голос похож на исходный; чем выше, тем ближе к модели",
-                                        minimum=self.index_rates_values[0],
-                                        maximum=self.index_rates_values[1],
-                                        step=0.05,
-                                        value=0,
-                                        interactive=True,
-                                    )
-                                    filter_radius = gr.Slider(
-                                        label="Радиус фильтра",
-                                        info="Сглаживает результаты извлечения тона\nМожет снизить дыхание и шумы на выходе",
-                                        minimum=self.filter_radius_values[0],
-                                        maximum=self.filter_radius_values[1],
-                                        step=1,
-                                        value=3,
-                                        interactive=True,
-                                    )
-                                with gr.Row():
-                                    rms = gr.Slider(
-                                        label="Соотношение огибающих громкости",
-                                        info="Значение 0 - огибающая громкости как у входного аудио, 1 - как у выходного сигнала",
-                                        minimum=self.rms_values[0],
-                                        maximum=self.rms_values[1],
-                                        step=0.05,
-                                        value=0.25,
-                                        interactive=True,
-                                    )
-                                    protect = gr.Slider(
-                                        label="Защита согласных",
-                                        info="Предовращает роботизацию дыхания и согласных (Может влиять на четкость речи)\nЗначение 0.5 - выключает защиту, 0 - максимальная защита",
-                                        minimum=self.protect_values[0],
-                                        maximum=self.protect_values[1],
-                                        step=0.05,
-                                        value=0.35,
-                                        interactive=True,
-                                    )
-                            with gr.Accordion(label="Диапазон определения высоты тона", open=False):
-                                with gr.Row():
-                                    f0_min = gr.Slider(
-                                        label="Нижний предел диапазона определения высоты тона",
-                                        minimum=self.f0_min_values[0],
-                                        maximum=self.f0_min_values[1],
-                                        step=10,
-                                        value=50,
-                                        interactive=True,
-                                    )
-                                    f0_max = gr.Slider(
-                                        label="Верхний предел диапазона определения высоты тона",
-                                        minimum=self.f0_max_values[0],
-                                        maximum=self.f0_max_values[1],
-                                        step=10,
-                                        value=1100,
-                                        interactive=True,
-                                    )
-                            with gr.Accordion(label="Эмбеддер", open=False):
-                                embedder_name = gr.Radio(
-                                    label="Модель Hubert",
-                                    choices=self.fairseq_embedders,
-                                    value=self.fairseq_embedders[0],
-                                )
-                                transformers_mode = gr.Checkbox(
-                                    label="Использовать стек Transformers",
-                                    value=False,
-                                    interactive=True,
+                                    visible=False,
                                 )
 
-                                @transformers_mode.change(
-                                    inputs=[transformers_mode], outputs=[embedder_name]
+                                @pitch_method.change(
+                                    inputs=[pitch_method], outputs=[hop_length]
                                 )
-                                def change_embedders(tr_m):
-                                    if tr_m:
-                                        return gr.update(
-                                            value=self.transformers_embedders[0],
-                                            choices=self.transformers_embedders,
+                                def show_mangio_crepe_hop_length(pitch_method):
+                                    return gr.update(
+                                        visible=(
+                                            True
+                                            if pitch_method
+                                            in ["mangio-crepe", "mangio-crepe-tiny", "pyin"]
+                                            else False
                                         )
-                                    else:
-                                        return gr.update(
-                                            choices=self.fairseq_embedders,
-                                            value=self.fairseq_embedders[0],
+                                    )
+
+                            with gr.Accordion(label="Дополнительные настройки", open=False):
+                                with gr.Group():
+                                    with gr.Accordion(label="Обработка аудио", open=False):
+                                        with gr.Group():
+                                            stereo_mode = gr.Radio(
+                                                choices=["mono", "left/right", "sim/dif"],
+                                                label="Стерео режим",
+                                                info="mono - монофоническая обработка аудио, \nleft/right - обработка левого и правого каналов отдельно, \nsim/dif - обработка фантомного центра и стерео-базы, разделенную на левый и правый каналы",
+                                                value="mono",
+                                                interactive=True,
+                                            )
+                                            alt_pl = gr.Checkbox(
+                                                label="Альтернативный пайплайн",
+                                                info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 40% свободной видеопамяти",
+                                                value=False,
+                                                interactive=True,
+                                            )
+                                    with gr.Accordion(label="Инференс", open=False):
+                                        with gr.Group():
+                                            with gr.Row():
+                                                index_rate = gr.Slider(
+                                                    label="Влияние индекса",
+                                                    info="Чем ниже значение, тем больше голос похож на исходный; чем выше, тем ближе к модели",
+                                                    minimum=self.index_rates_values[0],
+                                                    maximum=self.index_rates_values[1],
+                                                    step=0.05,
+                                                    value=0,
+                                                    interactive=True,
+                                                )
+                                                filter_radius = gr.Slider(
+                                                    label="Радиус фильтра",
+                                                    info="Сглаживает результаты извлечения тона\nМожет снизить дыхание и шумы на выходе",
+                                                    minimum=self.filter_radius_values[0],
+                                                    maximum=self.filter_radius_values[1],
+                                                    step=1,
+                                                    value=3,
+                                                    interactive=True,
+                                                )
+                                            with gr.Row():
+                                                rms = gr.Slider(
+                                                    label="Соотношение огибающих громкости",
+                                                    info="Значение 0 - огибающая громкости как у входного аудио, 1 - как у выходного сигнала",
+                                                    minimum=self.rms_values[0],
+                                                    maximum=self.rms_values[1],
+                                                    step=0.05,
+                                                    value=0.25,
+                                                    interactive=True,
+                                                )
+                                                protect = gr.Slider(
+                                                    label="Защита согласных",
+                                                    info="Предовращает роботизацию дыхания и согласных (Может влиять на четкость речи)\nЗначение 0.5 - выключает защиту, 0 - максимальная защита",
+                                                    minimum=self.protect_values[0],
+                                                    maximum=self.protect_values[1],
+                                                    step=0.05,
+                                                    value=0.35,
+                                                    interactive=True,
+                                                )
+                                    with gr.Accordion(label="Диапазон определения высоты тона", open=False):
+                                        with gr.Group():
+                                            with gr.Row():
+                                                f0_min = gr.Slider(
+                                                    label="Нижний предел диапазона определения высоты тона",
+                                                    minimum=self.f0_min_values[0],
+                                                    maximum=self.f0_min_values[1],
+                                                    step=10,
+                                                    value=50,
+                                                    interactive=True,
+                                                )
+                                                f0_max = gr.Slider(
+                                                    label="Верхний предел диапазона определения высоты тона",
+                                                    minimum=self.f0_max_values[0],
+                                                    maximum=self.f0_max_values[1],
+                                                    step=10,
+                                                    value=1100,
+                                                    interactive=True,
+                                                )
+                                    with gr.Accordion(label="Эмбеддер", open=False):
+                                        with gr.Group():
+                                            embedder_name = gr.Radio(
+                                                label="Модель Hubert",
+                                                choices=self.fairseq_embedders,
+                                                value=self.fairseq_embedders[0],
+                                            )
+                                            transformers_mode = gr.Checkbox(
+                                                label="Использовать стек Transformers",
+                                                value=False,
+                                                interactive=True,
+                                            )
+
+                                        @transformers_mode.change(
+                                            inputs=[transformers_mode], outputs=[embedder_name]
                                         )
+                                        def change_embedders(tr_m):
+                                            if tr_m:
+                                                return gr.update(
+                                                    value=self.transformers_embedders[0],
+                                                    choices=self.transformers_embedders,
+                                                )
+                                            else:
+                                                return gr.update(
+                                                    choices=self.fairseq_embedders,
+                                                    value=self.fairseq_embedders[0],
+                                                )
 
-                            with gr.Accordion(label="Имя выходного файла", open=False):
-                                output_name = gr.Textbox(
-                                    label="Имя выходного файла",
-                                    interactive=True,
-                                    value="NAME - MODEL - F0METHOD - PITCH",
-                                )
-                                format_output_name_check = gr.Checkbox(
-                                    label="Форматировать имя",
-                                    info="Используйте ключи: \nNAME - имя входного файла без расширения, \nPITCH - высота тона, \nF0METHOD - метод извлечения высота тона, \nMODEL - имя голосовой модели",
-                                    value=True,
-                                    interactive=True,
-                                )
+                                    with gr.Accordion(label="Имя выходного файла", open=False):
+                                        with gr.Group():
+                                            output_name = gr.Textbox(
+                                                label="Имя выходного файла",
+                                                interactive=True,
+                                                value="NAME - MODEL - F0METHOD - PITCH",
+                                            )
+                                            format_output_name_check = gr.Checkbox(
+                                                label="Форматировать имя",
+                                                info="Используйте ключи: \nNAME - имя входного файла без расширения, \nPITCH - высота тона, \nF0METHOD - метод извлечения высота тона, \nMODEL - имя голосовой модели",
+                                                value=True,
+                                                interactive=True,
+                                            )
 
-                        with gr.Group():
-                            output_format = gr.Dropdown(
-                                label="Формат выходного файла",
-                                interactive=True,
-                                choices=output_formats,
-                                value=output_formats[0],
-                                filterable=False,
-                            )
-                            status = gr.Textbox(
-                                container=False, lines=3, interactive=False, max_lines=3, visible=False
-                            )
-                            convert_btn = gr.Button(
-                                "Преобразовать", variant="primary", interactive=True
-                            ).click(lambda: gr.update(visible=True), outputs=[status])
+                            with gr.Group():
+                                output_format = gr.Dropdown(
+                                    label="Формат выходного файла",
+                                    interactive=True,
+                                    choices=output_formats,
+                                    value=output_formats[0],
+                                    filterable=False,
+                                )
+                                status = gr.Textbox(
+                                    container=False, lines=3, interactive=False, max_lines=3, visible=False
+                                )
+                                convert_btn = gr.Button(
+                                    "Преобразовать", variant="primary", interactive=True
+                                ).click(lambda: gr.update(visible=True), outputs=[status])
                 @convert_btn.then(
                     inputs=[
                         list_input_files,

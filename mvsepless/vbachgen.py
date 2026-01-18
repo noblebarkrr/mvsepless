@@ -1248,448 +1248,448 @@ class VbachGen(Separator, GradioHelper):
     def UI(self):
 
         with gr.Row(equal_height=False, variant="panel"):
-            with gr.Group():
-                model_name = gr.Dropdown(
-                    label="Имя модели", interactive=True, filterable=False, scale=6
-                )
-                model_update_btn = gr.Button(
-                    "Обновить", variant="primary", scale=3, size="lg"
-                )
-            with gr.Row(min_height=150):
+            with gr.Column():
                 with gr.Group():
-                    with gr.Group():
-                        upload = gr.File(show_label=False, type="filepath", interactive=True)
-                        refresh_input_btn = gr.Button("Обновить", variant="primary", interactive=True)
-                        list_input_files = gr.Dropdown(
-                            label="Загрузить файлы",
-                            choices=reversed(self.input_files),
-                            value=None,
-                            multiselect=False,
-                            interactive=True,
-                            filterable=False, scale=15
-                        )
-                        gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=[]), outputs=list_input_files, trigger_mode="once")
-                        refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files)
-                            
-                        @upload.upload(inputs=[upload], outputs=[list_input_files, upload])
-                        def upload_files(input_file):
-                            files = self.upload_files([input_file])
-                            return gr.update(
-                                choices=reversed(self.input_files), value=files[0]
-                            ), gr.update(value=None)
+                    upload = gr.File(show_label=False, type="filepath", interactive=True)
+                    refresh_input_btn = gr.Button("Обновить", variant="primary", interactive=True)
+                    list_input_files = gr.Dropdown(
+                        label="Загрузить файлы",
+                        choices=reversed(self.input_files),
+                        value=None,
+                        multiselect=False,
+                        interactive=True,
+                        filterable=False, scale=15
+                    )
+                    gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files, trigger_mode="once")
+                    refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files)
+                        
+                    @upload.upload(inputs=[upload], outputs=[list_input_files, upload])
+                    def upload_files(input_file):
+                        files = self.upload_files([input_file])
+                        return gr.update(
+                            choices=reversed(self.input_files), value=files[0]
+                        ), gr.update(value=None)
 
-        with gr.Row():
             with gr.Column():
 
-                with gr.Tab("Разделение"):
-                    preclear_vocals_check = gr.Checkbox(
-                        label="Очистить вокал от реверба/эха", value=False
+                with gr.Group():
+                    model_name = gr.Dropdown(
+                        label="Имя модели", interactive=True, filterable=False, scale=6
                     )
-                    karaoke_check = gr.Checkbox(
-                        label="Разделить вокал на лид/бэк-вокалы", value=False
+                    model_update_btn = gr.Button(
+                        "Обновить", variant="primary", scale=3, size="lg"
                     )
-
                     with gr.Column(variant="panel"):
-                        with gr.Group() as extract_vocals_group:
-                            anti_instrum_model = gr.Dropdown(
-                                label="Вокальная модель",
-                                choices=self.get_list_mn_from_category(
-                                    ["Инструментал", "Вокал", "Инструментал и вокал"],
-                                    [
-                                        "mel_band_roformer",
-                                        "bs_roformer",
-                                        "mdx23c",
-                                        "mdxnet",
-                                        "htdemucs",
-                                    ],
-                                ),
-                                interactive=True,
-                                filterable=False,
-                            )
-
-                        with gr.Group(visible=False) as deecho_group:
-                            dereverb_model = gr.Dropdown(
-                                label="Dereverb/Deecho модель",
-                                choices=self.get_list_mn_from_category(
-                                    ["Реверб и эхо", "Реверб", "Эхо"], ["vr"]
-                                ),
-                                interactive=True,
-                                filterable=False,
-                            )
-
-                        with gr.Group(visible=False) as karaoke_group:
-                            karaoke_model = gr.Dropdown(
-                                label="Караоке модель",
-                                choices=self.get_list_mn_from_category(["Караоке"]),
-                                interactive=True,
-                                filterable=False,
-                            )
-
-                    separate_only_btn = gr.Button(
-                        "Только разделение", variant="secondary"
-                    )
-                    clear_cache_btn = gr.Button(
-                        "Очистить кэш разделения", variant="secondary", size="sm"
-                    )
-                    separation_status = gr.Textbox(
-                        label="Статус разделения", interactive=False
-                    )
-
-                with gr.Tab("Настройки преобразования голоса"):
-                    conversion_mode = gr.Dropdown(
-                        label="Режим преобразования",
-                        choices=["lead", "back", "lead/back", "full"],
-                        value="full",
-                        filterable=False,
-                        visible=False,
-                        info="lead - только основной вокал\nback - только бэк-вокал\nlead/back - основной и бэк-вокалы\nfull - весь вокал",
-                    )
-                    with gr.Row():
-                        pitch1 = gr.Slider(
-                            -48,
-                            48,
-                            value=0,
-                            step=12,
-                            label="Высота тона вокала",
-                            interactive=True,
-                        )
-                        pitch2 = gr.Slider(
-                            -48,
-                            48,
-                            value=0,
-                            step=12,
-                            label="Высота тона бэк-вокала",
-                            visible=False,
-                            interactive=True,
-                        )
-                    with gr.Row():
-                        method_pitch = gr.Dropdown(
-                            label="Метод извлечения тона",
-                            choices=f0_methods,
-                            value=f0_methods[0],
-                            interactive=True,
-                            filterable=False,
-                        )
-                        f0_max = gr.Slider(
-                            50,
-                            2000,
-                            value=1100,
-                            step=50,
-                            label="Верхний лимит определения высоты тона",
-                            interactive=True,
-                        )
-                    with gr.Row():
-                        with gr.Column(scale=1):
-                            index_rate = gr.Slider(
-                                0,
-                                1,
-                                value=0,
-                                step=0.05,
-                                label="Влияние индекса",
-                                interactive=True,
-                            )
-                            fr = gr.Slider(
-                                0,
-                                7,
-                                value=3,
-                                step=1,
-                                label="Радиус фильтра",
-                                interactive=True,
-                            )
-                        with gr.Column(scale=1):
-                            rms = gr.Slider(
-                                0,
-                                1,
-                                value=0.25,
-                                step=0.05,
-                                label="Огибающая громкости",
-                                interactive=True,
-                            )
-                            protect = gr.Slider(
-                                minimum=0,
-                                maximum=0.5,
-                                step=0.01,
-                                value=0.33,
-                                label="Защита согласных",
-                                interactive=True,
-                            )
-                    hop_mangio_crepe = gr.Slider(
-                        8,
-                        512,
-                        value=128,
-                        step=8,
-                        label="Длина шага",
-                        interactive=True,
-                        visible=False,
-                    )
-                    with gr.Accordion(label="Эмбеддер", open=False):
-                        embedder_name = gr.Radio(
-                            label="Модель Hubert",
-                            choices=self.fairseq_embedders,
-                            value=self.fairseq_embedders[0],
-                        )
-                        transformers_mode = gr.Checkbox(
-                            label="Использовать стек Transformers",
-                            value=False,
-                            interactive=True,
-                        )
-
-                        @transformers_mode.change(
-                            inputs=[transformers_mode], outputs=[embedder_name]
-                        )
-                        def change_embedders(tr_m):
-                            if tr_m:
-                                return gr.update(
-                                    value=self.transformers_embedders[0],
-                                    choices=self.transformers_embedders,
+                        with gr.Tab("Разделение"):
+                            with gr.Group():
+                                preclear_vocals_check = gr.Checkbox(
+                                    label="Очистить вокал от реверба/эха", value=False
                                 )
-                            else:
-                                return gr.update(
-                                    choices=self.fairseq_embedders,
-                                    value=self.fairseq_embedders[0],
+                                karaoke_check = gr.Checkbox(
+                                    label="Разделить вокал на лид/бэк-вокалы", value=False
                                 )
 
-                with gr.Tab("Настройки сведения аудио"):
-                    gr.Markdown("<center><h2>Изменение громкости</h2></center>")
-                    with gr.Row(variant="panel"):
-                        vocal1_gain = gr.Slider(
-                            -30,
-                            30,
-                            value=-3,
-                            step=1,
-                            label="Вокал",
-                            scale=3,
-                            interactive=True,
-                        )
-                        vocal2_gain = gr.Slider(
-                            -30,
-                            30,
-                            value=-3,
-                            step=1,
-                            label="Бэк-вокал",
-                            scale=3,
-                            visible=False,
-                            interactive=True,
-                        )
-                        instrumental_gain = gr.Slider(
-                            -30,
-                            30,
-                            value=0,
-                            step=1,
-                            label="Инструментал",
-                            scale=3,
-                            interactive=True,
-                        )
+                                with gr.Group() as extract_vocals_group:
+                                    anti_instrum_model = gr.Dropdown(
+                                        label="Вокальная модель",
+                                        choices=self.get_list_mn_from_category(
+                                            ["Инструментал", "Вокал", "Инструментал и вокал"],
+                                            [
+                                                "mel_band_roformer",
+                                                "bs_roformer",
+                                                "mdx23c",
+                                                "mdxnet",
+                                                "htdemucs",
+                                            ],
+                                        ),
+                                        interactive=True,
+                                        filterable=False,
+                                    )
 
-                    output_format = gr.Dropdown(
-                        label="Формат вывода",
-                        choices=output_formats,
-                        value=output_formats[0],
-                        interactive=True,
-                        filterable=False,
-                    )
-                    unconv_vocals_check = gr.Checkbox(
-                        label="Добавить к инструменталу непреобразованный вокал",
-                        visible=False,
-                    )
-                    use_effects = gr.Checkbox(
-                        label="Добавить эффекты на голос", value=True
-                    )
-                    with gr.Column(variant="panel", visible=True) as effects_accordion:
-                        with gr.Tab("Эффекты"):
-                            with gr.Tab("Эхо"):
-                                with gr.Group():
-                                    with gr.Column(variant="panel"):
-                                        with gr.Row():
-                                            echo_delay = gr.Slider(
-                                                0,
-                                                3,
-                                                value=0,
-                                                label="Время задержки (сек)",
-                                                interactive=True,
-                                            )
-                                            echo_feedback = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0,
-                                                label="Обратная связь",
-                                                interactive=True,
-                                            )
-                                            echo_mix = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0,
-                                                label="Смешение",
-                                                interactive=True,
-                                            )
+                                with gr.Group(visible=False) as deecho_group:
+                                    dereverb_model = gr.Dropdown(
+                                        label="Dereverb/Deecho модель",
+                                        choices=self.get_list_mn_from_category(
+                                            ["Реверб и эхо", "Реверб", "Эхо"], ["vr"]
+                                        ),
+                                        interactive=True,
+                                        filterable=False,
+                                    )
 
-                            with gr.Tab("Реверберация"):
-                                with gr.Group():
-                                    with gr.Column(variant="panel"):
-                                        with gr.Row():
-                                            reverb_rm_size = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0.1,
-                                                label="Размер комнаты",
-                                                interactive=True,
-                                            )
-                                            reverb_width = gr.Slider(
-                                                0,
-                                                1,
-                                                value=1.0,
-                                                label="Ширина реверберации",
-                                                interactive=True,
-                                            )
-                                        with gr.Row():
-                                            reverb_wet = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0.3,
-                                                label="Уровень влажности",
-                                                interactive=True,
-                                            )
-                                            reverb_dry = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0.8,
-                                                label="Уровень сухости",
-                                                interactive=True,
-                                            )
-                                        with gr.Row():
-                                            reverb_damping = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0.9,
-                                                label="Уровень демпфирования",
-                                                interactive=True,
-                                            )
+                                with gr.Group(visible=False) as karaoke_group:
+                                    karaoke_model = gr.Dropdown(
+                                        label="Караоке модель",
+                                        choices=self.get_list_mn_from_category(["Караоке"]),
+                                        interactive=True,
+                                        filterable=False,
+                                    )
 
-                            with gr.Tab("Хорус"):
-                                with gr.Group():
-                                    with gr.Column(variant="panel"):
-                                        with gr.Row():
-                                            chorus_rate_hz = gr.Slider(
-                                                0,
-                                                10,
-                                                value=0,
-                                                label="Скорость хоруса",
-                                                interactive=True,
-                                            )
-                                            chorus_depth = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0,
-                                                label="Глубина хоруса",
-                                                interactive=True,
-                                            )
-                                        with gr.Row():
-                                            chorus_centre_delay_ms = gr.Slider(
-                                                0,
-                                                50,
-                                                value=0,
-                                                label="Задержка центра (мс)",
-                                                interactive=True,
-                                            )
-                                            chorus_feedback = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0,
-                                                label="Обратная связь",
-                                                interactive=True,
-                                            )
-                                        with gr.Row():
-                                            chorus_mix = gr.Slider(
-                                                0,
-                                                1,
-                                                value=0,
-                                                label="Смешение",
-                                                interactive=True,
-                                            )
+                                with gr.Group(visible=False):
+                                    separate_only_btn = gr.Button(
+                                        "Только разделение", variant="primary"
+                                    )
+                                    clear_cache_btn = gr.Button(
+                                        "Очистить кэш разделения", variant="stop", size="sm"
+                                    )
+                                separation_status = gr.Textbox(
+                                    label="Статус разделения", interactive=False, visible=False
+                                )
 
-                        with gr.Tab("Обработка"):
-                            with gr.Tab("Компрессор"):
-                                with gr.Row(variant="panel"):
-                                    compressor_ratio = gr.Slider(
-                                        1,
-                                        20,
-                                        value=16,
-                                        label="Соотношение",
+                        with gr.Tab("Настройки преобразования голоса"):
+                            with gr.Group():
+                                conversion_mode = gr.Dropdown(
+                                    label="Режим преобразования",
+                                    choices=["lead", "back", "lead/back", "full"],
+                                    value="full",
+                                    filterable=False,
+                                    visible=False,
+                                    info="lead - только основной вокал\nback - только бэк-вокал\nlead/back - основной и бэк-вокалы\nfull - весь вокал",
+                                )
+                                with gr.Row():
+                                    pitch1 = gr.Slider(
+                                        -48,
+                                        48,
+                                        value=0,
+                                        step=12,
+                                        label="Высота тона вокала",
                                         interactive=True,
                                     )
-                                    compressor_threshold = gr.Slider(
-                                        -60,
-                                        0,
-                                        value=-16,
-                                        label="Порог",
+                                    pitch2 = gr.Slider(
+                                        -48,
+                                        48,
+                                        value=0,
+                                        step=12,
+                                        label="Высота тона бэк-вокала",
+                                        visible=False,
                                         interactive=True,
                                     )
-                                    compressor_attack = gr.Slider(
-                                        0,
+                                with gr.Row():
+                                    method_pitch = gr.Dropdown(
+                                        label="Метод извлечения тона",
+                                        choices=f0_methods,
+                                        value=f0_methods[0],
+                                        interactive=True,
+                                        filterable=False,
+                                    )
+                                    f0_max = gr.Slider(
+                                        50,
                                         2000,
-                                        value=40,
-                                        label="Время атаки (мс)",
+                                        value=1100,
+                                        step=50,
+                                        label="Верхний лимит определения высоты тона",
                                         interactive=True,
                                     )
-                                    compressor_release = gr.Slider(
-                                        0,
-                                        2000,
-                                        value=100,
-                                        label="Время спада (мс)",
-                                        interactive=True,
-                                    )
+                                with gr.Row():
+                                    with gr.Column(scale=1):
+                                        index_rate = gr.Slider(
+                                            0,
+                                            1,
+                                            value=0,
+                                            step=0.05,
+                                            label="Влияние индекса",
+                                            interactive=True,
+                                        )
+                                        fr = gr.Slider(
+                                            0,
+                                            7,
+                                            value=3,
+                                            step=1,
+                                            label="Радиус фильтра",
+                                            interactive=True,
+                                        )
+                                    with gr.Column(scale=1):
+                                        rms = gr.Slider(
+                                            0,
+                                            1,
+                                            value=0.25,
+                                            step=0.05,
+                                            label="Огибающая громкости",
+                                            interactive=True,
+                                        )
+                                        protect = gr.Slider(
+                                            minimum=0,
+                                            maximum=0.5,
+                                            step=0.01,
+                                            value=0.33,
+                                            label="Защита согласных",
+                                            interactive=True,
+                                        )
+                                hop_mangio_crepe = gr.Slider(
+                                    8,
+                                    512,
+                                    value=128,
+                                    step=8,
+                                    label="Длина шага",
+                                    interactive=True,
+                                    visible=False,
+                                )
+                                with gr.Accordion(label="Эмбеддер", open=False):
+                                    with gr.Group():
+                                        embedder_name = gr.Radio(
+                                            label="Модель Hubert",
+                                            choices=self.fairseq_embedders,
+                                            value=self.fairseq_embedders[0],
+                                        )
+                                        transformers_mode = gr.Checkbox(
+                                            label="Использовать стек Transformers",
+                                            value=False,
+                                            interactive=True,
+                                        )
 
-                            with gr.Tab("Подавление шума"):
-                                with gr.Group():
-                                    with gr.Column(variant="panel"):
-                                        with gr.Row():
-                                            noise_gate_threshold = gr.Slider(
-                                                -60,
-                                                0,
-                                                value=-40,
-                                                label="Порог",
-                                                interactive=True,
-                                            )
-                                            noise_gate_ratio = gr.Slider(
-                                                1,
-                                                20,
-                                                value=8,
-                                                label="Соотношение",
-                                                interactive=True,
-                                            )
-                                        with gr.Row():
-                                            noise_gate_attack = gr.Slider(
-                                                0,
-                                                100,
-                                                value=10,
-                                                label="Время атаки (мс)",
-                                                interactive=True,
-                                            )
-                                            noise_gate_release = gr.Slider(
-                                                0,
-                                                1000,
-                                                value=100,
-                                                label="Время спада (мс)",
-                                                interactive=True,
-                                            )
+                                        @transformers_mode.change(
+                                            inputs=[transformers_mode], outputs=[embedder_name]
+                                        )
+                                        def change_embedders(tr_m):
+                                            if tr_m:
+                                                return gr.update(
+                                                    value=self.transformers_embedders[0],
+                                                    choices=self.transformers_embedders,
+                                                )
+                                            else:
+                                                return gr.update(
+                                                    choices=self.fairseq_embedders,
+                                                    value=self.fairseq_embedders[0],
+                                                )
 
-            with gr.Column(variant="panel"):
+                        with gr.Tab("Настройки сведения аудио"):
+                            gr.Markdown("<center>Изменение громкости</center>", container=True)
+                            with gr.Group():
+                                vocal1_gain = gr.Slider(
+                                    -60,
+                                    60,
+                                    value=-3,
+                                    step=1,
+                                    label="Вокал",
+                                    scale=3,
+                                    interactive=True,
+                                )
+                                vocal2_gain = gr.Slider(
+                                    -60,
+                                    60,
+                                    value=-3,
+                                    step=1,
+                                    label="Бэк-вокал",
+                                    scale=3,
+                                    visible=False,
+                                    interactive=True,
+                                )
+                                instrumental_gain = gr.Slider(
+                                    -60,
+                                    60,
+                                    value=0,
+                                    step=1,
+                                    label="Инструментал",
+                                    scale=3,
+                                    interactive=True,
+                                )
+
+                                output_format = gr.Dropdown(
+                                    label="Формат вывода",
+                                    choices=output_formats,
+                                    value=output_formats[0],
+                                    interactive=True,
+                                    filterable=False,
+                                )
+                                unconv_vocals_check = gr.Checkbox(
+                                    label="Добавить к инструменталу непреобразованный вокал",
+                                    visible=False,
+                                )
+                                use_effects = gr.Checkbox(
+                                    label="Добавить эффекты на голос", value=True
+                                )
+                                with gr.Column(variant="panel", visible=True) as effects_accordion:
+                                    with gr.Tab("Эффекты"):
+                                        with gr.Tab("Эхо"):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    echo_delay = gr.Slider(
+                                                        0,
+                                                        3,
+                                                        value=0,
+                                                        label="Время задержки (сек)",
+                                                        interactive=True,
+                                                    )
+                                                    echo_feedback = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0,
+                                                        label="Обратная связь",
+                                                        interactive=True,
+                                                    )
+                                                    echo_mix = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0,
+                                                        label="Смешение",
+                                                        interactive=True,
+                                                    )
+
+                                        with gr.Tab("Реверберация"):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    reverb_rm_size = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0.1,
+                                                        label="Размер комнаты",
+                                                        interactive=True,
+                                                    )
+                                                    reverb_width = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=1.0,
+                                                        label="Ширина реверберации",
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    reverb_wet = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0.3,
+                                                        label="Уровень влажности",
+                                                        interactive=True,
+                                                    )
+                                                    reverb_dry = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0.8,
+                                                        label="Уровень сухости",
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    reverb_damping = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0.9,
+                                                        label="Уровень демпфирования",
+                                                        interactive=True,
+                                                    )
+
+                                        with gr.Tab("Хорус"):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    chorus_rate_hz = gr.Slider(
+                                                        0,
+                                                        10,
+                                                        value=0,
+                                                        label="Скорость хоруса",
+                                                        interactive=True,
+                                                    )
+                                                    chorus_depth = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0,
+                                                        label="Глубина хоруса",
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    chorus_centre_delay_ms = gr.Slider(
+                                                        0,
+                                                        50,
+                                                        value=0,
+                                                        label="Задержка центра (мс)",
+                                                        interactive=True,
+                                                    )
+                                                    chorus_feedback = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0,
+                                                        label="Обратная связь",
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    chorus_mix = gr.Slider(
+                                                        0,
+                                                        1,
+                                                        value=0,
+                                                        label="Смешение",
+                                                        interactive=True,
+                                                    )
+
+                                    with gr.Tab("Обработка"):
+                                        with gr.Tab("Компрессор"):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    compressor_ratio = gr.Slider(
+                                                        1,
+                                                        50,
+                                                        value=16,
+                                                        label="Соотношение",
+                                                        interactive=True,
+                                                    )
+                                                    compressor_threshold = gr.Slider(
+                                                        -60,
+                                                        0,
+                                                        value=-16,
+                                                        label="Порог",
+                                                        interactive=True,
+                                                    )
+                                                    compressor_attack = gr.Slider(
+                                                        0,
+                                                        2000,
+                                                        value=40,
+                                                        label="Время атаки (мс)",
+                                                        interactive=True,
+                                                    )
+                                                    compressor_release = gr.Slider(
+                                                        0,
+                                                        2000,
+                                                        value=100,
+                                                        label="Время спада (мс)",
+                                                        interactive=True,
+                                                    )
+
+                                        with gr.Tab("Подавление шума"):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    noise_gate_threshold = gr.Slider(
+                                                        -60,
+                                                        0,
+                                                        value=-40,
+                                                        label="Порог",
+                                                        interactive=True,
+                                                    )
+                                                    noise_gate_ratio = gr.Slider(
+                                                        1,
+                                                        20,
+                                                        value=8,
+                                                        label="Соотношение",
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    noise_gate_attack = gr.Slider(
+                                                        0,
+                                                        100,
+                                                        value=10,
+                                                        label="Время атаки (мс)",
+                                                        interactive=True,
+                                                    )
+                                                    noise_gate_release = gr.Slider(
+                                                        0,
+                                                        1000,
+                                                        value=100,
+                                                        label="Время спада (мс)",
+                                                        interactive=True,
+                                                    )
+                        with gr.Tab("Промежуточные файлы"):
+                            with gr.Group():
+                                generated_files_list = gr.Files(
+                                    label="Промежуточные файлы", interactive=False, type="filepath", show_label=False
+                                )
                 final_ai_cover = gr.Audio(
                     label="Финальный результат",
                     interactive=False,
                     show_download_button=True,
                 )
-                generated_files_list = gr.Files(
-                    label="Промежуточные файлы", interactive=False, type="filepath"
-                )
+                with gr.Group():
+                    with gr.Row(equal_height=True):
+                        generate_btn = gr.Button("Сгенерировать кавер", variant="primary")
+                        regenerate_btn = gr.Button(
+                            "Перегенерировать вокал", variant="secondary"
+                        )
+                        remix_btn = gr.Button("Пересвести кавер", variant="huggingface")
 
-                with gr.Row(equal_height=True):
-                    generate_btn = gr.Button("Сгенерировать кавер", variant="primary")
-                    regenerate_btn = gr.Button(
-                        "Перегенерировать вокал", variant="secondary"
-                    )
-                    remix_btn = gr.Button("Пересвести кавер", variant="secondary")
-        status_text = gr.Textbox(label="Статус", interactive=False)
+        status_text = gr.Textbox(label="Статус", interactive=False, visible=False)
 
         method_pitch.change(
             fn=lambda x: gr.update(

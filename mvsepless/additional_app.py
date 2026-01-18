@@ -556,7 +556,7 @@ class AutoEnsembless(Separator, GradioHelper):
                             interactive=True,
                             filterable=False, scale=15
                         )
-                        gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=[]), outputs=list_input_files, trigger_mode="once")
+                        gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files, trigger_mode="once")
                         refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files)
                             
                         @upload.upload(inputs=[upload], outputs=[list_input_files, upload])
@@ -1069,13 +1069,14 @@ class PluginManager(Separator):
 
     def UI(self):
         with gr.Tab("Установка"):
-            upload_plugins_files = gr.File(
-                label="Загрузить плагины",
-                file_types=[".py"],
-                file_count="multiple",
-                interactive=True,
-            )
-            install_plugins_btn = gr.Button("Установить", interactive=True)
+            with gr.Group():
+                upload_plugins_files = gr.File(
+                    label="Загрузить плагины",
+                    file_types=[".py"],
+                    file_count="multiple",
+                    interactive=True,
+                )
+                install_plugins_btn = gr.Button("Установить", interactive=True)
 
             @install_plugins_btn.click(inputs=[upload_plugins_files])
             def upload_plugin_list(files):
