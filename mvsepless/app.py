@@ -407,7 +407,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 value=None,
                                 interactive=True, scale=14
                             )
-                            list_separations.change(lambda x: gr.update(value=str(self.history.get(x))), inputs=[list_separations], outputs=[sep_state])
+                            list_separations.change(lambda x: gr.update(value=str(self.history.get(x))), inputs=[list_separations], outputs=[sep_state], trigger_mode="once")
                             refresh_separations_btn = gr.Button("Обновить", scale=2, interactive=True)
                             refresh_separations_btn.click(lambda: self.return_list(self.history.get_list(), none=True), outputs=[list_separations])
                             gr.on(fn=lambda: self.return_list(self.history.get_list(), none=True), outputs=[list_separations])
@@ -573,7 +573,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                             container=False, lines=3, interactive=False, max_lines=3, visible=False
                         )
                         download_dwm_button = gr.Button("Скачать")
-                        select_dwm_preset.change(lambda x: gr.update(value=self.parse_models_from_dwm_preset(x)), inputs=select_dwm_preset, outputs=select_dwm_names)
+                        select_dwm_preset.change(lambda x: gr.update(value=self.parse_models_from_dwm_preset(x)), inputs=select_dwm_preset, outputs=select_dwm_names, trigger_mode="once")
                         download_dwm_button.click(lambda: gr.update(visible=True), outputs=dwm_status).then(lambda x: (self.batch_download(x), gr.update(visible=False)), inputs=select_dwm_names, outputs=[gr.State(None), dwm_status])
                 with gr.Tab("Удалить все модели"):
                     gr.Markdown("<h3><center>Это действие необратимо</center></h3>")

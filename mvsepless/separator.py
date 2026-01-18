@@ -25,25 +25,37 @@ class MvseplessModelManager:
         return [mn for mn in self.models_info]
 
     def get_stems(self, model_name):
-        return [
-            stem
-            for stem in self.models_info
-            .get(model_name)
-            .get("stems", [])
-        ]
-
+        if model_name is not None and model_name != "":
+            return [
+                stem
+                for stem in self.models_info
+                .get(model_name)
+                .get("stems", [])
+            ]
+        else:
+            return []
+        
     def get_id(self, model_type, model_name):
-        return self.models_info.get(model_name).get("id", 0)
+        if model_name is not None and model_name != "":
+            return self.models_info.get(model_name).get("id", 0)
+        else:
+            return 0
 
     def get_tgt_inst(self, model_name):
-        return (
-            self.models_info
-            .get(model_name)
-            .get("target_instrument", None)
-        )
+        if model_name is not None and model_name != "":
+            return (
+                self.models_info
+                .get(model_name)
+                .get("target_instrument", None)
+            )
+        else:
+            return None
 
     def get_category(self, model_name):
-        return self.models_info.get(model_name).get("category", "")
+        if model_name is not None and model_name != "":
+            return self.models_info.get(model_name).get("category", "")
+        else:
+            return ""
 
     def get_list_mn_from_category(self, category: list, model_type: list | None = None):
         list_models = []

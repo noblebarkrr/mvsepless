@@ -96,37 +96,37 @@ class VbachModelManager:
         )
         self.huberts_fairseq_dict = {
             "hubert_base": {
-                "url": "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/hubert_base.pt",
+                "url": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/fairseq/hubert_base.pt?download=true",
                 "local_path": os.path.join(
                     self.custom_fairseq_huberts_dir, "hubert_base.pt"
                 ),
             },
             "contentvec_base": {
-                "url": "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/contentvec_base.pt",
+                "url": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/fairseq/contentvec_base.pt?download=true",
                 "local_path": os.path.join(
                     self.custom_fairseq_huberts_dir, "contentvec_base.pt"
                 ),
             },
             "korean_hubert_base": {
-                "url": "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/korean_hubert_base.pt",
+                "url": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/fairseq/korean_hubert_base.pt?download=true",
                 "local_path": os.path.join(
                     self.custom_fairseq_huberts_dir, "korean_hubert_base.pt"
                 ),
             },
             "chinese_hubert_base": {
-                "url": "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/chinese_hubert_base.pt",
+                "url": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/fairseq/chinese_hubert_base.pt?download=true",
                 "local_path": os.path.join(
                     self.custom_fairseq_huberts_dir, "chinese_hubert_base.pt"
                 ),
             },
             "portuguese_hubert_base": {
-                "url": "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/portuguese_hubert_base.pt",
+                "url": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/fairseq/portuguese_hubert_base.pt?download=true",
                 "local_path": os.path.join(
                     self.custom_fairseq_huberts_dir, "portuguese_hubert_base.pt"
                 ),
             },
             "japanese_hubert_base": {
-                "url": "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/japanese_hubert_base.pt",
+                "url": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/fairseq/japanese_hubert_base.pt?download=true",
                 "local_path": os.path.join(
                     self.custom_fairseq_huberts_dir, "japanese_hubert_base.pt"
                 ),
@@ -137,8 +137,8 @@ class VbachModelManager:
                 "base_dir": os.path.join(
                     self.custom_transformers_huberts_dir, "contentvec"
                 ),
-                "url_bin": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/contentvec/pytorch_model.bin",
-                "url_json": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/contentvec/config.json",
+                "url_bin": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/contentvec/pytorch_model.bin?download=true",
+                "url_json": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/contentvec/config.json?download=true",
                 "local_bin": os.path.join(
                     self.custom_transformers_huberts_dir,
                     "contentvec",
@@ -150,8 +150,8 @@ class VbachModelManager:
             },
             "spin": {
                 "base_dir": os.path.join(self.custom_transformers_huberts_dir, "spin"),
-                "url_bin": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/spin/pytorch_model.bin",
-                "url_json": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/spin/config.json",
+                "url_bin": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/spin/pytorch_model.bin?download=true",
+                "url_json": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/spin/config.json?download=true",
                 "local_bin": os.path.join(
                     self.custom_transformers_huberts_dir, "spin", "pytorch_model.bin"
                 ),
@@ -163,8 +163,8 @@ class VbachModelManager:
                 "base_dir": os.path.join(
                     self.custom_transformers_huberts_dir, "spinv2"
                 ),
-                "url_bin": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/spin-v2/pytorch_model.bin",
-                "url_json": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/spin-v2/config.json",
+                "url_bin": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/spinv2/pytorch_model.bin?download=true",
+                "url_json": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/spinv2/config.json?download=true",
                 "local_bin": os.path.join(
                     self.custom_transformers_huberts_dir, "spinv2", "pytorch_model.bin"
                 ),
@@ -176,8 +176,8 @@ class VbachModelManager:
                 "base_dir": os.path.join(
                     self.custom_transformers_huberts_dir, "chinese_hubert_base"
                 ),
-                "url_bin": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/chinese_hubert_base/pytorch_model.bin",
-                "url_json": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/chinese_hubert_base/config.json",
+                "url_bin": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/chinese_hubert_base/pytorch_model.bin?download=true",
+                "url_json": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/chinese_hubert_base/config.json?download=true",
                 "local_bin": os.path.join(
                     self.custom_transformers_huberts_dir,
                     "chinese_hubert_base",
@@ -193,8 +193,8 @@ class VbachModelManager:
                 "base_dir": os.path.join(
                     self.custom_transformers_huberts_dir, "japanese_hubert_base"
                 ),
-                "url_bin": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/japanese_hubert_base/pytorch_model.bin",
-                "url_json": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/japanese_hubert_base/config.json",
+                "url_bin": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/japanese_hubert_base/pytorch_model.bin?download=true",
+                "url_json": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/japanese_hubert_base/config.json?download=true",
                 "local_bin": os.path.join(
                     self.custom_transformers_huberts_dir,
                     "japanese_hubert_base",
@@ -210,8 +210,8 @@ class VbachModelManager:
                 "base_dir": os.path.join(
                     self.custom_transformers_huberts_dir, "korean_hubert_base"
                 ),
-                "url_bin": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/korean_hubert_base/pytorch_model.bin",
-                "url_json": "https://huggingface.co/IAHispano/Applio/resolve/main/Resources/embedders/korean_hubert_base/config.json",
+                "url_bin": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/korean_hubert_base/pytorch_model.bin?download=true",
+                "url_json": "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/transformers/korean_hubert_base/config.json?download=true",
                 "local_bin": os.path.join(
                     self.custom_transformers_huberts_dir,
                     "korean_hubert_base",
@@ -226,15 +226,15 @@ class VbachModelManager:
         }
         self.requirements = [
             [
-                "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/rmvpe.pt",
+                "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/rmvpe.pt?download=true",
                 self.rmvpe_path,
             ],
             [
-                "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/hpa-rmvpe.pt",
+                "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/hpa_rmvpe.pt?download=true",
                 self.hpa_rmvpe_path,
             ],
             [
-                "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/fcpe.pt",
+                "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/fcpe.pt?download=true",
                 self.fcpe_path,
             ],
         ]
@@ -245,7 +245,6 @@ class VbachModelManager:
         self.download_requirements()
         self.check_hubert("hubert_base")
         self.check_and_load()
-        pass
 
     def check_hubert(self, embedder_name):
         if embedder_name in self.huberts_fairseq_dict:

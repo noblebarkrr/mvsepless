@@ -9,8 +9,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/KimberleyJSN/melbandroformer/resolve/main/MelBandRoformer.ckpt?download=true",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/KimberleyJensen/config_vocals_mel_band_roformer_kj.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_kim.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_kim_config.yaml?download=true"
     },
     "mbr_wsa": {
         "model_type": "mel_band_roformer",
@@ -22,8 +22,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/smulelabs/windowed-roformer/resolve/main/mbr-win10-sink8.ckpt?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/config_windowed_roformer_by_smulelabs_wsa.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_wsa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_wsa_config.yaml?download=true"
     },
     "mbr_instvoc_duality1_unwa": {
         "model_type": "mel_band_roformer",
@@ -35,8 +35,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/melband_roformer_instvoc_duality_v1.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/config_melbandroformer_instvoc_duality.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instvoc_duality1_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instvoc_duality1_unwa_config.yaml?download=true"
     },
     "mbr_instvoc_duality2_unwa": {
         "model_type": "mel_band_roformer",
@@ -48,8 +48,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/melband_roformer_instvox_duality_v2.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/resolve/main/config_melbandroformer_instvoc_duality.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instvoc_duality2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instvoc_duality2_unwa_config.yaml?download=true"
     },
     "mbr_kimft1_unwa": {
         "model_type": "mel_band_roformer",
@@ -61,8 +61,8 @@
             "other"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft1_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft1_unwa_config.yaml?download=true"
     },
     "mbr_kimft2_unwa": {
         "model_type": "mel_band_roformer",
@@ -74,8 +74,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft2.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2_unwa_config.yaml?download=true"
     },
     "mbr_kimft2b_unwa": {
         "model_type": "mel_band_roformer",
@@ -87,8 +87,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft2_bleedless.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2b_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2b_unwa_config.yaml?download=true"
     },
     "mbr_kimft3_prev_unwa": {
         "model_type": "mel_band_roformer",
@@ -100,8 +100,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft3_prev.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft3_prev_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft3_prev_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta1_unwa": {
         "model_type": "mel_band_roformer",
@@ -113,8 +113,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/melband_roformer_big_beta1.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/config_melbandroformer_big.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta1_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta1_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta2_unwa": {
         "model_type": "mel_band_roformer",
@@ -126,8 +126,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/melband_roformer_big_beta2.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/config_melbandroformer_big.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta2_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta3_unwa": {
         "model_type": "mel_band_roformer",
@@ -139,8 +139,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/melband_roformer_big_beta3.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/config_melbandroformer_big.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta3_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta3_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta4_unwa": {
         "model_type": "mel_band_roformer",
@@ -152,8 +152,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/melband_roformer_big_beta4.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/config_melbandroformer_big_beta4.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta4_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta4_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta5e_unwa": {
         "model_type": "mel_band_roformer",
@@ -165,8 +165,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta5e.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta5e.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta5e_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta5e_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta6_unwa": {
         "model_type": "mel_band_roformer",
@@ -178,8 +178,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6_unwa_config.yaml?download=true"
     },
     "mbr_bigbeta6x_unwa": {
         "model_type": "mel_band_roformer",
@@ -191,8 +191,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6x.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6x.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6x_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6x_unwa_config.yaml?download=true"
     },
     "mbr_inst1_unwa": {
         "model_type": "mel_band_roformer",
@@ -204,8 +204,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/melband_roformer_inst_v1.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1_unwa_config.yaml?download=true"
     },
     "mbr_inst1+_unwa": {
         "model_type": "mel_band_roformer",
@@ -217,8 +217,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1_plus_test.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1+_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1+_unwa_config.yaml?download=true"
     },
     "mbr_inst1e_unwa": {
         "model_type": "mel_band_roformer",
@@ -230,8 +230,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1e.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1e_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1e_unwa_config.yaml?download=true"
     },
     "mbr_inst1e+_unwa": {
         "model_type": "mel_band_roformer",
@@ -243,8 +243,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1e_plus.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1e+_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1e+_unwa_config.yaml?download=true"
     },
     "mbr_inst2_unwa": {
         "model_type": "mel_band_roformer",
@@ -256,8 +256,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/melband_roformer_inst_v2.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst_v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst2_unwa_config.yaml?download=true"
     },
     "mbr_small_unwa": {
         "model_type": "mel_band_roformer",
@@ -269,8 +269,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-small/resolve/main/melband_roformer_small_v1.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-small/resolve/main/config_melbandroformer_small.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_small_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_small_unwa_config.yaml?download=true"
     },
     "mbr_bleed_supressor_unwa_97chris": {
         "model_type": "mel_band_roformer",
@@ -282,8 +282,8 @@
             "Bleed"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/jarredou/bleed_suppressor_melband_rofo_by_unwa_97chris/resolve/main/bleed_suppressor_v1.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/bleed_suppressor_melband_rofo_by_unwa_97chris/resolve/main/config_bleed_suppressor_v1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bleed_supressor_unwa_97chris.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bleed_supressor_unwa_97chris_config.yaml?download=true"
     },
     "mbr_inst_becruily": {
         "model_type": "mel_band_roformer",
@@ -295,8 +295,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/mel_band_roformer_instrumental_becruily.ckpt?download=true",
-        "config_url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/config_instrumental_becruily.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_becruily.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_becruily_config.yaml?download=true"
     },
     "mbr_guitar_becruily": {
         "model_type": "mel_band_roformer",
@@ -308,8 +308,8 @@
             "Other"
         ],
         "target_instrument": "Guitar",
-        "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-guitar/resolve/main/becruily_guitar.ckpt?download=true",
-        "config_url": "https://huggingface.co/becruily/mel-band-roformer-guitar/resolve/main/config_guitar_becruily.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_guitar_becruily.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_guitar_becruily_config.yaml?download=true"
     },
     "mbr_karaoke_becruily": {
         "model_type": "mel_band_roformer",
@@ -321,8 +321,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-karaoke/resolve/main/mel_band_roformer_karaoke_becruily.ckpt?download=true",
-        "config_url": "https://huggingface.co/becruily/mel-band-roformer-karaoke/resolve/main/config_karaoke_becruily.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_becruily.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_becruily_config.yaml?download=true"
     },
     "mbr_vocals_becruily": {
         "model_type": "mel_band_roformer",
@@ -334,8 +334,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/mel_band_roformer_vocals_becruily.ckpt?download=true",
-        "config_url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/config_vocals_becruily.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_becruily.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_becruily_config.yaml?download=true"
     },
     "mbr_deux_becruily": {
         "model_type": "mel_band_roformer",
@@ -347,8 +347,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/becruily/mel-band-roformer-deux/resolve/main/becruily_deux.ckpt?download=true",
-        "config_url": "https://huggingface.co/becruily/mel-band-roformer-deux/resolve/main/config_deux_becruily.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_deux_becruily.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_deux_becruily_config.yaml?download=true"
     },
     "mbr_syhft1": {
         "model_type": "mel_band_roformer",
@@ -360,8 +360,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/MelBandRoformerSYHFT.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/config_vocals_mel_band_roformer_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft1_config.yaml?download=true"
     },
     "mbr_syhft2": {
         "model_type": "mel_band_roformer",
@@ -373,8 +373,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTV2/resolve/main/MelBandRoformerSYHFTV2.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/config_vocals_mel_band_roformer_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft2_config.yaml?download=true"
     },
     "mbr_syhft2.5": {
         "model_type": "mel_band_roformer",
@@ -386,8 +386,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTV2.5/resolve/main/MelBandRoformerSYHFTV2.5.ckpt/MelBandRoformerSYHFTV2.5.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/config_vocals_mel_band_roformer_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft2.5.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft2.5_config.yaml?download=true"
     },
     "mbr_syhft3": {
         "model_type": "mel_band_roformer",
@@ -399,8 +399,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTV3Epsilon/resolve/main/MelBandRoformerSYHFTV3Epsilon.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/config_vocals_mel_band_roformer_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft3.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft3_config.yaml?download=true"
     },
     "mbr_bigsyhft1fast": {
         "model_type": "mel_band_roformer",
@@ -412,8 +412,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerBigSYHFTV1Fast/resolve/main/MelBandRoformerBigSYHFTV1.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerBigSYHFTV1Fast/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigsyhft1fast.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigsyhft1fast_config.yaml?download=true"
     },
     "mbr_syhftbeta1": {
         "model_type": "mel_band_roformer",
@@ -425,8 +425,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerMergedSYHFTBeta1/resolve/main/merge_syhft.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFT/resolve/main/config_vocals_mel_band_roformer_ft.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftbeta1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftbeta1_config.yaml?download=true"
     },
     "mbr_syhftB1_1": {
         "model_type": "mel_band_roformer",
@@ -438,8 +438,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/model.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_1_config.yaml?download=true"
     },
     "mbr_syhftB1_2": {
         "model_type": "mel_band_roformer",
@@ -451,8 +451,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/model2.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_2_config.yaml?download=true"
     },
     "mbr_syhftB1_3": {
         "model_type": "mel_band_roformer",
@@ -464,8 +464,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/model3.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_3.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_3_config.yaml?download=true"
     },
     "mbr_syhft_4stem": {
         "model_type": "mel_band_roformer",
@@ -479,8 +479,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/MelBandRoformer4StemFTLarge.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft_4stem.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft_4stem_config.yaml?download=true"
     },
     "mbr_syhft_4stem2": {
         "model_type": "mel_band_roformer",
@@ -494,8 +494,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/ver2.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft_4stem2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft_4stem2_config.yaml?download=true"
     },
     "mbr_inst_1652_essid": {
         "model_type": "mel_band_roformer",
@@ -507,8 +507,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/3960860f7895c87a12707ca6b378df2b3c68e2c0/model_mel_band_roformer_ep_17_sdr_16.5244.ckpt?download=true",
-        "config_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/4768859bd59bc699d33f4567e82082993dde7eb9/config_vocals_mel_band_roformer_essid.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_1652_essid.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_1652_essid_config.yaml?download=true"
     },
     "mbr_inst_1681_essid": {
         "model_type": "mel_band_roformer",
@@ -520,8 +520,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/main/essid_mel_inst_old.ckpt?download=true",
-        "config_url": "https://huggingface.co/Essid/Essid-MelBandRoformer/resolve/4768859bd59bc699d33f4567e82082993dde7eb9/config_vocals_mel_band_roformer_essid.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_1681_essid.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_1681_essid_config.yaml?download=true"
     },
     "mbr_instfv1_gabox": {
         "model_type": "mel_band_roformer",
@@ -533,8 +533,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv1.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv1_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv1_gabox_config.yaml?download=true"
     },
     "mbr_instfv2_gabox": {
         "model_type": "mel_band_roformer",
@@ -546,8 +546,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv2.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv2_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv2_gabox_config.yaml?download=true"
     },
     "mbr_instfv3_gabox": {
         "model_type": "mel_band_roformer",
@@ -559,8 +559,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv3.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv3_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv3_gabox_config.yaml?download=true"
     },
     "mbr_instfv4_gabox": {
         "model_type": "mel_band_roformer",
@@ -572,8 +572,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_Fv4.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv4_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv4_gabox_config.yaml?download=true"
     },
     "mbr_instfv4n_gabox": {
         "model_type": "mel_band_roformer",
@@ -585,8 +585,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_Fv4Noise.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv4n_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv4n_gabox_config.yaml?download=true"
     },
     "mbr_instfv5_gabox": {
         "model_type": "mel_band_roformer",
@@ -598,8 +598,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV5.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv5_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv5_gabox_config.yaml?download=true"
     },
     "mbr_instfv5n_gabox": {
         "model_type": "mel_band_roformer",
@@ -611,8 +611,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV5N.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv5n_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv5n_gabox_config.yaml?download=true"
     },
     "mbr_instfv6_gabox": {
         "model_type": "mel_band_roformer",
@@ -624,8 +624,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV6.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv6_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv6_gabox_config.yaml?download=true"
     },
     "mbr_instfv6n_gabox": {
         "model_type": "mel_band_roformer",
@@ -637,8 +637,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV6N.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv6n_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv6n_gabox_config.yaml?download=true"
     },
     "mbr_instfv7_gabox": {
         "model_type": "mel_band_roformer",
@@ -650,8 +650,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxV7.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7_gabox_config.yaml?download=true"
     },
     "mbr_instfv7n_gabox": {
         "model_type": "mel_band_roformer",
@@ -663,8 +663,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV7N.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7n_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7n_gabox_config.yaml?download=true"
     },
     "mbr_instfv7+_gabox": {
         "model_type": "mel_band_roformer",
@@ -676,8 +676,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/5fba9605d4b6bc1a31c04c50d08d757c5107d23f/melbandroformers/experimental/instv7plus.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7+_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7+_gabox_config.yaml?download=true"
     },
     "mbr_instfv7z_gabox": {
         "model_type": "mel_band_roformer",
@@ -689,8 +689,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv7z.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7z_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7z_gabox_config.yaml?download=true"
     },
     "mbr_instfv8_gabox": {
         "model_type": "mel_band_roformer",
@@ -702,8 +702,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv8.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv8_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv8_gabox_config.yaml?download=true"
     },
     "mbr_instfv8b_gabox": {
         "model_type": "mel_band_roformer",
@@ -715,8 +715,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Inst_FV8b.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv8b_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv8b_gabox_config.yaml?download=true"
     },
     "mbr_instfv9_gabox": {
         "model_type": "mel_band_roformer",
@@ -728,8 +728,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Inst_Fv9.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv9_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv9_gabox_config.yaml?download=true"
     },
     "mbr_instfv9_2_gabox": {
         "model_type": "mel_band_roformer",
@@ -741,8 +741,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv9.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv9_2_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv9_2_gabox_config.yaml?download=true"
     },
     "mbr_instfv10_gabox": {
         "model_type": "mel_band_roformer",
@@ -754,8 +754,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV10.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv10_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv10_gabox_config.yaml?download=true"
     },
     "mbr_instflowersv10_gabox": {
         "model_type": "mel_band_roformer",
@@ -767,8 +767,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFlowersV10.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/v10.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instflowersv10_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instflowersv10_gabox_config.yaml?download=true"
     },
     "mbr_instfvx_gabox": {
         "model_type": "mel_band_roformer",
@@ -780,8 +780,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFVX.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfvx_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfvx_gabox_config.yaml?download=true"
     },
     "mbr_instbv1_gabox": {
         "model_type": "mel_band_roformer",
@@ -793,8 +793,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv1.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv1_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv1_gabox_config.yaml?download=true"
     },
     "mbr_instbv2_gabox": {
         "model_type": "mel_band_roformer",
@@ -806,8 +806,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv2.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv2_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv2_gabox_config.yaml?download=true"
     },
     "mbr_instbv3_gabox": {
         "model_type": "mel_band_roformer",
@@ -819,8 +819,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxBv3.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv3_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv3_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv1_gabox": {
         "model_type": "mel_band_roformer",
@@ -832,8 +832,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gaboxFv1.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv1_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv1_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv2_gabox": {
         "model_type": "mel_band_roformer",
@@ -845,8 +845,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gaboxFv2.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv2_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv2_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv3_gabox": {
         "model_type": "mel_band_roformer",
@@ -858,8 +858,8 @@
             "Instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_Fv3.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv3_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv3_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv4_gabox": {
         "model_type": "mel_band_roformer",
@@ -871,8 +871,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv4.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv4_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv4_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv5_gabox": {
         "model_type": "mel_band_roformer",
@@ -884,8 +884,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv5.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv5_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv5_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv6_gabox": {
         "model_type": "mel_band_roformer",
@@ -897,8 +897,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv6.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv6_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv6_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv7_beta1_gabox": {
         "model_type": "mel_band_roformer",
@@ -910,8 +910,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/vocfv7beta1.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta1_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta1_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv7_beta2_gabox": {
         "model_type": "mel_band_roformer",
@@ -923,8 +923,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/vocfv7beta2.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta2_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta2_gabox_config.yaml?download=true"
     },
     "mbr_vocalsfv7_beta3_gabox": {
         "model_type": "mel_band_roformer",
@@ -936,8 +936,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/vocfv7beta3.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta3_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta3_gabox_config.yaml?download=true"
     },
     "mbr_karaoke25022025_gabox": {
         "model_type": "mel_band_roformer",
@@ -949,8 +949,8 @@
             "other"
         ],
         "target_instrument": "karaoke",
-        "checkpoint_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/gabox_karaoke_25_02_2025.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke25022025_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke25022025_gabox_config.yaml?download=true"
     },
     "mbr_karaoke28022025_gabox": {
         "model_type": "mel_band_roformer",
@@ -962,8 +962,8 @@
             "other"
         ],
         "target_instrument": "karaoke",
-        "checkpoint_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/gabox_karaoke_28_02_2025.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke28022025_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke28022025_gabox_config.yaml?download=true"
     },
     "mbr_karaoke1_gabox": {
         "model_type": "mel_band_roformer",
@@ -975,8 +975,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/Karaoke_GaboxV1.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/karaokegabox_1750911344.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke1_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke1_gabox_config.yaml?download=true"
     },
     "mbr_karaoke2_gabox": {
         "model_type": "mel_band_roformer",
@@ -988,8 +988,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Karaoke_GaboxV2.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/karaokegabox_1750911344.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke2_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke2_gabox_config.yaml?download=true"
     },
     "mbr_leadvoc_dereverb_gabox": {
         "model_type": "mel_band_roformer",
@@ -1001,8 +1001,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/Lead_VocalDereverb.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/27e73ca2beec0ab7daa46e366159753a166612e1/melbandroformers/karaoke/karaokegabox_1750911344.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_leadvoc_dereverb_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_leadvoc_dereverb_gabox_config.yaml?download=true"
     },
     "mbr_denoise_debleed_gabox": {
         "model_type": "mel_band_roformer",
@@ -1014,8 +1014,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/denoisedebleed.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_debleed_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_debleed_gabox_config.yaml?download=true"
     },
     "mbr_karaoke_fusion_gonzaluigi": {
         "model_type": "mel_band_roformer",
@@ -1027,8 +1027,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_standard.ckpt?download=true",
-        "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/melband_karaokefusion_gonza.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_gonzaluigi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_gonzaluigi_config.yaml?download=true"
     },
     "mbr_karaoke_fusion_aggr_gonzaluigi": {
         "model_type": "mel_band_roformer",
@@ -1040,8 +1040,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_aggressive.ckpt?download=true",
-        "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/melband_karaokefusion_gonza.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_aggr_gonzaluigi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_aggr_gonzaluigi_config.yaml?download=true"
     },
     "mbr_bve_gonzaluigi": {
         "model_type": "mel_band_roformer",
@@ -1053,8 +1053,8 @@
             "Back"
         ],
         "target_instrument": "Lead",
-        "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Roformer-BVE-Gonzaluigi/resolve/main/mel_band_roformer_bve_gonza.ckpt?download=true",
-        "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Roformer-BVE-Gonzaluigi/resolve/main/config_bve_gonza.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bve_gonzaluigi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bve_gonzaluigi_config.yaml?download=true"
     },
     "mbr_karaoke_fusion2_aggr_gonzaluigi": {
         "model_type": "mel_band_roformer",
@@ -1066,8 +1066,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_agg_v2.ckpt?download=true",
-        "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/karaoke_fusion_v2_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion2_aggr_gonzaluigi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion2_aggr_gonzaluigi_config.yaml?download=true"
     },
     "mbr_karaoke_fusion_total_aggr_gonzaluigi": {
         "model_type": "mel_band_roformer",
@@ -1079,8 +1079,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/mel_band_karaoke_fusion_total.ckpt?download=true",
-        "config_url": "https://huggingface.co/Gonzaluigi/Mel-Band-Karaoke-Fusion/resolve/main/karaoke_fusion_total_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_total_aggr_gonzaluigi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_total_aggr_gonzaluigi_config.yaml?download=true"
     },
     "mbr_dereverb_anvuew": {
         "model_type": "mel_band_roformer",
@@ -1092,8 +1092,8 @@
             "noreverb"
         ],
         "target_instrument": "noreverb",
-        "checkpoint_url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew_sdr_19.1729.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_anvuew_config.yaml?download=true"
     },
     "mbr_dereverb_less_aggr_anvuew": {
         "model_type": "mel_band_roformer",
@@ -1105,8 +1105,8 @@
             "noreverb"
         ],
         "target_instrument": "noreverb",
-        "checkpoint_url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_less_aggressive_anvuew_sdr_18.8050.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_less_aggr_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_less_aggr_anvuew_config.yaml?download=true"
     },
     "mbr_dereverb_mono_anvuew": {
         "model_type": "mel_band_roformer",
@@ -1118,8 +1118,8 @@
             "noreverb"
         ],
         "target_instrument": "noreverb",
-        "checkpoint_url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_mono_anvuew_sdr_20.4029.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/resolve/main/dereverb_mel_band_roformer_anvuew.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_mono_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_mono_anvuew_config.yaml?download=true"
     },
     "mbr_aspiration_sucial": {
         "model_type": "mel_band_roformer",
@@ -1131,8 +1131,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/Aspiration_Mel_Band_Roformer/resolve/main/aspiration_mel_band_roformer_less_aggr_sdr_18.1201.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Aspiration_Mel_Band_Roformer/resolve/main/config_aspiration_mel_band_roformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_aspiration_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_aspiration_sucial_config.yaml?download=true"
     },
     "mbr_dereverb_echo1_sucial": {
         "model_type": "mel_band_roformer",
@@ -1144,8 +1144,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb-echo_mel_band_roformer_sdr_10.0169.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb-echo_mel_band_roformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_echo1_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_echo1_sucial_config.yaml?download=true"
     },
     "mbr_debigreverb_sucial": {
         "model_type": "mel_band_roformer",
@@ -1157,8 +1157,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/de_big_reverb_mbr_ep_362.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb_echo_mbr_v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_debigreverb_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_debigreverb_sucial_config.yaml?download=true"
     },
     "mbr_desuperbigreverb_sucial": {
         "model_type": "mel_band_roformer",
@@ -1170,8 +1170,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/de_super_big_reverb_mbr_ep_346.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb_echo_mbr_v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_desuperbigreverb_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_desuperbigreverb_sucial_config.yaml?download=true"
     },
     "mbr_dereverb-echo_fused_sucial": {
         "model_type": "mel_band_roformer",
@@ -1183,8 +1183,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb_echo_mbr_fused_0.5_v2_0.25_big_0.25_super.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb_echo_mbr_v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb-echo_fused_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb-echo_fused_sucial_config.yaml?download=true"
     },
     "mbr_dereverb-echo2_sucial": {
         "model_type": "mel_band_roformer",
@@ -1196,8 +1196,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/dereverb_echo_mbr_v2_sdr_dry_13.4843.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/resolve/main/config_dereverb_echo_mbr_v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb-echo2_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb-echo2_sucial_config.yaml?download=true"
     },
     "mbr_karaoke_aufr33_viperx": {
         "model_type": "mel_band_roformer",
@@ -1209,8 +1209,8 @@
             "other"
         ],
         "target_instrument": "karaoke",
-        "checkpoint_url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_aufr33_viperx.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_aufr33_viperx_config.yaml?download=true"
     },
     "mbr_denoise_aufr33": {
         "model_type": "mel_band_roformer",
@@ -1222,8 +1222,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/model_mel_band_roformer_denoise.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_aufr33.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_aufr33_config.yaml?download=true"
     },
     "mbr_denoise_aggr_aufr33": {
         "model_type": "mel_band_roformer",
@@ -1235,8 +1235,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/aufr33_MelBand_Denoise/resolve/main/model_mel_band_roformer_denoise.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_aggr_aufr33.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_aggr_aufr33_config.yaml?download=true"
     },
     "mbr_crowd_aufr33_viperx": {
         "model_type": "mel_band_roformer",
@@ -1248,8 +1248,8 @@
             "other"
         ],
         "target_instrument": "crowd",
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.4/mel_band_roformer_crowd_aufr33_viperx_sdr_8.7144.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.4/model_mel_band_roformer_crowd.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_crowd_aufr33_viperx.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_crowd_aufr33_viperx_config.yaml?download=true"
     },
     "mbr_vocals_viperx": {
         "model_type": "mel_band_roformer",
@@ -1261,8 +1261,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/model_mel_band_roformer_ep_3005_sdr_11.4360.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_viperx.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_viperx_config.yaml?download=true"
     },
     "mbr_vocalsf_aname": {
         "model_type": "mel_band_roformer",
@@ -1274,8 +1274,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/FullnessVocalModel.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsf_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsf_aname_config.yaml?download=true"
     },
     "mbr_kimft1_aname": {
         "model_type": "mel_band_roformer",
@@ -1287,8 +1287,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/model_kim.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft1_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft1_aname_config.yaml?download=true"
     },
     "mbr_kimft2_aname": {
         "model_type": "mel_band_roformer",
@@ -1300,8 +1300,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/model_kim_2.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2_aname_config.yaml?download=true"
     },
     "mbr_kimft2f_aname": {
         "model_type": "mel_band_roformer",
@@ -1313,8 +1313,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/model_kim_2_fullness.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2f_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2f_aname_config.yaml?download=true"
     },
     "mbr_kimft3_aname": {
         "model_type": "mel_band_roformer",
@@ -1326,8 +1326,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/model_kim_3.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft3_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft3_aname_config.yaml?download=true"
     },
     "mbr_small_aname": {
         "model_type": "mel_band_roformer",
@@ -1339,8 +1339,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/resolve/main/mel_band_roformer_small.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_small_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_small_aname_config.yaml?download=true"
     },
     "mbr_duality1_aname": {
         "model_type": "mel_band_roformer",
@@ -1352,8 +1352,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Mel-Band-Roformer_Duality/resolve/main/duality_v1.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/Mel-Band-Roformer_Duality/resolve/main/config_v1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_duality1_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_duality1_aname_config.yaml?download=true"
     },
     "mbr_4stemlarge1_aname": {
         "model_type": "mel_band_roformer",
@@ -1367,8 +1367,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/mel_band_roformer_4stems_large_ver1.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemlarge1_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemlarge1_aname_config.yaml?download=true"
     },
     "mbr_4stemlarge2_aname": {
         "model_type": "mel_band_roformer",
@@ -1382,8 +1382,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Test/resolve/main/4stemsver2.ckpt?download=true",
-        "config_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemlarge2_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemlarge2_aname_config.yaml?download=true"
     },
     "mbr_4stemxl1_aname": {
         "model_type": "mel_band_roformer",
@@ -1397,8 +1397,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/mel_band_roformer_4stems_xl_ver1.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/melbandroformer4stems/resolve/main/config_xl.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemxl1_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemxl1_aname_config.yaml?download=true"
     },
     "mbr_percussion_yolkispaliks": {
         "model_type": "mel_band_roformer",
@@ -1410,8 +1410,8 @@
             "other"
         ],
         "target_instrument": "percussions",
-        "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_mel_band_roformer_ep_11_sdr_7.6853.ckpt?download=true",
-        "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_drums_musdb18_moises_mel_band_roformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_percussion_yolkispaliks.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_percussion_yolkispaliks_config.yaml?download=true"
     },
     "mbr_inst_metal_prev_meskvlla33": {
         "model_type": "mel_band_roformer",
@@ -1423,8 +1423,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/meskvlla33/metal_roformer_preview/resolve/main/metal_roformer_inst_mesk_preview.ckpt?download=true",
-        "config_url": "https://huggingface.co/meskvlla33/metal_roformer_preview/resolve/main/config_inst_metal_roformer_mesk.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_metal_prev_meskvlla33.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_metal_prev_meskvlla33_config.yaml?download=true"
     },
     "mbr_neo_inst_vfx": {
         "model_type": "mel_band_roformer",
@@ -1436,8 +1436,8 @@
             "Instrumental"
         ],
         "target_instrument": "Instrumental",
-        "checkpoint_url": "https://huggingface.co/natanworkspace/melband_roformer/resolve/main/Neo_InstVFX.ckpt?download=true",
-        "config_url": "https://huggingface.co/natanworkspace/melband_roformer/resolve/main/config_neo_inst.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_neo_inst_vfx.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_neo_inst_vfx_config.yaml?download=true"
     },
     "bs_cr_4stem_zf_turbo": {
         "model_type": "bs_roformer",
@@ -1451,8 +1451,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.18/fused_model_bs_conformer_sdr_9.18.ckpt",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/bs_conformer_4_stems_zf_turbo.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_cr_4stem_zf_turbo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_cr_4stem_zf_turbo_config.yaml?download=true"
     },
     "bs_drums_beatloo_labs": {
         "model_type": "bs_roformer",
@@ -1464,8 +1464,8 @@
             "other"
         ],
         "target_instrument": "drums",
-        "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_drums_bs_roformer_ep_12_sdr_7.2279.ckpt?download=true",
-        "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/BS-Roformer_Drums_beatloo_labs_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_drums_beatloo_labs.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_drums_beatloo_labs_config.yaml?download=true"
     },
     "bs_bass_beatloo_labs": {
         "model_type": "bs_roformer",
@@ -1477,8 +1477,8 @@
             "other"
         ],
         "target_instrument": "bass",
-        "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_bass_bs_roformer_ep_10_sdr_5.7862.ckpt?download=true",
-        "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/BS-Roformer_Bass_beatloo_labs_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_bass_beatloo_labs.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_bass_beatloo_labs_config.yaml?download=true"
     },
     "bs_vocals_1296_viperx": {
         "model_type": "bs_roformer",
@@ -1490,8 +1490,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
-        "config_url": "https://raw.githubusercontent.com/TRvlvr/application_data/main/mdx_model_data/mdx_c_configs/model_bs_roformer_ep_368_sdr_12.9628.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_1296_viperx.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_1296_viperx_config.yaml?download=true"
     },
     "bs_other_viperx": {
         "model_type": "bs_roformer",
@@ -1503,8 +1503,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_bs_roformer_ep_937_sdr_10.5309.ckpt",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/model_bs_roformer_ep_937_sdr_10.5309.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_other_viperx.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_other_viperx_config.yaml?download=true"
     },
     "bs_revive1_unwa": {
         "model_type": "bs_roformer",
@@ -1516,8 +1516,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive1_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive1_unwa_config.yaml?download=true"
     },
     "bs_revive2_unwa": {
         "model_type": "bs_roformer",
@@ -1529,8 +1529,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive2.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive2_unwa_config.yaml?download=true"
     },
     "bs_revive3e_unwa": {
         "model_type": "bs_roformer",
@@ -1542,8 +1542,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/bs_roformer_revive3e.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive3e_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive3e_unwa_config.yaml?download=true"
     },
     "bs_resurrection_unwa": {
         "model_type": "bs_roformer",
@@ -1555,8 +1555,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_unwa_config.yaml?download=true"
     },
     "bs_resurrection_inst_unwa": {
         "model_type": "bs_roformer",
@@ -1568,8 +1568,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst.ckpt?download=true",
-        "config_url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst-Config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_inst_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_inst_unwa_config.yaml?download=true"
     },
     "bs_inst_fno_unwa": {
         "model_type": "bs_roformer",
@@ -1581,8 +1581,8 @@
             "other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-Inst-FNO/resolve/main/bs_roformer_fno.ckpt?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/fno_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_fno_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_fno_unwa_config.yaml?download=true"
     },
     "bs_inst_hyperace_unwa": {
         "model_type": "bs_roformer",
@@ -1594,8 +1594,8 @@
             "instrument"
         ],
         "target_instrument": "instrument",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-HyperACE/resolve/main/bs_hyperace.ckpt?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/hyperace_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_hyperace_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_hyperace_unwa_config.yaml?download=true"
     },
     "bs_inst_hyperace2_unwa": {
         "model_type": "bs_roformer",
@@ -1607,8 +1607,8 @@
             "instrument"
         ],
         "target_instrument": "instrument",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-HyperACE/resolve/main/v2_inst/bs_roformer_inst_hyperacev2.ckpt?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/hyperace2_inst_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_hyperace2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_hyperace2_unwa_config.yaml?download=true"
     },
     "bs_voc_hyperace2_unwa": {
         "model_type": "bs_roformer",
@@ -1620,8 +1620,8 @@
             "instrument"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/pcunwa/BS-Roformer-HyperACE/resolve/main/v2_voc/bs_roformer_voc_hyperacev2.ckpt?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/hyperace2_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_voc_hyperace2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_voc_hyperace2_unwa_config.yaml?download=true"
     },
     "bs_karaoke_becruily": {
         "model_type": "bs_roformer",
@@ -1633,8 +1633,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/becruily/bs-roformer-karaoke/resolve/main/bs_roformer_karaoke_frazer_becruily.ckpt?download=true",
-        "config_url": "https://huggingface.co/becruily/bs-roformer-karaoke/resolve/main/config_karaoke_frazer_becruily.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_becruily.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_becruily_config.yaml?download=true"
     },
     "bs_voctest_gabox": {
         "model_type": "bs_roformer",
@@ -1646,8 +1646,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/resolve/main/voc_gaboxBSR.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/resolve/main/voc_gaboxBSroformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_voctest_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_voctest_gabox_config.yaml?download=true"
     },
     "bs_karaoke_gabox": {
         "model_type": "bs_roformer",
@@ -1659,8 +1659,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/aa0a94097a222fcc8ebdd691b1435145eda31b46/bsroformers/bs_karaoke_gabox_IS.ckpt?download=true",
-        "config_url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/aa0a94097a222fcc8ebdd691b1435145eda31b46/bsroformers/karaoke_bs_roformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_gabox_config.yaml?download=true"
     },
     "bs_6stem": {
         "model_type": "bs_roformer",
@@ -1676,8 +1676,8 @@
             "vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/undef13/splifft/releases/download/v0.0.1/roformer-fp16.pt",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/new_fixed_configs/sw_config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_6stem.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_6stem_config.yaml?download=true"
     },
     "bs_6stem_fixed": {
         "model_type": "bs_roformer",
@@ -1693,8 +1693,8 @@
             "vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/jarredou/BS-ROFO-SW-Fixed/resolve/main/BS-Rofo-SW-Fixed.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/BS-ROFO-SW-Fixed/resolve/main/BS-Rofo-SW-Fixed.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_6stem_fixed.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_6stem_fixed_config.yaml?download=true"
     },
     "bs_logic_6stem": {
         "model_type": "bs_roformer",
@@ -1710,8 +1710,8 @@
             "vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/ChanTrail/BS-RoFormer/resolve/main/logic_bs_roformer.ckpt?download=true",
-        "config_url": "https://huggingface.co/ChanTrail/BS-RoFormer/resolve/main/BS-Rofo-SW-Fixed.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_logic_6stem.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_logic_6stem_config.yaml?download=true"
     },
     "bs_4stem_zfturbo": {
         "model_type": "bs_roformer",
@@ -1725,8 +1725,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.12/model_bs_roformer_ep_17_sdr_9.6568.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.12/config_bs_roformer_384_8_2_485100.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_zfturbo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_zfturbo_config.yaml?download=true"
     },
     "bs_4stemft_syh99999": {
         "model_type": "bs_roformer",
@@ -1740,8 +1740,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/SYH99999/bs_roformer_4stems_ft/resolve/main/bs_roformer_4stems_ft.pth?download=true",
-        "config_url": "https://huggingface.co/SYH99999/bs_roformer_4stems_ft/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stemft_syh99999.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stemft_syh99999_config.yaml?download=true"
     },
     "bs_male_female_146_sucial": {
         "model_type": "bs_roformer",
@@ -1753,8 +1753,8 @@
             "female"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/model_chorus_bs_roformer_ep_146_sdr_23.8613.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/config_chorus_male_female_bs_roformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_146_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_146_sucial_config.yaml?download=true"
     },
     "bs_male_female_267_sucial": {
         "model_type": "bs_roformer",
@@ -1766,8 +1766,8 @@
             "female"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/model_chorus_bs_roformer_ep_267_sdr_24.1275.ckpt?download=true",
-        "config_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/config_chorus_male_female_bs_roformer.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_267_sucial.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_267_sucial_config.yaml?download=true"
     },
     "bs_male_female_aufr33": {
         "model_type": "bs_roformer",
@@ -1779,8 +1779,8 @@
             "female"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/bs_roformer_male_female_by_aufr33_sdr_7.2889.ckpt",
-        "config_url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/resolve/main/config_chorus_male_female_bs_roformer.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_aufr33.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_aufr33_config.yaml?download=true"
     },
     "bs_deverb_256_8_anvuew": {
         "model_type": "bs_roformer",
@@ -1792,8 +1792,8 @@
             "noreverb"
         ],
         "target_instrument": "noreverb",
-        "checkpoint_url": "https://huggingface.co/anvuew/deverb_bs_roformer/resolve/main/deverb_bs_roformer_8_256dim_8depth.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/deverb_bs_roformer/resolve/main/deverb_bs_roformer_8_256dim_8depth.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_256_8_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_256_8_anvuew_config.yaml?download=true"
     },
     "bs_deverb_384_10_anvuew": {
         "model_type": "bs_roformer",
@@ -1805,8 +1805,8 @@
             "noreverb"
         ],
         "target_instrument": "noreverb",
-        "checkpoint_url": "https://huggingface.co/anvuew/deverb_bs_roformer/resolve/main/deverb_bs_roformer_8_384dim_10depth.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/deverb_bs_roformer/resolve/main/deverb_bs_roformer_8_384dim_10depth.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_384_10_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_384_10_anvuew_config.yaml?download=true"
     },
     "bs_deverb_room_anvuew": {
         "model_type": "bs_roformer",
@@ -1818,8 +1818,8 @@
             "noreverb"
         ],
         "target_instrument": "noreverb",
-        "checkpoint_url": "https://huggingface.co/anvuew/dereverb_room/resolve/main/dereverb_room_anvuew_sdr_13.7432.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/dereverb_room/resolve/main/dereverb_room_anvuew.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_room_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_room_anvuew_config.yaml?download=true"
     },
     "bs_karaoke_anvuew": {
         "model_type": "bs_roformer",
@@ -1831,8 +1831,8 @@
             "Instrumental"
         ],
         "target_instrument": "Vocals",
-        "checkpoint_url": "https://huggingface.co/anvuew/karaoke_bs_roformer/resolve/main/karaoke_bs_roformer_anvuew.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/karaoke_bs_roformer/resolve/main/karaoke_bs_roformer_anvuew.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_anvuew_config.yaml?download=true"
     },
     "bs_vocals_anvuew": {
         "model_type": "bs_roformer",
@@ -1844,8 +1844,8 @@
             "instrument"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/anvuew/BS-RoFormer/resolve/main/bs_roformer_anvuew_sdr_12.45.ckpt?download=true",
-        "config_url": "https://huggingface.co/anvuew/BS-RoFormer/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_anvuew.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_anvuew_config.yaml?download=true"
     },
     "bs_4stem_aname": {
         "model_type": "bs_roformer",
@@ -1859,8 +1859,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/Amane4stem_bs_roformer.ckpt",
-        "config_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/Amane4stem_bs_roformer.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_aname_config.yaml?download=true"
     },
     "mdx23c_instvoc_zfturbo": {
         "model_type": "mdx23c",
@@ -1872,8 +1872,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.0/model_vocals_mdx23c_sdr_10.17.ckpt",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_vocals_mdx23c.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_zfturbo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_zfturbo_config.yaml?download=true"
     },
     "mdx23c_instvoc_hq1": {
         "model_type": "mdx23c",
@@ -1885,8 +1885,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/MDX23C-8KFFT-InstVoc_HQ.ckpt?download=true",
-        "config_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/model_2_stem_full_band_8k.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_hq1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_hq1_config.yaml?download=true"
     },
     "mdx23c_instvoc_hq2": {
         "model_type": "mdx23c",
@@ -1898,8 +1898,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/MDX23C-8KFFT-InstVoc_HQ_2.ckpt?download=true",
-        "config_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/model_2_stem_full_band_8k.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_hq2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_hq2_config.yaml?download=true"
     },
     "mdx23c_d1581": {
         "model_type": "mdx23c",
@@ -1911,8 +1911,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/MDX23C_D1581.ckpt?download=true",
-        "config_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDX23C/model_2_stem_061321.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_d1581.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_d1581_config.yaml?download=true"
     },
     "mdx23c_drumsep_6stem_aufr33_jarredou": {
         "model_type": "mdx23c",
@@ -1928,8 +1928,8 @@
             "crash"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/jarredou/models/releases/download/aufr33-jarredou_MDX23C_DrumSep_model_v0.1/aufr33-jarredou_DrumSep_model_mdx23c_ep_141_sdr_10.8059.ckpt",
-        "config_url": "https://github.com/jarredou/models/releases/download/aufr33-jarredou_MDX23C_DrumSep_model_v0.1/aufr33-jarredou_DrumSep_model_mdx23c_ep_141_sdr_10.8059.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_drumsep_6stem_aufr33_jarredou.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_drumsep_6stem_aufr33_jarredou_config.yaml?download=true"
     },
     "mdx23c_drumsep_5stem_aufr33_jarredou": {
         "model_type": "mdx23c",
@@ -1944,8 +1944,8 @@
             "cymbals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/jarredou/models/releases/download/DrumSep/drumsep_5stems_mdx23c_jarredou.ckpt",
-        "config_url": "https://github.com/jarredou/models/releases/download/DrumSep/config_mdx23c.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_drumsep_5stem_aufr33_jarredou.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_drumsep_5stem_aufr33_jarredou_config.yaml?download=true"
     },
     "mdx23c_dereverb_aufr33_jarredou": {
         "model_type": "mdx23c",
@@ -1957,8 +1957,8 @@
             "other"
         ],
         "target_instrument": "dry",
-        "checkpoint_url": "https://huggingface.co/jarredou/aufr33_jarredou_MDXv3_DeReverb/resolve/main/dereverb_mdx23c_sdr_6.9096.ckpt",
-        "config_url": "https://huggingface.co/jarredou/aufr33_jarredou_MDXv3_DeReverb/resolve/main/config_dereverb_mdx23c.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_dereverb_aufr33_jarredou.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_dereverb_aufr33_jarredou_config.yaml?download=true"
     },
     "mdx23c_mid_side_wesleyr36": {
         "model_type": "mdx23c",
@@ -1970,8 +1970,8 @@
             "difference"
         ],
         "target_instrument": "similarity",
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.10/model_mdx23c_ep_271_l1_freq_72.2383.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.10/config_mdx23c_similarity.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_mid_side_wesleyr36.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_mid_side_wesleyr36_config.yaml?download=true"
     },
     "mdx23c_4stem_zfturbo": {
         "model_type": "mdx23c",
@@ -1985,8 +1985,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.1/model_mdx23c_ep_168_sdr_7.0207.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.1/config_musdb18_mdx23c.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_4stem_zfturbo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_4stem_zfturbo_config.yaml?download=true"
     },
     "mdx23c_orch_verosment": {
         "model_type": "mdx23c",
@@ -1998,8 +1998,8 @@
             "orch"
         ],
         "target_instrument": "orch",
-        "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/model_mdx23c_ep_120_sdr_4.4174.ckpt?download=true",
-        "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/config_orchestra_mdx23c.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_orch_verosment.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_orch_verosment_config.yaml?download=true"
     },
     "mdx_kim_inst": {
         "model_type": "mdxnet",
@@ -2011,8 +2011,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/Kim_Inst.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/Kim_Inst.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_inst.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_inst_config.yaml?download=true"
     },
     "mdx_kim_vocal1": {
         "model_type": "mdxnet",
@@ -2024,8 +2024,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/Kim_Vocal_1.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/Kim_Vocal_1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_vocal1.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_vocal1_config.yaml?download=true"
     },
     "mdx_kim_vocal2": {
         "model_type": "mdxnet",
@@ -2037,8 +2037,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/Kim_Vocal_2.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/Kim_Vocal_2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_vocal2.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_vocal2_config.yaml?download=true"
     },
     "mdx_kuielab_a_bass": {
         "model_type": "mdxnet",
@@ -2050,8 +2050,8 @@
             "other"
         ],
         "target_instrument": "bass",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_a_bass.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_a_bass.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_bass.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_bass_config.yaml?download=true"
     },
     "mdx_kuielab_a_drums": {
         "model_type": "mdxnet",
@@ -2063,8 +2063,8 @@
             "other"
         ],
         "target_instrument": "drums",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_a_drums.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_a_drums.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_drums.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_drums_config.yaml?download=true"
     },
     "mdx_kuielab_a_other": {
         "model_type": "mdxnet",
@@ -2076,8 +2076,8 @@
             "no_other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_a_other.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_a_other.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_other.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_other_config.yaml?download=true"
     },
     "mdx_kuielab_a_vocals": {
         "model_type": "mdxnet",
@@ -2089,8 +2089,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_a_vocals.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_a_vocals.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_vocals.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_vocals_config.yaml?download=true"
     },
     "mdx_kuielab_b_bass": {
         "model_type": "mdxnet",
@@ -2102,8 +2102,8 @@
             "other"
         ],
         "target_instrument": "bass",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_b_bass.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_b_bass.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_bass.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_bass_config.yaml?download=true"
     },
     "mdx_kuielab_b_drums": {
         "model_type": "mdxnet",
@@ -2115,8 +2115,8 @@
             "other"
         ],
         "target_instrument": "drums",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_b_drums.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_b_drums.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_drums.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_drums_config.yaml?download=true"
     },
     "mdx_kuielab_b_other": {
         "model_type": "mdxnet",
@@ -2128,8 +2128,8 @@
             "no_other"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_b_other.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_b_other.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_other.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_other_config.yaml?download=true"
     },
     "mdx_kuielab_b_vocals": {
         "model_type": "mdxnet",
@@ -2141,8 +2141,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/kuielab_b_vocals.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/kuielab_b_vocals.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_vocals.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_vocals_config.yaml?download=true"
     },
     "mdx_reverb_hq_foxjoy": {
         "model_type": "mdxnet",
@@ -2154,8 +2154,8 @@
             "other"
         ],
         "target_instrument": "reverb",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/Reverb_HQ_By_FoxJoy.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/Reverb_HQ_By_FoxJoy.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_reverb_hq_foxjoy.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_reverb_hq_foxjoy_config.yaml?download=true"
     },
     "mdx_inst1": {
         "model_type": "mdxnet",
@@ -2167,8 +2167,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_1.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst1.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst1_config.yaml?download=true"
     },
     "mdx_inst2": {
         "model_type": "mdxnet",
@@ -2180,8 +2180,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_2.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst2.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst2_config.yaml?download=true"
     },
     "mdx_inst3": {
         "model_type": "mdxnet",
@@ -2193,8 +2193,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_3.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_3.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst3.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst3_config.yaml?download=true"
     },
     "mdx_inst_full_292": {
         "model_type": "mdxnet",
@@ -2206,8 +2206,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_full_292.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_full_292.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_full_292.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_full_292_config.yaml?download=true"
     },
     "mdx_inst_hq1": {
         "model_type": "mdxnet",
@@ -2219,8 +2219,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_HQ_1.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_HQ_1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq1.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq1_config.yaml?download=true"
     },
     "mdx_inst_hq2": {
         "model_type": "mdxnet",
@@ -2232,8 +2232,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_HQ_2.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_HQ_2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq2.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq2_config.yaml?download=true"
     },
     "mdx_inst_hq3": {
         "model_type": "mdxnet",
@@ -2245,8 +2245,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_HQ_3.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_HQ_3.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq3.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq3_config.yaml?download=true"
     },
     "mdx_inst_hq4": {
         "model_type": "mdxnet",
@@ -2258,8 +2258,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_HQ_4.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_HQ_4.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq4.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq4_config.yaml?download=true"
     },
     "mdx_inst_hq5": {
         "model_type": "mdxnet",
@@ -2271,8 +2271,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_HQ_5.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_HQ_5.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq5.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_hq5_config.yaml?download=true"
     },
     "mdx_inst_main": {
         "model_type": "mdxnet",
@@ -2284,8 +2284,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Inst_Main.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Inst_Main.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_main.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_main_config.yaml?download=true"
     },
     "mdx_vocft": {
         "model_type": "mdxnet",
@@ -2297,8 +2297,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET-Voc_FT.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET-Voc_FT.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_vocft.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_vocft_config.yaml?download=true"
     },
     "mdx_crowd_hq1": {
         "model_type": "mdxnet",
@@ -2310,8 +2310,8 @@
             "crowd"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Crowd_HQ_1.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Crowd_HQ_1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_crowd_hq1.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_crowd_hq1_config.yaml?download=true"
     },
     "mdx_inst_187_beta": {
         "model_type": "mdxnet",
@@ -2323,8 +2323,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Inst_187_beta.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Inst_187_beta.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_187_beta.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_187_beta_config.yaml?download=true"
     },
     "mdx_inst_82_beta": {
         "model_type": "mdxnet",
@@ -2336,8 +2336,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Inst_82_beta.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Inst_82_beta.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_82_beta.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_82_beta_config.yaml?download=true"
     },
     "mdx_inst_90_beta": {
         "model_type": "mdxnet",
@@ -2349,8 +2349,8 @@
             "vocals"
         ],
         "target_instrument": "instrumental",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Inst_90_beta.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Inst_90_beta.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_90_beta.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_inst_90_beta_config.yaml?download=true"
     },
     "mdx_main_340": {
         "model_type": "mdxnet",
@@ -2362,8 +2362,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Main_340.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Main_340.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_340.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_340_config.yaml?download=true"
     },
     "mdx_main_390": {
         "model_type": "mdxnet",
@@ -2375,8 +2375,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Main_390.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Main_390.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_390.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_390_config.yaml?download=true"
     },
     "mdx_main_406": {
         "model_type": "mdxnet",
@@ -2388,8 +2388,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Main_406.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Main_406.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_406.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_406_config.yaml?download=true"
     },
     "mdx_main_427": {
         "model_type": "mdxnet",
@@ -2401,8 +2401,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Main_427.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Main_427.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_427.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_427_config.yaml?download=true"
     },
     "mdx_main_438": {
         "model_type": "mdxnet",
@@ -2414,8 +2414,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR-MDX-NET_Main_438.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR-MDX-NET_Main_438.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_438.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_438_config.yaml?download=true"
     },
     "mdx_1_9703": {
         "model_type": "mdxnet",
@@ -2427,8 +2427,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_1_9703.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_1_9703.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_1_9703.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_1_9703_config.yaml?download=true"
     },
     "mdx_2_9682": {
         "model_type": "mdxnet",
@@ -2440,8 +2440,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_2_9682.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_2_9682.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_2_9682.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_2_9682_config.yaml?download=true"
     },
     "mdx_3_9662": {
         "model_type": "mdxnet",
@@ -2453,8 +2453,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_3_9662.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_3_9662.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_3_9662.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_3_9662_config.yaml?download=true"
     },
     "mdx_9482": {
         "model_type": "mdxnet",
@@ -2466,8 +2466,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_9482.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_9482.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_9482.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_9482_config.yaml?download=true"
     },
     "mdx_karaoke1": {
         "model_type": "mdxnet",
@@ -2479,8 +2479,8 @@
             "other"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_KARA.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_KARA.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_karaoke1.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_karaoke1_config.yaml?download=true"
     },
     "mdx_karaoke2": {
         "model_type": "mdxnet",
@@ -2492,8 +2492,8 @@
             "vocals"
         ],
         "target_instrument": "other",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_KARA_2.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_KARA_2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_karaoke2.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_karaoke2_config.yaml?download=true"
     },
     "mdx_main": {
         "model_type": "mdxnet",
@@ -2505,8 +2505,8 @@
             "instrumental"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/MDXNet/UVR_MDXNET_Main.onnx?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/mdx_configs/UVR_MDXNET_Main.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main.onnx?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_config.yaml?download=true"
     },
     "1_hp-uvr": {
         "model_type": "vr",
@@ -2518,8 +2518,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/1_HP-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/1_HP-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/1_hp-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/1_hp-uvr_config.yaml?download=true"
     },
     "2_hp-uvr": {
         "model_type": "vr",
@@ -2531,8 +2531,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/2_HP-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/2_HP-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/2_hp-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/2_hp-uvr_config.yaml?download=true"
     },
     "3_hp-vocal-uvr": {
         "model_type": "vr",
@@ -2544,8 +2544,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/3_HP-Vocal-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/3_HP-Vocal-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/3_hp-vocal-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/3_hp-vocal-uvr_config.yaml?download=true"
     },
     "4_hp-vocal-uvr": {
         "model_type": "vr",
@@ -2557,8 +2557,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/4_HP-Vocal-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/4_HP-Vocal-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/4_hp-vocal-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/4_hp-vocal-uvr_config.yaml?download=true"
     },
     "5_hp-karaoke-uvr": {
         "model_type": "vr",
@@ -2570,8 +2570,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/5_HP-Karaoke-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/5_HP-Karaoke-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/5_hp-karaoke-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/5_hp-karaoke-uvr_config.yaml?download=true"
     },
     "6_hp-karaoke-uvr": {
         "model_type": "vr",
@@ -2583,8 +2583,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/6_HP-Karaoke-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/6_HP-Karaoke-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/6_hp-karaoke-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/6_hp-karaoke-uvr_config.yaml?download=true"
     },
     "7_hp2-uvr": {
         "model_type": "vr",
@@ -2596,8 +2596,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/7_HP2-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/7_HP2-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/7_hp2-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/7_hp2-uvr_config.yaml?download=true"
     },
     "8_hp2-uvr": {
         "model_type": "vr",
@@ -2609,8 +2609,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/8_HP2-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/8_HP2-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/8_hp2-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/8_hp2-uvr_config.yaml?download=true"
     },
     "9_hp2-uvr": {
         "model_type": "vr",
@@ -2622,8 +2622,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/9_HP2-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/9_HP2-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/9_hp2-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/9_hp2-uvr_config.yaml?download=true"
     },
     "10_sp-uvr-2b-32000-1": {
         "model_type": "vr",
@@ -2635,8 +2635,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/10_SP-UVR-2B-32000-1.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/10_SP-UVR-2B-32000-1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/10_sp-uvr-2b-32000-1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/10_sp-uvr-2b-32000-1_config.yaml?download=true"
     },
     "11_sp-uvr-2b-32000-2": {
         "model_type": "vr",
@@ -2648,8 +2648,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/11_SP-UVR-2B-32000-2.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/11_SP-UVR-2B-32000-2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/11_sp-uvr-2b-32000-2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/11_sp-uvr-2b-32000-2_config.yaml?download=true"
     },
     "12_sp-uvr-3b-44100": {
         "model_type": "vr",
@@ -2661,8 +2661,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/12_SP-UVR-3B-44100.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/12_SP-UVR-3B-44100.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/12_sp-uvr-3b-44100.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/12_sp-uvr-3b-44100_config.yaml?download=true"
     },
     "13_sp-uvr-4b-44100-1": {
         "model_type": "vr",
@@ -2674,8 +2674,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/13_SP-UVR-4B-44100-1.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/13_SP-UVR-4B-44100-1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/13_sp-uvr-4b-44100-1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/13_sp-uvr-4b-44100-1_config.yaml?download=true"
     },
     "14_sp-uvr-4b-44100-2": {
         "model_type": "vr",
@@ -2687,8 +2687,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/14_SP-UVR-4B-44100-2.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/14_SP-UVR-4B-44100-2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/14_sp-uvr-4b-44100-2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/14_sp-uvr-4b-44100-2_config.yaml?download=true"
     },
     "15_sp-uvr-mid-44100-1": {
         "model_type": "vr",
@@ -2700,8 +2700,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/15_SP-UVR-MID-44100-1.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/15_SP-UVR-MID-44100-1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/15_sp-uvr-mid-44100-1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/15_sp-uvr-mid-44100-1_config.yaml?download=true"
     },
     "16_sp-uvr-mid-44100-2": {
         "model_type": "vr",
@@ -2713,8 +2713,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/16_SP-UVR-MID-44100-2.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/16_SP-UVR-MID-44100-2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/16_sp-uvr-mid-44100-2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/16_sp-uvr-mid-44100-2_config.yaml?download=true"
     },
     "17_hp-wind_inst-uvr": {
         "model_type": "vr",
@@ -2726,8 +2726,8 @@
             "Woodwinds"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/17_HP-Wind_Inst-UVR.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/17_HP-Wind_Inst-UVR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/17_hp-wind_inst-uvr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/17_hp-wind_inst-uvr_config.yaml?download=true"
     },
     "uvr-de-echo-aggressive": {
         "model_type": "vr",
@@ -2739,8 +2739,8 @@
             "Echo"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-De-Echo-Aggressive.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-De-Echo-Aggressive.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-echo-aggressive.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-echo-aggressive_config.yaml?download=true"
     },
     "uvr-de-echo-normal": {
         "model_type": "vr",
@@ -2752,8 +2752,8 @@
             "Echo"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-De-Echo-Normal.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-De-Echo-Normal.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-echo-normal.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-echo-normal_config.yaml?download=true"
     },
     "uvr-deecho-dereverb": {
         "model_type": "vr",
@@ -2765,8 +2765,8 @@
             "Reverb"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-DeEcho-DeReverb.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-DeEcho-DeReverb.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-deecho-dereverb.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-deecho-dereverb_config.yaml?download=true"
     },
     "uvr-denoise-lite": {
         "model_type": "vr",
@@ -2778,8 +2778,8 @@
             "No Noise"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-DeNoise-Lite.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-DeNoise-Lite.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-denoise-lite.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-denoise-lite_config.yaml?download=true"
     },
     "uvr-denoise": {
         "model_type": "vr",
@@ -2791,8 +2791,8 @@
             "No Noise"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-DeNoise.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-DeNoise.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-denoise.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-denoise_config.yaml?download=true"
     },
     "uvr-bve-4b_sn-44100-1": {
         "model_type": "vr",
@@ -2804,8 +2804,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-BVE-4B_SN-44100-1.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-BVE-4B_SN-44100-1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-bve-4b_sn-44100-1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-bve-4b_sn-44100-1_config.yaml?download=true"
     },
     "uvr-bve-v2-4b-sn-44100": {
         "model_type": "vr",
@@ -2817,8 +2817,8 @@
             "Instrumental"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/RareSirMix/AIModelRehosting/resolve/main/UVR-5-1_4band_v4_ms_fullband_BVE_v2_by_aufr33.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-BVE-v2-4B-SN-44100.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-bve-v2-4b-sn-44100.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-bve-v2-4b-sn-44100_config.yaml?download=true"
     },
     "mgm-v5-karokee-32000-beta1": {
         "model_type": "vr",
@@ -2830,8 +2830,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/lucassantilli/UVR-Colab-GUI/releases/download/m5.1/MGM-v5-KAROKEE-32000-BETA1.pth",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/MGM-v5-KAROKEE-32000-BETA1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm-v5-karokee-32000-beta1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm-v5-karokee-32000-beta1_config.yaml?download=true"
     },
     "mgm-v5-karokee-32000-beta2-agr": {
         "model_type": "vr",
@@ -2843,8 +2843,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/lucassantilli/UVR-Colab-GUI/releases/download/m5.1/MGM-v5-KAROKEE-32000-BETA2-AGR.pth",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/MGM-v5-KAROKEE-32000-BETA2-AGR.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm-v5-karokee-32000-beta2-agr.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm-v5-karokee-32000-beta2-agr_config.yaml?download=true"
     },
     "mgm_highend_v4": {
         "model_type": "vr",
@@ -2856,8 +2856,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/MGM_HIGHEND_v4.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/MGM_HIGHEND_v4.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_highend_v4.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_highend_v4_config.yaml?download=true"
     },
     "mgm_lowend_a_v4": {
         "model_type": "vr",
@@ -2869,8 +2869,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/MGM_LOWEND_A_v4.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/MGM_LOWEND_A_v4.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_lowend_a_v4.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_lowend_a_v4_config.yaml?download=true"
     },
     "mgm_lowend_b_v4": {
         "model_type": "vr",
@@ -2882,8 +2882,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/MGM_LOWEND_B_v4.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/MGM_LOWEND_B_v4.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_lowend_b_v4.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_lowend_b_v4_config.yaml?download=true"
     },
     "mgm_main_v4": {
         "model_type": "vr",
@@ -2895,8 +2895,8 @@
             "Vocals"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/MGM_MAIN_v4.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/MGM_MAIN_v4.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_main_v4.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/mgm_main_v4_config.yaml?download=true"
     },
     "uvr-de-reverb-aufr33-jarredou": {
         "model_type": "vr",
@@ -2908,8 +2908,8 @@
             "No Dry"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Politrees/UVR_resources/resolve/main/models/VR_Arch/UVR-De-Reverb-aufr33-jarredou.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-De-Reverb-aufr33-jarredou.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-reverb-aufr33-jarredou.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-reverb-aufr33-jarredou_config.yaml?download=true"
     },
     "uvr-de-breath-sucial-v1": {
         "model_type": "vr",
@@ -2921,8 +2921,8 @@
             "No Breath"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/UVR_De-Breathe_1band_sr44100_hl1024_Sucial_v1.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-De-Breath-sucial-v1.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-breath-sucial-v1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-breath-sucial-v1_config.yaml?download=true"
     },
     "uvr-de-breath-sucial-v2": {
         "model_type": "vr",
@@ -2934,8 +2934,8 @@
             "No Breath"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/De-Breathe-Models/resolve/main/UVR_De-Breathe_1band_sr44100_hl1024_Sucial_v2.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/UVR-De-Breath-sucial-v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-breath-sucial-v2.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-breath-sucial-v2_config.yaml?download=true"
     },
     "vr_harmonic_noise_sep": {
         "model_type": "vr",
@@ -2947,8 +2947,8 @@
             "No Noise"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Sucial/MSST-WebUI/resolve/main/All_Models/VR_Models/Harmonic_Noise_Separation_yxlllc.pth?download=true",
-        "config_url": "https://huggingface.co/noblebarkrr/all_models_for_mel_band_roformer/resolve/main/vr_configs/VR_Harmonic_Noise_Sep.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/vr_harmonic_noise_sep.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/vr_harmonic_noise_sep_config.yaml?download=true"
     },
     "scnet_4stem_zfturbo": {
         "model_type": "scnet",
@@ -2962,8 +2962,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.9/SCNet-large_starrytong_fixed.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.9/config_musdb18_scnet_large_starrytong.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_4stem_zfturbo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_4stem_zfturbo_config.yaml?download=true"
     },
     "scnet_xl_ihf_4stem_zfturbo": {
         "model_type": "scnet",
@@ -2977,8 +2977,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.15/model_scnet_ep_36_sdr_10.0891.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.15/config_musdb18_scnet_xl_more_wide_v5.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_ihf_4stem_zfturbo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_ihf_4stem_zfturbo_config.yaml?download=true"
     },
     "scnet_xl_4stem_starrytong": {
         "model_type": "scnet",
@@ -2992,8 +2992,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.13/model_scnet_ep_54_sdr_9.8051.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.13/config_musdb18_scnet_xl.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_4stem_starrytong.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_4stem_starrytong_config.yaml?download=true"
     },
     "scnet_xl_4stem_zftrubo": {
         "model_type": "scnet",
@@ -3007,8 +3007,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/scnet_checkpoint_musdb18.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.6/config_musdb18_scnet.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_4stem_zftrubo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_4stem_zftrubo_config.yaml?download=true"
     },
     "scnet_huge_4stem_aname": {
         "model_type": "scnet",
@@ -3022,8 +3022,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/Huge-SCNet-4stems/resolve/main/huge_scnet_4stems_v1.pt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/Huge-SCNet-4stems/resolve/main/config.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_aname_config.yaml?download=true"
     },
     "scnet_masked_small_4stem_zftrubo": {
         "model_type": "scnet_masked",
@@ -3037,8 +3037,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.16/model_scnet_masked_ep_156_sdr_8.8149.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.16/config_musdb18_scnet_small.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_small_4stem_zftrubo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_small_4stem_zftrubo_config.yaml?download=true"
     },
     "scnet_masked_xl_ihf_4stem_zftrubo": {
         "model_type": "scnet_masked",
@@ -3052,8 +3052,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.17/model_scnet_masked_ep_111_sdr_9.8286.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.17/config_musdb18_scnet_xl_ihf.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_xl_ihf_4stem_zftrubo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_xl_ihf_4stem_zftrubo_config.yaml?download=true"
     },
     "scnet_tran_4stem_zftrubo": {
         "model_type": "scnet_tran",
@@ -3067,8 +3067,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.14/model_scnet_tran_sdr_8.9272.ckpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.14/config_musdb18_scnet_tran.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_tran/scnet_tran_4stem_zftrubo.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_tran/scnet_tran_4stem_zftrubo_config.yaml?download=true"
     },
     "scnet_jazz_4stem_jorisvaneyghen": {
         "model_type": "scnet",
@@ -3082,8 +3082,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/jorisvaneyghen/SCNet/resolve/main/model_jazz_scnet_large.ckpt?download=true",
-        "config_url": "https://huggingface.co/spaces/jorisvaneyghen/jazz_playalong/resolve/main/configs/config_jazz_scnet_large.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_jazz_4stem_jorisvaneyghen.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_jazz_4stem_jorisvaneyghen_config.yaml?download=true"
     },
     "scnet_xl_jazz_4stem_jorisvaneyghen": {
         "model_type": "scnet",
@@ -3097,8 +3097,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/jorisvaneyghen/SCNet/resolve/main/model_jazz_scnet_xl.ckpt?download=true",
-        "config_url": "https://huggingface.co/spaces/jorisvaneyghen/jazz_playalong/resolve/main/configs/config_jazz_scnet_xl.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_jazz_4stem_jorisvaneyghen.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_jazz_4stem_jorisvaneyghen_config.yaml?download=true"
     },
     "scnet_choirsep_exp": {
         "model_type": "scnet",
@@ -3112,8 +3112,8 @@
             "soprano"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/scnet_choirsep/model_scnet_ep_36_sdr_5.4596.ckpt?download=true",
-        "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/scnet_choirsep/config_scnet_choirsep.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_choirsep_exp.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_choirsep_exp_config.yaml?download=true"
     },
     "demucs4_mvsep_vocals": {
         "model_type": "htdemucs",
@@ -3125,8 +3125,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v1.0.0/model_vocals_htdemucs_sdr_8.78.ckpt",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_vocals_htdemucs.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_mvsep_vocals.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_mvsep_vocals_config.yaml?download=true"
     },
     "demucs4_4stem": {
         "model_type": "htdemucs",
@@ -3140,8 +3140,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_4stem.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_4stem_config.yaml?download=true"
     },
     "demucs4_6stem": {
         "model_type": "htdemucs",
@@ -3157,8 +3157,8 @@
             "piano"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_htdemucs_6stems.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_6stem.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_6stem_config.yaml?download=true"
     },
     "demucs3_mmi": {
         "model_type": "htdemucs",
@@ -3172,8 +3172,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/75fc33f5-1941ce65.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_demucs3_mmi.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs3_mmi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs3_mmi_config.yaml?download=true"
     },
     "demucs4_ft_bass": {
         "model_type": "htdemucs",
@@ -3187,8 +3187,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/d12395a8-e57c48e6.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_bass.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_bass_config.yaml?download=true"
     },
     "demucs4_ft_drums": {
         "model_type": "htdemucs",
@@ -3202,8 +3202,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/f7e0c4bc-ba3fe64a.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_drums.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_drums_config.yaml?download=true"
     },
     "demucs4_ft_vocals": {
         "model_type": "htdemucs",
@@ -3217,8 +3217,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/04573f0d-f3cf25b2.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_vocals.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_vocals_config.yaml?download=true"
     },
     "demucs4_ft_other": {
         "model_type": "htdemucs",
@@ -3232,8 +3232,8 @@
             "other"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/92cfc3b6-ef3bcb9c.th",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/config_musdb18_htdemucs.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_other.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_other_config.yaml?download=true"
     },
     "demucs_mid_side_wesleyr36": {
         "model_type": "htdemucs",
@@ -3245,8 +3245,8 @@
             "difference"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/jarredou/HTDemucs_Similarity_Extractor_by_wesleyr36/resolve/main/model_htdemucs_ep_21_sdr_13.6970.ckpt?download=true",
-        "config_url": "https://huggingface.co/jarredou/HTDemucs_Similarity_Extractor_by_wesleyr36/resolve/main/config_htdemucs_similarity.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs_mid_side_wesleyr36.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs_mid_side_wesleyr36_config.yaml?download=true"
     },
     "demucs4_choirsep": {
         "model_type": "htdemucs",
@@ -3260,8 +3260,8 @@
             "soprano"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/demucs_choirsep/model_htdemucs_ep_94_sdr_5.2474.ckpt?download=true",
-        "config_url": "https://huggingface.co/am2460162/msst_failed_failed_test/resolve/main/demucs_choirsep/config_htdemucs_choirsep.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_choirsep.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_choirsep_config.yaml?download=true"
     },
     "bandit_plus": {
         "model_type": "bandit",
@@ -3274,8 +3274,8 @@
             "effects"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.3/model_bandit_plus_dnr_sdr_11.47.chpt",
-        "config_url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/releases/download/v.1.0.3/config_dnr_bandit_bsrnn_multi_mus64.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit/bandit_plus.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit/bandit_plus_config.yaml?download=true"
     },
     "bandit_v2_multi": {
         "model_type": "bandit_v2",
@@ -3288,7 +3288,7 @@
             "sfx"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/jarredou/banditv2_state_dicts_only/resolve/main/checkpoint-multi_state_dict.ckpt",
-        "config_url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/refs/heads/main/configs/config_dnr_bandit_v2_mus64.yaml"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit_v2/bandit_v2_multi.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit_v2/bandit_v2_multi_config.yaml?download=true"
     }
 }
