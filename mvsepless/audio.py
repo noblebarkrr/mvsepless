@@ -96,7 +96,7 @@ input_extensions = [f".{of}" for of in input_formats]
 
 output_extensions = [f".{of}" for of in output_formats]
 
-allowed_chars = r".1234567890"
+allowed_chars = r"1234567890"
 
 def sanitize_output(output):
     return "".join([char for char in output if char in allowed_chars])
@@ -132,11 +132,11 @@ def check(path):
     sr = get_sr(path)
     return channels !=0 and sr != 0
 
-def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike = "float32", multi_channel: bool = False, stream: int = 0, flatten=False):
+def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike = "float32", multi_channel: bool = False, num_channels: int = 2, stream: int = 0, flatten=False):
     output_format = SAMPLE_FORMATS_DICT.get(dtype)
     if not sr:
         sr = get_sr(path, stream)
-    channels = 1 if mono else get_channels(path, stream) if multi_channel else 2
+    channels = 1 if mono else get_channels(path, stream) if multi_channel else num_channels
     cmd = [ffmpeg_path, "-i", path, "-map", f"0:a:{stream}", "-vn", "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
@@ -164,18 +164,59 @@ def bitrate_to_int(a):
     else:
         return 320
 
-def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    dtype = y.dtype
-    channels = 1
+def get_info_array(y: np.ndarray) -> tuple[int, int, int | None, bool]:
     if y.ndim == 1:
-        y = y.reshape(-1, 1)
+        flatten = True
+        channels = 1
+        samples = len(y)
+        array_index = None
     elif y.ndim == 2:
+        flatten = False
         if y.shape[0] < y.shape[1]:
             channels = y.shape[0]
-            y = y.T
+            samples = y.shape[1]
+            array_index = 1
         else:
             channels = y.shape[1]
+            samples = y.shape[0]
+            array_index = 0
+    return channels, samples, array_index, flatten
+
+def get_duration_from_array(y: np.ndarray, sr: int | None = None):
+    len_samples = get_info_array(y)[1]
+    if sr is not None:
+        return len_samples / sr
+    else:
+        return len_samples
+    
+def trim(y: np.ndarray, start: int = 0, end: int = -1):
+    channels, samples, array_index, flatten = get_info_array(y)
+    end_index = samples - 1
+    _end = end if end > 0 and end <= end_index else end_index
+    if flatten:
+        return y[start:_end]
+    elif array_index == 0:
+        return y[start:_end, :]
+    elif array_index == 1:
+        return y[:, start:_end]
+
+def reverse(y: np.ndarray):
+    channels, samples, array_index, flatten = get_info_array(y)
+    if flatten:
+        return np.flip(y)
+    else:
+        return np.flip(y, axis=array_index)
+
+def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
+    path = os.path.abspath(path)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    dtype = y.dtype
+    channels, samples, array_index, flatten = get_info_array(y)
+    if flatten:
+        y = y.reshape(-1, 1)
+    else:
+        if array_index == 1:
+            y = y.T
     y = np.nan_to_num(y, nan=0, posinf=0, neginf=0)
     audio_bytes = y.tobytes()
     sample_format = SAMPLE_FORMATS_DICT.get(str(dtype))
@@ -192,5 +233,5 @@ def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
     process.stdin.write(audio_bytes)
     process.stdin.close()
     process.wait()
-
     return path
+
