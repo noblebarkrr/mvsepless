@@ -10,18 +10,6 @@ from ml_collections import ConfigDict
 from omegaconf import OmegaConf
 from typing import Dict, List, Tuple, Any, List, Optional
 
-model_types = (
-    "mel_band_roformer",
-    "bs_roformer",
-    "mdx23c",
-    "mdxnet",
-    "vr",
-    "scnet",
-    "htdemucs",
-    "bandit",
-    "bandit_v2"
-)
-
 def load_config(model_type: str, config_path: str) -> Any:
     try:
         with open(config_path, "r") as f:
@@ -76,6 +64,9 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         elif hasattr(config, "conformer"):
             from models.bs_roformer import BSConformer
             model = BSConformer(**dict(config.model))
+        elif hasattr(config, "conditional"):
+            from models.bs_roformer import BSRoformer_Conditional
+            model = BSRoformer_Conditional(**dict(config.model))
         else:
             from models.bs_roformer import BSRoformer
             model = BSRoformer(**dict(config.model))
