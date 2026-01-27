@@ -133,16 +133,26 @@ def check(path):
     return channels !=0 and sr != 0
 
 def read(path: str, sr: int | None = None, mono: bool = False, dtype: DTypeLike = "float32", multi_channel: bool = False, num_channels: int = 2, stream: int = 0, flatten=False):
-    output_format = SAMPLE_FORMATS_DICT.get(dtype)
+    output_format = SAMPLE_FORMATS_DICT.get(dtype, None)
     if not sr:
         sr = get_sr(path, stream)
     channels = 1 if mono else get_channels(path, stream) if multi_channel else num_channels
-    cmd = [ffmpeg_path, "-i", path, "-map", f"0:a:{stream}", "-vn", "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
-    )
-    stdout, stderr = process.communicate()
-    y = np.frombuffer(stdout, dtype=dtype)
+    if not output_format:
+        output_format = "f32le"
+        cmd = [ffmpeg_path, "-i", path, "-map", f"0:a:{stream}", "-vn", "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
+        )
+        stdout, stderr = process.communicate()
+        y = np.frombuffer(stdout, dtype=np.float32)
+        y = convert_to_dtype(y, dtype)
+    else:
+        cmd = [ffmpeg_path, "-i", path, "-map", f"0:a:{stream}", "-vn", "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
+        )
+        stdout, stderr = process.communicate()
+        y = np.frombuffer(stdout, dtype=dtype)
     y = y.reshape((-1, channels)).T if not mono else y.flatten() if flatten else y.reshape((-1, 1)).T
     return y.copy(), sr
 
@@ -188,7 +198,74 @@ def get_duration_from_array(y: np.ndarray, sr: int | None = None):
         return len_samples / sr
     else:
         return len_samples
-    
+
+def is_float(y: np.ndarray) -> bool:
+    return np.issubdtype(y.dtype, np.floating)
+
+def is_float_dtype(dtype: DTypeLike) -> bool:
+    return np.issubdtype(dtype, np.floating)
+
+def float_to_int(y: np.ndarray, dtype: DTypeLike) -> np.ndarray:
+    if is_float(y):
+        info = np.iinfo(dtype)
+        min_val = info.min
+        max_val = info.max
+        y_scaled = y * max_val
+        y_rounded = np.round(y_scaled)
+        y_clipped = np.clip(y_rounded, min_val, max_val)
+        return y_clipped.astype(dtype)
+    else:
+        info_dst = np.iinfo(dtype)
+        info_src = np.iinfo(y.dtype)
+        if info_src.max > info_dst.max or info_src.min < info_dst.min:
+            y_zero_centered = y - info_src.min
+            scale_factor = (info_dst.max - info_dst.min) / (info_src.max - info_src.min)
+            y_scaled = y_zero_centered * scale_factor
+            y_shifted = y_scaled + info_dst.min
+            y_rounded = np.round(y_shifted)
+            return np.clip(y_rounded, info_dst.min, info_dst.max).astype(dtype)
+        else:
+            return np.clip(y, info_dst.min, info_dst.max).astype(dtype)
+
+def int_to_float(y: np.ndarray, dtype: DTypeLike) -> np.ndarray:
+    if not is_float(y):
+        info = np.iinfo(y.dtype)
+        
+        if info.min >= 0:
+            y_normalized = y.astype(np.float64) / info.max
+        else:
+            abs_max = max(abs(info.min), abs(info.max))
+            y_normalized = y.astype(np.float64) / abs_max
+            
+        return y_normalized.astype(dtype)
+    else:
+        y_converted = y.astype(dtype)
+        return y_converted
+        
+def convert_to_dtype(y: np.ndarray, dtype: DTypeLike):
+    if is_float(y):
+        if is_float_dtype(dtype):
+            return int_to_float(y, dtype)
+        else:
+            return float_to_int(y, dtype)
+    else:
+        if is_float_dtype(dtype):
+            return int_to_float(y, dtype)
+        else:
+            return float_to_int(y, dtype)
+
+def dc_offset(y: np.ndarray, offset: float | int):
+    orig_dtype = y.dtype
+    y = convert_to_dtype(y, np.float64)
+    y = y + offset
+    return convert_to_dtype(y, orig_dtype)
+
+def gain(y: np.ndarray, gain: float | int):
+    orig_dtype = y.dtype
+    y = convert_to_dtype(y, np.float64)
+    y = y * gain
+    return convert_to_dtype(y, orig_dtype)
+
 def trim(y: np.ndarray, start: int = 0, end: int = -1):
     channels, samples, array_index, flatten = get_info_array(y)
     end_index = samples - 1
@@ -217,9 +294,12 @@ def write(path, y: np.ndarray, sr: int, bitrate: int | str = 320):
     else:
         if array_index == 1:
             y = y.T
+    sample_format = SAMPLE_FORMATS_DICT.get(str(dtype), None)
+    if not sample_format:
+        sample_format = "f32le"
+        y = convert_to_dtype(y, np.float32)
     y = np.nan_to_num(y, nan=0, posinf=0, neginf=0)
     audio_bytes = y.tobytes()
-    sample_format = SAMPLE_FORMATS_DICT.get(str(dtype))
     bitrate = bitrate_to_int(bitrate)
     bitrate_fixed = 64 if bitrate < 64 else 320 if bitrate > 320 else bitrate
     cmd = [ffmpeg_path, "-y", "-f", sample_format, "-ar", str(sr), "-ac", str(channels), "-i", "-", "-ab", f"{bitrate_fixed}k", path]
