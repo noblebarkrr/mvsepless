@@ -4,7 +4,13 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.utils.parametrizations import weight_norm
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
+if is_pytorch2_1:
+    from torch.nn.utils.parametrizations import weight_norm
+else:
+    from torch.nn.utils import weight_norm
+
 from torchaudio.transforms import Resample
 import os
 import librosa

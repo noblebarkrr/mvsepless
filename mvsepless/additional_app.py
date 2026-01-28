@@ -23,10 +23,24 @@ from functools import wraps
 from separator import Separator, script_dir
 from gradio_helper import GradioHelper, tz
 from namer import Namer
-from audio import input_extensions, output_formats, check, read, write, get_sr
-from ensemble import ensemble_audio_files
+from audio import input_extensions, output_formats, check, read, write, get_sr, multiread, multiwrite, ensemble, substractor, concatenate, trim, get_duration_from_array, split_mid_side
 
 namer = Namer()
+
+def ensemble_audio_files(
+    files: list,
+    weights: list,
+    output_name: str,
+    ensemble_type: str,
+    out_format="mp3",
+    add_wav=False
+):
+    arrays, srs = multiread(files)
+    results, max_sr = ensemble(arrays, srs, weights, ensemble_type)
+    if add_wav:
+        return write(f"{output_name}.{out_format}", results, max_sr), write(f"{output_name}_orig.wav", results, max_sr)
+    else:
+        return write(f"{output_name}.{out_format}", results, max_sr)
 
 class Inverter:
     def __init__(self):
@@ -51,144 +65,18 @@ class Inverter:
             "lanczos",
         ]
 
-    def load_audio(self, filepath):
-        try:
-            y, sr = read(path=filepath, sr=None, mono=False)
-            return y, sr
-        except Exception as e:
-            print(f"Ошибка загрузки аудио: {e}")
-            return None, None
-
-    def process_channel(
-        self, y1_ch, y2_ch, sr, method, w_size=2048, overlap=2, w_type="hann"
-    ):
-        HOP_LENGTH = w_size // overlap
-        if method == "waveform":
-            return y1_ch - y2_ch
-
-        elif method == "spectrogram":
-            S1 = librosa.stft(
-                y1_ch, n_fft=w_size, hop_length=HOP_LENGTH, win_length=w_size
-            )
-            S2 = librosa.stft(
-                y2_ch, n_fft=w_size, hop_length=HOP_LENGTH, win_length=w_size
-            )
-
-            mag1 = np.abs(S1)
-            mag2 = np.abs(S2)
-
-            mag_result = np.maximum(mag1 - mag2, 0)
-
-            phase = np.angle(S1)
-
-            S_result = mag_result * np.exp(1j * phase)
-
-            return librosa.istft(
-                S_result,
-                n_fft=w_size,
-                hop_length=HOP_LENGTH,
-                win_length=w_size,
-                length=len(y1_ch),
-            )
-
     def process_audio(
         self,
         audio1_path,
         audio2_path,
-        out_format,
         method,
         output_path="./inverted.mp3",
-        w_size=2048,
-        overlap=2,
-        w_type="hann",
     ):
-        y1, sr1 = self.load_audio(audio1_path)
-        y2, sr2 = self.load_audio(audio2_path)
-
-        if sr1 is None or sr2 is None:
-            raise Exception("Произошла ошибка при чтении файлов")
-
-        channels1 = 1 if y1.ndim == 1 else y1.shape[0]
-        channels2 = 1 if y2.ndim == 1 else y2.shape[0]
-
-        if channels1 > 1:
-            y1 = y1.T
-        else:
-            y1 = y1.reshape(-1, 1)
-
-        if channels2 > 1:
-            y2 = y2.T
-        else:
-            y2 = y2.reshape(-1, 1)
-
-        if sr1 != sr2:
-            if channels2 > 1:
-                y2_resampled_list = []
-                for c in range(channels2):
-                    channel_resampled = librosa.resample(
-                        y2[:, c], orig_sr=sr2, target_sr=sr1
-                    )
-                    y2_resampled_list.append(channel_resampled)
-
-                min_channel_length = min(len(ch) for ch in y2_resampled_list)
-
-                y2_resampled = np.zeros(
-                    (min_channel_length, channels2), dtype=np.float32
-                )
-                for c, channel in enumerate(y2_resampled_list):
-                    y2_resampled[:, c] = channel[:min_channel_length]
-
-                y2 = y2_resampled
-            else:
-                y2 = librosa.resample(y2[:, 0], orig_sr=sr2, target_sr=sr1)
-                y2 = y2.reshape(-1, 1)
-            sr2 = sr1
-
-        min_len = min(len(y1), len(y2))
-        y1 = y1[:min_len]
-        y2 = y2[:min_len]
-
-        result_channels = []
-
-        if channels1 == 1 and channels2 > 1:
-            y2 = y2.mean(axis=1, keepdims=True)
-            channels2 = 1
-
-        for c in range(channels1):
-            y1_ch = y1[:, c]
-
-            if channels2 == 1:
-                y2_ch = y2[:, 0]
-            else:
-                y2_ch = y2[:, min(c, channels2 - 1)]
-
-            result_ch = self.process_channel(
-                y1_ch, y2_ch, sr1, method, w_size=w_size, overlap=overlap, w_type=w_type
-            )
-            result_channels.append(result_ch)
-
-        if len(result_channels) > 1:
-            result = np.column_stack(result_channels)
-        else:
-            result = np.array(result_channels[0])
-
-        if result.ndim > 1:
-            for c in range(result.shape[1]):
-                channel = result[:, c]
-                max_val = np.max(np.abs(channel))
-                if max_val > 0:
-                    result[:, c] = channel * 0.9 / max_val
-        else:
-            max_val = np.max(np.abs(result))
-            if max_val > 0:
-                result = result * 0.9 / max_val
-
-        inverted = write(
-            output_path, result.T, sr1, "320k"
-        )
-        return inverted
-
-
+        y1, sr1 = read(audio1_path)
+        y2, sr2 = read(audio2_path)
+        inverted, min_sr = substractor(y1, y2, sr1, sr2, spectrogram=method == "spectrogram")
+        return write(output_path, inverted, min_sr)
+        
 class AutoEnsembless(Separator, GradioHelper):
     def __init__(self, input_files, upload_files, user_directory, device):
         super().__init__()
@@ -197,7 +85,7 @@ class AutoEnsembless(Separator, GradioHelper):
         self.upload_files = upload_files
         self.user_directory = user_directory
         self.device = device
-        
+
     class ModelManager(Separator):
         def __init__(self):
             self.data: list[list[str, str, str, int]] = []
@@ -646,7 +534,6 @@ class AutoEnsembless(Separator, GradioHelper):
                         inverted = self.inverter.process_audio(
                             audio1_path=input_file,
                             audio2_path=output_file,
-                            out_format=out_format,
                             method=method,
                             output_path=output_path,
                         )
@@ -796,7 +683,7 @@ class AutoEnsembless(Separator, GradioHelper):
             auto_ensemble_out_file, auto_ensemble_out_file_wav = ensemble_audio_files(
                 files=ensemble_sources_stems,
                 weights=weights,
-                output=os.path.join(o, auto_ensemble_output_name),
+                output_name=os.path.join(o, auto_ensemble_output_name),
                 ensemble_type=method,
                 out_format=out_format,
                 add_wav=True,
@@ -808,7 +695,7 @@ class AutoEnsembless(Separator, GradioHelper):
                         ensemble_audio_files(
                             files=ensemble_sources_invert_stems,
                             weights=invert_weights(weights),
-                            output=os.path.join(o, auto_ensemble_inverted_output_name),
+                            output_name=os.path.join(o, auto_ensemble_inverted_output_name),
                             ensemble_type=invert_methods_map[method],
                             out_format=out_format,
                             add_wav=True,
@@ -826,11 +713,12 @@ class ManualEnsembless(GradioHelper):
     def __init__(self, user_directory):
         super().__init__()
         self.user_directory = user_directory
+
     def UI(self):
         with gr.Row():
             with gr.Column():
                 input_ensemble_files = gr.File(
-                    label="Входное аудио",
+                    label="Входные аудио",
                     interactive=True,
                     type="filepath",
                     file_count="multiple",
@@ -896,7 +784,17 @@ class ManualEnsembless(GradioHelper):
                     )
 
         weights = gr.Textbox(label="Веса", value="1.0,1.0")
-
+        @input_ensemble_files.change(
+            inputs=[input_ensemble_files], outputs=[weights]
+        )
+        def parse_weights(files):
+            if files:
+                total = len(files)
+                weights__ = [str(float(1)) for __i in range(total)]
+                return ",".join(weights__)
+            else:
+                return ""
+        
         method = gr.Dropdown(
             label="Алгоритм склеивания",
             choices=["min_fft", "max_fft", "avg_fft", "median_fft"],
@@ -953,7 +851,7 @@ class ManualEnsembless(GradioHelper):
 
             output_file = ensemble_audio_files(
                 files=input_files_list,
-                output=os.path.join(o, o_filename),
+                output_name=os.path.join(o, o_filename),
                 weights=[float(x) for x in weights.split(",")],
                 ensemble_type=method,
                 out_format=out_format,
@@ -1015,13 +913,128 @@ class Inverter_UI(GradioHelper):
                 inverted = self.inverter.process_audio(
                     audio1_path=input_file,
                     audio2_path=output_file,
-                    out_format=out_format,
                     method=method,
                     output_path=output_path,
                 )
                 return self.return_audio_with_size(value=inverted, label="Инверсия")
             else:
                 return None
+
+class AudioApp(GradioHelper):
+    def __init__(self, user_directory):
+        super().__init__()
+        self.user_directory = user_directory
+    
+    def UI(self):
+        with gr.Tab("Склеить все аудио в одно"):
+            input_concat_files = gr.File(label="Входное аудио", file_count="multiple", type="filepath", interactive=True)
+            output_format = gr.Dropdown(
+                label="Формат выходного файла",
+                interactive=True,
+                choices=output_formats,
+                value="mp3",
+                filterable=False,
+            )
+            concat_btn = gr.Button("Склеить", variant="primary", interactive=True)
+            concated_audio = gr.Audio(
+                label="Результат",
+                type="filepath",
+                interactive=False,
+                show_download_button=True,
+            )
+            @concat_btn.click(inputs=[input_concat_files, output_format], outputs=concated_audio)
+            def concat_fn(files, of):
+                timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
+                o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
+                os.makedirs(o, exist_ok=True)
+                arrays, srs = multiread(files)
+                full_audio, max_sr = concatenate(arrays, srs, dtype="float32")
+                output_path = os.path.join(o, f"concated_{timestamp}.{of}")
+                return self.return_audio_with_size(value=write(output_path, full_audio, max_sr), label="Результат")
+        with gr.Tab("Обрезать аудио"):
+            with gr.Group():
+                input_trim_file = gr.File(label="Входное аудио", file_count="single", type="filepath", interactive=True)
+                @gr.render(inputs=[input_trim_file])
+                def preview_input_file(file):
+                    if file:
+                        self.define_audio_with_size(value=file, label="Предпросмотр")
+                with gr.Row():
+                    start_num, end_num = gr.Number(label="Начало", minimum=0, maximum=1, value=0, interactive=True, min_width=80), gr.Number(label="Конец", minimum=0, maximum=1, value=1, interactive=True, min_width=80)
+                @input_trim_file.change(inputs=[input_trim_file], outputs=[start_num, end_num])
+                def input_trim_fn(file):
+                    if file:
+                        y, sr = read(file)
+                        end = get_duration_from_array(y, sr)
+                        return gr.update(minimum=0, maximum=end, value=0), gr.update(minimum=0, maximum=end, value=end, placeholder=end)
+                    else:
+                        return gr.update(minimum=0, maximum=1, value=0), gr.update(minimum=0, maximum=1, value=1, placeholder=1)
+                out_format2 = gr.Dropdown(
+                    label="Формат выходного файла",
+                    interactive=True,
+                    choices=output_formats,
+                    value="mp3",
+                    filterable=False,
+                )
+                trim_btn = gr.Button("Обрезать", variant="primary")
+            trimmed_audio = gr.Audio(
+                label="Результат",
+                type="filepath",
+                interactive=False,
+                show_download_button=True,
+            )
+            @trim_btn.click(inputs=[input_trim_file, start_num, end_num, out_format2], outputs=trimmed_audio)
+            def trim_fn(i, s, e, of):            
+                timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
+                o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
+                os.makedirs(o, exist_ok=True)
+                basename, ext = os.path.splitext(os.path.basename(i))
+                basename = namer.short(basename, length=50)
+                filename = f"{basename}_trimmed_{timestamp}.{of}"
+                output_path = os.path.join(o, filename)
+                y, sr = read(i)
+                y = trim(y, s * sr, e * sr)
+                return self.return_audio_with_size(value=write(output_path, y, sr), label="Результат")
+        with gr.Tab("Извлечь фантомный центр"):
+            with gr.Group():
+                input_stereo_file = gr.File(label="Входные аудио", file_count="single", type="filepath", interactive=True)
+                @gr.render(inputs=[input_stereo_file])
+                def preview_input_file(file):
+                    if file:
+                        self.define_audio_with_size(value=file, label="Предпросмотр")
+                out_format3 = gr.Dropdown(
+                    label="Формат выходного файла",
+                    interactive=True,
+                    choices=output_formats,
+                    value="mp3",
+                    filterable=False,
+                )
+                separate_mid_side_btn = gr.Button("Разделить", variant="primary")
+            with gr.Row():
+                mid_audio, side_audio = gr.Audio(
+                    label="Фантомный центр",
+                    type="filepath",
+                    interactive=False,
+                    show_download_button=True,
+                ), gr.Audio(
+                    label="Стерео-база",
+                    type="filepath",
+                    interactive=False,
+                    show_download_button=True,
+                )
+            @separate_mid_side_btn.click(inputs=[input_stereo_file, out_format3], outputs=[mid_audio, side_audio])
+            def sep_ms_fn(i, of):            
+                timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
+                o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
+                os.makedirs(o, exist_ok=True)
+                basename, ext = os.path.splitext(os.path.basename(i))
+                basename = namer.short(basename, length=50)
+                filename_mid = f"{basename}_center_{timestamp}.{of}"
+                filename_side = f"{basename}_stereo_base_{timestamp}.{of}"
+                output_path_mid = os.path.join(o, filename_mid)
+                output_path_side = os.path.join(o, filename_side)
+                y, sr = read(i)
+                mid, side = split_mid_side(y, var=3, sr=sr)
+                return self.return_audio_with_size(value=write(output_path_mid, mid, sr), label="Фантомный центр"), self.return_audio_with_size(value=write(output_path_side, side, sr), label="Стерео-база")
 
 class PluginManager(Separator):
     plugins_dir = os.path.join(script_dir, "plugins")

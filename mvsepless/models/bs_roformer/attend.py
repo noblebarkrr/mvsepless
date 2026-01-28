@@ -48,50 +48,54 @@ class Attend(nn.Module):
         self.attn_dropout = nn.Dropout(dropout)
 
         self.flash = flash
-        assert not (
-            flash and version.parse(torch.__version__) < version.parse("2.0.0")
-        ), "in order to use flash attention, you must be using pytorch 2.0 or above"
-
-        self.cpu_config = FlashAttentionConfig(True, True, True)
-        self.cuda_config = None
-
-        if not torch.cuda.is_available() or not flash:
-            return
-
-        device_properties = torch.cuda.get_device_properties(torch.device("cuda"))
-        device_version = version.parse(
-            f"{device_properties.major}.{device_properties.minor}"
-        )
-
-        if device_version >= version.parse("8.0"):
-            if os.name == "nt":
-                print_once(
-                    "Windows OS detected, using math or mem efficient attention if input tensor is on cuda"
-                )
-                self.cuda_config = FlashAttentionConfig(False, True, True)
+        self.use_torch_2_sdpa = False
+        self._config_checked = False
+        
+        # Проверяем версию PyTorch при первом вызове
+        if flash and not self._config_checked:
+            if version.parse(torch.__version__) >= version.parse("2.0.0"):
+                print_once("PyTorch >= 2.0 detected, will use SDPA if available.")
+                self.use_torch_2_sdpa = True
+                
+                # Настройки для PyTorch >= 2.0
+                self.cpu_config = FlashAttentionConfig(True, True, True)
+                self.cuda_config = None
+                
+                if torch.cuda.is_available():
+                    device_properties = torch.cuda.get_device_properties(torch.device("cuda"))
+                    device_version = version.parse(
+                        f"{device_properties.major}.{device_properties.minor}"
+                    )
+                    
+                    if device_version >= version.parse("8.0"):
+                        if os.name == "nt":
+                            print_once(
+                                "Windows OS detected, using math or mem efficient attention if input tensor is on cuda"
+                            )
+                            self.cuda_config = FlashAttentionConfig(False, True, True)
+                        else:
+                            print_once(
+                                "GPU Compute Capability equal or above 8.0, using flash attention if input tensor is on cuda"
+                            )
+                            self.cuda_config = FlashAttentionConfig(True, False, False)
+                    else:
+                        print_once(
+                            "GPU Compute Capability below 8.0, using math or mem efficient attention if input tensor is on cuda"
+                        )
+                        self.cuda_config = FlashAttentionConfig(False, True, True)
             else:
-                print_once(
-                    "GPU Compute Capability equal or above 8.0, using flash attention if input tensor is on cuda"
-                )
-                self.cuda_config = FlashAttentionConfig(True, False, False)
-        else:
-            print_once(
-                "GPU Compute Capability below 8.0, using math or mem efficient attention if input tensor is on cuda"
-            )
-            self.cuda_config = FlashAttentionConfig(False, True, True)
+                print_once("PyTorch < 2.0 detected, flash attention will use einsum fallback.")
+                self.use_torch_2_sdpa = False
+            
+            self._config_checked = True
 
-    def flash_attn(self, q, k, v):
-        _, heads, q_len, _, k_len, is_cuda, device = (
-            *q.shape,
-            k.shape[-2],
-            q.is_cuda,
-            q.device,
-        )
-
+    def flash_attn_torch2(self, q, k, v):
+        """SDPA для PyTorch >= 2.0"""
         if exists(self.scale):
             default_scale = q.shape[-1] ** -0.5
             q = q * (self.scale / default_scale)
 
+        is_cuda = q.is_cuda
         config = self.cuda_config if is_cuda else self.cpu_config
 
         with torch.backends.cuda.sdp_kernel(**config._asdict()):
@@ -102,14 +106,18 @@ class Attend(nn.Module):
         return out
 
     def forward(self, q, k, v):
-
         q_len, k_len, device = q.shape[-2], k.shape[-2], q.device
 
         scale = default(self.scale, q.shape[-1] ** -0.5)
 
-        if self.flash:
-            return self.flash_attn(q, k, v)
+        if self.flash and self.use_torch_2_sdpa:
+            try:
+                return self.flash_attn_torch2(q, k, v)
+            except Exception as e:
+                print(f"Flash attention failed: {e}. Falling back to einsum.")
+                self.use_torch_2_sdpa = False
 
+        # Fallback для PyTorch < 2.0 или если flash отключен
         sim = einsum(f"b h i d, b h j d -> b h i j", q, k) * scale
 
         attn = sim.softmax(dim=-1)

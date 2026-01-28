@@ -6,7 +6,7 @@ from torch.nn import Module, ModuleList
 import torch.nn.functional as F
 from neuralop.models import FNO1d
 
-from .attend_sw import Attend
+from .attend import Attend
 
 try:
     from .attend_sage import Attend as AttendSage

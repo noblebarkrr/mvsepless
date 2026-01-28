@@ -4,7 +4,7 @@ from downloader import dw_yt_dlp
 from check_colab import easy_check_is_colab
 from datetime import datetime, timezone, timedelta
 from functools import wraps
-from device import all_ids, set_device
+from device import all_ids, set_device, cuda_available, mps_available
 from audio import output_formats, input_extensions, check
 from gradio_helper import GradioHelper, tz
 
@@ -206,6 +206,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
 
     def UI(self, theme, add_app=True, plugins=True, add_vbach=False):
         with gr.Blocks(theme=theme, title="Разделение музыки и вокала") as MVSEPLESS_LITE_UI:
+            if not cuda_available:
+                gr.Markdown("<h2><center>ВНИМАНИЕ! Используется CPU, инференс слишком медленно работает<center><h2>")
             with gr.Tab("Разделение"):
                 default_model = self.get_mn()
                 with gr.Row():
@@ -237,7 +239,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 model_name = gr.Dropdown(
                                     label="Имя модели", choices=default_model, value=default_model[0], interactive=True, scale=9
                                 )
-                                model_name_refresh_btn = gr.Button("Обновить", size="sm", scale=2, interactive=True, min_width=50)
+                                model_name_refresh_btn = gr.Button("🔄", size="lg", scale=2, interactive=True, min_width=50)
 
                             show_only_downloaded_models = gr.Checkbox(
                                 label="Показать только загруженные модели", value=False, interactive=True
@@ -581,8 +583,11 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                     delete_models_cache_btn = gr.Button("Удалить ВСЁ!")
                     delete_models_cache_btn.click(self.delete_models_cache, inputs=None, outputs=None)
 
-            from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI
+            from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI, AudioApp
             if add_app:
+                with gr.Tab("Обработка аудио"):
+                    _audio_app = AudioApp(user_directory)
+                    _audio_app.UI()
                 with gr.Tab("Ансамбль"):
                     
                     with gr.Tab("Авто-ансамбль"):
@@ -657,7 +662,6 @@ if __name__ == "__main__":
         help="Включить Vbach",
     )
     args = parser.parse_args()
-
     SeparatorGradio().UI(gr.themes.Citrus(
             primary_hue="teal",
             secondary_hue="blue",
@@ -675,5 +679,5 @@ if __name__ == "__main__":
             share=args.share,
             allowed_paths=["/"],
             debug=True,
-
+            inbrowser=True
         )

@@ -131,7 +131,7 @@ class LinearAttention(Module):
         dim_head=32,
         heads=8,
         scale=8,
-        flash=False,
+        flash=True,
         dropout=0.0,
         sage_attention=False,
     ):

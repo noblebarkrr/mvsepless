@@ -1,6 +1,7 @@
 import torch
 from .commons import fused_add_tanh_sigmoid_multiply
-
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
 
 class WaveNet(torch.nn.Module):
 
@@ -29,37 +30,66 @@ class WaveNet(torch.nn.Module):
         self.drop = torch.nn.Dropout(p_dropout)
 
         if gin_channels:
-            self.cond_layer = torch.nn.utils.parametrizations.weight_norm(
-                torch.nn.Conv1d(gin_channels, 2 * hidden_channels * n_layers, 1),
-                name="weight",
-            )
+            if is_pytorch2_1:
+                self.cond_layer = torch.nn.utils.parametrizations.weight_norm(
+                    torch.nn.Conv1d(gin_channels, 2 * hidden_channels * n_layers, 1),
+                    name="weight",
+                )
+            else:
+                self.cond_layer = torch.nn.utils.weight_norm(
+                    torch.nn.Conv1d(gin_channels, 2 * hidden_channels * n_layers, 1),
+                    name="weight",
+                )
 
         dilations = [dilation_rate**i for i in range(n_layers)]
         paddings = [(kernel_size * d - d) // 2 for d in dilations]
 
         for i in range(n_layers):
-            self.in_layers.append(
-                torch.nn.utils.parametrizations.weight_norm(
-                    torch.nn.Conv1d(
-                        hidden_channels,
-                        2 * hidden_channels,
-                        kernel_size,
-                        dilation=dilations[i],
-                        padding=paddings[i],
-                    ),
-                    name="weight",
+            if is_pytorch2_1:
+                self.in_layers.append(
+                    torch.nn.utils.parametrizations.weight_norm(
+                        torch.nn.Conv1d(
+                            hidden_channels,
+                            2 * hidden_channels,
+                            kernel_size,
+                            dilation=dilations[i],
+                            padding=paddings[i],
+                        ),
+                        name="weight",
+                    )
                 )
-            )
+            else:
+                self.in_layers.append(
+                    torch.nn.utils.weight_norm(
+                        torch.nn.Conv1d(
+                            hidden_channels,
+                            2 * hidden_channels,
+                            kernel_size,
+                            dilation=dilations[i],
+                            padding=paddings[i],
+                        ),
+                        name="weight",
+                    )
+                )
 
             res_skip_channels = (
                 hidden_channels if i == n_layers - 1 else 2 * hidden_channels
             )
-            self.res_skip_layers.append(
-                torch.nn.utils.parametrizations.weight_norm(
-                    torch.nn.Conv1d(hidden_channels, res_skip_channels, 1),
-                    name="weight",
+            if is_pytorch2_1:
+                self.res_skip_layers.append(
+                    torch.nn.utils.parametrizations.weight_norm(
+                        torch.nn.Conv1d(hidden_channels, res_skip_channels, 1),
+                        name="weight",
+                    )
                 )
-            )
+            else:
+                self.res_skip_layers.append(
+                    torch.nn.utils.weight_norm(
+                        torch.nn.Conv1d(hidden_channels, res_skip_channels, 1),
+                        name="weight",
+                    )
+                )
+
 
     def forward(self, x, x_mask, g=None):
         output = x.clone().zero_()

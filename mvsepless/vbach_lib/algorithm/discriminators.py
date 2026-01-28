@@ -1,7 +1,13 @@
 import torch
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
-from torch.nn.utils.parametrizations import spectral_norm, weight_norm
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
+if is_pytorch2_1:
+    from torch.nn.utils.parametrizations import spectral_norm, weight_norm
+else:
+    from torch.nn.utils.parametrizations import spectral_norm
+    from torch.nn.utils import weight_norm
 
 from .commons import get_padding
 from .residuals import LRELU_SLOPE

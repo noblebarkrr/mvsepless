@@ -5,7 +5,7 @@ from torch import nn, einsum, Tensor
 from torch.nn import Module, ModuleList
 import torch.nn.functional as F
 
-from .attend_sw import Attend
+from .attend import Attend
 
 try:
     from .attend_sage import Attend as AttendSage
@@ -132,7 +132,7 @@ class LinearAttention(Module):
         dim_head=32,
         heads=8,
         scale=8,
-        flash=False,
+        flash=True,
         dropout=0.0,
         sage_attention=False,
     ):

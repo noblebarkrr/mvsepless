@@ -4,9 +4,10 @@ import re
 import sys
 import types
 import uuid
-
+from packaging import version
 import numpy as np
 import torch
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
 import torch.nn.functional as F
 from omegaconf import DictConfig, open_dict
 from torch import nn
@@ -858,13 +859,18 @@ def make_conv_pos(e, k, g):
         pos_conv.weight, mean=0, std=math.sqrt((4 * (1.0 - dropout)) / (k * e))
     )
     nn.init.constant_(pos_conv.bias, 0)
-    return nn.Sequential(
-        nn.utils.parametrizations.weight_norm(pos_conv, name="weight", dim=2),
-        SamePad(k),
-        nn.GELU(),
-    )
-
-
+    if is_pytorch2_1:
+        return nn.Sequential(
+            nn.utils.parametrizations.weight_norm(pos_conv, name="weight", dim=2),
+            SamePad(k),
+            nn.GELU(),
+        )
+    else:
+        return nn.Sequential(
+            nn.utils.weight_norm(pos_conv, name="weight", dim=2),
+            SamePad(k),
+            nn.GELU(),
+        )
 def is_xla_tensor(tensor):
     return torch.is_tensor(tensor) and tensor.device.type == "xla"
 

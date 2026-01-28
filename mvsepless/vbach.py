@@ -42,7 +42,7 @@ bh, ah = signal.butter(
 )
 from device import all_ids, set_device
 from multiprocessing import cpu_count
-from audio import check, read, write, output_formats
+from audio import check, read, write, output_formats, split_mid_side, split_channels, easy_resampler, stereo_to_mono, mono_to_stereo, convert_to_dtype, gain, add_zero_to_end, multi_channel_array_from_arrays, trim
 from namer import Namer
 from gradio_helper import GradioHelper, tz
 from downloader import dw_file
@@ -506,106 +506,6 @@ def get_harvest_f0(input_audio_path, fs, f0max, f0min, frame_period):
     f0 = pyworld.stonemask(audio, f0, t, fs)
     return f0
 
-
-def remove_center(
-    input_array,
-    samplerate,
-    rdf=0.99999,
-    window_size=2048,
-    overlap=2,
-    window_type="blackman",
-):
-
-    left = input_array[0]
-    right = input_array[1]
-
-    nperseg = min(window_size, len(left))
-    if nperseg < 16:
-        nperseg = 16
-        if len(left) < 16:
-            import warnings
-
-            warnings.warn(
-                f"Input too short ({len(left)} samples), returning original audio"
-            )
-            return left, right, left, right
-
-    noverlap = nperseg // overlap
-    if noverlap >= nperseg:
-        noverlap = nperseg - 1
-
-    f, t, Z_left = signal.stft(
-        left, fs=samplerate, nperseg=nperseg, noverlap=noverlap, window=window_type
-    )
-    f, t, Z_right = signal.stft(
-        right, fs=samplerate, nperseg=nperseg, noverlap=noverlap, window=window_type
-    )
-
-    Z_common_left = np.minimum(np.abs(Z_left), np.abs(Z_right)) * np.exp(
-        1j * np.angle(Z_right)
-    )
-    Z_common_right = np.minimum(np.abs(Z_left), np.abs(Z_right)) * np.exp(
-        1j * np.angle(Z_left)
-    )
-
-    reduction_factor = rdf
-
-    Z_new_left = Z_left - Z_common_left * reduction_factor
-    Z_new_right = Z_right - Z_common_right * reduction_factor
-
-    _, new_left = signal.istft(
-        Z_new_left,
-        fs=samplerate,
-        nperseg=nperseg,
-        noverlap=noverlap,
-        window=window_type,
-    )
-    _, new_right = signal.istft(
-        Z_new_right,
-        fs=samplerate,
-        nperseg=nperseg,
-        noverlap=noverlap,
-        window=window_type,
-    )
-    _, common_signal_left = signal.istft(
-        Z_common_left,
-        fs=samplerate,
-        nperseg=nperseg,
-        noverlap=noverlap,
-        window=window_type,
-    )
-    _, common_signal_right = signal.istft(
-        Z_common_right,
-        fs=samplerate,
-        nperseg=nperseg,
-        noverlap=noverlap,
-        window=window_type,
-    )
-
-    new_left = new_left[: len(left)]
-    new_right = new_right[: len(right)]
-    common_signal_left = common_signal_left[: len(left)]
-    common_signal_right = common_signal_right[: len(left)]
-
-    peak = np.max([np.abs(new_left).max(), np.abs(new_right).max()])
-    if peak > 1.0:
-        new_left = new_left / peak
-        new_right = new_right / peak
-
-    inverted_center_left = -common_signal_left
-    inverted_center_right = -common_signal_right
-
-    mixed_left = left + inverted_center_left
-    mixed_right = right + inverted_center_right
-
-    peak_mixed = np.max([np.abs(mixed_left).max(), np.abs(mixed_right).max()])
-    if peak_mixed > 1.0:
-        mixed_left = mixed_left / peak_mixed
-        mixed_right = mixed_right / peak_mixed
-
-    return common_signal_left, common_signal_right, new_left, new_right
-
-
 class AudioProcessor:
     @staticmethod
     def change_rms(sourceaudio, source_rate, targetaudio, target_rate, rate):
@@ -1009,6 +909,7 @@ class VC:
         f0_file,
         f0_min=50,
         f0_max=1100,
+        add_text=""
     ):
         if (
             file_index is not None
@@ -1057,6 +958,10 @@ class VC:
             except Exception as e:
                 print(f"Произошла ошибка при чтении файла F0: {e}")
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
+
+        progress = gr.Progress()
+        progress((2, 4), desc=f"Вычисление кривой F0 {add_text}")
+
         if pitch_guidance:
             pitch, pitchf = self.get_f0(
                 inputaudio_path,
@@ -1072,10 +977,14 @@ class VC:
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
-            if self.device == "mps":
+            if self.device.type == "mps":
                 pitchf = pitchf.astype(np.float32)
             pitch = torch.tensor(pitch, device=self.device).unsqueeze(0).long()
             pitchf = torch.tensor(pitchf, device=self.device).unsqueeze(0).float()
+
+        progress = gr.Progress()
+        progress((3, 4), desc=f"Синтез голоса... {add_text}")
+
         for t in opt_ts:
             t = t // self.window * self.window
             if pitch_guidance:
@@ -1188,6 +1097,7 @@ class VC:
         f0_file,
         f0_min=50,
         f0_max=1100,
+        add_text=""
     ):
 
         device = self.device
@@ -1232,6 +1142,9 @@ class VC:
         audio_pad = np.pad(audio, (offset, offset), mode="reflect")
         padded_len = len(audio_pad)
 
+        progress = gr.Progress()
+        progress((2, 4), desc=f"Вычисление кривой F0 {add_text}")
+
         pitch_tensor = pitchf_tensor = None
         if pitch_guidance:
             p_len = len(audio_pad) // self.window
@@ -1249,13 +1162,16 @@ class VC:
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
-            if device == "mps":
+            if device.type == "mps":
                 pitchf = pitchf.astype(np.float32)
             pitch_tensor = torch.tensor(pitch, device=device).unsqueeze(0).long()
             pitchf_tensor = torch.tensor(pitchf, device=device).unsqueeze(0).float()
 
         processed_chunks = []
         start = 0
+
+        progress = gr.Progress()
+        progress((3, 4), desc=f"Синтез голоса... {add_text}")
 
         while start < audio_len:
             end = min(start + real_chunk_size, audio_len)
@@ -1430,79 +1346,20 @@ class VC:
         )
         return feats
 
-
-def overlay_mono_on_stereo(monoaudio, stereoaudio, gain=0.5):
-    if monoaudio is None or stereoaudio is None:
-        raise ValueError("Input audio arrays cannot be None")
-
-    monoaudio = monoaudio.astype(np.float32)
-    stereoaudio = stereoaudio.astype(np.float32)
-
-    if monoaudio.ndim == 1:
-        monoaudio = np.vstack([monoaudio, monoaudio])
-    elif monoaudio.shape[0] == 1:
-        monoaudio = np.vstack([monoaudio[0], monoaudio[0]])
-
-    if monoaudio.shape[0] != 2 or stereoaudio.shape[0] != 2:
-        raise ValueError("Shapes must be (2, N)")
-
-    min_len = min(monoaudio.shape[1], stereoaudio.shape[1])
-    if min_len == 0:
-        raise ValueError("Audio arrays cannot be empty")
-
-    monoaudio = monoaudio[:, :min_len]
-    stereoaudio = stereoaudio[:, :min_len]
-
-    result = stereoaudio + monoaudio * gain
-
-    max_amp = np.max(np.abs(result))
-    if max_amp > 0:
-        result /= max_amp
-
-    result = (result * 32767).astype(np.int16)
-
-    return result
-
-
 def loadaudio(file_path: str, target_sr: int, stereo_mode: str) -> np.ndarray:
     try:
         mid, left, right = None, None, None
-
         if stereo_mode == "mono":
-            midaudio, sr = read(path=file_path, sr=None, mono=True)
-            midaudio = librosa.resample(midaudio, orig_sr=sr, target_sr=target_sr)
-            mid = midaudio.flatten()
-
-        elif stereo_mode == "left/right" or stereo_mode == "sim/dif":
-            stereoaudio, sr = read(path=file_path, sr=None, mono=False)
-
+            mid, sr = read(path=file_path, sr=target_sr, mono=True, flatten=True)
+        else:
+            stereoaudio, sr = read(path=file_path, sr=target_sr, mono=False)
             if stereo_mode == "left/right":
-                leftaudio = stereoaudio[0]
-                rightaudio = stereoaudio[1]
-                leftaudio = librosa.resample(leftaudio, orig_sr=sr, target_sr=target_sr)
-                rightaudio = librosa.resample(
-                    rightaudio, orig_sr=sr, target_sr=target_sr
-                )
-
-                left = leftaudio.flatten()
-                right = rightaudio.flatten()
-
+                left, right = split_channels(stereoaudio)
             elif stereo_mode == "sim/dif":
-                mid_left, mid_right, dif_left, dif_right = remove_center(
-                    input_array=stereoaudio, samplerate=sr
-                )
-                midaudio = (mid_left + mid_right) * 0.5
-
-                midaudio = librosa.resample(midaudio, orig_sr=sr, target_sr=target_sr)
-                dif_left = librosa.resample(dif_left, orig_sr=sr, target_sr=target_sr)
-                dif_right = librosa.resample(dif_right, orig_sr=sr, target_sr=target_sr)
-
-                mid = midaudio.flatten()
-                left = dif_left.flatten()
-                right = dif_right.flatten()
-
+                center, stereo_base = split_mid_side(stereoaudio, var=3, sr=target_sr)
+                mid = stereo_to_mono(center, to_flatten=True)
+                left, right = split_channels(stereo_base)
         return mid, left, right
-
     except Exception as e:
         raise RuntimeError(f"Ошибка загрузки аудио '{file_path}': {str(e)}")
 
@@ -1511,7 +1368,7 @@ class Config:
     def __init__(self, device):
         self.device_str = device
         self.set_device(self.device_str)
-        self.is_half = self.device == "cpu"
+        self.is_half = False
         self.n_cpu = cpu_count()
         self.gpu_name = None
         self.gpu_mem = None
@@ -1542,7 +1399,6 @@ class Config:
             print("Используется устройство MPS")
         else:
             print("Используется CPU")
-            self.is_half = True
 
         x_pad, x_query, x_center, x_max = (
             (3, 10, 60, 65) if self.is_half else (1, 6, 38, 41)
@@ -1689,6 +1545,7 @@ def rvc_infer(
     output_bitrate="320k",
     stereo_mode="mono",
     pipeline_mode="orig",
+    add_text=""
 ) -> str:
 
     if pipeline_mode == "alt":
@@ -1722,6 +1579,7 @@ def rvc_infer(
             f0_file=None,
             f0_min=f0_min,
             f0_max=f0_max,
+            add_text=add_text
         )
 
     elif stereo_mode == "left/right":
@@ -1749,6 +1607,7 @@ def rvc_infer(
             f0_file=None,
             f0_min=f0_min,
             f0_max=f0_max,
+            add_text=f"{add_text} (L)"
         )
         rightaudio_opt = pipeline(
             hubert_model,
@@ -1771,16 +1630,19 @@ def rvc_infer(
             f0_file=None,
             f0_min=f0_min,
             f0_max=f0_max,
+            add_text=f"{add_text} (R)"
         )
 
         min_len = min(len(leftaudio_opt), len(rightaudio_opt))
         if min_len == 0:
             raise ValueError("Processed audio is empty")
+        
+        output_dtype = leftaudio_opt.dtype
 
-        leftaudio_opt = leftaudio_opt[:min_len]
-        rightaudio_opt = rightaudio_opt[:min_len]
+        leftaudio_opt = trim(leftaudio_opt, 0, min_len)
+        rightaudio_opt = trim(rightaudio_opt, 0, min_len)
 
-        audio_opt = np.stack((leftaudio_opt, rightaudio_opt), axis=0)
+        audio_opt = multi_channel_array_from_arrays(leftaudio_opt, rightaudio_opt, index=1, dtype=output_dtype)
 
     elif stereo_mode == "sim/dif":
         if mid is None or left is None or right is None:
@@ -1807,6 +1669,7 @@ def rvc_infer(
             f0_file=None,
             f0_min=f0_min,
             f0_max=f0_max,
+            add_text=f"{add_text} (Центр)"
         )
         leftaudio_opt = pipeline(
             hubert_model,
@@ -1829,6 +1692,7 @@ def rvc_infer(
             f0_file=None,
             f0_min=f0_min,
             f0_max=f0_max,
+            add_text=f"{add_text} (Стерео-база L)"
         )
         rightaudio_opt = pipeline(
             hubert_model,
@@ -1851,19 +1715,18 @@ def rvc_infer(
             f0_file=None,
             f0_min=f0_min,
             f0_max=f0_max,
+            add_text=f"{add_text} (Стерео-база R)"
         )
 
         min_len = min(len(midaudio_opt), len(leftaudio_opt), len(rightaudio_opt))
         if min_len == 0:
             raise ValueError("Processed audio is empty")
-
-        midaudio_opt = midaudio_opt[:min_len]
-        leftaudio_opt = leftaudio_opt[:min_len]
-        rightaudio_opt = rightaudio_opt[:min_len]
-
-        difaudio_opt = np.stack((leftaudio_opt, rightaudio_opt), axis=0)
-
-        audio_opt = overlay_mono_on_stereo(midaudio_opt, difaudio_opt)
+        output_dtype = leftaudio_opt.dtype
+        midaudio_opt = trim(midaudio_opt, 0, min_len)
+        leftaudio_opt = trim(leftaudio_opt, 0, min_len)
+        rightaudio_opt = trim(rightaudio_opt, 0, min_len)
+        difaudio_opt = multi_channel_array_from_arrays(leftaudio_opt, rightaudio_opt, index=1, dtype=output_dtype)
+        audio_opt = convert_to_dtype((mono_to_stereo(midaudio_opt, index=1) + difaudio_opt), output_dtype)
 
     output_path = write(
         output_path, audio_opt, tgt_sr, output_bitrate
@@ -1909,11 +1772,17 @@ def voice_conversion(
     stereo_mode,
     embedder_name="hubert_base",
     pipeline_mode="orig",
-    device="cpu"
+    device="cpu",
+    add_text_progress=""
 ):
+    _add_text = ""
+    if add_text_progress != "" or add_text_progress is not None:
+        _add_text = f"| {add_text_progress}"
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
-
+    progress = gr.Progress()
+    progress((0, 4), desc=f"Загрузка RVC модели {_add_text}")
     config = Config(device)
+    progress((1, 4), desc=f"Загрузка Hubert модели {_add_text}")
     hubert_path = model_manager.check_hubert(embedder_name)
     if not hubert_path:
         raise ValueError(
@@ -1949,6 +1818,7 @@ def voice_conversion(
         output_bitrate,
         stereo_mode,
         pipeline_mode,
+        _add_text
     )
 
     del hubert_model, cpt, net_g, vc
@@ -1975,11 +1845,18 @@ def voice_conversion_transformers(
     stereo_mode,
     embedder_name="contentvec",
     pipeline_mode="orig",
-    device="cpu"
+    device="cpu",
+    add_text_progress=""
 ):
+    _add_text = ""
+    if add_text_progress != "" or add_text_progress is not None:
+        _add_text = f"| {add_text_progress}"
+    progress = gr.Progress()
+    progress((0, 4), desc=f"Загрузка RVC модели {_add_text}")
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
 
     config = Config(device)
+    progress((1, 4), desc=f"Загрузка Hubert модели {_add_text}")
     hubert_path = model_manager.check_hubert_transformers(embedder_name)
     if not hubert_path:
         raise ValueError(
@@ -2016,6 +1893,7 @@ def voice_conversion_transformers(
         output_bitrate,
         stereo_mode,
         pipeline_mode,
+        _add_text
     )
 
     del hubert_model, cpt, net_g, vc
@@ -2047,6 +1925,7 @@ def vbach_inference(
         "f0_max": 1100,
         "stereo_mode": "mono",
     },
+    add_text_progress: str = "",
     device: str = "cpu"
 ):
 
@@ -2118,7 +1997,8 @@ def vbach_inference(
         stereo_mode=stereo_mode,
         pipeline_mode=pipeline_mode,
         embedder_name=embedder_name,
-        device=device
+        device=device,
+        add_text_progress=add_text_progress
     )
     print(f'Инференс завершен\nПуть к выходному файлу: "{output_converted_voice}"')
     return output_converted_voice
@@ -2520,6 +2400,7 @@ class Vbach(GradioHelper):
                                 progress(
                                     progress=(i / len(ifl)), desc=f"Файл {i} из {len(ifl)}"
                                 )
+                                gr.Warning(title=f"Файл {i} из {len(ifl)}: {file}", message="")
                                 out_conv = vbach_inference(
                                     input_file=file,
                                     model_name=mn,
@@ -2543,6 +2424,7 @@ class Vbach(GradioHelper):
                                     pipeline_mode="alt" if alt_pipeline == True else "orig",
                                     embedder_name=em_n,
                                     stack="transformers" if tr_m == True else "fairseq",
+                                    add_text_progress=f"{i} из {len(ifl)}",
                                     device=self.device
                                 )
                                 output_converted_files.append(out_conv)
@@ -3009,6 +2891,7 @@ if __name__ == "__main__":
             share=args.share,
             allowed_paths=["/"],
             debug=args.debug,
+            inbrowser=True
         )
 
     elif args.mode == "model_manager":

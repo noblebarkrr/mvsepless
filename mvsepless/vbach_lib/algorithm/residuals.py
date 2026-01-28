@@ -2,7 +2,12 @@ import torch
 from itertools import chain
 from typing import Optional, Tuple
 from torch.nn.utils import remove_weight_norm
-from torch.nn.utils.parametrizations import weight_norm
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
+if is_pytorch2_1:
+    from torch.nn.utils.parametrizations import weight_norm
+else:
+    from torch.nn.utils import weight_norm
 
 from .modules import WaveNet
 from .commons import get_padding, init_weights
@@ -133,11 +138,18 @@ class ResidualCouplingBlock(torch.nn.Module):
     def __prepare_scriptable__(self):
         for i in range(self.n_flows):
             for hook in self.flows[i * 2]._forward_pre_hooks.values():
-                if (
-                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
-                    and hook.__class__.__name__ == "WeightNorm"
-                ):
-                    torch.nn.utils.remove_weight_norm(self.flows[i * 2])
+                if is_pytorch2_1:
+                    if (
+                        hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                        and hook.__class__.__name__ == "WeightNorm"
+                    ):
+                        torch.nn.utils.remove_weight_norm(self.flows[i * 2])
+                else:
+                    if (
+                        hook.__module__ == "torch.nn.utils.weight_norm"
+                        and hook.__class__.__name__ == "WeightNorm"
+                    ):
+                        torch.nn.utils.remove_weight_norm(self.flows[i * 2])         
 
         return self
 

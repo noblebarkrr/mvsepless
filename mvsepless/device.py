@@ -1,7 +1,7 @@
 import torch
 
 cuda_available = torch.cuda.is_available()
-mps_available = torch.mps.is_available()
+mps_available = False #torch.mps.is_available()
 device_count = torch.cuda.device_count() if cuda_available else 0
 all_ids = list(range(device_count))
 

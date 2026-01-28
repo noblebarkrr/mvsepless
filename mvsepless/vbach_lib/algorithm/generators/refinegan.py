@@ -3,7 +3,13 @@ import torch
 import torchaudio
 from torch import nn
 from torch.nn import functional as F
-from torch.nn.utils.parametrizations import weight_norm
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
+is_pytorchaudio2_0 = version.parse(torch.__version__) >= version.parse("2.0.1")
+if is_pytorch2_1:
+    from torch.nn.utils.parametrizations import weight_norm
+else:
+    from torch.nn.utils import weight_norm
 from torch.nn.utils import remove_weight_norm
 from torch.utils.checkpoint import checkpoint
 
@@ -309,15 +315,24 @@ class RefineGANGenerator(nn.Module):
         for block, (old_size, new_size) in zip(self.downsample_blocks, self.df0):
             x = F.leaky_relu(x, self.leaky_relu_slope)
             downs.append(x)
-            x = torchaudio.functional.resample(
-                x.contiguous(),
-                orig_freq=int(f0_size * old_size),
-                new_freq=int(f0_size * new_size),
-                lowpass_filter_width=64,
-                rolloff=0.9475937167399596,
-                resampling_method="sinc_interp_kaiser",
-                beta=14.769656459379492,
-            )
+            if is_pytorchaudio2_0:
+                x = torchaudio.functional.resample(
+                    x.contiguous(),
+                    orig_freq=int(f0_size * old_size),
+                    new_freq=int(f0_size * new_size),
+                    lowpass_filter_width=64,
+                    rolloff=0.9475937167399596,
+                    resampling_method="sinc_interp_kaiser",
+                    beta=14.769656459379492,
+                )
+            else:
+                x = torchaudio.functional.resample(
+                    x.contiguous(),
+                    orig_freq=int(f0_size * old_size),
+                    new_freq=int(f0_size * new_size),
+                    resampling_method="kaiser_window",
+                    beta=9.0,
+                )
             x = block(x)
 
         mel = self.mel_conv(mel)

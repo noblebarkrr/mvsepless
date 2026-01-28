@@ -12,7 +12,7 @@ from torch import nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from .attend_sw import Attend
+from .attend import Attend
 
 try:
     from .attend_sage import AttendSage
@@ -149,7 +149,7 @@ class LinearAttention(Module):
         dim_head=32,
         heads=8,
         scale=8,
-        flash=False,
+        flash=True,
         dropout=0.0,
         sage_attention=False,
     ):

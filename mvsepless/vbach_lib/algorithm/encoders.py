@@ -1,7 +1,8 @@
 import math
 import torch
 from typing import Optional
-
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
 from .commons import sequence_mask
 from .modules import WaveNet
 from .normalization import LayerNorm
@@ -163,9 +164,17 @@ class PosteriorEncoder(torch.nn.Module):
 
     def __prepare_scriptable__(self):
         for hook in self.enc._forward_pre_hooks.values():
-            if (
-                hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
-                and hook.__class__.__name__ == "WeightNorm"
-            ):
-                torch.nn.utils.remove_weight_norm(self.enc)
+            if is_pytorch2_1:
+                if (
+                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                    and hook.__class__.__name__ == "WeightNorm"
+                ):
+                    torch.nn.utils.remove_weight_norm(self.enc)
+            else:
+                if (
+                    hook.__module__ == "torch.nn.utils.weight_norm"
+                    and hook.__class__.__name__ == "WeightNorm"
+                ):
+                    torch.nn.utils.remove_weight_norm(self.enc)
+
         return self

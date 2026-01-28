@@ -4,7 +4,13 @@ from typing import Optional
 import numpy as np
 import torch
 from torch.nn.utils import remove_weight_norm
-from torch.nn.utils.parametrizations import weight_norm
+from packaging import version
+is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
+if is_pytorch2_1:
+    from torch.nn.utils.parametrizations import weight_norm
+else:
+    from torch.nn.utils import weight_norm
+    
 from torch.utils.checkpoint import checkpoint
 
 LRELU_SLOPE = 0.1

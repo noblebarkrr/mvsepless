@@ -1,7 +1,7 @@
 import os
 import sys
-sys.stdout.reconfigure(encoding='utf-8') # Фикс для Windows
-sys.stderr.reconfigure(encoding='utf-8') # Фикс для Windows
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 import json
 import argparse
 import time
@@ -652,4 +652,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

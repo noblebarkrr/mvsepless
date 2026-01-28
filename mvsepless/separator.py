@@ -1,8 +1,12 @@
 import os, json, sys, subprocess, threading, time, argparse, gradio as gr, yaml, tabulate
 from downloader import dw_file
 from audio import check, output_formats
-from device import all_ids, set_device
-
+from device import all_ids, set_device, cuda_available
+import torch
+from check_colab import easy_check_is_colab
+from packaging import version
+is_pytorch2 = version.parse(torch.__version__) >= version.parse("2.0.0")
+unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa", "bandit_v2_multi", "bandit_plus"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not easy_check_is_colab() else []
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
@@ -22,7 +26,7 @@ class MvseplessModelManager:
         return self.models_info.get(model_name).get("model_type")
 
     def get_mn(self):
-        return [mn for mn in self.models_info]
+        return [mn for mn in self.models_info if mn not in unsupported_models]
 
     def get_stems(self, model_name):
         if model_name is not None and model_name != "":
@@ -143,6 +147,10 @@ class MvseplessModelManager:
 
             elif model_type == "vr":
                 data["inference"]["aggression"] = vr_aggr
+
+            if not cuda_available:
+                if model_type in ["mel_band_roformer", "bs_roformer"]:
+                    data["audio"]["chunk_size"] = 44100 * 7
 
             with open(config_path, "w") as f:
                 yaml.dump(
@@ -468,6 +476,7 @@ class Separator(MvseplessModelManager):
             results = []
             for i, f in enumerate(input, 1):
                 print(f"Файл {i} из {len(input)}: {f}")
+                gr.Warning(title=f"Файл {i} из {len(input)}: {f}", message="")
                 if os.path.exists(f):
                     if check(f):
                         basename = os.path.splitext(os.path.basename(f))[0]
