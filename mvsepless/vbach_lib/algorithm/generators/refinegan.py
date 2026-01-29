@@ -5,7 +5,7 @@ from torch import nn
 from torch.nn import functional as F
 from packaging import version
 is_pytorch2_1 = version.parse(torch.__version__) >= version.parse("2.1.0")
-is_pytorchaudio2_0 = version.parse(torch.__version__) >= version.parse("2.0.1")
+is_pytorchaudio2_0 = version.parse(torchaudio.__version__) >= version.parse("2.0.1")
 if is_pytorch2_1:
     from torch.nn.utils.parametrizations import weight_norm
 else:
@@ -373,3 +373,4 @@ class RefineGANGenerator(nn.Module):
 
         for block in self.upsample_conv_blocks:
             block.remove_weight_norm()
+
