@@ -8,7 +8,6 @@ from numpy.typing import DTypeLike
 
 ffmpeg_path = "ffmpeg"
 ffprobe_path = "ffprobe"
-__all__ = ["read", "write", "multiread", "multiwrite", "ensemble", "gain", "dc_offset", "trim", "reverse", "normalize", "split_channels", "split_mid_side", "get_info_array", "substractor", "average", "convert_to_dtype", "easy_resampler", "add_zero_to_end", "get_axis_from_array_index", "concatenate", "stereo_to_mono", "mono_to_stereo"]
 
 def average(*ints):
     numbers = len(ints)
@@ -443,7 +442,16 @@ def split_mid_side(y: np.ndarray, var: int = 1, sr: int | None = None) -> tuple[
             side_channel = np.stack([base_L, base_R], axis=axis)
         else:
             raise Exception("Не указана частота дискретизации")
+    elif var == 4:
+        mid_channel = mid_channel_one
+        side_channel = left_channel + -right_channel
     return convert_to_dtype(mid_channel, orig_dtype), convert_to_dtype(side_channel, orig_dtype)
+
+def mid_side_to_stereo(y: np.ndarray, z: np.ndarray, index: int = -1, dtype: DTypeLike = np.float32):
+    y, z = convert_to_dtype(y, np.float64), convert_to_dtype(z, np.float64)
+    mid = multi_channel_array_from_arrays(y, y, index=index, dtype=np.float64)
+    side = multi_channel_array_from_arrays(z, -z, index=index, dtype=np.float64)
+    return convert_to_dtype(mid + side, dtype)
 
 def mono_to_stereo(y: np.ndarray, index: int, num_channels: int = 2) -> np.ndarray:
     channels, samples, array_index, flatten = get_info_array(y)
