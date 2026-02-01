@@ -16,7 +16,7 @@ import torch.nn as nn
 
 from typing import Literal
 
-from audio import read, write, output_formats
+from audio import read, multiwrite, output_formats, substractor
 from namer import Namer
 
 namer = Namer()
@@ -30,6 +30,21 @@ def normalize_peak(audio, peak):
         return audio
     scale_factor = peak / current_peak
     return audio * scale_factor
+
+
+def create_output_path(input_path, stem_name, model_name, model_id, output_format, store_dir, template):
+    file_name = os.path.splitext(os.path.basename(input_path))[0]
+    file_name_shorted = namer.short_input_name_template(
+        template, STEM=stem_name, MODEL=model_name, ID=model_id, NAME=file_name
+    )
+    custom_name = namer.template(
+        template,
+        STEM=stem_name,
+        MODEL=model_name,
+        ID=model_id,
+        NAME=file_name_shorted,
+    )
+    return os.path.join(store_dir, f"{custom_name}.{output_format}")
 
 
 gc.enable()
@@ -69,8 +84,6 @@ def once_inference(
         "mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"
     ] = "mp3",
     output_bitrate: str = "320k",
-    use_tta: bool = False,
-    verbose: bool = False,
     model_name: str = None,
     sample_rate: int = 44100,
     instruments: list = [],
@@ -78,6 +91,7 @@ def once_inference(
     template: str = None,
     selected_instruments: list = [],
     model_id: int = 0,
+    spec_invert_target_instrument: bool = False
 ):
     results = []
     sys.stdout.write(json.dumps({"reading": path}, ensure_ascii=False) + "\n")
@@ -87,15 +101,8 @@ def once_inference(
     )
     sys.stdout.flush()
 
-    if config.training.target_instrument is not None:
-        sys.stdout.write(
-            json.dumps(
-                {"target_instrument": config.training.target_instrument},
-                ensure_ascii=False,
-            )
-            + "\n"
-        )
-        sys.stdout.flush()
+    output_instruments = []
+    output_waveforms = {}
 
     mono_bool = False
     if hasattr(config.model, "stereo"):
@@ -117,28 +124,21 @@ def once_inference(
         std = mono.std()
         mix = (mix - mean) / std
 
-    if use_tta:
-        track_proc_list = [mix.copy(), mix[::-1].copy(), -1.0 * mix.copy()]
-    else:
-        track_proc_list = [mix.copy()]
-    full_result = []
-    for m in track_proc_list:
-        try:
-            waveforms = demix(
-                config, model, m, device, pbar=detailed_pbar, model_type=model_type
-            )
+    waveforms = {}
 
-            full_result.append(waveforms)
-        except Exception as e:
-            sys.stdout.write(
-                json.dumps({"error": f"Ошибка при демиксе: {e}"}, ensure_ascii=False)
-                + "\n"
-            )
-            sys.stdout.flush()
-        del m
-        gc.collect()
+    try:
+        waveforms = demix(
+            config, model, mix_orig, device, pbar=detailed_pbar, model_type=model_type
+        )
+    except Exception as e:
+        sys.stdout.write(
+            json.dumps({"error": f"Ошибка при демиксе: {e}"}, ensure_ascii=False)
+            + "\n"
+        )
+        sys.stdout.flush()
+    gc.collect()
 
-    if not full_result:
+    if not waveforms:
         sys.stdout.write(
             json.dumps({"error": "Пустой результат демикса."}, ensure_ascii=False)
             + "\n"
@@ -146,61 +146,57 @@ def once_inference(
         sys.stdout.flush()
         return results
 
-    waveforms = full_result[0]
-    for i in range(1, len(full_result)):
-        d = full_result[i]
-        for el in d:
-            if i == 2:
-                waveforms[el] += -1.0 * d[el]
-            elif i == 1:
-                waveforms[el] += d[el][::-1].copy()
-            else:
-                waveforms[el] += d[el]
-    for el in waveforms:
-        waveforms[el] /= len(full_result)
-
-    if extract_instrumental and config.training.target_instrument is not None:
-        second_stem = [
-            s
-            for s in config.training.instruments
-            if s != config.training.target_instrument
-        ]
+    if config.training.target_instrument is not None and not selected_instruments:
+        output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
+        second_stem = None
+        for instr_ in instruments:
+            if instr_ != config.training.target_instrument:
+                second_stem = instr_
+                break
         if second_stem:
-            second_stem_key = second_stem[0]
-            if second_stem_key not in instruments:
-                instruments.append(second_stem_key)
-            waveforms[second_stem_key] = mix_orig - waveforms[instruments[0]]
+            output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+    elif config.training.target_instrument is not None and selected_instruments:
+        if config.training.target_instrument in selected_instruments:
+            output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
+        second_stem = None
+        for instr_ in instruments:
+            if instr_ != config.training.target_instrument:
+                second_stem = instr_
+                break
+        if second_stem:
+            if second_stem in selected_instruments:
+                output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
-    elif (
-        extract_instrumental
-        and selected_instruments
-        and config.training.target_instrument is None
-    ):
-
-        all_instruments = config.training.instruments
-        if len(all_instruments) > 2:
-
-            waveforms["inverted -"] = mix_orig.copy()
-            for instr in instruments:
-                if instr in waveforms:
-                    waveforms["inverted -"] -= waveforms[instr]
-
-            if "inverted -" not in instruments:
-                instruments.append("inverted -")
+    elif config.training.target_instrument is None and not selected_instruments and not extract_instrumental:
+        for instr in waveforms:
+            output_waveforms[instr] = waveforms[instr]
+    elif config.training.target_instrument is None and selected_instruments and not extract_instrumental:
+        for instr in waveforms:
+            if instr in selected_instruments:
+                output_waveforms[instr] = waveforms[instr]
+    elif config.training.target_instrument is None and selected_instruments and extract_instrumental:
+        for instr in waveforms:
+            if instr in selected_instruments:
+                output_waveforms[instr] = waveforms[instr]
+        if len(instruments) > 2:
+            output_waveforms["inverted -"] = mix_orig.copy()
+            for instr_ in selected_instruments:
+                if instr_ in waveforms:
+                    output_waveforms["inverted -"] = substractor(output_waveforms["inverted -"], waveforms[instr_], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
             unselected_stems = [
-                s for s in all_instruments if s not in selected_instruments
+                s for s in instruments if s not in selected_instruments
             ]
             if unselected_stems:
-                waveforms["inverted +"] = np.zeros_like(mix_orig)
+                output_waveforms["inverted +"] = np.zeros_like(mix_orig)
                 for stem in unselected_stems:
                     if stem in waveforms:
-                        waveforms["inverted +"] += waveforms[stem]
+                        output_waveforms["inverted +"] += waveforms[stem]
                 if "inverted +" not in instruments:
                     instruments.append("inverted +")
 
-            peak = np.max(np.abs(waveforms["inverted -"]))
-            waveforms["inverted +"] = normalize_peak(waveforms["inverted +"], peak)
+            peak = np.max(np.abs(output_waveforms["inverted -"]))
+            output_waveforms["inverted +"] = normalize_peak(output_waveforms["inverted +"], peak)
 
     elif (
         extract_instrumental
@@ -208,83 +204,64 @@ def once_inference(
         and config.training.target_instrument is None
         and (
             all(
-                instr in config.training.instruments
+                instr in instruments
                 for instr in ["bass", "drums", "other", "vocals"]
             )
             or all(
-                instr in config.training.instruments
+                instr in instruments
                 for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"]
             )
         )
     ):
+        for instr in waveforms:
+            output_waveforms[instr] = waveforms[instr]
+        output_waveforms["instrumental -"] = mix_orig.copy()
+        output_waveforms["instrumental -"] = substractor(output_waveforms["instrumental -"], waveforms["vocals"], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
-        waveforms["instrumental -"] = mix_orig.copy()
-        waveforms["instrumental -"] -= waveforms["vocals"]
-
-        if "instrumental -" not in instruments:
-            instruments.append("instrumental -")
-
-        all_instruments = config.training.instruments
-        non_vocal_stems = [s for s in all_instruments if s not in ["vocals"]]
+        non_vocal_stems = [s for s in instruments if s not in ["vocals"]]
         if non_vocal_stems:
-            waveforms["instrumental +"] = np.zeros_like(mix_orig)
+            output_waveforms["instrumental +"] = np.zeros_like(mix_orig)
             for stem in non_vocal_stems:
                 if stem in waveforms:
-                    waveforms["instrumental +"] += waveforms[stem]
-            if "instrumental +" not in instruments:
-                instruments.append("instrumental +")
+                    output_waveforms["instrumental +"] += waveforms[stem]
 
-        peak = np.max(np.abs(waveforms["instrumental -"]))
-        waveforms["instrumental +"] = normalize_peak(waveforms["instrumental +"], peak)
+        peak = np.max(np.abs(output_waveforms["instrumental -"]))
+        output_waveforms["instrumental +"] = normalize_peak(output_waveforms["instrumental +"], peak)
+
+    output_instruments = [instr__ for instr__ in output_waveforms]
 
     template = namer.sanitize(template)
     template = namer.dedup_template(template, keys=["NAME", "MODEL", "STEM", "ID"])
     template = namer.short(template, length=40)
 
-    for instr in instruments:
-        try:
-            estimates = waveforms[instr].T
-            if mean is not None and std is not None:
-                estimates = estimates * std + mean
+    output_paths = [create_output_path(path, instr, model_name, model_id, output_format, store_dir, template) for instr in output_instruments]
+    if mean is not None and std is not None:
+        output_arrays = [output_waveforms[instr] * std + mean for instr in output_instruments]
+    else:
+        output_arrays = [output_waveforms[instr] for instr in output_instruments]
+    output_sample_rates = [sample_rate for _ in range(len(output_instruments))]
 
-            file_name = os.path.splitext(os.path.basename(path))[0]
-            file_name_shorted = namer.short_input_name_template(
-                template, STEM=instr, MODEL=model_name, ID=model_id, NAME=file_name
-            )
-            custom_name = namer.template(
-                template,
-                STEM=instr,
-                MODEL=model_name,
-                ID=model_id,
-                NAME=file_name_shorted,
-            )
-            output_path = os.path.join(store_dir, f"{custom_name}.{output_format}")
+    def flush_writing_file(file):
+        sys.stdout.write(
+            json.dumps({"writing": file}, ensure_ascii=False) + "\n"
+        )
+        sys.stdout.flush()
 
-            sys.stdout.write(
-                json.dumps({"writing": output_path}, ensure_ascii=False) + "\n"
+    try:
+        writed_files = multiwrite(output_arrays, output_sample_rates, [namer.iter(output_path_) for output_path_ in output_paths], output_bitrate, callable_func=flush_writing_file, strict=True)
+    except Exception as e:
+        sys.stdout.write(
+            json.dumps(
+                {"error": f"Ошибка при обработке: {e}"}, ensure_ascii=False
             )
-            sys.stdout.flush()
+            + "\n"
+        )
+        sys.stdout.flush()
+    gc.collect()
 
-            output_path = write(
-                namer.iter(output_path),
-                estimates,
-                sr,
-                output_bitrate,
-            )
+    results = tuple(zip(output_instruments, writed_files))
 
-            results.append((instr, output_path))
-            del estimates
-        except Exception as e:
-            sys.stdout.write(
-                json.dumps(
-                    {"error": f"Ошибка при обработке {instr}: {e}"}, ensure_ascii=False
-                )
-                + "\n"
-            )
-            sys.stdout.flush()
-        gc.collect()
-
-    del mix, mix_orig, waveforms, full_result
+    del mix, mix_orig, waveforms, output_arrays
     gc.collect()
 
     return results
@@ -303,12 +280,11 @@ def run_inference(
         "mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"
     ] = "mp3",
     output_bitrate: str = "320k",
-    use_tta: bool = False,
-    verbose: bool = False,
     model_name: str = None,
     template: str = "NAME_STEM",
     selected_instruments: list = [],
     model_id: int = 0,
+    spec_invert_target_instrument: bool = False
 ):
     start_time = time.time()
     if model_type != "vr":
@@ -317,30 +293,7 @@ def run_inference(
     if "sample_rate" in config.audio:
         sample_rate = config.audio["sample_rate"]
 
-    instruments = prefer_target_instrument(config)
-
-    if config.training.target_instrument is not None:
-        sys.stdout.write(
-            json.dumps(
-                {
-                    "info": "Целевой инструмент найден в конфигурации модели. Выбранные стемы будут проигнорированы."
-                },
-                ensure_ascii=False,
-            )
-            + "\n"
-        )
-        sys.stdout.flush()
-    else:
-        if selected_instruments is not None and selected_instruments != []:
-            instruments = [
-                instr for instr in instruments if instr in selected_instruments
-            ]
-            if verbose:
-                sys.stdout.write(
-                    json.dumps({"selected_stems": instruments}, ensure_ascii=False)
-                    + "\n"
-                )
-                sys.stdout.flush()
+    instruments = config.training.instruments
 
     os.makedirs(store_dir, exist_ok=True)
 
@@ -356,8 +309,6 @@ def run_inference(
         detailed_pbar=detailed_pbar,
         output_format=output_format,
         output_bitrate=output_bitrate,
-        use_tta=use_tta,
-        verbose=verbose,
         model_name=model_name,
         sample_rate=sample_rate,
         instruments=instruments,
@@ -365,6 +316,7 @@ def run_inference(
         template=template,
         selected_instruments=selected_instruments,
         model_id=model_id,
+        spec_invert_target_instrument=spec_invert_target_instrument
     )
 
     time.sleep(1)
@@ -503,10 +455,9 @@ def mvsep_offline(
     template,
     device="cpu",
     disable_detailed_pbar=False,
-    use_tta=False,
-    verbose=False,
     selected_instruments=None,
     model_id=0,
+    spec_invert_target_instrument=False
 ):
     model, config, device = load_model(
         model_type, config_path, start_check_point, device
@@ -523,12 +474,11 @@ def mvsep_offline(
         disable_detailed_pbar=disable_detailed_pbar,
         output_format=output_format,
         output_bitrate=output_bitrate,
-        use_tta=use_tta,
-        verbose=verbose,
         model_name=model_name,
         template=template,
         selected_instruments=selected_instruments,
         model_id=model_id,
+        spec_invert_target_instrument=spec_invert_target_instrument
     )
 
     if model_type != "vr":
@@ -599,6 +549,11 @@ def parse_args():
         help="Извлечь инструментальную версию",
     )
     parser.add_argument(
+        "--use_spec_invert",
+        action="store_true",
+        help="При извлечь инструментальной версии, использовать спектрограмму",
+    )
+    parser.add_argument(
         "--template",
         type=str,
         default="NAME_STEM",
@@ -643,12 +598,10 @@ def main():
         template=args.template,
         device=args.device,
         disable_detailed_pbar=args.disable_detailed_pbar,
-        use_tta=args.use_tta,
-        verbose=args.verbose,
         selected_instruments=args.selected_instruments,
         model_id=args.model_id,
+        spec_invert_target_instrument=args.use_spec_invert
     )
-
 
 if __name__ == "__main__":
     main()

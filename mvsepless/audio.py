@@ -612,16 +612,20 @@ def substractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: b
         substracted_specs = []
         substracted_wavs = []
         y_stfts = []
-        for ch in split_channels(y):
-            f, t, spec = stft(ch, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window, padded=False)
+        for ch_1 in split_channels(y):
+            f, t, spec = stft(ch_1, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window, padded=False)
             y_stfts.append(spec)
         z_stfts = []
-        for ch in split_channels(z):
-            f, t, spec = stft(ch, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window, padded=False)
+        for ch_2 in split_channels(z):
+            f, t, spec = stft(ch_2, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window, padded=False)
             z_stfts.append(spec)
         y_z_stfts = zip(y_stfts, z_stfts)
         for a1, a2 in y_z_stfts:
-            substracted_specs.append(a1 - a2)
+            mag1 = np.abs(a1)
+            mag2 = np.abs(a2)
+            mag_result = np.maximum(mag1 - mag2, 0)
+            phase = np.angle(a1)
+            substracted_specs.append(mag_result * np.exp(1j * phase))
         for sub_spec in substracted_specs:
             _, wav = istft(sub_spec, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window)
             substracted_wavs.append(wav)
@@ -796,10 +800,23 @@ def write(path: str, y: np.ndarray, sr: int, bitrate: int | str = 320, prefer_fl
     process.wait()
     return path
 
-def multiwrite(arrays: tuple[np.ndarray] | list[np.ndarray], srs: tuple[int] | list[int], paths: tuple[str] | list[int], prefer_float: bool = False):
+def multiwrite(arrays: tuple[np.ndarray] | list[np.ndarray], srs: tuple[int] | list[int], paths: tuple[str] | list[int], bitrate: int | str = 320, prefer_float: bool = False, callable_func = None, strict: bool = False):
     saved_paths = []
+    exceptions = []
     if len(arrays) == len(srs) == len(paths):
         save_arrays = list(zip(arrays, srs, paths))
         for array, sr, path in save_arrays:
-            saved_paths.append(write(path, array, sr, prefer_float=prefer_float))
+            if callable_func is not None:
+                callable_func(path)
+            try:
+                saved_paths.append(write(path, array, sr, bitrate=bitrate, prefer_float=prefer_float))
+            except Exception as e:
+                if strict:
+                    raise Exception(str(e))
+                else:
+                    print(e)
+                    exceptions.append(str(e))
+    if not saved_paths:
+        exceptions_str = '\n'.join(exceptions)
+        raise Exception(f"Ни один из аудио-массивов не был записан без ошибок\nОшибки: {exceptions_str}")
     return tuple(saved_paths)

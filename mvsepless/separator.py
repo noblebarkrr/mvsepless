@@ -286,6 +286,7 @@ class Separator(MvseplessModelManager):
         conf: str = None,
         id: int = None,
         progress: any = None,
+        use_spec_invert: bool = False,
         add_text_progress: str = "",
     ) -> list[tuple[str, str]]:
 
@@ -318,6 +319,8 @@ class Separator(MvseplessModelManager):
         ]
         if ext_inst:
             cmd.append("--extract_instrumental")
+        if use_spec_invert:
+            cmd.append("--use_spec_invert")
         if selected_stems:
             cmd.append("--selected_instruments")
             cmd.extend(selected_stems)
@@ -408,6 +411,7 @@ class Separator(MvseplessModelManager):
             "vr_aggr": 5,
             "add_single_sep_text_progress": None,
         },
+        use_spec_invert: bool = False,
         progress: any = gr.Progress(track_tqdm=True),
     ) -> list[tuple[str, str]] | list[str, list[tuple[str, str]]]:
 
@@ -468,6 +472,7 @@ class Separator(MvseplessModelManager):
                 conf=conf,
                 id=id,
                 progress=progress,
+                use_spec_invert=use_spec_invert,
                 add_text_progress=add_progress_text_custom,
             )
             return seped
@@ -494,6 +499,7 @@ class Separator(MvseplessModelManager):
                             conf=conf,
                             id=id,
                             progress=progress,
+                            use_spec_invert=use_spec_invert,
                             add_text_progress=f"({i} из {len(input)}) ",
                         )
                         results.append([basename, seped])

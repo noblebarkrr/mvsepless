@@ -182,6 +182,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         selected_stems=None,
         vr_aggr=5,
         mdx_denoise=False,
+        use_spec_invert=False,
         progress=gr.Progress(track_tqdm=True),
     ):
         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
@@ -199,6 +200,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                 "vr_aggr": vr_aggr,
                 "add_single_sep_text_progress": None,
             },
+            use_spec_invert=use_spec_invert,
             progress=progress,
         )
         self.history.add(results, model_name, timestamp)
@@ -283,13 +285,13 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 return gr.update(choices=models, value=value)
 
                             extract_instrumental = gr.Checkbox(
-                                label="Извлечь инструментал", value=True, interactive=True
+                                label="Извлечь инструментал", value=False, interactive=True, visible=False
                             )
                             stems = gr.CheckboxGroup(
                                 label="Выберите стемы",
                                 choices=self.get_stems(default_model[0]),
                                 value=[],
-                                interactive=False, scale=8
+                                interactive=True, scale=8
                             )
                             with gr.Accordion(label="Дополнительные настройки", open=False):
                                 with gr.Group():
@@ -305,18 +307,19 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                         value=False,
                                         interactive=True,
                                     )
+                                    use_spec_for_extract_instrumental = gr.Checkbox(
+                                        label="При извлечении инструментала/второго стема использовать спектрограмму", value=False, interactive=True
+                                    )
 
                             @model_name.change(
                                 inputs=[model_name], outputs=[extract_instrumental, stems]
                             )
                             def update_model_name(model_name):
                                 stems = self.get_stems(model_name)
-                                target_instrument = self.get_tgt_inst(model_name)
                                 return gr.update(
-                                    value=target_instrument is not None, 
-                                    visible=(target_instrument is None and len(stems) > 2) or target_instrument is not None
+                                    visible=len(stems) > 2
                                 ), gr.update(
-                                    choices=stems, value=[], interactive=target_instrument is None
+                                    choices=stems, value=[], interactive=True
                                 )
                             
                             with gr.Row():
@@ -369,6 +372,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     stems,
                                     mdx_denoise,
                                     vr_aggr,
+                                    use_spec_for_extract_instrumental
                                 ],
                                 outputs=[sep_state, status],
                                 show_progress="full",
@@ -383,6 +387,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 stems,
                                 mdx_denoise,
                                 vr_aggr,
+                                u_spec,
                                 progress=gr.Progress(track_tqdm=True),
                             ):
                                 results = self._separate_batch(
@@ -395,6 +400,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     stems,
                                     vr_aggr,
                                     mdx_denoise,
+                                    u_spec,
                                     progress=progress,
                                 )
                                 return gr.update(value=str(results)), gr.update(visible=False)
