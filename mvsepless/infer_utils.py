@@ -17,6 +17,9 @@ def load_config(model_type: str, config_path: str) -> Any:
                 config = OmegaConf.load(config_path)
             else:
                 config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
+                if hasattr(config.audio, "new_chunk_size"):
+                    if hasattr(config.audio, "chunk_size"):
+                        config.audio.chunk_size = config.audio.new_chunk_size
             return config
     except FileNotFoundError:
         raise FileNotFoundError(f"Configuration file not found at {config_path}")

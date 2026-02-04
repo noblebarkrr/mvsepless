@@ -114,7 +114,7 @@ class MvseplessModelManager:
 
         return config_path, checkpoint_path
 
-    def conf_editor(self, config_path, mdx_denoise, vr_aggr, model_type):
+    def conf_editor(self, config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type):
 
         class IndentDumper(yaml.Dumper):
             def increase_indent(self, flow=False, indentless=False):
@@ -128,14 +128,14 @@ class MvseplessModelManager:
             "tag:yaml.org,2002:python/tuple", tuple_constructor
         )
 
-        def conf_edit(config_path, mdx_denoise, vr_aggr, model_type):
+        def conf_edit(config_path: str, mdx_denoise: bool, vr_aggr: int, vr_enable_post_process: bool, vr_high_end_process: bool, model_type: str):
             with open(config_path, "r") as f:
                 data = yaml.load(f, Loader=yaml.SafeLoader)
 
             if "use_amp" not in data.keys():
                 data["training"]["use_amp"] = True
 
-            if model_type != "vr":
+            if model_type not in ["vr", "htdemucs"]:
                 if data["inference"]["num_overlap"] != 2:
                     data["inference"]["num_overlap"] = 2
 
@@ -147,10 +147,16 @@ class MvseplessModelManager:
 
             elif model_type == "vr":
                 data["inference"]["aggression"] = vr_aggr
+                data["inference"]["enable_post_process"] = vr_enable_post_process
+                data["inference"]["high_end_process"] = vr_high_end_process
 
             if not cuda_available:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
-                    data["audio"]["chunk_size"] = 44100 * 7
+                    data["audio"]["new_chunk_size"] = 44100 * 7
+            else:
+                if model_type in ["mel_band_roformer", "bs_roformer"]:
+                    if "new_chunk_size" in data["audio"]:
+                        del data["audio"]["new_chunk_size"]
 
             with open(config_path, "w") as f:
                 yaml.dump(
@@ -162,7 +168,7 @@ class MvseplessModelManager:
                     allow_unicode=True,
                 )
 
-        conf_edit(config_path, mdx_denoise, vr_aggr, model_type)
+        conf_edit(config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type)
 
     def install_model(
         self,
@@ -170,6 +176,8 @@ class MvseplessModelManager:
         model_name: str,
         mdx_denoise: bool = False,
         vr_aggr: bool = 5,
+        vr_post_process: bool = False,
+        vr_high_end_process: bool = False,
         progress: any = None,
     ) -> tuple[int, str, str]:
 
@@ -186,8 +194,7 @@ class MvseplessModelManager:
             info["checkpoint_url"],
             info["config_url"],
         )
-        if model_type != "htdemucs":
-            self.conf_editor(conf, mdx_denoise, vr_aggr, model_type)
+        self.conf_editor(conf, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, model_type)
 
         return id, conf, ckpt
     
@@ -259,7 +266,7 @@ class Separator(MvseplessModelManager):
                     print(f"\rОбработано: {percent}%", end="")
                 return None
             elif "writing" in data:
-                progress(0.9, desc="Запись результатов")
+                progress(0.9, desc=f"Запись результатов {_add_text}")
                 print(f"\rЗапись в файл {data['writing']}", end="")
                 return None
             elif "done" in data:
@@ -409,6 +416,8 @@ class Separator(MvseplessModelManager):
         add_settings: dict = {
             "mdx_denoise": False,
             "vr_aggr": 5,
+            "vr_post_process": False,
+            "vr_high_end_process": False,
             "add_single_sep_text_progress": None,
         },
         use_spec_invert: bool = False,
@@ -442,12 +451,13 @@ class Separator(MvseplessModelManager):
         os.makedirs(output_dir, exist_ok=True)
 
         mdx_denoise = add_settings.get("mdx_denoise", False)
-
         vr_aggr = add_settings.get("vr_aggr", 5)
-
+        vr_post_process = add_settings.get("vr_post_process", False)
+        vr_high_end_process = add_settings.get("vr_high_end_process", False)
         add_progress_text_custom = add_settings.get("add_single_sep_text_progress", "")
+
         id, conf, ckpt = self.install_model(
-            model_type, model_name, mdx_denoise, vr_aggr, progress
+            model_type, model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, progress
         )
 
         if isinstance(input, str):

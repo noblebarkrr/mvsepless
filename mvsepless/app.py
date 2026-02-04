@@ -181,6 +181,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         template="NAME_(STEM)_MODEL",
         selected_stems=None,
         vr_aggr=5,
+        vr_post_process=False,
+        vr_high_end_process=False,
         mdx_denoise=False,
         use_spec_invert=False,
         progress=gr.Progress(track_tqdm=True),
@@ -198,6 +200,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
             add_settings={
                 "mdx_denoise": mdx_denoise,
                 "vr_aggr": vr_aggr,
+                "vr_post_process": vr_post_process,
+                "vr_high_end_process": vr_high_end_process,
                 "add_single_sep_text_progress": None,
             },
             use_spec_invert=use_spec_invert,
@@ -295,20 +299,30 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                             )
                             with gr.Accordion(label="Дополнительные настройки", open=False):
                                 with gr.Group():
-                                    vr_aggr, mdx_denoise = gr.Slider(
-                                        label="Сила подавления для VR моделей",
+                                    gr.Markdown("<h4>VR</h4>", container=True)
+                                    vr_aggr = gr.Slider(
+                                        label="Агрессивность",
                                         minimum=0,
                                         maximum=100,
                                         value=5,
                                         step=1,
                                         interactive=True,
-                                    ), gr.Checkbox(
-                                        label="Включить шумоподавление для MDX-NET моделей",
+                                    )
+                                    vr_enable_post_process = gr.Checkbox(
+                                        label="Дополнительная обработка для улучшения качества разделения", value=False, interactive=True
+                                    )
+                                    vr_enable_high_end_process = gr.Checkbox(
+                                        label="Восстановление недостающих высоких частот", value=False, interactive=True
+                                    )
+                                    gr.Markdown("<h4>MDX-NET</h4>", container=True)
+                                    mdx_denoise = gr.Checkbox(
+                                        label="Шумоподавление",
                                         value=False,
                                         interactive=True,
                                     )
+                                    gr.Markdown("<h4>Инвертирование результата</h4>", container=True)
                                     use_spec_for_extract_instrumental = gr.Checkbox(
-                                        label="При извлечении инструментала/второго стема использовать спектрограмму", value=False, interactive=True
+                                        label="При извлечении инструментала/второго стема/остатка использовать спектрограмму", value=False, interactive=True
                                     )
 
                             @model_name.change(
@@ -372,6 +386,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     stems,
                                     mdx_denoise,
                                     vr_aggr,
+                                    vr_enable_post_process,
+                                    vr_enable_high_end_process,
                                     use_spec_for_extract_instrumental
                                 ],
                                 outputs=[sep_state, status],
@@ -387,6 +403,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 stems,
                                 mdx_denoise,
                                 vr_aggr,
+                                vr_pp,
+                                vr_hip,
                                 u_spec,
                                 progress=gr.Progress(track_tqdm=True),
                             ):
@@ -399,6 +417,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     t,
                                     stems,
                                     vr_aggr,
+                                    vr_pp,
+                                    vr_hip,
                                     mdx_denoise,
                                     u_spec,
                                     progress=progress,

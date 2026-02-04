@@ -146,7 +146,7 @@ def once_inference(
         sys.stdout.flush()
         return results
 
-    if config.training.target_instrument is not None and not selected_instruments:
+    if config.training.target_instrument is not None and not selected_instruments: # Если обнаружен целевой инструмент и не выбрано ни одного стема:
         output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
         second_stem = None
         for instr_ in instruments:
@@ -155,7 +155,7 @@ def once_inference(
                 break
         if second_stem:
             output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
-    elif config.training.target_instrument is not None and selected_instruments:
+    elif config.training.target_instrument is not None and selected_instruments: # Если обнаружен целевой инструмент и выбран хотя бы один стем:
         if config.training.target_instrument in selected_instruments:
             output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
         second_stem = None
@@ -167,14 +167,14 @@ def once_inference(
             if second_stem in selected_instruments:
                 output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
-    elif config.training.target_instrument is None and not selected_instruments and not extract_instrumental:
+    elif config.training.target_instrument is None and not selected_instruments and not extract_instrumental: # Если не обнаружено целевого инструмента, и не выбрано ни одного стема
         for instr in waveforms:
             output_waveforms[instr] = waveforms[instr]
-    elif config.training.target_instrument is None and selected_instruments and not extract_instrumental:
+    elif config.training.target_instrument is None and selected_instruments and not extract_instrumental: # Если не обнаружено целевого инструмента, выбран хотя бы один стем 
         for instr in waveforms:
             if instr in selected_instruments:
                 output_waveforms[instr] = waveforms[instr]
-    elif config.training.target_instrument is None and selected_instruments and extract_instrumental:
+    elif config.training.target_instrument is None and selected_instruments and extract_instrumental: # Если не обнаружено целевого инструмента, выбран хотя бы один стем и включено извлчение инструментала
         for instr in waveforms:
             if instr in selected_instruments:
                 output_waveforms[instr] = waveforms[instr]
@@ -212,7 +212,7 @@ def once_inference(
                 for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"]
             )
         )
-    ):
+    ): # Если не обнаружено целевого инструмента, не выбрано ни одного стема, и набор стемов у модели ["bass", "drums", "other", "vocals"] или ["bass", "drums", "other", "vocals", "piano", "guitar"]
         for instr in waveforms:
             output_waveforms[instr] = waveforms[instr]
         output_waveforms["instrumental -"] = mix_orig.copy()
@@ -230,6 +230,7 @@ def once_inference(
 
     output_instruments = [instr__ for instr__ in output_waveforms]
 
+    ### Подготовка шаблона
     template = namer.sanitize(template)
     template = namer.dedup_template(template, keys=["NAME", "MODEL", "STEM", "ID"])
     template = namer.short(template, length=40)
@@ -363,9 +364,12 @@ def load_model(model_type, config_path, start_check_point, device: str):
     model, config = get_model_from_config(model_type, config_path)
 
     if model_type == "vr":
+        enable_post_process = False
+        if hasattr(config.inference, "enable_post_process"):
+            enable_post_process = config.inference.enable_post_process
         model.load_checkpoint(start_check_point, torch_device)
         model.settings(
-            enable_post_process=False,
+            enable_post_process=enable_post_process,
             post_process_threshold=config.inference.post_process_threshold,
             batch_size=config.inference.batch_size,
             window_size=config.inference.window_size,
