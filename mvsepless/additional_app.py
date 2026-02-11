@@ -928,7 +928,7 @@ class AudioApp(GradioHelper):
     def UI(self):
         with gr.Tab("Склеить все аудио в одно"):
             with gr.Group():
-                input_concat_files = gr.File(label="Входное аудио", file_count="multiple", type="filepath", interactive=True)
+                input_concat_files = gr.File(label="Входные аудио", file_count="multiple", type="filepath", interactive=True)
                 output_format = gr.Dropdown(
                     label="Формат выходного файла",
                     interactive=True,
@@ -1113,4 +1113,5 @@ class PluginManager(Separator):
 
 
         self.parse_plugins()
+
 
