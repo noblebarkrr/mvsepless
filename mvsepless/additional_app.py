@@ -997,7 +997,7 @@ class AudioApp(GradioHelper):
                 return self.return_audio_with_size(value=write(output_path, y, sr), label="Результат")
         with gr.Tab("Извлечь фантомный центр"):
             with gr.Group():
-                input_stereo_file = gr.File(label="Входные аудио", file_count="single", type="filepath", interactive=True)
+                input_stereo_file = gr.File(label="Входное аудио", file_count="single", type="filepath", interactive=True)
                 @gr.render(inputs=[input_stereo_file])
                 def preview_input_file(file):
                     if file:
@@ -1113,3 +1113,4 @@ class PluginManager(Separator):
 
 
         self.parse_plugins()
+
