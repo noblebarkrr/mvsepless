@@ -581,11 +581,11 @@ class AutoEnsembless(Separator, GradioHelper):
             ensemble_state = ensemble_model_manager.data
             invert_methods_map = ensemble_model_manager.ensemble_invert_methods_map
             if not input_file:
-                return None, None, None, None, []
+                return None, None, None, []
             if not os.path.exists(input_file):
-                return None, None, None, None, []
+                return None, None, None, []
             if not check(input_file):
-                return None, None, None, None, []
+                return None, None, None, []
             
             timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
             o = os.path.join(self.user_directory.path, "ensembless_output", f"ensembless_outputs_{timestamp}")
@@ -677,7 +677,7 @@ class AutoEnsembless(Separator, GradioHelper):
             auto_ensemble_invout_file_wav = None
 
             if not ensemble_sources_stems:
-                return None, None, None, None, []
+                return None, None, None, []
             auto_ensemble_output_name = f"ensembless_{namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{method}"
             auto_ensemble_inverted_output_name = f"ensembless_{namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{invert_methods_map[method]}_invert"
             auto_ensemble_out_file, auto_ensemble_out_file_wav = ensemble_audio_files(
@@ -1113,5 +1113,6 @@ class PluginManager(Separator):
 
 
         self.parse_plugins()
+
 
 
