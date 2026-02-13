@@ -146,87 +146,79 @@ def once_inference(
         sys.stdout.flush()
         return results
 
-    if config.training.target_instrument is not None and not selected_instruments: # Если обнаружен целевой инструмент и не выбрано ни одного стема:
-        output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
-        second_stem = None
-        for instr_ in instruments:
-            if instr_ != config.training.target_instrument:
-                second_stem = instr_
-                break
-        if second_stem:
-            output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
-    elif config.training.target_instrument is not None and selected_instruments: # Если обнаружен целевой инструмент и выбран хотя бы один стем:
-        if config.training.target_instrument in selected_instruments:
+    if config.training.target_instrument is not None: # Если обнаружен целевой инструмент и не выбрано ни одного стема:
+        if not selected_instruments:
             output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
-        second_stem = None
-        for instr_ in instruments:
-            if instr_ != config.training.target_instrument:
-                second_stem = instr_
-                break
-        if second_stem:
-            if second_stem in selected_instruments:
+            second_stem = None
+            for instr_ in instruments:
+                if instr_ != config.training.target_instrument:
+                    second_stem = instr_
+                    break
+            if second_stem:
                 output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+        else: # Если обнаружен целевой инструмент и выбран хотя бы один стем:
+            if config.training.target_instrument in selected_instruments:
+                output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
+            second_stem = None
+            for instr_ in instruments:
+                if instr_ != config.training.target_instrument:
+                    second_stem = instr_
+                    break
+            if second_stem:
+                if second_stem in selected_instruments:
+                    output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
-    elif config.training.target_instrument is None and not selected_instruments and not extract_instrumental: # Если не обнаружено целевого инструмента, и не выбрано ни одного стема
-        for instr in waveforms:
-            output_waveforms[instr] = waveforms[instr]
-    elif config.training.target_instrument is None and selected_instruments and not extract_instrumental: # Если не обнаружено целевого инструмента, выбран хотя бы один стем 
-        for instr in waveforms:
-            if instr in selected_instruments:
+    elif config.training.target_instrument is None:
+        if not selected_instruments:
+            for instr in waveforms:
                 output_waveforms[instr] = waveforms[instr]
-    elif config.training.target_instrument is None and selected_instruments and extract_instrumental: # Если не обнаружено целевого инструмента, выбран хотя бы один стем и включено извлчение инструментала
-        for instr in waveforms:
-            if instr in selected_instruments:
-                output_waveforms[instr] = waveforms[instr]
-        if len(instruments) > 2:
-            output_waveforms["inverted -"] = mix_orig.copy()
-            for instr_ in selected_instruments:
-                if instr_ in waveforms:
-                    output_waveforms["inverted -"] = substractor(output_waveforms["inverted -"], waveforms[instr_], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+            if extract_instrumental:
+                if (
+                    all(
+                        instr in instruments
+                        for instr in ["bass", "drums", "other", "vocals"]
+                    )
+                    or all(
+                        instr in instruments
+                        for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"]
+                    )
+                ):
+                    output_waveforms["instrumental -"] = mix_orig.copy()
+                    output_waveforms["instrumental -"] = substractor(output_waveforms["instrumental -"], waveforms["vocals"], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
-            unselected_stems = [
-                s for s in instruments if s not in selected_instruments
-            ]
-            if unselected_stems:
-                output_waveforms["inverted +"] = np.zeros_like(mix_orig)
-                for stem in unselected_stems:
-                    if stem in waveforms:
-                        output_waveforms["inverted +"] += waveforms[stem]
-                if "inverted +" not in instruments:
-                    instruments.append("inverted +")
+                    non_vocal_stems = [s for s in instruments if s not in ["vocals"]]
+                    if non_vocal_stems:
+                        output_waveforms["instrumental +"] = np.zeros_like(mix_orig)
+                        for stem in non_vocal_stems:
+                            if stem in waveforms:
+                                output_waveforms["instrumental +"] += waveforms[stem]
 
-            peak = np.max(np.abs(output_waveforms["inverted -"]))
-            output_waveforms["inverted +"] = normalize_peak(output_waveforms["inverted +"], peak)
+                    peak = np.max(np.abs(output_waveforms["instrumental -"]))
+                    output_waveforms["instrumental +"] = normalize_peak(output_waveforms["instrumental +"], peak)
+        else:
+            for instr in waveforms:
+                if instr in selected_instruments:
+                    output_waveforms[instr] = waveforms[instr]  
+            if extract_instrumental:
+                if len(instruments) >= 3:
+                    output_waveforms["inverted -"] = mix_orig.copy()
+                    for instr_ in selected_instruments:
+                        if instr_ in waveforms:
+                            output_waveforms["inverted -"] = substractor(output_waveforms["inverted -"], waveforms[instr_], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
-    elif (
-        extract_instrumental
-        and not selected_instruments
-        and config.training.target_instrument is None
-        and (
-            all(
-                instr in instruments
-                for instr in ["bass", "drums", "other", "vocals"]
-            )
-            or all(
-                instr in instruments
-                for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"]
-            )
-        )
-    ): # Если не обнаружено целевого инструмента, не выбрано ни одного стема, и набор стемов у модели ["bass", "drums", "other", "vocals"] или ["bass", "drums", "other", "vocals", "piano", "guitar"]
-        for instr in waveforms:
-            output_waveforms[instr] = waveforms[instr]
-        output_waveforms["instrumental -"] = mix_orig.copy()
-        output_waveforms["instrumental -"] = substractor(output_waveforms["instrumental -"], waveforms["vocals"], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+                    unselected_stems = [
+                        s for s in instruments if s not in selected_instruments
+                    ]
+                    if unselected_stems:
+                        output_waveforms["inverted +"] = np.zeros_like(mix_orig)
+                        for stem in unselected_stems:
+                            if stem in waveforms:
+                                output_waveforms["inverted +"] += waveforms[stem]
+                        if "inverted +" not in instruments:
+                            instruments.append("inverted +")
 
-        non_vocal_stems = [s for s in instruments if s not in ["vocals"]]
-        if non_vocal_stems:
-            output_waveforms["instrumental +"] = np.zeros_like(mix_orig)
-            for stem in non_vocal_stems:
-                if stem in waveforms:
-                    output_waveforms["instrumental +"] += waveforms[stem]
-
-        peak = np.max(np.abs(output_waveforms["instrumental -"]))
-        output_waveforms["instrumental +"] = normalize_peak(output_waveforms["instrumental +"], peak)
+                    peak = np.max(np.abs(output_waveforms["inverted -"]))
+                    output_waveforms["inverted +"] = normalize_peak(output_waveforms["inverted +"], peak)
 
     output_instruments = [instr__ for instr__ in output_waveforms]
 
