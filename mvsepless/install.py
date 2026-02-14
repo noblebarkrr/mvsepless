@@ -32,9 +32,12 @@ def install_uv():
     print("Установка uv...")
     result = subprocess.run([os.sys.executable, "-m", "pip", "install", "uv"])
     print("uv установлен")
-def install_requirements(requirements: list):
+def install_requirements(requirements: list, force=False):
     if requirements:
         cmd = [os.sys.executable, "-m", "uv", "pip", "install", "--no-cache-dir", "-qq"]
+        if force:
+            cmd.append("--upgrade")
+            cmd.append("--force-reinstall")
         for pkg in requirements:
             cmd.append(pkg)
         print("Установка зависимостей через uv...")
@@ -162,4 +165,4 @@ if __name__ == "__main__":
         reqs = universal_requirements
     install_uv()
     install_requirements(reqs)
-    install_requirements(["setuptools<76.0"])
+    install_requirements(["setuptools<76.0"], force=True)
