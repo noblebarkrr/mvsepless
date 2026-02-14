@@ -93,7 +93,6 @@ universal_requirements = [
     "local-attention",
     "tenacity",
     "pyworld",
-    "setuptools<76.0",
     "gdown"
 ]
 if easy_check_is_colab():
@@ -150,7 +149,6 @@ old_requirements = [
     "local-attention==1.10.0",
     "tenacity==9.1.2",
     "pyworld==0.3.5",
-    "setuptools<76.0",
     "gdown"
 ]
 
@@ -164,3 +162,4 @@ if __name__ == "__main__":
         reqs = universal_requirements
     install_uv()
     install_requirements(reqs)
+    install_requirements(["setuptools<76.0"])
