@@ -158,11 +158,12 @@ old_requirements = [
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Установщик зависимостей")
     parser.add_argument("--old", action="store_true", help="Старые зависимости (только python 3.10)")
+    parser.add_argument("--force", action="store_true", help="Принудительная переустановка")
     args = parser.parse_args()
     if args.old:
         reqs = old_requirements
     else:
         reqs = universal_requirements
     install_uv()
-    install_requirements(reqs)
+    install_requirements(reqs, force=args.force)
     install_requirements(["setuptools<76.0"], force=True)
