@@ -583,6 +583,16 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 gr.Warning(title="Файлы успешно загружены", message="")
                             return gr.update(value=None)
 
+                    with gr.Group():
+                        with gr.Row(equal_height=True):
+                            add_inputs_from_path = gr.Textbox(label="Загрузить аудио (путь к файлу)", interactive=True, value="", scale=15)
+                            add_inputs_from_path_btn = gr.Button("Загрузить", variant="primary", interactive=True, scale=3)
+                            @add_inputs_from_path_btn.click(inputs=add_inputs_from_path, outputs=add_inputs_from_path)
+                            def upload_from_path(path):
+                                files = self.upload_files([path])
+                                gr.Warning(title="Файл успешно загружен", message="")
+                                return gr.update(value="")
+
             with gr.Tab("Менеджер моделей"):
                 with gr.Tab("Скачать модель"):
                     with gr.Group():

@@ -23,59 +23,13 @@ from functools import wraps
 from separator import Separator, script_dir
 from gradio_helper import GradioHelper, tz
 from namer import Namer
+from ensemble import ensemble_audio_files, auto_ensemble_run
+from inverter import Inverter
+from trim_concat import trim_, concat
+from extract_phantom_center import extract_phantom_center
 from audio import input_extensions, output_formats, check, read, write, get_sr, multiread, multiwrite, ensemble, substractor, concatenate, trim, get_duration_from_array, split_mid_side
 
 namer = Namer()
-
-def ensemble_audio_files(
-    files: list,
-    weights: list,
-    output_name: str,
-    ensemble_type: str,
-    out_format="mp3",
-    add_wav=False
-):
-    arrays, srs = multiread(files)
-    results, max_sr = ensemble(arrays, srs, weights, ensemble_type)
-    if add_wav:
-        return write(f"{output_name}.{out_format}", results, max_sr), write(f"{output_name}_orig.wav", results, max_sr)
-    else:
-        return write(f"{output_name}.{out_format}", results, max_sr)
-
-class Inverter:
-    def __init__(self):
-        self.test = "test"
-        self.w_types = [
-            "boxcar",
-            "triang",
-            "blackman",
-            "hamming",
-            "hann",
-            "bartlett",
-            "flattop",
-            "parzen",
-            "bohman",
-            "blackmanharris",
-            "nuttall",
-            "barthann",
-            "cosine",
-            "exponential",
-            "tukey",
-            "taylor",
-            "lanczos",
-        ]
-
-    def process_audio(
-        self,
-        audio1_path,
-        audio2_path,
-        method,
-        output_path="./inverted.mp3",
-    ):
-        y1, sr1 = read(audio1_path)
-        y2, sr2 = read(audio2_path)
-        inverted, min_sr = substractor(y1, y2, sr1, sr2, spectrogram=method == "spectrogram")
-        return write(output_path, inverted, min_sr)
         
 class AutoEnsembless(Separator, GradioHelper):
     def __init__(self, input_files, upload_files, user_directory, device):
@@ -89,13 +43,6 @@ class AutoEnsembless(Separator, GradioHelper):
     class ModelManager(Separator):
         def __init__(self):
             self.data: list[list[str, str, str, int]] = []
-            self.ensemble_methods = ("min_fft", "max_fft", "avg_fft", "median_fft")
-            self.ensemble_invert_methods_map = {
-                "min_fft": "max_fft",
-                "max_fft": "min_fft",
-                "avg_fft": "avg_fft",
-                "median_fft": "median_fft",
-            }
             self.dir_presets = os.path.join(tempfile.tempdir, "presets")
             os.makedirs(self.dir_presets, exist_ok=True)
 
@@ -292,7 +239,7 @@ class AutoEnsembless(Separator, GradioHelper):
                         choices=default_model["mn"],
                         value=default_model["mn"][0],
                         interactive=True,
-                        filterable=False,
+                        filterable=True,
                     )
                     primary_stem = gr.Dropdown(
                         label="Основной стем",
@@ -502,9 +449,9 @@ class AutoEnsembless(Separator, GradioHelper):
                 )
                 with gr.Group():
                     invert_method = gr.Radio(
-                        choices=["waveform", "spectrogram"],
+                        choices=self.inverter.methods,
                         label="Метод создания инверсии",
-                        value="waveform",
+                        value=self.inverter.methods[0],
                     )
                     invert_btn = gr.Button("Инвертировать")
                 output_inverted_audio = gr.Audio(
@@ -571,136 +518,18 @@ class AutoEnsembless(Separator, GradioHelper):
                 output_source_files,
             ],
         )
-        def auto_ensemble_run(
+        def auto_ensemble_run_(
             input_file,
             method,
             out_format,
             invert_ensemble,
             progress=gr.Progress(track_tqdm=True),
         ):
-            ensemble_state = ensemble_model_manager.data
-            invert_methods_map = ensemble_model_manager.ensemble_invert_methods_map
-            if not input_file:
-                return None, None, None, []
-            if not os.path.exists(input_file):
-                return None, None, None, []
-            if not check(input_file):
-                return None, None, None, []
-            
             timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
             o = os.path.join(self.user_directory.path, "ensembless_output", f"ensembless_outputs_{timestamp}")
             os.makedirs(o, exist_ok=True)
-
-            basename = os.path.splitext(os.path.basename(input_file))[0]
-
-            def invert_weights(weights):
-                total_weight = sum(weights)
-                return [total_weight - w for w in weights]
-
-            success_separations = []
-            ensemble_sources_list = []
-            if ensemble_state:
-                total_ensemble_models = len(ensemble_state)
-                for i, model in enumerate(ensemble_state, start=1):
-
-                    ens_mn = model[0]
-                    ens_s_stem = model[1]
-                    ens_i_stem = model[2]
-                    weight = model[3]
-
-                    s_stem = None
-                    i_stem = None
-
-                    try:
-                        result_seped_auto_ensemble = self.separate(
-                            input=input_file,
-                            output_dir=os.path.join(o, ens_mn),
-                            model_name=ens_mn,
-                            ext_inst=True,
-                            template="NAME - MODEL - STEM",
-                            output_format="wav",
-                            add_settings={
-                                "add_single_sep_text_progress": f"{i} из {total_ensemble_models}"
-                            },
-                            progress=progress,
-                        )
-                        if result_seped_auto_ensemble:
-                            for stem, path in result_seped_auto_ensemble:
-                                ensemble_sources_list.append(path)
-                                if stem == ens_s_stem:
-                                    s_stem = path
-                                elif stem == ens_i_stem:
-                                    i_stem = path
-
-                        if invert_ensemble:
-                            if not i_stem:
-                                result_seped_auto_ensemble_invert = self.separate(
-                                    input=input_file,
-                                    output_dir=os.path.join(o, f"{ens_mn}_invert"),
-                                    model_name=ens_mn,
-                                    ext_inst=True,
-                                    template="NAME - MODEL - STEM",
-                                    output_format="wav",
-                                    selected_stems=[ens_s_stem],
-                                    add_settings={
-                                        "add_single_sep_text_progress": f"{i} из {total_ensemble_models} (инверт.)"
-                                    },
-                                    progress=progress,
-                                )
-                                if result_seped_auto_ensemble_invert:
-                                    for stem, path in result_seped_auto_ensemble_invert:
-                                        if stem == ens_i_stem:
-                                            i_stem = path
-                                            ensemble_sources_list.append(path)
-
-                    except Exception as e:
-                        print(f"\nПроизошла ошибка при разделении: {e}")
-                        progress(
-                            0,
-                            desc="Произошла ошибка при разделении, модель пропускается...",
-                        )
-                        continue
-                    finally:
-                        if s_stem:
-                            success_separations.append((ens_mn, s_stem, i_stem, weight))
-
-            ensemble_sources_stems = []
-            ensemble_sources_invert_stems = []
-            weights = []
-
-            for out_mn, out_s_stem, out_i_stem, out_weight in success_separations:
-                ensemble_sources_stems.append(out_s_stem)
-                ensemble_sources_invert_stems.append(out_i_stem)
-                weights.append(out_weight)
-
-            auto_ensemble_invout_file = None
-            auto_ensemble_invout_file_wav = None
-
-            if not ensemble_sources_stems:
-                return None, None, None, []
-            auto_ensemble_output_name = f"ensembless_{namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{method}"
-            auto_ensemble_inverted_output_name = f"ensembless_{namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{invert_methods_map[method]}_invert"
-            auto_ensemble_out_file, auto_ensemble_out_file_wav = ensemble_audio_files(
-                files=ensemble_sources_stems,
-                weights=weights,
-                output_name=os.path.join(o, auto_ensemble_output_name),
-                ensemble_type=method,
-                out_format=out_format,
-                add_wav=True,
-            )
-
-            if invert_ensemble:
-                if ensemble_sources_invert_stems:
-                    auto_ensemble_invout_file, auto_ensemble_invout_file_wav = (
-                        ensemble_audio_files(
-                            files=ensemble_sources_invert_stems,
-                            weights=invert_weights(weights),
-                            output_name=os.path.join(o, auto_ensemble_inverted_output_name),
-                            ensemble_type=invert_methods_map[method],
-                            out_format=out_format,
-                            add_wav=True,
-                        )
-                    )
+            ensemble_state = ensemble_model_manager.data
+            auto_ensemble_out_file, auto_ensemble_out_file_wav, auto_ensemble_invout_file, ensemble_sources_list = auto_ensemble_run(input_file, ensemble_state, o, method, out_format, invert_ensemble, progress=progress)
             history.add(input_file, auto_ensemble_out_file, auto_ensemble_out_file_wav, auto_ensemble_invout_file, ensemble_sources_list, method, timestamp, ensemble_state)
             return (
                 self.return_audio_with_size(value=auto_ensemble_out_file, label="Результат"),
@@ -886,9 +715,9 @@ class Inverter_UI(GradioHelper):
                     filterable=False,
                 )
                 method = gr.Radio(
-                    choices=["waveform", "spectrogram"],
+                    choices=self.inverter.methods,
                     label="Метод вычитания",
-                    value="waveform",
+                    value=self.inverter.methods[0],
                 )
                 btn = gr.Button("Вычесть")
         output_audio = gr.Audio(
@@ -948,10 +777,8 @@ class AudioApp(GradioHelper):
                 timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
                 o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
                 os.makedirs(o, exist_ok=True)
-                arrays, srs = multiread(files)
-                full_audio, max_sr = concatenate(arrays, srs, dtype="float32")
                 output_path = os.path.join(o, f"concated_{timestamp}.{of}")
-                return self.return_audio_with_size(value=write(output_path, full_audio, max_sr), label="Результат")
+                return self.return_audio_with_size(value=concat(files, output_path), label="Результат")
         with gr.Tab("Обрезать аудио"):
             with gr.Group():
                 input_trim_file = gr.File(label="Входное аудио", file_count="single", type="filepath", interactive=True)
@@ -992,9 +819,7 @@ class AudioApp(GradioHelper):
                 basename = namer.short(basename, length=50)
                 filename = f"{basename}_trimmed_{timestamp}.{of}"
                 output_path = os.path.join(o, filename)
-                y, sr = read(i)
-                y = trim(y, s * sr, e * sr)
-                return self.return_audio_with_size(value=write(output_path, y, sr), label="Результат")
+                return self.return_audio_with_size(value=trim_(i, s, e, output_path), label="Результат")
         with gr.Tab("Извлечь фантомный центр"):
             with gr.Group():
                 input_stereo_file = gr.File(label="Входное аудио", file_count="single", type="filepath", interactive=True)
@@ -1033,9 +858,8 @@ class AudioApp(GradioHelper):
                 filename_side = f"{basename}_stereo_base_{timestamp}.{of}"
                 output_path_mid = os.path.join(o, filename_mid)
                 output_path_side = os.path.join(o, filename_side)
-                y, sr = read(i)
-                mid, side = split_mid_side(y, var=3, sr=sr)
-                return self.return_audio_with_size(value=write(output_path_mid, mid, sr), label="Фантомный центр"), self.return_audio_with_size(value=write(output_path_side, side, sr), label="Стерео-база")
+                output_path_mid, output_path_side = extract_phantom_center(i, output_path_mid, output_path_side)
+                return self.return_audio_with_size(value=output_path_mid, label="Фантомный центр"), self.return_audio_with_size(value=output_path_side, label="Стерео-база")
 
 class PluginManager(Separator):
     plugins_dir = os.path.join(script_dir, "plugins")

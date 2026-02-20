@@ -510,7 +510,7 @@ class Separator(MvseplessModelManager):
                             id=id,
                             progress=progress,
                             use_spec_invert=use_spec_invert,
-                            add_text_progress=f"({i} из {len(input)}) ",
+                            add_text_progress=f"{i} из {len(input)}",
                         )
                         results.append([basename, seped])
             return results

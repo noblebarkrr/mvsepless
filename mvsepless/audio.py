@@ -3,11 +3,14 @@ import subprocess
 import numpy as np
 import tempfile
 from librosa import resample, stft as stft2, istft as istft2
-from scipy.signal import stft, istft
+from scipy.signal import ShortTimeFFT
+from scipy.signal.windows import dpss, hann
 from numpy.typing import DTypeLike
 
 ffmpeg_path = "ffmpeg"
 ffprobe_path = "ffprobe"
+n_fft = 4096
+hop = 1024
 
 def average(*ints):
     numbers = len(ints)
@@ -344,19 +347,19 @@ def convert_to_dtype(y: np.ndarray, dtype: DTypeLike) -> np.ndarray:
 
 def dc_offset(y: np.ndarray, offset: float | int) -> np.ndarray:
     orig_dtype = y.dtype
-    y = convert_to_dtype(y, np.float64)
+    y = convert_to_dtype(y, np.float32)
     y = y + offset
     return convert_to_dtype(y, orig_dtype)
 
 def gain(y: np.ndarray, gain: float | int) -> np.ndarray:
     orig_dtype = y.dtype
-    y = convert_to_dtype(y, np.float64)
+    y = convert_to_dtype(y, np.float32)
     y = y * gain
     return convert_to_dtype(y, orig_dtype)
 
 def normalize(y: np.ndarray, target_peak: float | int = 1.0) -> np.ndarray:
     orig_dtype = y.dtype
-    y = convert_to_dtype(y, np.float64)
+    y = convert_to_dtype(y, np.float32)
     current_peak = np.max(np.abs(y))
     if current_peak > 0:
         scaling_factor = target_peak / current_peak
@@ -379,25 +382,38 @@ def split_channels(y: np.ndarray) -> tuple[np.ndarray]:
         return tuple(channels_arrays)
     else:
         return (y,)
-    
+
+from scipy.signal import windows
+
+def get_stft_obj(sr, n_fft, hop, win_dpss=os.environ.get("MVSEPLESS_SPEC_DPSS", "False")):
+    """Создает STFT с окном DPSS для сверхточного разделения частот."""
+    if win_dpss == "True":
+        win = dpss(n_fft, NW=3, sym=False)
+    elif win_dpss == "False":
+        win = hann(n_fft, sym=False)
+    return ShortTimeFFT(win, hop=hop, fs=sr, scale_to='magnitude', phase_shift=None)
+
 def split_mid_side(y: np.ndarray, var: int = 1, sr: int | None = None) -> tuple[np.ndarray, np.ndarray]:
     channels, samples, array_index, flatten = get_info_array(y)
     axis = get_axis_from_array_index(array_index)
     if channels != 2:
         raise Exception("Аудио массив должен быть в стерео (2 канала)")
     orig_dtype = y.dtype
-    y = convert_to_dtype(y, np.float64)
+    y = convert_to_dtype(y, np.float32)
     channels_arrays = split_channels(y)
     left_channel = channels_arrays[0]
     right_channel = channels_arrays[1]
     mid_channel_one = (left_channel * 0.5) + (right_channel * 0.5)
     if var == 0:
+        print("Вариант 0: вычитание сайд сигнала из стерео")
         side_channel = np.stack([(left_channel + -mid_channel_one), (right_channel + -mid_channel_one)], axis=axis)
         mid_channel = y + -side_channel
     elif var == 1:
+        print("Вариант 1: вычитание моно сигнала из стерео")
         mid_channel = np.stack([mid_channel_one, mid_channel_one], axis=axis)
         side_channel = y + -mid_channel
     elif var == 2:
+        print("Вариант 2: вычитание фантомного центра")
         same_sign = (stereo_L * stereo_R) > 0
         center_mono = np.where(
             same_sign,
@@ -409,48 +425,52 @@ def split_mid_side(y: np.ndarray, var: int = 1, sr: int | None = None) -> tuple[
         stereo_R = right_channel - center_mono
         side_channel = np.stack([stereo_L, stereo_R], axis=axis)
     elif var == 3:
-        if sr:
-            n_fft = 2048
-            hop = 1024
-            window = "lanczos"
-            f, t, Lf = stft(left_channel, fs=sr, nperseg=n_fft, noverlap=n_fft-hop,
-                        window=window, padded=False)
-            _, _, Rf = stft(right_channel, fs=sr, nperseg=n_fft, noverlap=n_fft-hop,
-                        window=window, padded=False)
+        print("Вариант 3: вычитание фантомного центра (спектрограмма)")
+        if not sr: raise Exception("Не указана частота дискретизации")
+        
+        sft = get_stft_obj(sr, n_fft=n_fft, hop=hop)
+        y_float = convert_to_dtype(y, np.float32)
+        channels = split_channels(y_float)
+        
+        # Получаем спектры левого и правого каналов
+        Lf = sft.stft(channels[0])
+        Rf = sft.stft(channels[1])
+        
+        # Вычисляем схожесть (когерентность)
+        similarity_L = np.real(Lf * np.conj(Rf))
+        similarity_R = np.real(Rf * np.conj(Lf))
+        mask = (similarity_L > 0) & (similarity_R > 0)
+        magL = np.abs(Lf)
+        magR = np.abs(Rf)
 
-            similarity_L = np.real(Lf * np.conj(Rf))
-            similarity_R = np.real(Rf * np.conj(Lf))
-            mask = (similarity_L > 0) & (similarity_R > 0)
-            magL = np.abs(Lf)
-            magR = np.abs(Rf)
+        magC_L = np.minimum(magL, magR) * mask
+        magC_R = np.minimum(magL, magR) * mask
 
-            magC_L = np.minimum(magL, magR) * mask
-            magC_R = np.minimum(magL, magR) * mask
-
-            C_L = magC_L * np.exp(1j * np.angle(Rf))
-            C_R = magC_R * np.exp(1j * np.angle(Lf))
-            SL = Lf - C_L
-            SR = Rf - C_R
-
-            _, center_L = istft(C_L, fs=sr, nperseg=n_fft, noverlap=n_fft-hop, window=window)
-            _, center_R = istft(C_R, fs=sr, nperseg=n_fft, noverlap=n_fft-hop, window=window)
-
-            _, base_L = istft(SL, fs=sr, nperseg=n_fft, noverlap=n_fft-hop, window=window)
-            _, base_R = istft(SR, fs=sr, nperseg=n_fft, noverlap=n_fft-hop, window=window)
-
-            mid_channel = np.stack([center_L, center_R], axis=axis)
-            side_channel = np.stack([base_L, base_R], axis=axis)
-        else:
-            raise Exception("Не указана частота дискретизации")
+        C_L = magC_L * np.exp(1j * np.angle(Rf))
+        C_R = magC_R * np.exp(1j * np.angle(Lf))
+        SL = Lf - C_L
+        SR = Rf - C_R
+        
+        len_orig = y.shape[-1]
+        center_l = sft.istft(C_L, k1=len_orig)
+        center_r = sft.istft(C_R, k1=len_orig)
+        side_l = sft.istft(SL, k1=len_orig)
+        side_r = sft.istft(SR, k1=len_orig)
+        
+        mid_ch = multi_channel_array_from_arrays(center_l, center_l, index=1, dtype=y.dtype)
+        side_ch = multi_channel_array_from_arrays(side_l, side_r, index=1, dtype=y.dtype)
+        
+        return mid_ch, side_ch
     elif var == 4:
+        print("Вариант 4: вычитание правого канала из левого")
         mid_channel = mid_channel_one
         side_channel = left_channel + -right_channel
     return convert_to_dtype(mid_channel, orig_dtype), convert_to_dtype(side_channel, orig_dtype)
 
 def mid_side_to_stereo(y: np.ndarray, z: np.ndarray, index: int = -1, dtype: DTypeLike = np.float32):
-    y, z = convert_to_dtype(y, np.float64), convert_to_dtype(z, np.float64)
-    mid = multi_channel_array_from_arrays(y, y, index=index, dtype=np.float64)
-    side = multi_channel_array_from_arrays(z, -z, index=index, dtype=np.float64)
+    y, z = convert_to_dtype(y, np.float32), convert_to_dtype(z, np.float32)
+    mid = multi_channel_array_from_arrays(y, y, index=index, dtype=np.float32)
+    side = multi_channel_array_from_arrays(z, -z, index=index, dtype=np.float32)
     return convert_to_dtype(mid + side, dtype)
 
 def mono_to_stereo(y: np.ndarray, index: int, num_channels: int = 2) -> np.ndarray:
@@ -478,7 +498,7 @@ def stereo_to_mono(y: np.ndarray, to_flatten: bool = False) -> np.ndarray:
     channels, samples, array_index, flatten = get_info_array(y)
     orig_dtype = y.dtype
     axis = get_axis_from_array_index(array_index)
-    y = convert_to_dtype(y, np.float64)
+    y = convert_to_dtype(y, np.float32)
     if channels > 1:
         mono = create_zero_array(samples, np.float64)
         for ch in split_channels(y):
@@ -598,60 +618,36 @@ def substractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: b
     channels2, _, array_index2, flatten2 = get_info_array(z)
     orig_dtype1 = y.dtype
     orig_dtype2 = z.dtype
-    y = convert_to_dtype(y, np.float64)
-    z = convert_to_dtype(z, np.float64)
+    y = convert_to_dtype(y, np.float32)
+    z = convert_to_dtype(z, np.float32)
     max_channels = max(channels1, channels2)
     min_sr = min(sr1, sr2)
     yz = fit_arrays([y, z], [sr1, sr2], max_channels=max_channels, min_sr=min_sr)
     y, z = yz[0], yz[1]
+    
     if spectrogram:
-        print("Используется вычитание из спектрограммы")
-        n_fft = 2048
-        hop = 1024
-        window = "lanczos"
-        substracted_specs = []
-        substracted_wavs = []
-        y_stfts = []
-        for ch_1 in split_channels(y):
-            f, t, spec = stft(ch_1, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window, padded=False)
-            y_stfts.append(spec)
-        z_stfts = []
-        for ch_2 in split_channels(z):
-            f, t, spec = stft(ch_2, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window, padded=False)
-            z_stfts.append(spec)
-        y_z_stfts = zip(y_stfts, z_stfts)
-        for a1, a2 in y_z_stfts:
-            mag1 = np.abs(a1)
-            mag2 = np.abs(a2)
-            mag_result = np.maximum(mag1 - mag2, 0)
-            phase = np.angle(a1)
-            substracted_specs.append(mag_result * np.exp(1j * phase))
-        for sub_spec in substracted_specs:
-            _, wav = istft(sub_spec, fs=min_sr, nperseg=n_fft, noverlap=n_fft-hop, window=window)
-            substracted_wavs.append(wav)
-        substracted = multi_channel_array_from_arrays(*substracted_wavs, index=1, dtype=orig_dtype1)
+        print("STFT вычитание...")
+        sft = get_stft_obj(min_sr, n_fft=n_fft, hop=hop)
+        res_channels = []
+        
+        # Обрабатываем каналы по одному, чтобы не забивать RAM
+        for ch_y, ch_z in zip(split_channels(y), split_channels(z)):
+            spec_y = sft.stft(ch_y.astype(np.float32))
+            spec_z = sft.stft(ch_z.astype(np.float32))
+            
+            # Вычитание амплитуд: Mag_res = max(Mag_y - Mag_z, 0)
+            # Сохраняем фазу сигнала 'y'
+            res_spec = np.maximum(np.abs(spec_y) - np.abs(spec_z), 0) * np.exp(1j * np.angle(spec_y))
+            
+            del spec_y, spec_z # Явно освобождаем память
+            
+            res_wav = sft.istft(res_spec, k1=ch_y.shape[-1])
+            res_channels.append(res_wav)
+            
+        substracted = multi_channel_array_from_arrays(*res_channels, index=1, dtype=orig_dtype1)
         return substracted, min_sr
     else:
-        print("Используется вычитание противофазой")
-        return convert_to_dtype(y + -z, orig_dtype1), min_sr
-
-def stft_(wave, nfft, hl):
-    wave_left = np.asfortranarray(wave[0])
-    wave_right = np.asfortranarray(wave[1])
-    spec_left = stft2(wave_left, n_fft=nfft, hop_length=hl)
-    spec_right = stft2(wave_right, n_fft=nfft, hop_length=hl)
-    spec = np.asfortranarray([spec_left, spec_right])
-    return spec
-
-
-def istft_(spec, hl, length):
-    spec_left = np.asfortranarray(spec[0])
-    spec_right = np.asfortranarray(spec[1])
-    wave_left = istft2(spec_left, hop_length=hl, length=length)
-    wave_right = istft2(spec_right, hop_length=hl, length=length)
-    wave = np.asfortranarray([wave_left, wave_right])
-    return wave
-
+        return convert_to_dtype(y - z, orig_dtype1), min_sr
 
 def absmax(a, *, axis):
     dims = list(a.shape)
@@ -695,54 +691,54 @@ def lambda_min(arr, axis=None, key=None, keepdims=False):
     else:
         return arr.flatten()[idxs]
 
-def ensemble(pred_track: list, srs: list, weights: list, algorithm: str, dtype: DTypeLike = np.float64):
-    max_sr = int(max(*srs))
-    pred_track = [convert_to_dtype(track, np.float64) for track in pred_track]
-    pred_track = fit_arrays(pred_track, srs, max_channels=2, min_sr=max_sr)
-    pred_track = np.array(pred_track)
-    final_length = pred_track.shape[-1]
-    mod_track = []
-    for i in range(pred_track.shape[0]):
-        if algorithm == "avg_wave":
-            mod_track.append(pred_track[i] * weights[i])
-        elif algorithm in ["median_wave", "min_wave", "max_wave"]:
-            mod_track.append(pred_track[i])
-        elif algorithm in ["avg_fft", "min_fft", "max_fft", "median_fft"]:
-            spec = stft_(pred_track[i], nfft=2048, hl=1024)
-            if algorithm in ["avg_fft"]:
-                mod_track.append(spec * weights[i])
-            else:
-                mod_track.append(spec)
-    pred_track: np.ndarray = np.array(mod_track)
-    if algorithm in ["avg_wave"]:
-        pred_track = pred_track.sum(axis=0)
-        pred_track /= np.array(weights).sum().T
-    elif algorithm in ["median_wave"]:
-        pred_track = np.median(pred_track, axis=0)
-    elif algorithm in ["min_wave"]:
-        pred_track = np.array(pred_track)
-        pred_track = lambda_min(pred_track, axis=0, key=np.abs)
-    elif algorithm in ["max_wave"]:
-        pred_track = np.array(pred_track)
-        pred_track = lambda_max(pred_track, axis=0, key=np.abs)
-    elif algorithm in ["avg_fft"]:
-        pred_track = pred_track.sum(axis=0)
-        pred_track /= np.array(weights).sum()
-        pred_track = istft_(pred_track, 1024, final_length)
-    elif algorithm in ["min_fft"]:
-        pred_track = np.array(pred_track)
-        pred_track = lambda_min(pred_track, axis=0, key=np.abs)
-        pred_track = istft_(pred_track, 1024, final_length)
-    elif algorithm in ["max_fft"]:
-        pred_track = np.array(pred_track)
-        pred_track = absmax(pred_track, axis=0)
-        pred_track = istft_(pred_track, 1024, final_length)
-    elif algorithm in ["median_fft"]:
-        pred_track = np.array(pred_track)
-        pred_track = np.median(pred_track, axis=0)
-        pred_track = istft_(pred_track, 1024, final_length)
-    print("Склеивание завершено")
-    return convert_to_dtype(pred_track, dtype), max_sr
+def ensemble(pred_tracks: list, srs: list, weights: list, algorithm: str, dtype: np.dtype = np.float32):
+    max_sr = int(max(srs))
+    # Подгоняем все треки к одной длине и частоте
+    pred_tracks = fit_arrays(pred_tracks, srs, max_channels=2, min_sr=max_sr)
+    
+    sft = get_stft_obj(max_sr, n_fft=2048, hop=1024)
+    final_length = pred_tracks[0].shape[-1]
+    ensemble_wav_channels = []
+
+    for ch_idx in range(2): # Для каждого канала (L и R)
+        accumulator = None
+        total_weight = sum(weights)
+        
+        for i, track in enumerate(pred_tracks):
+            # Извлекаем канал и считаем STFT
+            spec = sft.stft(track[ch_idx].astype(np.float32))
+            
+            if algorithm == "avg_fft":
+                weighted_spec = spec * weights[i]
+                if accumulator is None:
+                    accumulator = weighted_spec
+                else:
+                    accumulator += weighted_spec
+            
+            elif algorithm in ["min_fft", "max_fft", "median_fft"]:
+                # Для медианы и экстремумов всё же придется собрать стек, 
+                # но только для одного канала за раз! (Экономия в 2 раза)
+                if i == 0: accumulator = [spec]
+                else: accumulator.append(spec)
+            
+            del spec
+
+        # Финализация алгоритма
+        if algorithm == "avg_fft":
+            res_spec = accumulator / total_weight
+        elif algorithm == "median_fft":
+            res_spec = np.median(np.real(accumulator), axis=0) + 1j * np.median(np.imag(accumulator), axis=0)
+        elif algorithm == "min_fft":
+            # Используем твою логику lambda_min поканально
+            res_spec = lambda_min(np.array(accumulator), axis=0, key=np.abs)
+        elif algorithm == "max_fft":
+            res_spec = absmax(np.array(accumulator), axis=0)
+        
+        ensemble_wav_channels.append(sft.istft(res_spec, k1=final_length))
+        del accumulator
+
+    result = multi_channel_array_from_arrays(*ensemble_wav_channels, index=1, dtype=dtype)
+    return result, max_sr
 
 def concatenate(arrays: tuple[np.ndarray] | list[np.ndarray], srs: tuple[int] | list[int], dtype=np.float32):
     max_sr = int(max(*srs))
@@ -774,30 +770,48 @@ def write(path: str, y: np.ndarray, sr: int, bitrate: int | str = 320, prefer_fl
     name, ext = os.path.splitext(path)
     dir = os.path.dirname(path)
     os.makedirs(dir, exist_ok=True)
+    
     if not sr:
         raise Exception("Не указана частота дискретизации")
+    
     dtype = y.dtype
     channels, *_ = get_info_array(y)
     y = reshape(y, shape=("samples", "channels"))
+    
     sample_format = SAMPLE_FORMATS_DICT.get(str(dtype), None)
     if not sample_format:
         sample_format = "f32le"
         y = convert_to_dtype(y, np.float32)
+    
     y = np.nan_to_num(y, nan=0, posinf=0, neginf=0)
-    audio_bytes = y.tobytes()
+    
     bitrate = bitrate_to_int(bitrate)
     bitrate_fixed = 64 if bitrate < 64 else 320 if bitrate > 320 else bitrate
+    
     cmd = [ffmpeg_path, "-y", "-f", sample_format, "-ar", str(sr), "-ac", str(channels), "-i", "-", *get_codec_args(ext, prefer_float), "-ab", f"{bitrate_fixed}k", path]
+
+    # ИЗМЕНЕНИЯ ЗДЕСЬ:
     process = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=None,        # Не захватываем stdout, пусть идет в консоль
+        stderr=subprocess.PIPE, # Захватываем для отладки
         bufsize=10**8
     )
-    process.stdin.write(audio_bytes)
-    process.stdin.close()
-    process.wait()
+    
+    try:
+        # communicate передает данные и ПРАВИЛЬНО закрывает потоки, избегая deadlock
+        stdout_data, stderr_data = process.communicate(input=y.tobytes())
+        
+        if process.returncode != 0:
+            print(f"Ошибка FFmpeg: {stderr_data.decode('utf-8', errors='ignore')}")
+            raise Exception(f"FFmpeg завершился с кодом {process.returncode}")
+            
+    except Exception as e:
+        print(f"Критическая ошибка при записи: {e}")
+        process.kill()
+        raise e
+
     return path
 
 def multiwrite(arrays: tuple[np.ndarray] | list[np.ndarray], srs: tuple[int] | list[int], paths: tuple[str] | list[int], bitrate: int | str = 320, prefer_float: bool = False, callable_func = None, strict: bool = False):

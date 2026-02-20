@@ -11,6 +11,7 @@ import argparse
 import time
 import yt_dlp
 from typing import Dict, Any
+from audio import output_formats
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 DOWNLOAD_DIR = os.environ.get(
@@ -95,3 +96,27 @@ def dw_yt_dlp(
             return os.path.join(DOWNLOAD_DIR, audio_file)
         except Exception as e:
             return None
+        
+import argparse
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Скачивание аудио-файлов с интернета"
+    )
+    
+    parser.add_argument("--url", type=str, required=True, help="Ссылка на аудио файл")
+    parser.add_argument("--output_dir", type=str, default=None, help="Папка для сохранения")
+    parser.add_argument("--cookie", type=str, default=None, help="Путь к файлу куки (необязательно)")
+    parser.add_argument("--output_format", type=str, default=output_formats[0], choices=output_formats, help="Формат файла (например, mp3, wav)")
+    parser.add_argument("--title", type=str, default=None, help="Название файла (если не указано, возьмется из сети)")
+    args = parser.parse_args()
+
+    # Теперь все поля из args соответствуют вызову функции
+    dw_yt_dlp(
+        args.url,
+        args.output_dir,
+        args.cookie,
+        args.output_format,
+        "320",
+        args.title,
+    )
