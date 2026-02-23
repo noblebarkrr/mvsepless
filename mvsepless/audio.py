@@ -2,8 +2,7 @@ import os
 import subprocess
 import numpy as np
 import tempfile
-from librosa import resample, stft as stft2, istft as istft2
-from scipy.signal import ShortTimeFFT
+from scipy.signal import ShortTimeFFT, resample
 from scipy.signal.windows import dpss, hann
 from numpy.typing import DTypeLike
 
@@ -554,8 +553,10 @@ def reshape(y: np.ndarray, shape: tuple = ("channels", "samples")) -> np.ndarray
 def easy_resampler(y: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
     channels, samples, array_index, flatten = get_info_array(y)
     orig_dtype = y.dtype
-    axis = get_axis_from_array_index(array_index)
-    return convert_to_dtype(resample(y, orig_sr=orig_sr, target_sr=target_sr, axis=axis), orig_dtype)
+    ratio = float(target_sr) / orig_sr
+    n_samples = int(np.ceil(samples * ratio))
+    resampled = resample(y, n_samples, axis=array_index)
+    return convert_to_dtype(resampled, orig_dtype)
 
 def add_zero_to_end(y: np.ndarray, max_samples: int) -> np.ndarray:
     channels, samples, array_index, flatten = get_info_array(y)
@@ -590,10 +591,8 @@ def fit_arrays(arrays: tuple[np.ndarray] | list[np.ndarray], srs: tuple[int] | l
 
     for i, (array, sr) in enumerate(arrays_with_srs, start=1):
         channels1, samples1, array_index1, _ = get_info_array(array)
-        
         a1 = easy_resampler(array, sr, min_sr)
         max_samples = max(max_samples, get_duration_from_array(array))
-        
         if flatten:
             a1 = stereo_to_mono(a1, to_flatten=True)
         else:
@@ -626,7 +625,7 @@ def substractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: b
     y, z = yz[0], yz[1]
     
     if spectrogram:
-        print("STFT вычитание...")
+        print("Вычитание из спектрограммы...")
         sft = get_stft_obj(min_sr, n_fft=n_fft, hop=hop)
         res_channels = []
         
@@ -647,6 +646,7 @@ def substractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: b
         substracted = multi_channel_array_from_arrays(*res_channels, index=1, dtype=orig_dtype1)
         return substracted, min_sr
     else:
+        print("Вычитание противофазой...")
         return convert_to_dtype(y - z, orig_dtype1), min_sr
 
 def absmax(a, *, axis):
