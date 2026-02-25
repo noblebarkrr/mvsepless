@@ -42,7 +42,7 @@ bh, ah = signal.butter(
 )
 from device import all_ids, set_device
 from multiprocessing import cpu_count
-from audio import check, read, write, output_formats, split_mid_side, split_channels, easy_resampler, stereo_to_mono, mono_to_stereo, convert_to_dtype, gain, add_zero_to_end, multi_channel_array_from_arrays, trim
+from audio import check, read, write, output_formats, split_mid_side, split_channels, easy_resampler, stereo_to_mono, mono_to_stereo, convert_to_dtype, gain, add_zero_to_end, multi_channel_array_from_arrays, trim, fit_arrays
 from namer import Namer
 from gradio_helper import GradioHelper, tz
 from downloader import dw_file
@@ -2467,6 +2467,512 @@ class Vbach(GradioHelper):
                                         interactive=False,
                                         show_download_button=True,
                                     )
+            with gr.TabItem("Дуэт"):
+                with gr.Column():
+                    with gr.Group():
+                        upload_duet = gr.File(show_label=False, type="filepath", interactive=True)
+                        refresh_input_btn_duet = gr.Button("Обновить", variant="primary", interactive=True)
+                        list_input_files_duet = gr.Dropdown(
+                            label="Загрузить файл",
+                            choices=self.input_files,
+                            value=None,
+                            multiselect=False,
+                            interactive=True,
+                            filterable=False, scale=15
+                        )
+                        gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files_duet, trigger_mode="once")
+                        refresh_input_btn_duet.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files_duet)
+                            
+                        @upload_duet.upload(inputs=[upload_duet], outputs=[list_input_files_duet, upload_duet])
+                        def upload_files(input_file):
+                            files = self.upload_files([input_file])
+                            return gr.update(
+                                choices=reversed(self.input_files), value=files[0]
+                            ), gr.update(value=None)
+                        
+
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Markdown("<h3><center>Модель 1</center></h3>")
+                            with gr.Group():
+                                model_name1 = gr.Dropdown(label="Имя модели", interactive=True)
+
+                                pitch_method1 = gr.Dropdown(
+                                    label="Метод извлечения высоты тона",
+                                    choices=self.pitch_methods,
+                                    value=self.pitch_methods[0],
+                                    interactive=True,
+                                    filterable=False
+                                )
+                                pitch1 = gr.Slider(
+                                    label="Высота тона",
+                                    minimum=-48,
+                                    maximum=48,
+                                    step=0.5,
+                                    value=0,
+                                    interactive=True,
+                                )
+                                hop_length1 = gr.Slider(
+                                    label="Длина шага",
+                                    info="Длина шага влияет на точность передачи высоты тона\nЧем меньше длина шага - тем точнее будет передана высота тона",
+                                    minimum=self.hop_length_values[0],
+                                    maximum=self.hop_length_values[1],
+                                    step=8,
+                                    value=128,
+                                    interactive=True,
+                                    visible=False,
+                                )
+
+                                @pitch_method1.change(
+                                    inputs=[pitch_method1], outputs=[hop_length1]
+                                )
+                                def show_mangio_crepe_hop_length(pitch_method):
+                                    return gr.update(
+                                        visible=(
+                                            True
+                                            if pitch_method
+                                            in ["mangio-crepe", "mangio-crepe-tiny", "pyin"]
+                                            else False
+                                        )
+                                    )
+
+                                with gr.Accordion(label="Дополнительные настройки", open=False):
+                                    with gr.Group():
+                                        with gr.Accordion(label="Инференс", open=False):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    index_rate1 = gr.Slider(
+                                                        label="Влияние индекса",
+                                                        info="Чем ниже значение, тем больше голос похож на исходный; чем выше, тем ближе к модели",
+                                                        minimum=self.index_rates_values[0],
+                                                        maximum=self.index_rates_values[1],
+                                                        step=0.05,
+                                                        value=0,
+                                                        interactive=True,
+                                                    )
+                                                    filter_radius1 = gr.Slider(
+                                                        label="Радиус фильтра",
+                                                        info="Сглаживает результаты извлечения тона\nМожет снизить дыхание и шумы на выходе",
+                                                        minimum=self.filter_radius_values[0],
+                                                        maximum=self.filter_radius_values[1],
+                                                        step=1,
+                                                        value=3,
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    rms1 = gr.Slider(
+                                                        label="Соотношение огибающих громкости",
+                                                        info="Значение 0 - огибающая громкости как у входного аудио, 1 - как у выходного сигнала",
+                                                        minimum=self.rms_values[0],
+                                                        maximum=self.rms_values[1],
+                                                        step=0.05,
+                                                        value=0.25,
+                                                        interactive=True,
+                                                    )
+                                                    protect1 = gr.Slider(
+                                                        label="Защита согласных",
+                                                        info="Предовращает роботизацию дыхания и согласных (Может влиять на четкость речи)\nЗначение 0.5 - выключает защиту, 0 - максимальная защита",
+                                                        minimum=self.protect_values[0],
+                                                        maximum=self.protect_values[1],
+                                                        step=0.05,
+                                                        value=0.35,
+                                                        interactive=True,
+                                                    )
+                                        with gr.Accordion(label="Диапазон определения высоты тона", open=False):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    f0_min1 = gr.Slider(
+                                                        label="Нижний предел диапазона определения высоты тона",
+                                                        minimum=self.f0_min_values[0],
+                                                        maximum=self.f0_min_values[1],
+                                                        step=10,
+                                                        value=50,
+                                                        interactive=True,
+                                                    )
+                                                    f0_max1 = gr.Slider(
+                                                        label="Верхний предел диапазона определения высоты тона",
+                                                        minimum=self.f0_max_values[0],
+                                                        maximum=self.f0_max_values[1],
+                                                        step=10,
+                                                        value=1100,
+                                                        interactive=True,
+                                                    )
+                                        with gr.Accordion(label="Эмбеддер", open=False):
+                                            with gr.Group():
+                                                embedder_name1 = gr.Radio(
+                                                    label="Модель Hubert",
+                                                    choices=self.fairseq_embedders,
+                                                    value=self.fairseq_embedders[0],
+                                                )
+                                                transformers_mode1 = gr.Checkbox(
+                                                    label="Использовать стек Transformers",
+                                                    value=False,
+                                                    interactive=True,
+                                                )
+
+                                            @transformers_mode1.change(
+                                                inputs=[transformers_mode1], outputs=[embedder_name1]
+                                            )
+                                            def change_embedders(tr_m):
+                                                if tr_m:
+                                                    return gr.update(
+                                                        value=self.transformers_embedders[0],
+                                                        choices=self.transformers_embedders,
+                                                    )
+                                                else:
+                                                    return gr.update(
+                                                        choices=self.fairseq_embedders,
+                                                        value=self.fairseq_embedders[0],
+                                                    )
+
+                        with gr.Column():
+                            gr.Markdown("<h3><center>Модель 2</center></h3>")
+                            with gr.Group():
+                                model_name2 = gr.Dropdown(label="Имя модели", interactive=True)
+
+                                pitch_method2 = gr.Dropdown(
+                                    label="Метод извлечения высоты тона",
+                                    choices=self.pitch_methods,
+                                    value=self.pitch_methods[0],
+                                    interactive=True,
+                                    filterable=False
+                                )
+                                pitch2 = gr.Slider(
+                                    label="Высота тона",
+                                    minimum=-48,
+                                    maximum=48,
+                                    step=0.5,
+                                    value=0,
+                                    interactive=True,
+                                )
+                                hop_length2 = gr.Slider(
+                                    label="Длина шага",
+                                    info="Длина шага влияет на точность передачи высоты тона\nЧем меньше длина шага - тем точнее будет передана высота тона",
+                                    minimum=self.hop_length_values[0],
+                                    maximum=self.hop_length_values[1],
+                                    step=8,
+                                    value=128,
+                                    interactive=True,
+                                    visible=False,
+                                )
+
+                                @pitch_method2.change(
+                                    inputs=[pitch_method2], outputs=[hop_length2]
+                                )
+                                def show_mangio_crepe_hop_length(pitch_method):
+                                    return gr.update(
+                                        visible=(
+                                            True
+                                            if pitch_method
+                                            in ["mangio-crepe", "mangio-crepe-tiny", "pyin"]
+                                            else False
+                                        )
+                                    )
+
+                                with gr.Accordion(label="Дополнительные настройки", open=False):
+                                    with gr.Group():
+                                        with gr.Accordion(label="Инференс", open=False):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    index_rate2 = gr.Slider(
+                                                        label="Влияние индекса",
+                                                        info="Чем ниже значение, тем больше голос похож на исходный; чем выше, тем ближе к модели",
+                                                        minimum=self.index_rates_values[0],
+                                                        maximum=self.index_rates_values[1],
+                                                        step=0.05,
+                                                        value=0,
+                                                        interactive=True,
+                                                    )
+                                                    filter_radius2 = gr.Slider(
+                                                        label="Радиус фильтра",
+                                                        info="Сглаживает результаты извлечения тона\nМожет снизить дыхание и шумы на выходе",
+                                                        minimum=self.filter_radius_values[0],
+                                                        maximum=self.filter_radius_values[1],
+                                                        step=1,
+                                                        value=3,
+                                                        interactive=True,
+                                                    )
+                                                with gr.Row():
+                                                    rms2 = gr.Slider(
+                                                        label="Соотношение огибающих громкости",
+                                                        info="Значение 0 - огибающая громкости как у входного аудио, 1 - как у выходного сигнала",
+                                                        minimum=self.rms_values[0],
+                                                        maximum=self.rms_values[1],
+                                                        step=0.05,
+                                                        value=0.25,
+                                                        interactive=True,
+                                                    )
+                                                    protect2 = gr.Slider(
+                                                        label="Защита согласных",
+                                                        info="Предовращает роботизацию дыхания и согласных (Может влиять на четкость речи)\nЗначение 0.5 - выключает защиту, 0 - максимальная защита",
+                                                        minimum=self.protect_values[0],
+                                                        maximum=self.protect_values[1],
+                                                        step=0.05,
+                                                        value=0.35,
+                                                        interactive=True,
+                                                    )
+                                        with gr.Accordion(label="Диапазон определения высоты тона", open=False):
+                                            with gr.Group():
+                                                with gr.Row():
+                                                    f0_min2 = gr.Slider(
+                                                        label="Нижний предел диапазона определения высоты тона",
+                                                        minimum=self.f0_min_values[0],
+                                                        maximum=self.f0_min_values[1],
+                                                        step=10,
+                                                        value=50,
+                                                        interactive=True,
+                                                    )
+                                                    f0_max2 = gr.Slider(
+                                                        label="Верхний предел диапазона определения высоты тона",
+                                                        minimum=self.f0_max_values[0],
+                                                        maximum=self.f0_max_values[1],
+                                                        step=10,
+                                                        value=1100,
+                                                        interactive=True,
+                                                    )
+                                        with gr.Accordion(label="Эмбеддер", open=False):
+                                            with gr.Group():
+                                                embedder_name2 = gr.Radio(
+                                                    label="Модель Hubert",
+                                                    choices=self.fairseq_embedders,
+                                                    value=self.fairseq_embedders[0],
+                                                )
+                                                transformers_mode2 = gr.Checkbox(
+                                                    label="Использовать стек Transformers",
+                                                    value=False,
+                                                    interactive=True,
+                                                )
+
+                                            @transformers_mode2.change(
+                                                inputs=[transformers_mode2], outputs=[embedder_name2]
+                                            )
+                                            def change_embedders(tr_m):
+                                                if tr_m:
+                                                    return gr.update(
+                                                        value=self.transformers_embedders[0],
+                                                        choices=self.transformers_embedders,
+                                                    )
+                                                else:
+                                                    return gr.update(
+                                                        choices=self.fairseq_embedders,
+                                                        value=self.fairseq_embedders[0],
+                                                    )
+
+                    with gr.Group():
+                        model_list_refresh_btn = gr.Button(
+                            "Обновить список моделей", variant="secondary", interactive=True
+                        )
+                        @model_list_refresh_btn.click(outputs=[model_name1, model_name2])
+                        def refresh_list_voice_models():
+                            models = []
+                            models = model_manager.parse_voice_models()
+                            first_model = None
+                            if len(models) > 0:
+                                first_model = models[0]
+                            return gr.update(choices=models, value=first_model), gr.update(choices=models, value=first_model)
+                        stereo_mode_duet = gr.Radio(
+                            choices=["mono", "left/right", "sim/dif"],
+                            label="Стерео режим",
+                            info="mono - монофоническая обработка аудио, \nleft/right - обработка левого и правого каналов отдельно, \nsim/dif - обработка фантомного центра и стерео-базы, разделенную на левый и правый каналы",
+                            value="mono",
+                            interactive=True,
+                        )
+                        alt_pl_duet = gr.Checkbox(
+                            label="Альтернативный пайплайн",
+                            info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 40% свободной видеопамяти",
+                            value=False,
+                            interactive=True,
+                        )
+                        mix_duet = gr.Checkbox(
+                            label="Смешать два голоса в один выходной файл",
+                            value=False,
+                            interactive=True,
+                        )
+                        mix_duet_ratio = gr.Slider(
+                            label="Баланс между двумя голосами",
+                            info="Регулирует громкость между первым и вторым голосом: значение -1 = только первый голос, значение 1 = только второй голос",
+                            minimum=-1,
+                            maximum=1,
+                            step=0.05,
+                            value=0,
+                            interactive=True,
+                            visible=False
+                        )
+
+                        output_format_duet = gr.Dropdown(
+                            label="Формат выходного файла",
+                            interactive=True,
+                            choices=output_formats,
+                            value=output_formats[0],
+                            filterable=False,
+                        )
+                        status_duet = gr.Textbox(
+                            container=False, lines=3, interactive=False, max_lines=3, visible=False
+                        )
+                        convert_btn_duet = gr.Button(
+                            "Преобразовать", variant="primary", interactive=True
+                        ).click(lambda: gr.update(visible=True), outputs=[status_duet])
+                        with gr.Row(equal_height=True):
+                            output_duet_audio_1 = gr.Audio(
+                                label="Результат модели 1",
+                                type="filepath",
+                                interactive=False,
+                                show_download_button=True,
+                            )
+                            output_duet_audio_2 = gr.Audio(
+                                label="Результат модели 2",
+                                type="filepath",
+                                interactive=False,
+                                show_download_button=True,
+                            )
+                        @mix_duet.change(inputs=mix_duet, outputs=[mix_duet_ratio, output_duet_audio_1, output_duet_audio_2])
+                        def mix_duet_change_fn(x):
+                            match x:
+                                case True:
+                                    return gr.update(visible=x), gr.update(label="Общий результат", value=None), gr.update(visible=False, value=None)
+                                case False:
+                                    return gr.update(visible=x), gr.update(label="Результат модели 1", value=None), gr.update(visible=True, value=None)
+
+                    @convert_btn_duet.then(
+                        inputs=[
+                            list_input_files_duet,
+                            model_name1, model_name2,
+                            pitch_method1, pitch_method2,
+                            pitch1, pitch2,
+                            hop_length1, hop_length2,
+                            index_rate1, index_rate2,
+                            filter_radius1, filter_radius2,
+                            rms1, rms2,
+                            protect1, protect2,
+                            f0_min1, f0_min1,
+                            f0_max1, f0_max2,
+                            output_format_duet,
+                            stereo_mode_duet,
+                            alt_pl_duet,
+                            embedder_name1, embedder_name2,
+                            transformers_mode1, transformers_mode2,
+                            mix_duet, mix_duet_ratio
+                        ],
+                        outputs=[output_duet_audio_1, output_duet_audio_2, status_duet],
+                    )
+                    def vbach_convert_duet(
+                        if_,
+                        mn1,
+                        mn2,
+                        pm1,
+                        pm2,
+                        p1,
+                        p2,
+                        hl1,
+                        hl2,
+                        ir1,
+                        ir2,
+                        fr1,
+                        fr2,
+                        rms1,
+                        rms2,
+                        pr1,
+                        pr2,
+                        f0min1,
+                        f0min2,
+                        f0max1,
+                        f0max2,
+                        of,
+                        sm,
+                        alt_pipeline,
+                        em_n1,
+                        em_n2,
+                        tr_m1,
+                        tr_m2,
+                        mix_d,
+                        mix_d_ratio
+                    ):
+                        output_1 = None
+                        output_2 = None
+                        output_mixed = None
+                        progress = gr.Progress(track_tqdm=True)
+                        progress(
+                            progress=0, desc=f"Начало преобразования"
+                        )
+                        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+                        output_dir = os.path.join(self.output_base_dir, timestamp)
+                        if if_:
+                            try:
+                                gr.Warning(title=f"Модель 1", message="")
+                                output_1 = vbach_inference(
+                                    input_file=if_,
+                                    model_name=mn1,
+                                    output_dir=output_dir,
+                                    output_name="NAME - MODEL - F0METHOD - PITCH",
+                                    format_name=True,
+                                    output_format=of,
+                                    pitch=p1,
+                                    method_pitch=pm1,
+                                    output_bitrate=320,
+                                    add_params={
+                                        "index_rate": ir1,
+                                        "filter_radius": fr1,
+                                        "protect": pr1,
+                                        "rms": rms1,
+                                        "mangio_crepe_hop_length": hl1,
+                                        "f0_min": f0min1,
+                                        "f0_max": f0max1,
+                                        "stereo_mode": sm,
+                                    },
+                                    pipeline_mode="alt" if alt_pipeline == True else "orig",
+                                    embedder_name=em_n1,
+                                    stack="transformers" if tr_m1 == True else "fairseq",
+                                    add_text_progress=f"Модель 1",
+                                    device=self.device
+                                )
+                                gr.Warning(title=f"Модель 2", message="")
+                                output_2 = vbach_inference(
+                                    input_file=if_,
+                                    model_name=mn2,
+                                    output_dir=output_dir,
+                                    output_name="NAME - MODEL - F0METHOD - PITCH",
+                                    format_name=True,
+                                    output_format=of,
+                                    pitch=p2,
+                                    method_pitch=pm2,
+                                    output_bitrate=320,
+                                    add_params={
+                                        "index_rate": ir2,
+                                        "filter_radius": fr2,
+                                        "protect": pr2,
+                                        "rms": rms2,
+                                        "mangio_crepe_hop_length": hl2,
+                                        "f0_min": f0min2,
+                                        "f0_max": f0max2,
+                                        "stereo_mode": sm,
+                                    },
+                                    pipeline_mode="alt" if alt_pipeline == True else "orig",
+                                    embedder_name=em_n2,
+                                    stack="transformers" if tr_m2 == True else "fairseq",
+                                    add_text_progress=f"Модель 2",
+                                    device=self.device
+                                )
+
+                            except Exception as e:
+                                print(e)
+                                return gr.update(value=None), gr.update(value=None), gr.update(visible=False)
+
+                        match mix_d:
+                            case True:
+                                input_file_basename = os.path.splitext(os.path.basename(if_))[0]
+                                mix1, sr1 = read(output_1)
+                                mix2, sr2 = read(output_2)
+                                max_sr = max(sr1, sr2)
+                                fited_arrays = fit_arrays([mix1, mix2], [sr1, sr2], min_sr=max_sr)
+                                g1 = (1 - mix_d_ratio) / 2
+                                g2 = (1 + mix_d_ratio) / 2
+                                mixed_duet = gain(fited_arrays[0], g1) + gain(fited_arrays[1], g2)
+                                shorted_name = namer.short(input_file_basename, length=50)
+                                sanitized_name = namer.sanitize(f"{mn1}, {mn2} - {shorted_name}")
+                                output_mixed = write(os.path.join(output_dir, f"{sanitized_name}.{of}"), mixed_duet, max_sr)
+                                return self.return_audio_with_size(label="Общий результат", value=output_mixed), gr.update(label="Результат модели 2", value=None), gr.update(visible=False)
+                            case False:
+                                return self.return_audio_with_size(label="Результат модели 1", value=output_1), self.return_audio_with_size(label="Результат модели 2", value=output_2), gr.update(visible=False)
 
             with gr.TabItem("Менеджер"):
                 with gr.TabItem("Загрузить по ссылке"):
@@ -2627,16 +3133,14 @@ class Vbach(GradioHelper):
                             outputs=delete_output,
                         )
 
-                @gr.on(fn="decorator", inputs=None, outputs=[delete_model_name, model_name])
+                @gr.on(fn="decorator", inputs=None, outputs=[delete_model_name, model_name, model_name1, model_name2])
                 def refresh_list_voice_models():
                     models = []
                     models = model_manager.parse_voice_models()
                     first_model = None
                     if len(models) > 0:
                         first_model = models[0]
-                    return gr.update(choices=models, value=first_model), gr.update(
-                        choices=models, value=first_model
-                    )
+                    return gr.update(choices=models, value=first_model), gr.update(choices=models, value=first_model), gr.update(choices=models, value=first_model), gr.update(choices=models, value=first_model)
         return vbach_app
 
 if __name__ == "__main__":

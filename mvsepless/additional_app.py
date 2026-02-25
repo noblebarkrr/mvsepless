@@ -384,7 +384,7 @@ class AutoEnsembless(Separator, GradioHelper):
                         upload = gr.File(show_label=False, type="filepath", interactive=True)
                         refresh_input_btn = gr.Button("Обновить", variant="primary", interactive=True)
                         list_input_files = gr.Dropdown(
-                            label="Загрузить файлы",
+                            label="Загрузить файл",
                             choices=self.input_files,
                             value=None,
                             multiselect=False,
