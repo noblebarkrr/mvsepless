@@ -6,7 +6,7 @@ import torch
 from check_colab import easy_check_is_colab
 from packaging import version
 is_pytorch2 = version.parse(torch.__version__) >= version.parse("2.0.0")
-unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa", "bandit_v2_multi", "bandit_plus"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not easy_check_is_colab() else []
+unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not easy_check_is_colab() else []
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
@@ -39,7 +39,7 @@ class MvseplessModelManager:
         else:
             return []
         
-    def get_id(self, model_type, model_name):
+    def get_id(self, model_name):
         if model_name is not None and model_name != "":
             return self.models_info.get(model_name).get("id", 0)
         else:
@@ -186,7 +186,7 @@ class MvseplessModelManager:
             raise ValueError(
                 f"Модель {model_name} не найдена"
             )
-        id = self.get_id(model_type, model_name)
+        id = self.get_id(model_name)
         conf, ckpt = self.download_model(
             self.models_cache_dir,
             model_name,
@@ -210,7 +210,7 @@ class MvseplessModelManager:
             raise ValueError(
                 f"Модель {model_name} не найдена"
             )
-        id = self.get_id(model_type, model_name)
+        id = self.get_id(model_name)
         return self.download_model(
             self.models_cache_dir,
             model_name,
