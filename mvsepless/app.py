@@ -210,7 +210,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         self.history.add(results, model_name, timestamp)
         return results
 
-    def UI(self, theme, add_app=True, plugins=True, add_vbach=False):
+    def UI(self, theme, add_app=True, plugins=True, add_vbach=False, medley_vox=False):
         with gr.Blocks(theme=theme, title="Разделение музыки и вокала") as MVSEPLESS_LITE_UI:
             if not cuda_available:
                 gr.Markdown("<h2><center>ВНИМАНИЕ! Используется CPU, инференс слишком медленно работает<center><h2>")
@@ -619,6 +619,12 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                     delete_models_cache_btn = gr.Button("Удалить ВСЁ!")
                     delete_models_cache_btn.click(self.delete_models_cache, inputs=None, outputs=None)
 
+            if medley_vox:
+                from medley_vox_infer import MedleyVoxSeparator
+                with gr.Tab("Разделение вокалов (Medley-Vox)"):
+                    _medley_vox = MedleyVoxSeparator(self.input_files, self.upload_files, user_directory, device=self.device)
+                    _medley_vox.UI()
+
             from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI, AudioApp
             if add_app:
                 with gr.Tab("Обработка аудио"):
@@ -645,6 +651,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                         from vbachgen import VbachGen
                         _vbach_gen = VbachGen(voice_model_manager, self.input_files, self.upload_files, user_directory, vbach_inference, device=self.device)
                         _vbach_gen.UI()
+
             if plugins:
                 with gr.Tab("Плагины"):
                     PluginManager().UI()
@@ -697,6 +704,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Включить Vbach",
     )
+    parser.add_argument(
+        "--medley_vox",
+        action="store_true",
+        help="Включить Medley-Vox",
+    )
     args = parser.parse_args()
     SeparatorGradio().UI(gr.themes.Citrus(
             primary_hue="teal",
@@ -709,7 +721,7 @@ if __name__ == "__main__":
                 "system-ui",
                 "sans-serif",
             ],
-        ), args.add_app, args.use_plugins, args.vbach).launch(
+        ), args.add_app, args.use_plugins, args.vbach, args.medley_vox).launch(
             server_name="0.0.0.0",
             server_port=args.port,
             share=args.share,
