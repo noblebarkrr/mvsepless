@@ -105,8 +105,9 @@ def once_inference(
     output_waveforms = {}
 
     mono_bool = False
-    if hasattr(config.model, "stereo"):
-        mono_bool = False if config.model.stereo else True
+    if hasattr(config, "model"):
+        if hasattr(config.model, "stereo"):
+            mono_bool = False if config.model.stereo else True
     try:
         mix, sr = read(path=path, sr=sample_rate, mono=mono_bool)
     except Exception as e:
@@ -489,7 +490,7 @@ def parse_args():
         description="Модифицированный Music-Source-Separation-Training для разделения аудио на источники"
     )
 
-    parser.add_argument("--input", type=str, help="Путь к входному файлу или папке")
+    parser.add_argument("--input", type=str, required=True, help="Путь к входному файлу или папке")
     parser.add_argument(
         "--store_dir", type=str, required=True, help="Путь для сохранения результатов"
     )
