@@ -6,7 +6,8 @@ import torch
 from check_colab import easy_check_is_colab
 from packaging import version
 is_pytorch2 = version.parse(torch.__version__) >= version.parse("2.0.0")
-unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not easy_check_is_colab() else []
+is_pytorch2_4 = version.parse(torch.__version__) >= version.parse("2.4.0")
+unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not is_pytorch2_4 else []
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 MVSEPLESS_ECONOM = not cuda_available
