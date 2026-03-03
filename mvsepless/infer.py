@@ -13,7 +13,7 @@ import torch
 import numpy as np
 import soundfile as sf
 import torch.nn as nn
-
+import tempfile
 from typing import Literal
 
 from audio import read, multiwrite, output_formats, substractor
@@ -388,10 +388,6 @@ def load_model(model_type, config_path, start_check_point, device: str):
                 state_dict = torch.load(
                     start_check_point, map_location=torch_device, weights_only=False
                 )
-                if "state" in state_dict:
-                    state_dict = state_dict["state"]
-                if "state_dict" in state_dict:
-                    state_dict = state_dict["state_dict"]
             else:
                 if hasattr(config, "fno"):
                     with torch.serialization.safe_globals([torch._C._nn.gelu]):
@@ -405,12 +401,29 @@ def load_model(model_type, config_path, start_check_point, device: str):
                         )
                     except torch.serialization.pickle.UnpicklingError:
                         state_dict = torch.load(
-                            start_check_point, map_location=torch_device, weights_only=False
+                            start_check_point, 
+                            map_location=torch_device, 
+                            weights_only=False
                         )
-            
+
+            if "state" in state_dict:
+                state_dict = state_dict["state"]
+            if "state_dict" in state_dict:
+                state_dict = state_dict["state_dict"]
+            if "model_state_dict" in state_dict:
+                state_dict = state_dict["model_state_dict"]
+
             try:
                 model.load_state_dict(state_dict)
             except RuntimeError as e:
+                sys.stdout.write(
+                    json.dumps({"stems": ["error", "error"]}, ensure_ascii=False)
+                    + "\n"
+                )
+                sys.stdout.write(
+                    json.dumps({"stems": [str(e)]}, ensure_ascii=False)
+                    + "\n"
+                )
                 print(f"Warning: Error loading state dict: {e}")
                 model.load_state_dict(state_dict, strict=False)
 
