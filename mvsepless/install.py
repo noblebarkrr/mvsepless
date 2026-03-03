@@ -1,5 +1,55 @@
 import os, sys, subprocess, argparse, time
 from check_colab import easy_check_is_colab
+import json
+import re
+
+def get_latest_version(package_name):
+    try:
+        result = subprocess.run(
+            ['pip', 'index', 'versions', package_name, '--report'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        data = json.loads(result.stdout)
+        print(data)
+        return data['index_url_results'][0]['latest_version']
+    
+    except (subprocess.CalledProcessError, KeyError, IndexError, json.JSONDecodeError):
+        result = subprocess.run(
+            ['pip', 'install', f'{package_name}==random_string'],
+            capture_output=True,
+            text=True
+        )
+        def parse_versions_from_pip_output(pip_output):
+            """Парсит версии из вывода pip с правильной сортировкой"""
+            for line in pip_output.split('\n'):
+                if 'from versions:' in line:
+                    match = re.search(r'from versions: (.*?)\)', line)
+                    if match:
+                        # Получаем список строк с версиями
+                        versions_str = [v.strip() for v in match.group(1).split(',')]
+                      
+                        return versions_str[-1]
+            return None
+        return parse_versions_from_pip_output(result.stderr)
+
+def fno_compitable():
+    is_torch_2 = False
+    fno_c = False
+    latest_version_torch = get_latest_version("torch")
+    lvt = latest_version_torch.split(".")
+    lvt = [int(n_) for n_ in lvt if n_.isdigit()]
+    for i, num in enumerate(lvt, start=1):
+        if i == 1:
+            if num == 2:
+                is_torch_2 = True
+        elif i == 2:
+            if num >= 4:
+                fno_c = True
+    return fno_c
+
 def is_nvidia_gpu_present():
     try:
         # Пытаемся выполнить команду nvidia-smi
@@ -99,7 +149,7 @@ universal_requirements = [
     "pyworld",
     "gdown"
 ]
-if easy_check_is_colab():
+if fno_compitable():
     universal_requirements.append("neuraloperator==1.0.2")
 
 old_requirements = [
