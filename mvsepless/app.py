@@ -185,6 +185,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         vr_high_end_process=False,
         mdx_denoise=False,
         use_spec_invert=False,
+        econom_mode=None,
         progress=gr.Progress(track_tqdm=True),
     ):
         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
@@ -198,6 +199,13 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
             template=template,
             selected_stems=selected_stems,
             add_settings={
+                "mdx_denoise": mdx_denoise,
+                "vr_aggr": vr_aggr,
+                "vr_post_process": vr_post_process,
+                "vr_high_end_process": vr_high_end_process,
+                "econom_mode": econom_mode,
+                "add_single_sep_text_progress": None,
+            } if econom_mode is not None else {
                 "mdx_denoise": mdx_denoise,
                 "vr_aggr": vr_aggr,
                 "vr_post_process": vr_post_process,
@@ -324,6 +332,10 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     use_spec_for_extract_instrumental = gr.Checkbox(
                                         label="При извлечении инструментала/второго стема/остатка использовать спектрограмму", value=False, interactive=True
                                     )
+                                    gr.Markdown("<h4>Экономия</h4>", container=True)
+                                    econom_mode = gr.Checkbox(
+                                        label="Включить эконом-режим", value=False, interactive=True
+                                    )
 
                             @model_name.change(
                                 inputs=[model_name], outputs=[extract_instrumental, stems]
@@ -388,7 +400,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     vr_aggr,
                                     vr_enable_post_process,
                                     vr_enable_high_end_process,
-                                    use_spec_for_extract_instrumental
+                                    use_spec_for_extract_instrumental,
+                                    econom_mode
                                 ],
                                 outputs=[sep_state, status],
                                 show_progress="full",
@@ -406,6 +419,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 vr_pp,
                                 vr_hip,
                                 u_spec,
+                                ec_mode,
                                 progress=gr.Progress(track_tqdm=True),
                             ):
                                 results = self._separate_batch(
@@ -421,6 +435,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     vr_hip,
                                     mdx_denoise,
                                     u_spec,
+                                    ec_mode,
                                     progress=progress,
                                 )
                                 return gr.update(value=str(results)), gr.update(visible=False)

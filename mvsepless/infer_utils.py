@@ -20,6 +20,9 @@ def load_config(model_type: str, config_path: str) -> Any:
                 if hasattr(config.audio, "new_chunk_size"):
                     if hasattr(config.audio, "chunk_size"):
                         config.audio.chunk_size = config.audio.new_chunk_size
+                if hasattr(config.audio, "new_dim_t"):
+                    if hasattr(config.audio, "dim_t"):
+                        config.audio.dim_t = config.audio.new_dim_t
             return config
     except FileNotFoundError:
         raise FileNotFoundError(f"Configuration file not found at {config_path}")

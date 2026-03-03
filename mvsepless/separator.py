@@ -9,6 +9,22 @@ is_pytorch2 = version.parse(torch.__version__) >= version.parse("2.0.0")
 unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not easy_check_is_colab() else []
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
+MVSEPLESS_ECONOM = not cuda_available
+
+def calculate_dimensions(chunk_size, hop_length=441):
+    # Находим dim_t
+    dim_t = (chunk_size // hop_length) + 1
+    
+    # Проверяем, чтобы chunk_size был кратен hop_length для идеального совмещения
+    actual_chunk_size = (dim_t - 1) * hop_length
+    
+    return dim_t, actual_chunk_size
+
+def generate_econom_params(sr=44100, seconds=7, hop_length=441):
+    chunk_size = sr * seconds
+    dim_t, chunk_size = calculate_dimensions(chunk_size, hop_length)
+    print(f"Для экономии ресурсов размер чанка был изменен на {chunk_size}")
+    return dim_t, chunk_size
 
 class MvseplessModelManager:
     def __init__(
@@ -114,7 +130,7 @@ class MvseplessModelManager:
 
         return config_path, checkpoint_path
 
-    def conf_editor(self, config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type):
+    def conf_editor(self, config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type, econom_mode):
 
         class IndentDumper(yaml.Dumper):
             def increase_indent(self, flow=False, indentless=False):
@@ -128,7 +144,7 @@ class MvseplessModelManager:
             "tag:yaml.org,2002:python/tuple", tuple_constructor
         )
 
-        def conf_edit(config_path: str, mdx_denoise: bool, vr_aggr: int, vr_enable_post_process: bool, vr_high_end_process: bool, model_type: str):
+        def conf_edit(config_path: str, mdx_denoise: bool, vr_aggr: int, vr_enable_post_process: bool, vr_high_end_process: bool, model_type: str, econom_mode: bool):
             with open(config_path, "r") as f:
                 data = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -150,13 +166,18 @@ class MvseplessModelManager:
                 data["inference"]["enable_post_process"] = vr_enable_post_process
                 data["inference"]["high_end_process"] = vr_high_end_process
 
-            if not cuda_available:
+            if econom_mode:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
-                    data["audio"]["new_chunk_size"] = 44100 * 7
+                    hop_length = data["audio"]["hop_length"]
+                    dim_t, chunk_size = generate_econom_params(hop_length=hop_length)
+                    data["audio"]["new_chunk_size"] = chunk_size
+                    data["audio"]["new_dim_t"] = dim_t
             else:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
                     if "new_chunk_size" in data["audio"]:
                         del data["audio"]["new_chunk_size"]
+                    if "new_dim_t" in data["audio"]:
+                        del data["audio"]["new_dim_t"]
 
             with open(config_path, "w") as f:
                 yaml.dump(
@@ -168,7 +189,7 @@ class MvseplessModelManager:
                     allow_unicode=True,
                 )
 
-        conf_edit(config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type)
+        conf_edit(config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type, econom_mode)
 
     def install_model(
         self,
@@ -178,6 +199,7 @@ class MvseplessModelManager:
         vr_aggr: bool = 5,
         vr_post_process: bool = False,
         vr_high_end_process: bool = False,
+        econom_mode: bool = False,
         progress: any = None,
     ) -> tuple[int, str, str]:
 
@@ -194,7 +216,7 @@ class MvseplessModelManager:
             info["checkpoint_url"],
             info["config_url"],
         )
-        self.conf_editor(conf, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, model_type)
+        self.conf_editor(conf, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, model_type, econom_mode)
 
         return id, conf, ckpt
     
@@ -418,6 +440,7 @@ class Separator(MvseplessModelManager):
             "vr_aggr": 5,
             "vr_post_process": False,
             "vr_high_end_process": False,
+            #"econom_mode": False,
             "add_single_sep_text_progress": None,
         },
         use_spec_invert: bool = False,
@@ -454,10 +477,11 @@ class Separator(MvseplessModelManager):
         vr_aggr = add_settings.get("vr_aggr", 5)
         vr_post_process = add_settings.get("vr_post_process", False)
         vr_high_end_process = add_settings.get("vr_high_end_process", False)
+        econom_mode = add_settings.get("econom_mode", MVSEPLESS_ECONOM)
         add_progress_text_custom = add_settings.get("add_single_sep_text_progress", "")
 
         id, conf, ckpt = self.install_model(
-            model_type, model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, progress
+            model_type, model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, econom_mode, progress
         )
 
         if isinstance(input, str):
