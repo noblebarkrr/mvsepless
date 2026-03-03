@@ -4,36 +4,23 @@ import json
 import re
 
 def get_latest_version(package_name):
-    try:
-        result = subprocess.run(
-            ['pip', 'index', 'versions', package_name, '--report'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        
-        data = json.loads(result.stdout)
-        print(data)
-        return data['index_url_results'][0]['latest_version']
-    
-    except (subprocess.CalledProcessError, KeyError, IndexError, json.JSONDecodeError):
-        result = subprocess.run(
-            ['pip', 'install', f'{package_name}==random_string'],
-            capture_output=True,
-            text=True
-        )
-        def parse_versions_from_pip_output(pip_output):
-            """Парсит версии из вывода pip с правильной сортировкой"""
-            for line in pip_output.split('\n'):
-                if 'from versions:' in line:
-                    match = re.search(r'from versions: (.*?)\)', line)
-                    if match:
-                        # Получаем список строк с версиями
-                        versions_str = [v.strip() for v in match.group(1).split(',')]
-                      
-                        return versions_str[-1]
-            return None
-        return parse_versions_from_pip_output(result.stderr)
+    result = subprocess.run(
+        [os.sys.executable, "-m", "pip", 'install', f'{package_name}==random_string'],
+        capture_output=True,
+        text=True
+    )
+    def parse_versions_from_pip_output(pip_output):
+        """Парсит версии из вывода pip с правильной сортировкой"""
+        for line in pip_output.split('\n'):
+            if 'from versions:' in line:
+                match = re.search(r'from versions: (.*?)\)', line)
+                if match:
+                    # Получаем список строк с версиями
+                    versions_str = [v.strip() for v in match.group(1).split(',')]
+                    
+                    return versions_str[-1]
+        return None
+    return parse_versions_from_pip_output(result.stderr)
 
 def fno_compitable():
     is_torch_2 = False
