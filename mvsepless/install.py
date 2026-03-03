@@ -61,7 +61,7 @@ universal_requirements = [
     "pydub",
     "webrtcvad",
     "audiomentations",
-    "pedalboard==0.8.2",
+    "pedalboard",
     "ml_collections",
     "timm",
     "wandb",
@@ -170,4 +170,5 @@ if __name__ == "__main__":
         print("Предупреждение! Зависимости устанавливаются принудительно")
     install_uv()
     install_requirements(reqs, force=args.force)
+
     install_requirements(["setuptools<76.0"], force=True)
