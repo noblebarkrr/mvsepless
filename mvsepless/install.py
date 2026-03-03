@@ -4,23 +4,27 @@ import json
 import re
 
 def get_latest_version(package_name):
+    """Получает последнюю версию пакета из поля LATEST в выводе pip index"""
     result = subprocess.run(
-        [os.sys.executable, "-m", "pip", 'install', f'{package_name}==random_string'],
+        [os.sys.executable, "-m", "pip", "index", "versions", package_name],
         capture_output=True,
         text=True
     )
-    def parse_versions_from_pip_output(pip_output):
-        """Парсит версии из вывода pip с правильной сортировкой"""
+    
+    def parse_latest_from_output(pip_output):
+        """Парсит значение LATEST из вывода pip"""
         for line in pip_output.split('\n'):
-            if 'from versions:' in line:
-                match = re.search(r'from versions: (.*?)\)', line)
+            # Ищем строку с LATEST:
+            if 'LATEST:' in line:
+                # Извлекаем значение после LATEST:
+                match = re.search(r'LATEST:\s+(\S+)', line)
                 if match:
-                    # Получаем список строк с версиями
-                    versions_str = [v.strip() for v in match.group(1).split(',')]
-                    
-                    return versions_str[-1]
+                    return match.group(1)
         return None
-    return parse_versions_from_pip_output(result.stderr)
+    
+    latest_version = parse_latest_from_output(result.stdout)
+    return latest_version
+
 
 def fno_compitable():
     is_torch_2 = False
