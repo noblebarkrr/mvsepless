@@ -1,4 +1,6 @@
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 import json
 import numpy as np
 import torch
@@ -17,6 +19,9 @@ def load_config(model_type: str, config_path: str) -> Any:
                 config = OmegaConf.load(config_path)
             else:
                 config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
+                if hasattr(config.training, "new_segment"):
+                    if hasattr(config.training, "segment"):
+                        config.training.segment = config.audio.new_chunk_size
                 if hasattr(config.audio, "new_chunk_size"):
                     if hasattr(config.audio, "chunk_size"):
                         config.audio.chunk_size = config.audio.new_chunk_size

@@ -11,7 +11,7 @@ unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["b
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 MVSEPLESS_ECONOM = not cuda_available
-
+MVSEPLESS_ECONOM_SEGMENT = int(os.environ.get("MVSEPLESS_ECONOM_SEGMENT", "7"))
 def calculate_dimensions(chunk_size, hop_length=441):
     # Находим dim_t
     dim_t = (chunk_size // hop_length) + 1
@@ -21,10 +21,9 @@ def calculate_dimensions(chunk_size, hop_length=441):
     
     return dim_t, actual_chunk_size
 
-def generate_econom_params(sr=44100, seconds=7, hop_length=441):
+def generate_econom_params(sr=44100, seconds=MVSEPLESS_ECONOM_SEGMENT, hop_length=441):
     chunk_size = sr * seconds
     dim_t, chunk_size = calculate_dimensions(chunk_size, hop_length)
-    print(f"Для экономии ресурсов размер чанка был изменен на {chunk_size}")
     return dim_t, chunk_size
 
 class MvseplessModelManager:
@@ -169,16 +168,27 @@ class MvseplessModelManager:
 
             if econom_mode:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
+                    old_chunk_size = data["audio"]["chunk_size"]
                     hop_length = data["audio"]["hop_length"]
-                    dim_t, chunk_size = generate_econom_params(hop_length=hop_length)
-                    data["audio"]["new_chunk_size"] = chunk_size
-                    data["audio"]["new_dim_t"] = dim_t
+                    dim_t, new_chunk_size = generate_econom_params(hop_length=hop_length)
+                    if old_chunk_size >= new_chunk_size:
+                        print(f"Для экономии ресурсов размер чанка был изменен на {new_chunk_size}")
+                        data["audio"]["new_chunk_size"] = new_chunk_size
+                        data["audio"]["new_dim_t"] = dim_t
+                elif model_type in ["htdemucs"]:
+                    old_segment = data["training"]["segment"]
+                    if old_segment >= MVSEPLESS_ECONOM_SEGMENT:
+                        print(f"Для экономии ресурсов размер сегмента был изменен на {MVSEPLESS_ECONOM_SEGMENT}")
+                        data["training"]["new_segment"] = MVSEPLESS_ECONOM_SEGMENT
             else:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
                     if "new_chunk_size" in data["audio"]:
                         del data["audio"]["new_chunk_size"]
                     if "new_dim_t" in data["audio"]:
                         del data["audio"]["new_dim_t"]
+                elif model_type in ["htdemucs"]:
+                    if "new_segment" in data["training"]:
+                        del data["training"]["new_segment"]
 
             with open(config_path, "w") as f:
                 yaml.dump(
