@@ -1,4 +1,4 @@
-import os, json, sys, subprocess, threading, time, argparse, gradio as gr, yaml, tabulate
+import os, json, sys, subprocess, threading, time, argparse, gradio as gr, yaml, queue
 from downloader import dw_file
 from audio import check, output_formats
 from device import all_ids, set_device, cuda_available
@@ -284,7 +284,7 @@ class Separator(MvseplessModelManager):
                 total = progress_a.get("total", 1)
                 if total > 0:
                     percent = int((processed / total) * 100)
-                    progress((processed, total), desc=f"Обработано: {percent}% {_add_text}", unit="сэмплов")
+                    progress((processed, total), desc=f"Обработано: {percent}% {_add_text}", unit=progress_a.get("unit", "сэмплов"))
                     print(f"\rОбработано: {percent}%", end="")
                 return None
             elif "writing" in data:
