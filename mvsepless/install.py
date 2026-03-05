@@ -3,33 +3,79 @@ from check_colab import easy_check_is_colab
 import json
 import re
 
-def get_latest_version(package_name):
-    """Получает последнюю версию пакета из поля LATEST в выводе pip index"""
-    result = subprocess.run(
-        [os.sys.executable, "-m", "pip", "index", "versions", package_name],
-        capture_output=True,
-        text=True
-    )
+def get_latest_version(package_name, index_url=None):
+    """Получает последнюю версию пакета из вывода pip index versions"""
+    cmd = [os.sys.executable, "-m", "pip", "index", "versions", package_name]
+    if index_url:
+        cmd.extend(["--index-url", index_url])
     
-    def parse_latest_from_output(pip_output):
-        """Парсит значение LATEST из вывода pip"""
-        for line in pip_output.split('\n'):
-            # Ищем строку с LATEST:
-            if 'LATEST:' in line:
-                # Извлекаем значение после LATEST:
-                match = re.search(r'LATEST:\s+(\S+)', line)
-                if match:
-                    return match.group(1)
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False  # Не вызываем исключение при ошибке
+        )
+        
+        if result.returncode != 0:
+            print(f"Предупреждение: pip index вернул код {result.returncode}")
+            print(f"stderr: {result.stderr}")
+            return None
+            
+    except Exception as e:
+        print(f"Ошибка при выполнении pip index: {e}")
         return None
     
-    latest_version = parse_latest_from_output(result.stdout)
+    def parse_version_from_output(pip_output):
+        if not pip_output:
+            return None
+            
+        lines = pip_output.split('\n')
+        
+        # Способ 1: Парсим первую строку
+        if lines and lines[0].strip():
+            first_line = lines[0].strip()
+            
+            # Версия в скобках (приоритетный способ)
+            match = re.search(r'\(([^)]+)\)', first_line)
+            if match:
+                version = match.group(1).strip()
+                return version
+            
+            # Версия после пробела
+            match = re.search(r'\S+\s+([^\s]+)', first_line)
+            if match:
+                version = match.group(1).strip()
+                # Проверяем, что это похоже на версию (содержит цифры)
+                if re.search(r'\d', version):
+                    return version
+        
+        # Способ 2: Ищем "Available versions:" и берем первую версию
+        for i, line in enumerate(lines):
+            if 'Available versions:' in line:
+                # Проверяем следующие несколько строк на наличие версий
+                for j in range(1, 4):  # Проверяем следующие 3 строки
+                    if i + j < len(lines):
+                        versions_line = lines[i + j].strip()
+                        if versions_line:
+                            # Разделяем по запятой и берем первую версию
+                            versions = [v.strip() for v in versions_line.split(',') if v.strip()]
+                            if versions:
+                                return versions[0]
+                break
+        
+        return None
+    
+    latest_version = parse_version_from_output(result.stdout)
+    
+    print(f"Получена версия для {package_name}: {latest_version}")
+    
     return latest_version
 
-
-def fno_compitable():
+def fno_compitable(index_url=None):
     is_torch_2 = False
     fno_c = False
-    latest_version_torch = get_latest_version("torch")
+    latest_version_torch = get_latest_version("torch", index_url)
     lvt = latest_version_torch.split(".")
     lvt = [int(n_) for n_ in lvt if n_.isdigit()]
     for i, num in enumerate(lvt, start=1):
@@ -73,22 +119,29 @@ def install_uv():
     print("Установка uv...")
     result = subprocess.run([os.sys.executable, "-m", "pip", "install", "uv"])
     print("uv установлен")
-def install_requirements(requirements: list, force=False):
+
+def install_requirements(requirements: list, force=False, index_url=None):
     if requirements:
         cmd = [os.sys.executable, "-m", "uv", "pip", "install", "--no-cache-dir", "-qq"]
         if force:
             cmd.append("--upgrade")
             cmd.append("--force-reinstall")
+        if index_url:
+            cmd.extend(["--index-url", index_url])
         for pkg in requirements:
             cmd.append(pkg)
         print("Установка зависимостей через uv...")
         result = subprocess.run(cmd)
         print("Установка зависимостей завершена")
 
-universal_requirements = [
+torch_requirements = [
     "torch",
     "torchvision",
     "torchaudio",
+    "torchcrepe",
+]
+
+universal_requirements = [
     "numpy==2.0.2",
     "pandas",
     "scipy",
@@ -132,7 +185,6 @@ universal_requirements = [
     "yt_dlp",
     "pyngrok",
     "tabulate",
-    "torchcrepe",
     "praat-parselmouth",
     "faiss-cpu==1.11",
     "local-attention",
@@ -140,13 +192,15 @@ universal_requirements = [
     "pyworld",
     "gdown"
 ]
-if fno_compitable():
-    universal_requirements.append("neuraloperator==1.0.2")
 
-old_requirements = [
+torch_old_requirements = [
     "torch==1.13.1",
     "torchvision==0.14.1",
     "torchaudio==0.13.1",
+    "torchcrepe==0.0.24",
+]
+
+old_requirements = [
     "numpy==1.26.4",
     "pandas==2.3.3",
     "scipy==1.15.3",
@@ -189,7 +243,6 @@ old_requirements = [
     "yt_dlp",
     "pyngrok",
     "tabulate",
-    "torchcrepe==0.0.24",
     "praat-parselmouth==0.4.7",
     "faiss-cpu==1.7.2",
     "local-attention==1.10.0",
@@ -202,14 +255,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Установщик зависимостей")
     parser.add_argument("--old", action="store_true", help="Старые зависимости (только python 3.10)")
     parser.add_argument("--force", action="store_true", help="Принудительная установка")
+    parser.add_argument("--index_url", type=str, default=None, help="Ссылка на индекс (только torch)")
     args = parser.parse_args()
     if args.old:
+        torch_reqs = torch_old_requirements
         reqs = old_requirements
     else:
+        torch_reqs = torch_requirements
         reqs = universal_requirements
+        if fno_compitable(args.index_url):
+            reqs.append("neuraloperator==1.0.2")
     if args.force:
         print("Предупреждение! Зависимости устанавливаются принудительно")
     install_uv()
+    install_requirements(torch_reqs, force=args.force, index_url=args.index_url)
     install_requirements(reqs, force=args.force)
-
     install_requirements(["setuptools<76.0"], force=True)
