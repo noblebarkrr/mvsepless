@@ -1,6 +1,8 @@
 import os
 import math
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 import json
 import torch
 import torch.nn as nn
@@ -45,7 +47,6 @@ class VRNet:
         nout=None,
         nout_lstm=None,
     ):
-        self.torch_device_mps = torch.backends.mps.is_available()
         self.enable_post_process = False
         self.post_process_threshold = 0.2
         self.batch_size = 1
@@ -61,7 +62,6 @@ class VRNet:
         self.model_params = ModelParameters(model_params)
         self.input_high_end_h = None
         self.input_high_end = None
-        self.enable_tta = False
         self.model_samplerate = self.model_params.param["sr"]
         self.model_run = lambda *args, **kwargs: print(
             "Model run method is not initialised yet."
@@ -107,21 +107,12 @@ class VRNet:
         audio_file = numpy_array
 
         for d in range(bands_n, 0, -1):
-            processed = min(d + self.batch_size, bands_n)
-            sys.stdout.write(
-                json.dumps(
-                    {"processing": {"processed": processed, "total": bands_n}},
-                    ensure_ascii=False,
-                )
-                + "\n"
-            )
-            sys.stdout.flush()
             bp = self.model_params.param["band"][d]
 
             wav_resolution = bp["res_type"]
 
-            if self.torch_device_mps:
-                wav_resolution = "polyphase"
+            #if self.torch_device_mps:
+                #wav_resolution = "polyphase"
 
             if d == bands_n:
                 X_wave[d], _ = librosa.resample(
@@ -174,105 +165,6 @@ class VRNet:
 
         return X_spec
 
-    def inference_vr(self, X_spec, device, aggressiveness):
-        def _execute(X_mag_pad, roi_size):
-            X_dataset = []
-            patches = (X_mag_pad.shape[2] - 2 * self.model_run.offset) // roi_size
-            total = patches
-            for i in range(patches):
-                processed = min(i + self.batch_size, patches)
-                sys.stdout.write(
-                    json.dumps(
-                        {"processing": {"processed": processed, "total": total}},
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-                sys.stdout.flush()
-                start = i * roi_size
-                X_mag_window = X_mag_pad[:, :, start : start + self.window_size]
-                X_dataset.append(X_mag_window)
-
-            total_iterations = (
-                patches // self.batch_size
-                if not self.enable_tta
-                else (patches // self.batch_size) * 2
-            )
-
-            X_dataset = np.asarray(X_dataset)
-            self.model_run.eval()
-            with torch.no_grad():
-                mask = []
-
-                for i in range(0, patches, self.batch_size):
-                    processed = min(i + self.batch_size, patches)
-                    sys.stdout.write(
-                        json.dumps(
-                            {"processing": {"processed": processed, "total": total}},
-                            ensure_ascii=False,
-                        )
-                        + "\n"
-                    )
-                    X_batch = X_dataset[i : i + self.batch_size]
-                    X_batch = torch.from_numpy(X_batch).to(device)
-                    pred = self.model_run.predict_mask(X_batch)
-                    if not pred.size()[3] > 0:
-                        raise ValueError(
-                            f"Window size error: h1_shape[3] must be greater than h2_shape[3]"
-                        )
-                    pred = pred.detach().cpu().numpy()
-                    pred = np.concatenate(pred, axis=2)
-                    mask.append(pred)
-                if len(mask) == 0:
-                    raise ValueError(
-                        f"Window size error: h1_shape[3] must be greater than h2_shape[3]"
-                    )
-
-                mask = np.concatenate(mask, axis=2)
-            return mask
-
-        def postprocess(mask, X_mag, X_phase):
-            is_non_accom_stem = False
-            for stem in NON_ACCOM_STEMS:
-                if stem == self.primary_stem.lower():
-                    is_non_accom_stem = True
-
-            mask = spec_utils.adjust_aggr(mask, is_non_accom_stem, aggressiveness)
-
-            if self.enable_post_process:
-                mask = spec_utils.merge_artifacts(
-                    mask, thres=self.post_process_threshold
-                )
-
-            y_spec = mask * X_mag * np.exp(1.0j * X_phase)
-            v_spec = (1 - mask) * X_mag * np.exp(1.0j * X_phase)
-
-            return y_spec, v_spec
-
-        X_mag, X_phase = spec_utils.preprocess(X_spec)
-        n_frame = X_mag.shape[2]
-        pad_l, pad_r, roi_size = spec_utils.make_padding(
-            n_frame, self.window_size, self.model_run.offset
-        )
-        X_mag_pad = np.pad(X_mag, ((0, 0), (0, 0), (pad_l, pad_r)), mode="constant")
-        X_mag_pad /= X_mag_pad.max()
-        mask = _execute(X_mag_pad, roi_size)
-
-        if self.enable_tta:
-            pad_l += roi_size // 2
-            pad_r += roi_size // 2
-            X_mag_pad = np.pad(X_mag, ((0, 0), (0, 0), (pad_l, pad_r)), mode="constant")
-            X_mag_pad /= X_mag_pad.max()
-            mask_tta = _execute(X_mag_pad, roi_size)
-            mask_tta = mask_tta[:, :, roi_size // 2 :]
-            mask = (mask[:, :, :n_frame] + mask_tta[:, :, :n_frame]) * 0.5
-        else:
-            mask = mask[:, :, :n_frame]
-
-        y_spec, v_spec = postprocess(mask, X_mag, X_phase)
-
-        return y_spec, v_spec
-
     def spec_to_wav(self, spec):
         if (
             self.high_end_process
@@ -313,32 +205,3 @@ class VRNet:
         self.high_end_process = high_end_process
         self.primary_stem = primary_stem
         self.secondary_stem = secondary_stem
-
-    def demix(self, numpy_array, sr, device, aggression):
-        aggr = float(int(aggression) / 100)
-        aggressiveness = {
-            "value": aggr,
-            "split_bin": self.model_params.param["band"][1]["crop_stop"],
-            "aggr_correction": self.model_params.param.get("aggr_correction"),
-        }
-        y_spec, v_spec = self.inference_vr(
-            self.loading_mix(numpy_array, sr), device, aggressiveness
-        )
-        y_spec = np.nan_to_num(y_spec, nan=0.0, posinf=0.0, neginf=0.0)
-        v_spec = np.nan_to_num(v_spec, nan=0.0, posinf=0.0, neginf=0.0)
-        primary_stem_array = self.spec_to_wav(y_spec).T
-        primary_stem_array = librosa.resample(
-            primary_stem_array.T,
-            orig_sr=self.model_samplerate,
-            target_sr=sr,
-        ).T
-        secondary_stem_array = self.spec_to_wav(v_spec).T
-        secondary_stem_array = librosa.resample(
-            secondary_stem_array.T,
-            orig_sr=self.model_samplerate,
-            target_sr=sr,
-        ).T
-        return {
-            self.primary_stem: primary_stem_array,
-            self.secondary_stem: secondary_stem_array,
-        }
