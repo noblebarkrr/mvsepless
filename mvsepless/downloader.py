@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import yaml
-from tabulate import tabulate
 import shutil
 from tqdm import tqdm
 import urllib.request

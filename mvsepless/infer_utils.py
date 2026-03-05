@@ -117,23 +117,93 @@ def demix_mdxnet(
     device: torch.device,
     pbar: bool = False,
 ) -> Dict[str, np.ndarray]:
-    mix_tensor = torch.tensor(mix, dtype=torch.float32)
-    inv_mix_tensor = torch.tensor(-mix, dtype=torch.float32)
-
+    mix_tensor = torch.tensor(mix, dtype=torch.float32).to(device)
+    batch_size = 1
     num_overlap = config.inference.num_overlap
     denoise = config.inference.denoise
     stem_name = model.primary_stem
-    if denoise:
-        processed_wav = model.process_wave(mix_tensor, device, num_overlap, pbar=pbar)
-        inv_processed_wav = model.process_wave(
-            inv_mix_tensor, device, num_overlap, pbar=pbar
-        )
-        result = processed_wav.cpu().numpy()
-        inv_result = inv_processed_wav.cpu().numpy()
-        result_separation = (result + -inv_result) * 0.5
-    else:
-        processed_wav = model.process_wave(mix_tensor, device, num_overlap, pbar=pbar)
-        result_separation = processed_wav.cpu().numpy()
+    chunk_size = model.hop_length * (model.dim_t - 1)
+    fade_size = chunk_size // 10
+    step = chunk_size // num_overlap
+    border = chunk_size - step
+
+    length_init = mix_tensor.shape[-1]
+
+    if length_init > 2 * border and border > 0:
+        wave = nn.functional.pad(mix_tensor, (border, border), mode="reflect")
+
+    window = _getWindowingArray(chunk_size, fade_size).to(device)
+
+    with torch.no_grad():
+        result = torch.zeros_like(wave, device=device)
+        counter = torch.zeros_like(wave, device=device)
+
+        i = 0
+        batch_data = []
+        batch_locations = []
+
+        total_chunks = 0
+        temp_i = 0
+        while temp_i < wave.shape[1]:
+            total_chunks += 1
+            temp_i += step
+
+        processed_chunks = 0
+
+        while i < wave.shape[1]:
+            part = wave[:, i : i + chunk_size]
+            chunk_len = part.shape[-1]
+
+            if chunk_len < chunk_size:
+                pad_mode = "reflect" if chunk_len > chunk_size // 2 else "constant"
+                part = nn.functional.pad(
+                    part, (0, chunk_size - chunk_len), mode=pad_mode, value=0
+                )
+
+            batch_data.append(part)
+            batch_locations.append((i, chunk_len))
+            i += step
+
+            if len(batch_data) >= batch_size or i >= wave.shape[1]:
+                arr = torch.stack(batch_data, dim=0)
+
+                for j, (start, seg_len) in enumerate(batch_locations):
+                    if denoise:
+                        processed_spec1 = model(model.stft(arr[j : j + 1]))
+                        processed_spec2 = model(model.stft(-(arr[j : j + 1])))
+                        processed_wav = (model.istft(processed_spec1) + -model.istft(processed_spec2)) * 0.5
+                    else:
+                        processed_spec = model(model.stft(arr[j : j + 1]))
+                        processed_wav = model.istft(processed_spec)
+
+                    window_segment = window[..., :seg_len]
+                    result[:, start : start + seg_len] += (
+                        processed_wav[0, :, :seg_len] * window_segment
+                    )
+                    counter[:, start : start + seg_len] += window_segment
+
+                processed_chunks += len(batch_data)
+                if pbar:
+                    progress_data = {
+                        "processing": {
+                            "processed": min(i, wave.shape[1]),
+                            "total": wave.shape[1],
+                        }
+                    }
+                    sys.stdout.write(
+                        json.dumps(progress_data, ensure_ascii=False) + "\n"
+                    )
+                    sys.stdout.flush()
+
+                batch_data.clear()
+                batch_locations.clear()
+
+        estimated_sources = result / counter
+
+        if length_init > 2 * border and border > 0:
+            estimated_sources = estimated_sources[..., border:-border]
+    
+    result_separation = estimated_sources.cpu().numpy()
 
     result_separation = np.nan_to_num(
         result_separation, nan=0.0, posinf=0.0, neginf=0.0
@@ -149,9 +219,114 @@ def demix_vr(
     device: torch.device,
     pbar: bool = False,
 ) -> Dict[str, np.ndarray]:
-    return model.demix(
-        mix, config.audio.sample_rate, device, config.inference.aggression
+    from models.vr_arch import spec_utils, NON_ACCOM_STEMS
+    aggression = config.inference.aggression
+    sr = config.audio.sample_rate
+    aggr = float(int(aggression) / 100)
+    aggressiveness = {
+        "value": aggr,
+        "split_bin": model.model_params.param["band"][1]["crop_stop"],
+        "aggr_correction": model.model_params.param.get("aggr_correction"),
+    }
+    X_spec = model.loading_mix(mix, sr)
+
+    def _execute(X_mag_pad, roi_size):
+        X_dataset = []
+        patches = (X_mag_pad.shape[2] - 2 * model.model_run.offset) // roi_size
+        total = patches
+        for i in range(patches):
+            processed = min(i + model.batch_size, patches)
+            sys.stdout.flush()
+            start = i * roi_size
+            X_mag_window = X_mag_pad[:, :, start : start + model.window_size]
+            X_dataset.append(X_mag_window)
+
+        total_iterations = (
+            patches // model.batch_size
+        )
+
+        X_dataset = np.asarray(X_dataset)
+        model.model_run.eval()
+        with torch.no_grad():
+            mask = []
+
+            for i in range(0, patches, model.batch_size):
+                processed = min(i + model.batch_size, patches)
+                sys.stdout.write(
+                    json.dumps(
+                        {"processing": {"processed": processed, "total": total, "unit": "патчей"}},
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+                X_batch = X_dataset[i : i + model.batch_size]
+                X_batch = torch.from_numpy(X_batch).to(device)
+                pred = model.model_run.predict_mask(X_batch)
+                if not pred.size()[3] > 0:
+                    raise ValueError(
+                        f"Window size error: h1_shape[3] must be greater than h2_shape[3]"
+                    )
+                pred = pred.detach().cpu().numpy()
+                pred = np.concatenate(pred, axis=2)
+                mask.append(pred)
+            if len(mask) == 0:
+                raise ValueError(
+                    f"Window size error: h1_shape[3] must be greater than h2_shape[3]"
+                )
+
+            mask = np.concatenate(mask, axis=2)
+        return mask
+
+    def postprocess(mask, X_mag, X_phase):
+        is_non_accom_stem = False
+        for stem in NON_ACCOM_STEMS:
+            if stem == model.primary_stem.lower():
+                is_non_accom_stem = True
+
+        mask = spec_utils.adjust_aggr(mask, is_non_accom_stem, aggressiveness)
+
+        if model.enable_post_process:
+            mask = spec_utils.merge_artifacts(
+                mask, thres=model.post_process_threshold
+            )
+
+        y_spec = mask * X_mag * np.exp(1.0j * X_phase)
+        v_spec = (1 - mask) * X_mag * np.exp(1.0j * X_phase)
+
+        return y_spec, v_spec
+
+    X_mag, X_phase = spec_utils.preprocess(X_spec)
+    n_frame = X_mag.shape[2]
+    pad_l, pad_r, roi_size = spec_utils.make_padding(
+        n_frame, model.window_size, model.model_run.offset
     )
+    X_mag_pad = np.pad(X_mag, ((0, 0), (0, 0), (pad_l, pad_r)), mode="constant")
+    X_mag_pad /= X_mag_pad.max()
+    mask = _execute(X_mag_pad, roi_size)
+
+    mask = mask[:, :, :n_frame]
+
+    y_spec, v_spec = postprocess(mask, X_mag, X_phase)
+
+    y_spec = np.nan_to_num(y_spec, nan=0.0, posinf=0.0, neginf=0.0)
+    v_spec = np.nan_to_num(v_spec, nan=0.0, posinf=0.0, neginf=0.0)
+    primary_stem_array = model.spec_to_wav(y_spec).T
+    primary_stem_array = librosa.resample(
+        primary_stem_array.T,
+        orig_sr=model.model_samplerate,
+        target_sr=sr,
+    ).T
+    secondary_stem_array = model.spec_to_wav(v_spec).T
+    secondary_stem_array = librosa.resample(
+        secondary_stem_array.T,
+        orig_sr=model.model_samplerate,
+        target_sr=sr,
+    ).T
+    return {
+        model.primary_stem: primary_stem_array,
+        model.secondary_stem: secondary_stem_array,
+    }
+
 
 def demix_demucs(config, model, mix, device, pbar=False):
     mix = torch.tensor(mix, dtype=torch.float32)
