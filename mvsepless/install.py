@@ -83,7 +83,7 @@ def fno_compitable(index_url=None):
             if num == 2:
                 is_torch_2 = True
         elif i == 2:
-            if num >= 4:
+            if num >= 4 and is_torch_2:
                 fno_c = True
     return fno_c
 
