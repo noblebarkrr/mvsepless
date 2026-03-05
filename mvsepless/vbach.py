@@ -960,7 +960,7 @@ class VC:
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
 
         progress = gr.Progress()
-        progress((2, 4), desc=f"Вычисление кривой F0 {add_text}")
+        progress((2, 4), desc=f"Вычисление кривой F0 {add_text}", unit="")
 
         if pitch_guidance:
             pitch, pitchf = self.get_f0(
@@ -983,9 +983,11 @@ class VC:
             pitchf = torch.tensor(pitchf, device=self.device).unsqueeze(0).float()
 
         progress = gr.Progress()
-        progress((3, 4), desc=f"Синтез голоса... {add_text}")
+        total_ts = len(opt_ts)
 
-        for t in opt_ts:
+        for i, t in enumerate(opt_ts, start=1):
+            progress((i, total_ts), desc=f"Синтез голоса... {add_text}", unit="чанков")
+            print(f"\rСинтез голоса... {int((i / total_ts) * 100)}% {add_text}", end="")
             t = t // self.window * self.window
             if pitch_guidance:
                 audio_opt.append(
@@ -1021,6 +1023,8 @@ class VC:
                 )
             s = t
         if pitch_guidance:
+            progress(1, desc=f"Синтез голоса... [Финал] {add_text}")
+            print(f"\rСинтез голоса... 100% {add_text}", end="")
             audio_opt.append(
                 self.vc(
                     model,
@@ -1037,6 +1041,8 @@ class VC:
                 )[self.t_pad_tgt : -self.t_pad_tgt]
             )
         else:
+            progress(1, desc=f"Синтез голоса... [Финал] {add_text}")
+            print(f"\rСинтез голоса... 100% {add_text}", end="")
             audio_opt.append(
                 self.vc(
                     model,
@@ -1052,7 +1058,7 @@ class VC:
                     protect,
                 )[self.t_pad_tgt : -self.t_pad_tgt]
             )
-
+        print("")
         audio_opt = np.concatenate(audio_opt)
         if volume_envelope != 1:
             audio_opt = AudioProcessor.change_rms(
@@ -1138,12 +1144,14 @@ class VC:
         real_chunk_size = raw_chunk_size
         if real_chunk_size <= 0:
             raise ValueError("Chunk size too small")
+        
+        print(f"Размер чанка: {real_chunk_size} | {int(real_chunk_size / self.sample_rate)} cекунд")
 
         audio_pad = np.pad(audio, (offset, offset), mode="reflect")
         padded_len = len(audio_pad)
 
         progress = gr.Progress()
-        progress((2, 4), desc=f"Вычисление кривой F0 {add_text}")
+        progress((2, 4), desc=f"Вычисление кривой F0 {add_text}", unit="")
 
         pitch_tensor = pitchf_tensor = None
         if pitch_guidance:
@@ -1170,10 +1178,21 @@ class VC:
         processed_chunks = []
         start = 0
 
+        chunk_count = 0
+        temp_start = 0
+        while temp_start < audio_len:
+            temp_end = min(temp_start + real_chunk_size, audio_len)
+            chunk_count += 1
+            temp_start = temp_end
+        
+        current_chunk = 0
+
         progress = gr.Progress()
-        progress((3, 4), desc=f"Синтез голоса... {add_text}")
 
         while start < audio_len:
+            current_chunk += 1
+            progress((current_chunk, chunk_count), desc=f"Синтез голоса... [ALT] {add_text}", unit="чанков")
+            print(f"\rСинтез голоса... [ALT] {int((current_chunk / chunk_count) * 100)}% {add_text}", end="")
             end = min(start + real_chunk_size, audio_len)
 
             need_left = start > 0
@@ -1264,6 +1283,7 @@ class VC:
         output[mask] /= weight[mask]
 
         expected_final_len = int(round(audio_len / self.sample_rate * tgt_sr))
+        print("")
         audio_opt = output[:expected_final_len]
 
         if volume_envelope != 1:
@@ -1294,17 +1314,17 @@ class VC:
         """
         base_chunk_size = min(self.sample_rate * 10, audio_length)
 
-        if self.device == "cuda" and torch.cuda.is_available():
+        if self.device.type == "cuda" and torch.cuda.is_available():
             try:
                 torch.cuda.synchronize()
                 total_memory = torch.cuda.get_device_properties(0).total_memory
                 allocated = torch.cuda.memory_allocated(0)
                 free_memory = total_memory - allocated
 
-                usable_memory = free_memory * 0.4
+                usable_memory = free_memory * 0.2
 
                 print(
-                    f"Доступно памяти: {free_memory/1024**3:.2f} GB, "
+                    f"Доступно видеопамяти: {free_memory/1024**3:.2f} GB, "
                     f"используем: {usable_memory/1024**3:.2f} GB"
                 )
 
@@ -1321,11 +1341,6 @@ class VC:
                 chunk_size = max(chunk_size, min_chunk_size)
 
                 chunk_size = min(chunk_size, audio_length)
-
-                print(
-                    f"Оптимальный размер чанка: {chunk_size} семплов "
-                    f"({chunk_size/self.sample_rate:.2f} сек)"
-                )
 
                 return chunk_size
 
@@ -1780,9 +1795,9 @@ def voice_conversion(
         _add_text = f"| {add_text_progress}"
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
     progress = gr.Progress()
-    progress((0, 4), desc=f"Загрузка RVC модели {_add_text}")
+    progress((0, 4), desc=f"Загрузка RVC модели {_add_text}", unit="")
     config = Config(device)
-    progress((1, 4), desc=f"Загрузка Hubert модели {_add_text}")
+    progress((1, 4), desc=f"Загрузка Hubert модели {_add_text}", unit="")
     hubert_path = model_manager.check_hubert(embedder_name)
     if not hubert_path:
         raise ValueError(
@@ -1852,11 +1867,11 @@ def voice_conversion_transformers(
     if add_text_progress != "" or add_text_progress is not None:
         _add_text = f"| {add_text_progress}"
     progress = gr.Progress()
-    progress((0, 4), desc=f"Загрузка RVC модели {_add_text}")
+    progress((0, 4), desc=f"Загрузка RVC модели {_add_text}", unit="")
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
 
     config = Config(device)
-    progress((1, 4), desc=f"Загрузка Hubert модели {_add_text}")
+    progress((1, 4), desc=f"Загрузка Hubert модели {_add_text}", unit="")
     hubert_path = model_manager.check_hubert_transformers(embedder_name)
     if not hubert_path:
         raise ValueError(
@@ -1977,6 +1992,8 @@ def vbach_inference(
 
     else:
         final_output_name = output_name
+
+    print(f"Эмбеддер: {embedder_name}", f"Стэк: {stack}", sep="\n")
 
     final_output_path = os.path.join(output_dir, f"{final_output_name}.{output_format}")
     output_converted_voice = vbach_convert(
@@ -2225,7 +2242,7 @@ class Vbach(GradioHelper):
                                             )
                                             alt_pl = gr.Checkbox(
                                                 label="Альтернативный пайплайн",
-                                                info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 40% свободной видеопамяти",
+                                                info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 20% свободной видеопамяти",
                                                 value=False,
                                                 interactive=True,
                                             )
@@ -2339,7 +2356,7 @@ class Vbach(GradioHelper):
                                     filterable=False,
                                 )
                                 status = gr.Textbox(
-                                    container=False, lines=3, interactive=False, max_lines=3, visible=False
+                                    container=False, lines=4, interactive=False, max_lines=4, visible=False
                                 )
                                 convert_btn = gr.Button(
                                     "Преобразовать", variant="primary", interactive=True
@@ -2779,7 +2796,7 @@ class Vbach(GradioHelper):
                         )
                         alt_pl_duet = gr.Checkbox(
                             label="Альтернативный пайплайн",
-                            info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 40% свободной видеопамяти",
+                            info="Аудио нарезается на фиксированные чанки с перекрытием, что исключает любые щелчки на выходе (исключение - если есть щелчки в самой модели из-за грязного датасета)\nРазмер чанка вычисляется на основе 20% свободной видеопамяти",
                             value=False,
                             interactive=True,
                         )
@@ -2812,19 +2829,19 @@ class Vbach(GradioHelper):
                         convert_btn_duet = gr.Button(
                             "Преобразовать", variant="primary", interactive=True
                         ).click(lambda: gr.update(visible=True), outputs=[status_duet])
-                        with gr.Row(equal_height=True):
-                            output_duet_audio_1 = gr.Audio(
-                                label="Результат модели 1",
-                                type="filepath",
-                                interactive=False,
-                                show_download_button=True,
-                            )
-                            output_duet_audio_2 = gr.Audio(
-                                label="Результат модели 2",
-                                type="filepath",
-                                interactive=False,
-                                show_download_button=True,
-                            )
+                    with gr.Row(equal_height=True):
+                        output_duet_audio_1 = gr.Audio(
+                            label="Результат модели 1",
+                            type="filepath",
+                            interactive=False,
+                            show_download_button=True,
+                        )
+                        output_duet_audio_2 = gr.Audio(
+                            label="Результат модели 2",
+                            type="filepath",
+                            interactive=False,
+                            show_download_button=True,
+                        )
                         @mix_duet.change(inputs=mix_duet, outputs=[mix_duet_ratio, output_duet_audio_1, output_duet_audio_2])
                         def mix_duet_change_fn(x):
                             match x:
@@ -2844,7 +2861,7 @@ class Vbach(GradioHelper):
                             filter_radius1, filter_radius2,
                             rms1, rms2,
                             protect1, protect2,
-                            f0_min1, f0_min1,
+                            f0_min1, f0_min2,
                             f0_max1, f0_max2,
                             output_format_duet,
                             stereo_mode_duet,
@@ -2856,7 +2873,7 @@ class Vbach(GradioHelper):
                         outputs=[output_duet_audio_1, output_duet_audio_2, status_duet],
                     )
                     def vbach_convert_duet(
-                        if_,
+                        ifile_,
                         mn1,
                         mn2,
                         pm1,
@@ -2894,16 +2911,17 @@ class Vbach(GradioHelper):
                         progress(
                             progress=0, desc=f"Начало преобразования"
                         )
+                        
                         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
                         output_dir = os.path.join(self.output_base_dir, timestamp)
-                        if if_:
+                        if ifile_:
                             try:
                                 gr.Warning(title=f"Модель 1", message="")
                                 output_1 = vbach_inference(
-                                    input_file=if_,
+                                    input_file=ifile_,
                                     model_name=mn1,
                                     output_dir=output_dir,
-                                    output_name="NAME - MODEL - F0METHOD - PITCH",
+                                    output_name="NAME - MODEL 1 - F0METHOD - PITCH",
                                     format_name=True,
                                     output_format=of,
                                     pitch=p1,
@@ -2927,10 +2945,10 @@ class Vbach(GradioHelper):
                                 )
                                 gr.Warning(title=f"Модель 2", message="")
                                 output_2 = vbach_inference(
-                                    input_file=if_,
+                                    input_file=ifile_,
                                     model_name=mn2,
                                     output_dir=output_dir,
-                                    output_name="NAME - MODEL - F0METHOD - PITCH",
+                                    output_name="NAME - MODEL 2 - F0METHOD - PITCH",
                                     format_name=True,
                                     output_format=of,
                                     pitch=p2,
@@ -2959,7 +2977,7 @@ class Vbach(GradioHelper):
 
                         match mix_d:
                             case True:
-                                input_file_basename = os.path.splitext(os.path.basename(if_))[0]
+                                input_file_basename = os.path.splitext(os.path.basename(ifile_))[0]
                                 mix1, sr1 = read(output_1)
                                 mix2, sr2 = read(output_2)
                                 max_sr = max(sr1, sr2)

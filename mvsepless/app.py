@@ -384,8 +384,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 visible=False,
                             )
                             status = gr.Textbox(
-                                container=False, lines=3, interactive=False, max_lines=3, visible=False
-                            )
+                                    container=False, lines=4, interactive=False, max_lines=4, visible=False
+                                )
                             separate_btn = gr.Button("Разделить", variant="primary", interactive=True).click(lambda: gr.update(visible=True), outputs=status)
                             @separate_btn.then(
                                 inputs=[

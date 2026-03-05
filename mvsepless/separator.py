@@ -283,9 +283,8 @@ class Separator(MvseplessModelManager):
                 processed = progress_a.get("processed", 0)
                 total = progress_a.get("total", 1)
                 if total > 0:
-                    progress_ratio = min(0.89, 0.05 + (processed / total * 0.85))
                     percent = int((processed / total) * 100)
-                    progress(progress_ratio, desc=f"Обработано: {percent}% {_add_text}")
+                    progress((processed, total), desc=f"Обработано: {percent}% {_add_text}", unit="сэмплов")
                     print(f"\rОбработано: {percent}%", end="")
                 return None
             elif "writing" in data:
