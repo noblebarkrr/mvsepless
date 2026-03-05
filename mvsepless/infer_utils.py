@@ -236,7 +236,6 @@ def demix_vr(
         total = patches
         for i in range(patches):
             processed = min(i + model.batch_size, patches)
-            sys.stdout.flush()
             start = i * roi_size
             X_mag_window = X_mag_pad[:, :, start : start + model.window_size]
             X_dataset.append(X_mag_window)
@@ -259,6 +258,7 @@ def demix_vr(
                     )
                     + "\n"
                 )
+                sys.stdout.flush()
                 X_batch = X_dataset[i : i + model.batch_size]
                 X_batch = torch.from_numpy(X_batch).to(device)
                 pred = model.model_run.predict_mask(X_batch)
