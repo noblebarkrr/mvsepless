@@ -53,6 +53,8 @@ from vbach_lib.predictors.FCPE import FCPEF0Predictor
 from vbach_lib.predictors.RMVPE import RMVPE0Predictor
 from vbach_lib.predictors.HPA_RMVPE import HPA_RMVPE
 
+VBACH_ALT_PIPELINE_TIME_CHUNK = int(os.environ.get("VBACH_ALT_PL_TIME_CHUNK", "10"))
+
 class UserDirectory:
     path = script_dir
     def change_dir(self, dir: str):
@@ -1312,7 +1314,7 @@ class VC:
         """
         Рассчитывает оптимальный размер чанка на основе доступной памяти
         """
-        base_chunk_size = min(self.sample_rate * 10, audio_length)
+        base_chunk_size = min(self.sample_rate * VBACH_ALT_PIPELINE_TIME_CHUNK, audio_length)
 
         if self.device.type == "cuda" and torch.cuda.is_available():
             try:
