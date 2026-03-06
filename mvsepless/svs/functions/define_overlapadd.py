@@ -1,7 +1,5 @@
-from asteroid.dsp.overlap_add import LambdaOverlapAdd
-
 from . import (
-    LambdaOverlapAdd_norm,
+    LambdaOverlapAdd,
     LambdaOverlapAdd_Chunkwise_SpectralFeatures,
 )
 
@@ -20,23 +18,6 @@ def load_ola_func_with_args(args, model, device, meter):
             window=None,
             reorder_chunks=args.reorder_chunks,
             enable_grad=False,
-        ).to(device)
-    elif args.use_overlapadd == "ola_norm":
-        continuous_nnet = LambdaOverlapAdd_norm(
-            nnet=model,
-            n_src=2,
-            window_size=int(args.seq_dur * args.sample_rate)
-            if not args.ola_window_len
-            else int(args.ola_window_len * args.sample_rate),
-            hop_size=int(args.seq_dur * args.sample_rate // 4)
-            if not args.ola_hop_len
-            else int(args.ola_hop_len * args.sample_rate),
-            window=None,
-            reorder_chunks=args.reorder_chunks,
-            enable_grad=False,
-            target_lufs=-24,
-            meter=meter,
-            device=device,
         ).to(device)
     elif (
         args.use_overlapadd == "sf_chunk"

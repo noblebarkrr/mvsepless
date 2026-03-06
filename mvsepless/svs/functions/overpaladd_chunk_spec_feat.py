@@ -6,7 +6,10 @@ from asteroid.dsp.overlap_add import LambdaOverlapAdd
 from ..utils.logging import AverageMeter
 from .silence_split import magspec_vad, webrtc_vad
 import gc
-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+import json
 
 class LambdaOverlapAdd_Chunkwise_SpectralFeatures(LambdaOverlapAdd):
     """
@@ -226,7 +229,7 @@ class LambdaOverlapAdd_Chunkwise_SpectralFeatures(LambdaOverlapAdd):
             if self.device.type == 'cuda' and not self.use_mixed_precision:
                 torch.cuda.empty_cache()
 
-    def ola_forward(self, x):
+    def ola_forward(self, x, num_mixture):
         """
         Максимально эффективная по памяти forward функция.
         """
@@ -265,8 +268,19 @@ class LambdaOverlapAdd_Chunkwise_SpectralFeatures(LambdaOverlapAdd):
         
         # Буфер для предыдущих признаков
         prev_features = None
-        
-        for frame_idx in range(len(starts)):
+        n_segments = len(starts)
+        for frame_idx in range(n_segments):
+            if n_segments > 0:
+                progress = {
+                    "processing": {
+                        "unit": "чанков",
+                        "processed": frame_idx + 1,
+                        "total": n_segments,
+                        "mixture": num_mixture
+                    }
+                }
+                sys.stdout.write(json.dumps(progress) + "\n")
+                sys.stdout.flush()
             # Очищаем память перед каждым чанком
             if frame_idx % 2 == 0:
                 self._clear_memory()
@@ -344,7 +358,7 @@ class LambdaOverlapAdd_Chunkwise_SpectralFeatures(LambdaOverlapAdd):
         # Возвращаем с правильным типом
         return out_cpu.to(device=self.device, dtype=self.model_dtype)
 
-    def forward(self, x):
+    def forward(self, x, num_mixture):
         """
         Forward с максимальной экономией памяти.
         """
@@ -362,7 +376,7 @@ class LambdaOverlapAdd_Chunkwise_SpectralFeatures(LambdaOverlapAdd):
                         x_chunk = x[..., i:end]
                         
                         # Обрабатываем чанк
-                        out_chunk = self.ola_forward(x_chunk)
+                        out_chunk = self.ola_forward(x_chunk, num_mixture)
                         outputs.append(out_chunk.cpu())
                         
                         # Очищаем память
@@ -380,4 +394,4 @@ class LambdaOverlapAdd_Chunkwise_SpectralFeatures(LambdaOverlapAdd):
                     del outputs
                     self._clear_memory()
             else:
-                return self.ola_forward(x)
+                return self.ola_forward(x, num_mixture)
