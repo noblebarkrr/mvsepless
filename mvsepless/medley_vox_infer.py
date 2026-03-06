@@ -1,35 +1,18 @@
 import os
 import sys
 import ast
-import gc
-sys.stdout.reconfigure(encoding='utf-8')
-sys.stderr.reconfigure(encoding='utf-8')
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 import gradio as gr
 import json
 import argparse
-import glob
 import subprocess
-import numpy as np
-import soundfile as sf
-import librosa
 from device import all_ids, set_device, cuda_available
-from audio import read, multi_channel_array_from_arrays, split_channels, multiwrite, output_formats, check, get_duration_from_array, convert_to_dtype
+from audio import check, output_formats
 from gradio_helper import GradioHelper, tz
 from datetime import datetime
 from downloader import dw_file
-from svs.utils import loudnorm, str2bool, db2linear
-from namer import Namer
-import torch
-import pyloudnorm as pyln
-
-stereo_modes = ("mono", "left/right")
-spectral_features = ("mfcc", "spectral_centroid")
-vad_methods = ("spec", "webrtc")
-overlap_add_methods = (None, "ola", "ola_norm", "sf_chunk")
-stems = ["vox_1", "vox_2", "residual"]
-namer = Namer()
+from svs.infer_m import overlap_add_methods, stereo_modes
 
 class MedleyVoxModelManager:
     def __init__(
@@ -199,7 +182,7 @@ class MedleyVoxModelManager:
 
 class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
 
-    def __init__(self, input_files, upload_files, user_directory, device):
+    def __init__(self, input_files=None, upload_files=None, user_directory=None, device=set_device()):
         super().__init__()
         self.input_files = input_files
         self.upload_files = upload_files
@@ -216,13 +199,37 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
             except json.JSONDecodeError:
                 return None
 
-        def reaction_line(self, line, progress, add_text):
+        def reaction_line(self, line, progress, stereo_mode, add_text):
             _add_text = ""
             if add_text != "" or add_text is not None:
                 _add_text = f"| {add_text}"
 
             data = self.parse_json_line(line)
             if data is None:
+                return None
+            elif "processing" in data:
+                progress_a = data["processing"]
+                processed = progress_a.get("processed", 0)
+                total = progress_a.get("total", 1)
+                if total > 0:
+                    percent = int((processed / total) * 100)
+                    if stereo_mode == "left/right":
+                        mixture_info = progress_a.get("mixture")
+                        match mixture_info:
+                            case 1:
+                                _add_text += " (L)"
+                            case 2:
+                                _add_text += " (R)"
+                        progress((processed, total), desc=f"Обработано: {percent}% {_add_text}", unit=progress_a.get("unit", "сэмплов"))
+                        print(f"\rОбработано: {percent}%", end="")
+                        match mixture_info:
+                            case 1:
+                                print(f"\rОбработано: {percent}% (L)", end="")
+                            case 2:
+                                print(f"\rОбработано: {percent}% (R)", end="")
+                    else:
+                        progress((processed, total), desc=f"Обработано: {percent}% {_add_text}", unit=progress_a.get("unit", "сэмплов"))
+                        print(f"\rОбработано: {percent}% ", end="")
                 return None
             elif "done" in data:
                 progress(1.0, desc=f"Завершено {_add_text}")
@@ -253,7 +260,7 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
         # Формируем базовый список аргументов, соответствующий parser в main()
         cmd = [
             os.sys.executable,
-            "-m", "medley_vox_infer",
+            "-m", "svs.infer_m",
             "--input", input_file,
             "--results_save_dir", output_dir,
             "--model_name", model_name,
@@ -294,7 +301,7 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
                     
                     # Обработка строки для получения прогресса и результата
                     line_result = self.output_reader.reaction_line(
-                        line, progress, add_text_progress
+                        line, progress, stereo_mode, add_text_progress
                     )
                     if line_result is not None:
                         result = line_result
@@ -309,7 +316,7 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
                     
                     # Также проверяем stderr на наличие JSON-сообщений
                     line_result = self.output_reader.reaction_line(
-                        line, progress, add_text_progress
+                        line, progress, stereo_mode, add_text_progress
                     )
                     if line_result is not None:
                         result = line_result
@@ -496,7 +503,7 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
 
                     sep_state = gr.Textbox(visible=False) # Для хранения состояния результатов
                     status = gr.Textbox(
-                        container=False, lines=3, interactive=False, max_lines=3, visible=False
+                        container=False, lines=4, interactive=False, max_lines=4, visible=False
                     )
                     separate_btn = gr.Button("Разделить", variant="primary", interactive=True).click(lambda: gr.update(visible=True), outputs=status)
 
@@ -564,248 +571,85 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
         # Возвращаем строковое представление для gr.render
         return gr.update(value=str(results)), gr.update(visible=False)
 
-def create_output_path(input_path, stem_name, model_name, model_id, output_format, store_dir, template):
-    file_name = os.path.splitext(os.path.basename(input_path))[0]
-    file_name_shorted = namer.short_input_name_template(
-        template, STEM=stem_name, MODEL=model_name, ID=model_id, NAME=file_name
-    )
-    custom_name = namer.template(
-        template,
-        STEM=stem_name,
-        MODEL=model_name,
-        ID=model_id,
-        NAME=file_name_shorted,
-    )
-    return os.path.join(store_dir, f"{custom_name}.{output_format}")
-
-def main():
-    parser = argparse.ArgumentParser(description="Адаптированный инференс Medley-Vox для MVSepLess Epsilon")
-    parser.add_argument("--input", type=str, required=True, help="Путь к входному файлу или папке")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="MVSepless (Medley-Vox) CLI")
     parser.add_argument(
-        "--template",
-        type=str,
-        default="NAME_STEM",
-        help="Шаблон для имен выходных файлов",
+        "--input", type=str, required=True, help="Входной аудиофайл или каталог."
+    )
+    parser.add_argument(
+        "--output_dir", type=str, default=None, help="Каталог для выходных файлов."
     )
     parser.add_argument(
         "--model_name",
         type=str,
-        default="model",
-        help="Имя модели для шаблона имен файлов",
+        default="multi_singing_librispeech", # Изменил на существующую в вашем словаре
+        help="Имя модели разделения.",
     )
     parser.add_argument(
         "--output_format",
         type=str,
         default="wav",
         choices=output_formats,
-        help="Формат выходных файлов",
+        help="Формат выходного файла.",
     )
-    parser.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
     parser.add_argument(
-        "--device", type=str, help="Какой девайс используется для разделения", default="cuda:0"
-    )
-    parser.add_argument("--checkpoint_path", type=str, required=True, help="Путь к чекпоинту модели")
-    parser.add_argument("--json_path", type=str, required=True, help="Путь к конфигурационному файлу модели")
-    parser.add_argument(
-        "--use_overlapadd",
+        "--template",
         type=str,
-        default=None,
+        default="NAME_(STEM)_MODEL",
+        help="Шаблон именования выходных файлов.",
+    )
+    parser.add_argument(
+        "--overlap",
+        type=str,
+        default="ola",
         choices=overlap_add_methods,
-        help="use overlapadd functions, ola, ola_norm, w2v will work with ola_window_len, ola_hop_len argugments. w2v_chunk and sf_chunk is chunk-wise processing based on VAD, so you have to specify the vad_method args. If you use sf_chunk (spectral_featrues_chunk), you also need to specify spectral_features.",
-    )
-    parser.add_argument(
-        "--vad_method",
-        type=str,
-        default=vad_methods[1],
-        choices=vad_methods,
-        help="what method do you want to use for 'voice activity detection (vad) -- split chunks -- processing. Only valid when 'w2v_chunk' or 'sf_chunk' for args.use_overlapadd.",
-    )
-    parser.add_argument(
-        "--spectral_features",
-        type=str,
-        default=spectral_features[0],
-        choices=spectral_features,
-        help="what spectral feature do you want to use in correlation calc in speaker assignment (only valid when using sf_chunk)",
-    )
-    parser.add_argument(
-        "--w2v_ckpt_path",
-        type=str,
-        required=False,
-        help="only valid when use_overlapadd is 'w2v' or 'w2v_chunk'.",
-    )
-    parser.add_argument(
-        "--w2v_nth_layer_output",
-        nargs="+",
-        type=int,
-        default=[0],
-        help="wav2vec nth layer output",
-    )
-    parser.add_argument(
-        "--ola_window_len",
-        type=float,
-        default=None,
-        help="ola window size in [sec]",
-    )
-    parser.add_argument(
-        "--ola_hop_len",
-        type=float,
-        default=None,
-        help="ola hop size in [sec]",
-    )
-    parser.add_argument(
-        "--use_ema_model",
-        type=str2bool,
-        default=True,
-        help="use ema model or online model? only vaind when args.ema it True (model trained with ema)",
+        help="Метод Overlap-Add.",
     )
     parser.add_argument(
         "--stereo",
         type=str,
-        choices=stereo_modes,
         default="mono",
-        help='',
+        choices=stereo_modes,
+        help="Режим стерео (mono|left/right).",
     )
-    parser.add_argument(
-        "--mix_consistent_out",
-        type=str2bool,
-        default=True,
-        help="only valid when the model is trained with mixture_consistency loss. Default is True.",
-    )
-    parser.add_argument(
-        "--reorder_chunks",
-        type=str2bool,
-        default=True,
-        help="ola reorder chunks",
-    )
-    parser.add_argument("--results_save_dir", type=str, default="./my_sep_results", help="Путь для сохранения результатов")
-    args, _ = parser.parse_known_args()
-    device = args.device
-    from svs.models import load_model_with_args
-    from svs.functions import load_ola_func_with_args
-    processed_mixtures_1 = []
-    processed_mixtures_2 = []
-    processed_mixtures_3 = []
-    if "cuda" in device.lower():
-        # Извлекаем ID устройств для CUDA
-        if ":" in device:
-            device_spec = device.split(":")[1]
-            device_ids = [int(id) for id in device_spec.split(",") if id.isdigit()]
+
+    args = parser.parse_args()
+
+    # Сбор списка файлов
+    input_files = []
+    if os.path.isdir(args.input):
+        for file in os.listdir(args.input):
+            full_path = os.path.join(args.input, file)
+            if os.path.isfile(full_path) and check(full_path):
+                input_files.append(full_path)
+    else:
+        if os.path.exists(args.input) and check(args.input):
+            input_files = args.input
         else:
-            # Если указано просто "cuda", используем все доступные GPU
-            device_ids = list(range(torch.cuda.device_count()))
-        torch_device = torch.device("cuda" if not device_ids else f"cuda:{device_ids[0]}")
-    elif "mps" in device.lower():
-        device_ids = None
-        torch_device = torch.device("mps")
-    else:
-        # CPU
-        device_ids = None
-        torch_device = torch.device("cpu")
-    with open(args.json_path, "r") as f:
-        args_dict = json.load(f)
-    for key, value in args_dict["args"].items():
-        setattr(args, key, value)
+            print(f"Ошибка: Файл {args.input} не найден или не является аудио.")
+            sys.exit(1)
 
-    model = load_model_with_args(args)
+    if not input_files:
+        print("Ошибка: Не найдено подходящих аудиофайлов для обработки.")
+        sys.exit(1)
 
-    device = torch_device
-    checkpoint = torch.load(args.checkpoint_path, map_location=device)
-    if args.ema and args.use_ema_model:
-        print("use ema model")
-        model_dict = model.state_dict()
-        # 1. filter out unnecessary keys
-        checkpoint = {
-            k.replace("ema_model.module.", ""): v
-            for k, v in checkpoint.items()
-            if k.replace("ema_model.module.", "") in model_dict
-        }
-        # 2. overwrite entries in the existing state dict
-        model_dict.update(checkpoint)
-        # 3. load the new state dict
-        model.load_state_dict(model_dict)
-    elif args.ema and not args.use_ema_model:
-        print("use ema online model")
-        model_dict = model.state_dict()
-        # 1. filter out unnecessary keys
-        checkpoint = {
-            k.replace("online_model.module.", ""): v
-            for k, v in checkpoint.items()
-            if k.replace("online_model.module.", "") in model_dict
-        }
-        # 2. overwrite entries in the existing state dict
-        model_dict.update(checkpoint)
-        # 3. load the new state dict
-        model.load_state_dict(model_dict)
-    else:
-        model.load_state_dict(checkpoint)
-
-    model.eval()
-
-    meter = pyln.Meter(args.sample_rate)
-    if args.use_overlapadd:
-        gc.collect()
-        torch.cuda.empty_cache()
-        continuous_nnet = load_ola_func_with_args(args, model, device, meter)
-
-    os.makedirs(args.results_save_dir, exist_ok=True)
-
-    if args.stereo == "left/right":
-        mixture, sr = read(
-            args.input,
-            sr=args.sample_rate,
-            mono=False
+    separator = MedleyVoxSeparator()
+    
+    try:
+        results = separator.separate(
+            input=input_files,
+            output_dir=args.output_dir,
+            model_name=args.model_name,
+            output_format=args.output_format,
+            template=args.template,
+            use_overlapadd=args.overlap,
+            stereo_mode=args.stereo,
+            progress=gr.Progress()
         )
-        mixtures = split_channels(mixture)
-    elif args.stereo == "mono":
-        mixture, sr = read(
-            args.input,
-            sr=args.sample_rate,
-            mono=True, flatten=True
-        )
-        mixtures = (mixture,)
-
-    for mixture_ in mixtures:
-
-        mixture_d, adjusted_gain = loudnorm(mixture_, -24.0, meter)
-        max_samples = get_duration_from_array(mixture_d)
-        mixture_d = mixture_d.reshape(1, 1, max_samples)
-        mixture_d = torch.as_tensor(mixture_d, dtype=torch.float32).to(device)
-
-        if args.use_overlapadd:
-            out_wavs = continuous_nnet.forward(mixture_d)
-        else:
-            out_wavs = model.separate(mixture_d)
-
-        if device.type == "cuda":
-            out_wav_1 = out_wavs[0, 0, :].cpu().detach().numpy()
-            out_wav_2 = out_wavs[0, 1, :].cpu().detach().numpy()
-        else:
-            out_wav_1 = out_wavs[0, 0, :]
-            out_wav_2 = out_wavs[0, 1, :]
-
-        out_wav_1 = out_wav_1 * db2linear(-adjusted_gain)
-        out_wav_2 = out_wav_2 * db2linear(-adjusted_gain)
-
-        processed_mixtures_1.append(out_wav_1)
-        if args.use_overlapadd == "sf_chunk":
-            processed_mixtures_2.append(mixture_ + -out_wav_1)
-        else:
-            processed_mixtures_2.append(out_wav_2)
-            processed_mixtures_3.append(mixture_ + -(out_wav_1 + out_wav_2))
-
-    vox_1 = multi_channel_array_from_arrays(*processed_mixtures_1, index=1, dtype=np.float32)
-    vox_2 = multi_channel_array_from_arrays(*processed_mixtures_2, index=1, dtype=np.float32)
-    if processed_mixtures_3:
-        vox_3 = multi_channel_array_from_arrays(*processed_mixtures_3, index=1, dtype=np.float32)
-        output_paths = [create_output_path(args.input, stem, args.model_name, args.model_id, args.output_format, args.results_save_dir, args.template) for stem in stems]
-        output_arrays = [vox_1, vox_2, vox_3]
-    else:
-        output_paths = [create_output_path(args.input, stem, args.model_name, args.model_id, args.output_format, args.results_save_dir, args.template) for stem in [stems[0], stems[1]]]
-        output_arrays = [vox_1, vox_2]       
-    writed_files = multiwrite(output_arrays, [sr for __a in range(len(output_arrays))], [namer.iter(output_path_) for output_path_ in output_paths], 180 if args.output_format == "ogg" else 320, strict=True)
-    sys.stdout.write(json.dumps({"done": writed_files}, ensure_ascii=False) + "\n")
-    sys.stdout.flush()
-    return writed_files
-
-if __name__ == "__main__":
-    main()
+        print("\nРазделение завершено успешно.")
+        print(f"Результаты сохранены в: {args.output_dir if args.output_dir else 'текущую директорию'}")
+        for r in results:
+            print(f" - {r}")
+            
+    except Exception as e:
+        print(f"\nПроизошла ошибка при выполнении: {e}")
