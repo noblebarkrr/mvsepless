@@ -14,7 +14,7 @@ soundfile
 pydub
 webrtcvad
 audiomentations
-pedalboard==0.8.2
+pedalboard
 ml_collections
 timm
 wandb
@@ -52,3 +52,4 @@ tenacity
 pyworld
 
 gdown
+
