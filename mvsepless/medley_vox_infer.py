@@ -12,6 +12,7 @@ from audio import check, output_formats
 from gradio_helper import GradioHelper, tz
 from datetime import datetime
 from downloader import dw_file
+from functools import wraps
 from svs.infer_m import overlap_add_methods, stereo_modes
 
 class MedleyVoxModelManager:
@@ -180,6 +181,50 @@ class MedleyVoxModelManager:
     def get_mn_dwloaded(self):
         return [model for model in self.get_mn() if self.check_model(self.get_mt(model), model)]
 
+class History:
+    def __init__(self, user_directory):
+        self.info = {}
+        self.user_directory = user_directory
+        self.path = os.path.join(self.user_directory.path, "history_medley_vox.json")
+        self.load_from_file()
+    
+    def _save_to_file(func):
+        """Декоратор для автоматического сохранения после вызова метода"""
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            result = func(self, *args, **kwargs)
+            self._write_file()
+            return result
+        return wrapper
+    
+    def _write_file(self):
+        """Записывает текущее состояние в файл"""
+        try:
+            with open(self.path, 'w', encoding='utf-8') as f:
+                json.dump(self.info, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            print(f"Ошибка при записи в файл: {e}")
+    
+    @_save_to_file
+    def add(self, state, model_name, timestamp, stereo_mode):
+        self.info[f"{timestamp} / {model_name} / {stereo_mode}"] = state
+    
+    @_save_to_file
+    def clear(self):
+        self.info = {}
+    
+    def get_list(self):
+        return sorted([key for key in self.info], reverse=True)
+    
+    def get(self, key):
+        return self.info.get(key, [])
+    
+    def load_from_file(self):
+        """Загрузить историю из файла"""
+        if os.path.exists(self.path):
+            with open(self.path, 'r', encoding='utf-8') as f:
+                self.info = json.load(f)
+
 class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
 
     def __init__(self, input_files=None, upload_files=None, user_directory=None, device=set_device()):
@@ -188,6 +233,7 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
         self.upload_files = upload_files
         self.user_directory = user_directory
         self.device = device
+        self.history = History(self.user_directory)
 
     class OutputReader:
         def __init__(self, debug=False):
@@ -508,7 +554,20 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
                     separate_btn = gr.Button("Разделить", variant="primary", interactive=True).click(lambda: gr.update(visible=True), outputs=status)
 
         with gr.Column(variant="panel"):
-            
+            gr.Markdown("<center><h3>Результаты</h3></center>")
+            with gr.Group():
+                with gr.Row(equal_height=True):
+                    list_seps = gr.Dropdown(
+                        label="Выберите результаты разделения",
+                        choices=[],
+                        value=None,
+                        interactive=True, scale=14
+                    )
+                    list_seps.change(lambda x: gr.update(value=str(self.history.get(x))), inputs=[list_seps], outputs=[sep_state])
+                    refresh_conversions_btn = gr.Button("Обновить", scale=2, interactive=True)
+                    refresh_conversions_btn.click(lambda: gr.update(choices=self.history.get_list(), value=None), outputs=[list_seps])
+                    gr.on(fn=lambda: gr.update(choices=self.history.get_list(), value=None), outputs=[list_seps])
+
             @gr.render(inputs=[sep_state], triggers=[sep_state.change])
             def render_medley_players(state):
                 if not state:
@@ -567,7 +626,7 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
             stereo_mode=stereo,
             progress=progress
         )
-        
+        self.history.add(results, model, timestamp, stereo)
         # Возвращаем строковое представление для gr.render
         return gr.update(value=str(results)), gr.update(visible=False)
 
@@ -623,7 +682,7 @@ if __name__ == "__main__":
     if args.list:
         print("Доступные модели:")
         for mn in MedleyVoxModelManager().get_mn():
-            print("  -", mn, sep="")
+            print("  - ", mn, sep="")
     else:
         # Сбор списка файлов
         input_files = []
