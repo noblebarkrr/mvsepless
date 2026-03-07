@@ -574,7 +574,12 @@ class MedleyVoxSeparator(MedleyVoxModelManager, GradioHelper):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MVSepless (Medley-Vox) CLI")
     parser.add_argument(
-        "--input", type=str, required=True, help="Входной аудиофайл или каталог."
+        "--list",
+        action="store_true",
+        help="Показать список моделей",
+    )
+    parser.add_argument(
+        "--input", type=str, default="./", help="Входной аудиофайл или каталог."
     )
     parser.add_argument(
         "--output_dir", type=str, default=None, help="Каталог для выходных файлов."
@@ -615,41 +620,46 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Сбор списка файлов
-    input_files = []
-    if os.path.isdir(args.input):
-        for file in os.listdir(args.input):
-            full_path = os.path.join(args.input, file)
-            if os.path.isfile(full_path) and check(full_path):
-                input_files.append(full_path)
+    if args.list:
+        print("Доступные модели:")
+        for mn in MedleyVoxModelManager().get_mn():
+            print("  -", mn, sep="")
     else:
-        if os.path.exists(args.input) and check(args.input):
-            input_files = args.input
+        # Сбор списка файлов
+        input_files = []
+        if os.path.isdir(args.input):
+            for file in os.listdir(args.input):
+                full_path = os.path.join(args.input, file)
+                if os.path.isfile(full_path) and check(full_path):
+                    input_files.append(full_path)
         else:
-            print(f"Ошибка: Файл {args.input} не найден или не является аудио.")
+            if os.path.exists(args.input) and check(args.input):
+                input_files = args.input
+            else:
+                print(f"Ошибка: Файл {args.input} не найден или не является аудио.")
+                sys.exit(1)
+
+        if not input_files:
+            print("Ошибка: Не найдено подходящих аудиофайлов для обработки.")
             sys.exit(1)
 
-    if not input_files:
-        print("Ошибка: Не найдено подходящих аудиофайлов для обработки.")
-        sys.exit(1)
-
-    separator = MedleyVoxSeparator()
-    
-    try:
-        results = separator.separate(
-            input=input_files,
-            output_dir=args.output_dir,
-            model_name=args.model_name,
-            output_format=args.output_format,
-            template=args.template,
-            use_overlapadd=args.overlap,
-            stereo_mode=args.stereo,
-            progress=gr.Progress()
-        )
-        print("\nРазделение завершено успешно.")
-        print(f"Результаты сохранены в: {args.output_dir if args.output_dir else 'текущую директорию'}")
-        for r in results:
-            print(f" - {r}")
-            
-    except Exception as e:
-        print(f"\nПроизошла ошибка при выполнении: {e}")
+        separator = MedleyVoxSeparator()
+        
+        try:
+            results = separator.separate(
+                input=input_files,
+                output_dir=args.output_dir,
+                model_name=args.model_name,
+                output_format=args.output_format,
+                template=args.template,
+                use_overlapadd=args.overlap,
+                stereo_mode=args.stereo,
+                progress=gr.Progress()
+            )
+            print("\nРазделение завершено успешно.")
+            print(f"Результаты сохранены в: {args.output_dir if args.output_dir else 'текущую директорию'}")
+            for r in results:
+                print(f" - {r}")
+                
+        except Exception as e:
+            print(f"\nПроизошла ошибка при выполнении: {e}")
