@@ -11,7 +11,7 @@ unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["b
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 MVSEPLESS_ECONOM = not cuda_available
-MVSEPLESS_ECONOM_SEGMENT = int(os.environ.get("MVSEPLESS_ECONOM_SEGMENT", "7"))
+MVSEPLESS_ECONOM_SEGMENT = int(os.environ.get("MVSEPLESS_ECO_SEG", "7"))
 def calculate_dimensions(chunk_size, hop_length=441):
     # Находим dim_t
     dim_t = (chunk_size // hop_length) + 1
@@ -610,4 +610,3 @@ if __name__ == "__main__":
         selected_stems=args.selected_stems,
     )
     print("Разделение завершено.")
-

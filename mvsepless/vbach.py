@@ -53,7 +53,7 @@ from vbach_lib.predictors.FCPE import FCPEF0Predictor
 from vbach_lib.predictors.RMVPE import RMVPE0Predictor
 from vbach_lib.predictors.HPA_RMVPE import HPA_RMVPE
 
-VBACH_ALT_PIPELINE_TIME_CHUNK = int(os.environ.get("VBACH_ALT_PL_TIME_CHUNK", "10"))
+VBACH_ALT_PIPELINE_TIME_CHUNK = int(os.environ.get("VBACH_ALTPL_BASE_SEG", "10"))
 
 class UserDirectory:
     path = ""
@@ -1316,7 +1316,7 @@ class VC:
         """
         base_chunk_size = min(self.sample_rate * VBACH_ALT_PIPELINE_TIME_CHUNK, audio_length)
 
-        if self.device.type == "cuda" and torch.cuda.is_available():
+        if self.device.type == "cuda" and torch.cuda.is_available() and not bool(os.environ.get("VBACH_ALTPL_PREF_BASE_SEG", "False")):
             try:
                 torch.cuda.synchronize()
                 total_memory = torch.cuda.get_device_properties(0).total_memory
@@ -2990,8 +2990,10 @@ class Vbach(GradioHelper):
                                 shorted_name = namer.short(input_file_basename, length=50)
                                 sanitized_name = namer.sanitize(f"{mn1}, {mn2} - {shorted_name}")
                                 output_mixed = write(os.path.join(output_dir, f"{sanitized_name}.{of}"), mixed_duet, max_sr)
+                                self.history.add([output_mixed], f"{mn1}|{mn2}", timestamp, f"{pm1}|{pm2}", f"{p1}|{p2}")
                                 return self.return_audio_with_size(label="Общий результат", value=output_mixed), gr.update(label="Результат модели 2", value=None), gr.update(visible=False)
                             case False:
+                                self.history.add([output_1, output_2], f"{mn1}|{mn2}", timestamp, f"{pm1}|{pm2}", f"{p1}|{p2}")
                                 return self.return_audio_with_size(label="Результат модели 1", value=output_1), self.return_audio_with_size(label="Результат модели 2", value=output_2), gr.update(visible=False)
 
             with gr.TabItem("Менеджер"):

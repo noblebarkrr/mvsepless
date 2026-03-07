@@ -386,7 +386,7 @@ from scipy.signal import windows
 
 def get_stft_obj(sr, n_fft, hop):
     """Создает STFT с окном DPSS для сверхточного разделения частот."""
-    win_dpss = bool(os.environ.get("MVSEPLESS_SPEC_DPSS", "False"))
+    win_dpss = bool(os.environ.get("MVSEPLESS_DPSS", "False"))
     if win_dpss:
         win = dpss(n_fft, NW=3, sym=False)
     else:
@@ -767,7 +767,7 @@ def reverse(y: np.ndarray) -> np.ndarray:
         return np.flip(y, axis=array_index)
 
 def write(path: str, y: np.ndarray, sr: int, bitrate: int | str = 320, prefer_float: bool = False) -> str:
-    if bool(os.environ.get("MVSEPLESS_WRITE_ABSPATH", "False")):
+    if bool(os.environ.get("MVSEPLESS_WRITE_ABS", "False")):
         path = os.path.abspath(path)
     name, ext = os.path.splitext(path)
     dir = os.path.dirname(path)
