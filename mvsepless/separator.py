@@ -465,9 +465,6 @@ class Separator(MvseplessModelManager):
         if output_dir is None:
             output_dir = os.getcwd()
 
-        if output_dir:
-            output_dir = os.path.abspath(output_dir)
-
         if selected_stems is None:
             selected_stems = []
 
@@ -613,3 +610,4 @@ if __name__ == "__main__":
         selected_stems=args.selected_stems,
     )
     print("Разделение завершено.")
+
