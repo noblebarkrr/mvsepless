@@ -694,7 +694,10 @@ def lambda_min(arr, axis=None, key=None, keepdims=False):
         return arr.flatten()[idxs]
 
 def ensemble(pred_tracks: list, srs: list, weights: list, algorithm: str, dtype: np.dtype = np.float32):
-    max_sr = int(max(srs))
+    if algorithm == "min_fft":
+        max_sr = int(min(srs))
+    else:
+        max_sr = int(max(srs))
     # Подгоняем все треки к одной длине и частоте
     pred_tracks = fit_arrays(pred_tracks, srs, max_channels=2, min_sr=max_sr)
     
