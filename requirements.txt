@@ -42,7 +42,6 @@ ml_dtypes
 resampy
 yt_dlp
 pyngrok
-tabulate
 neuraloperator==1.0.2
 torchcrepe
 praat-parselmouth
@@ -50,6 +49,6 @@ faiss-cpu==1.11
 local-attention
 tenacity
 pyworld
-
 gdown
+
 
