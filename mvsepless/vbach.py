@@ -56,7 +56,7 @@ from vbach_lib.predictors.HPA_RMVPE import HPA_RMVPE
 VBACH_ALT_PIPELINE_TIME_CHUNK = int(os.environ.get("VBACH_ALT_PL_TIME_CHUNK", "10"))
 
 class UserDirectory:
-    path = script_dir
+    path = ""
     def change_dir(self, dir: str):
         self.path = dir
         os.makedirs(dir, exist_ok=True)

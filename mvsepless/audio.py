@@ -384,11 +384,12 @@ def split_channels(y: np.ndarray) -> tuple[np.ndarray]:
 
 from scipy.signal import windows
 
-def get_stft_obj(sr, n_fft, hop, win_dpss=os.environ.get("MVSEPLESS_SPEC_DPSS", "False")):
+def get_stft_obj(sr, n_fft, hop):
     """Создает STFT с окном DPSS для сверхточного разделения частот."""
-    if win_dpss == "True":
+    win_dpss = bool(os.environ.get("MVSEPLESS_SPEC_DPSS", "False"))
+    if win_dpss:
         win = dpss(n_fft, NW=3, sym=False)
-    elif win_dpss == "False":
+    else:
         win = hann(n_fft, sym=False)
     return ShortTimeFFT(win, hop=hop, fs=sr, scale_to='magnitude', phase_shift=None)
 
@@ -766,10 +767,12 @@ def reverse(y: np.ndarray) -> np.ndarray:
         return np.flip(y, axis=array_index)
 
 def write(path: str, y: np.ndarray, sr: int, bitrate: int | str = 320, prefer_float: bool = False) -> str:
-    path = os.path.abspath(path)
+    if bool(os.environ.get("MVSEPLESS_WRITE_ABSPATH", "False")):
+        path = os.path.abspath(path)
     name, ext = os.path.splitext(path)
     dir = os.path.dirname(path)
-    os.makedirs(dir, exist_ok=True)
+    if dir != "":
+        os.makedirs(dir, exist_ok=True)
     
     if not sr:
         raise Exception("Не указана частота дискретизации")

@@ -9,7 +9,7 @@ from audio import output_formats, input_extensions, check
 from gradio_helper import GradioHelper, tz
 
 class UserDirectory:
-    path = script_dir
+    path = ""
     def change_dir(self, dir: str):
         self.path = dir
         os.makedirs(dir, exist_ok=True)
