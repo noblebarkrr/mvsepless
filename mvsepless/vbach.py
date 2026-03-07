@@ -46,6 +46,7 @@ from audio import check, read, write, output_formats, split_mid_side, split_chan
 from namer import Namer
 from gradio_helper import GradioHelper, tz
 from downloader import dw_file
+from str2bool import str2bool
 from check_colab import easy_check_is_colab
 from vbach_lib.fairseq import load_model_ensemble_and_task, load_checkpoint_to_cpu
 from vbach_lib.algorithm.synthesizers import Synthesizer
@@ -1316,7 +1317,7 @@ class VC:
         """
         base_chunk_size = min(self.sample_rate * VBACH_ALT_PIPELINE_TIME_CHUNK, audio_length)
 
-        if self.device.type == "cuda" and torch.cuda.is_available() and not bool(os.environ.get("VBACH_ALTPL_PREF_BASE_SEG", "False")):
+        if self.device.type == "cuda" and torch.cuda.is_available() and not str2bool(os.environ.get("VBACH_ALTPL_PREF_BASE_SEG", False)):
             try:
                 torch.cuda.synchronize()
                 total_memory = torch.cuda.get_device_properties(0).total_memory
