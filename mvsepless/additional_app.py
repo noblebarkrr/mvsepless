@@ -212,7 +212,7 @@ class AutoEnsembless(Separator, GradioHelper):
                 self.get_mn()[0]),
             "invert_stem": get_invert_stems(
                 self.get_mn()[0],
-                "vocals",
+                "other",
             ),
             "weight": 1,
         }
@@ -942,6 +942,7 @@ class PluginManager(Separator):
 
 
         self.parse_plugins()
+
 
 
 
