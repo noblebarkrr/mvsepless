@@ -406,7 +406,7 @@ class MvseplessModelManager:
         
         if categories_with_count:
             for (cat_, num_) in categories_with_count:
-                print(f"| {cat_} ({num_} {_i18n('model')}{format_end_count_models(num_)}):{'':<{models_count_width - len(cat_) - len(str(num_)) - 5}} |")
+                print(f"| {cat_+' '+_i18n('models_count').format(count=num_, end=format_end_count_models(num_)):<{models_count_width}} |")
                 print("|-", "-" * models_count_width, "-|", sep="")
         else:
             print(f"| {'n/a':<{models_count_width}} |")
@@ -435,7 +435,7 @@ class MvseplessModelManager:
         
         if mtypes_with_count:
             for (mt_, num_) in mtypes_with_count:
-                print(f"| {mt_} ({num_} {_i18n('model')}{format_end_count_models(num_)}):{'':<{models_count_width - len(mt_) - len(str(num_)) - 5}} |")
+                print(f"| {mt_+' '+_i18n('models_count').format(count=num_, end=format_end_count_models(num_)):<{models_count_width}} |")
                 print("|-", "-" * models_count_width, "-|", sep="")
         else:
             print(f"| {'n/a':<{models_count_width}} |")
