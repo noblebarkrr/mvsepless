@@ -1,32 +1,44 @@
-import os, gradio as gr, zipfile
+import os
+import gradio as gr
+import zipfile
 from datetime import timezone, timedelta
 import platform
 import torch
-import os
 from tqdm import tqdm
 import urllib.request
 import time
 import yt_dlp
+from typing import List, Optional, Tuple, Union, Any, Dict
+from i18n import _i18n
 
 tz = timezone(timedelta(hours=3))
 
-cuda_available = torch.cuda.is_available()
-mps_available = False #torch.mps.is_available()
-device_count = torch.cuda.device_count() if cuda_available else 0
-all_ids = list(range(device_count))
+cuda_available: bool = torch.cuda.is_available()
+mps_available: bool = False  # torch.mps.is_available()
+device_count: int = torch.cuda.device_count() if cuda_available else 0
+all_ids: List[int] = list(range(device_count))
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-DOWNLOAD_DIR = os.environ.get(
+script_dir: str = os.path.dirname(os.path.abspath(__file__))
+DOWNLOAD_DIR: str = os.environ.get(
     "MVSEPLESS_DOWNLOAD_DIR", os.path.join(os.getcwd(), "downloaded")
 )
 
-def dw_file(url_model: str, local_path: str, retries: int = 180):
+
+def dw_file(url_model: str, local_path: str, retries: int = 180) -> None:
+    """
+    Скачать файл с поддержкой повторных попыток
+    
+    Args:
+        url_model: URL файла
+        local_path: Локальный путь для сохранения
+        retries: Количество попыток
+    """
     dir_name = os.path.dirname(local_path)
     if dir_name != "":
         os.makedirs(dir_name, exist_ok=True)
 
     class TqdmUpTo(tqdm):
-        def update_to(self, b=1, bsize=1, tsize=None):
+        def update_to(self, b: int = 1, bsize: int = 1, tsize: Optional[int] = None) -> None:
             if tsize is not None:
                 self.total = tsize
             self.update(b * bsize - self.n)
@@ -45,25 +57,40 @@ def dw_file(url_model: str, local_path: str, retries: int = 180):
                 )
             break
         except Exception as e:
-            print(f"Попытка {attempt + 1}/{retries} не удалась. Ошибка: {e}")
+            print(_i18n("download_attempt_failed", attempt=attempt + 1, retries=retries, error=str(e)))
             if attempt < retries - 1:
-                print("Повторная попытка...")
+                print(_i18n("retrying"))
                 time.sleep(2)
             else:
-                print("Все попытки загрузки завершились неудачно")
+                print(_i18n("all_download_attempts_failed"))
                 raise
 
+
 def dw_yt_dlp(
-    url,
-    output_dir=None,
-    cookie=None,
-    output_format="mp3",
-    output_bitrate="320",
-    title=None,
-):
+    url: str,
+    output_dir: Optional[str] = None,
+    cookie: Optional[str] = None,
+    output_format: str = "mp3",
+    output_bitrate: str = "320",
+    title: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Скачать аудио с YouTube с помощью yt-dlp
+    
+    Args:
+        url: URL видео
+        output_dir: Директория для сохранения
+        cookie: Путь к файлу с cookies
+        output_format: Формат выходного файла
+        output_bitrate: Битрейт
+        title: Название файла
+    
+    Returns:
+        Путь к скачанному файлу или None
+    """
     outtmpl = "%(title)s.%(ext)s" if title is None else f"{title}.%(ext)s"
 
-    ydl_opts = {
+    ydl_opts: Dict[str, Any] = {
         "format": "bestaudio/best",
         "outtmpl": os.path.join(
             DOWNLOAD_DIR if not output_dir else output_dir, outtmpl
@@ -92,14 +119,25 @@ def dw_yt_dlp(
             else:
                 filename = ydl.prepare_filename(info)
 
-            base, _ = os.path.splitext(filename)
+            base, _c = os.path.splitext(filename)
             audio_file = base + f".{output_format}"
 
             return os.path.join(DOWNLOAD_DIR, audio_file)
         except Exception as e:
+            print(_i18n("download_error", error=str(e)))
             return None
 
-def str2bool(value):
+
+def str2bool(value: Union[str, bool, int, None]) -> bool:
+    """
+    Преобразовать строку в булево значение
+    
+    Args:
+        value: Входное значение
+    
+    Returns:
+        Булево значение
+    """
     true_values = ['true', '1', 'yes', 'y', 't', 'on']
     false_values = ['false', '0', 'no', 'n', 'f', 'off']
     
@@ -110,24 +148,31 @@ def str2bool(value):
         elif value_lower in false_values:
             return False
         else:
-            raise ValueError(f"Не удалось преобразовать '{value}' в булево значение")
+            raise ValueError(_i18n("str2bool_error", value=value))
     elif isinstance(value, bool):
         return value
     else:
         return bool(value)
 
-def set_device(*args, prefer_gpu=True):
- 
+
+def set_device(*args: Any, prefer_gpu: bool = True) -> str:
+    """
+    Установить устройство для вычислений
+    
+    Args:
+        *args: Аргументы (могут содержать ID устройств)
+        prefer_gpu: Предпочитать GPU
+    
+    Returns:
+        Строка с указанием устройства
+    """
     prefer_cuda_flag = prefer_gpu
     
     if args:
-
         if len(args) == 1 and isinstance(args[0], bool):
             prefer_cuda_flag = args[0]
             ids = None
-
         else:
-
             ids = []
             for arg in args:
                 if isinstance(arg, list):
@@ -143,9 +188,7 @@ def set_device(*args, prefer_gpu=True):
         ids = None
     
     if ids is not None:
-
         if cuda_available and prefer_cuda_flag:
-
             valid_ids = [i for i in ids if i < device_count]
             if valid_ids:
                 if len(valid_ids) == 1:
@@ -159,9 +202,7 @@ def set_device(*args, prefer_gpu=True):
         else:
             return "cpu"
     else:
-
         if cuda_available and prefer_cuda_flag:
-
             if device_count == 1:
                 return "cuda:0"
             elif device_count > 1:
@@ -173,7 +214,14 @@ def set_device(*args, prefer_gpu=True):
         else:
             return "cpu"
 
+
 def easy_check_is_colab() -> bool:
+    """
+    Проверить, выполняется ли код в Google Colab
+    
+    Returns:
+        True если в Colab
+    """
     if platform.machine() == "x86_64" and "Linux" in platform.platform():
         try:
             import google.colab
@@ -187,23 +235,55 @@ def easy_check_is_colab() -> bool:
     else:
         return False
 
-class GradioHelper:
 
-    def return_list(self, list, none=False, **kwargs):
-        if list:
-            return gr.update(choices=list, value=list[0] if not none else None, **kwargs)
+class GradioHelper:
+    """Вспомогательный класс для Gradio интерфейса"""
+    
+    def return_list(self, lst: List[Any], none: bool = False, **kwargs) -> gr.update:
+        """
+        Вернуть обновление для списка
+        
+        Args:
+            lst: Список значений
+            none: Добавить пустое значение
+            **kwargs: Дополнительные аргументы
+        
+        Returns:
+            Обновление Gradio
+        """
+        if lst:
+            return gr.update(choices=lst, value=lst[0] if not none else None, **kwargs)
         else:
             return gr.update(choices=[], value=None, **kwargs)
 
-    def return_audio(self, label, path):
+    def return_audio(self, label: str, path: str) -> gr.update:
+        """
+        Вернуть обновление для аудио
+        
+        Args:
+            label: Метка
+            path: Путь к файлу
+        
+        Returns:
+            Обновление Gradio
+        """
         return gr.update(label=label, value=path)
 
-    def get_file_size(self, path):
+    def get_file_size(self, path: Optional[str]) -> str:
+        """
+        Получить размер файла в человекочитаемом формате
+        
+        Args:
+            path: Путь к файлу
+        
+        Returns:
+            Строка с размером
+        """
         if path:
             if os.path.exists(path):
                 size_bytes = os.path.getsize(path)
             else:
-                return "[Указанного файла не существует]"
+                return _i18n("file_not_exists")
         else:
             return ""
 
@@ -213,29 +293,60 @@ class GradioHelper:
             return "[0 B]"
         
         i = 0
-        while size_bytes >= 1024 and i < len(units) - 1:
-            size_bytes /= 1024
+        size_float = float(size_bytes)
+        while size_float >= 1024 and i < len(units) - 1:
+            size_float /= 1024
             i += 1
         
-        return f"[{size_bytes:.1f} {units[i]}]" if i > 0 else f"[{size_bytes} {units[i]}]"
+        return f"[{size_float:.1f} {units[i]}]" if i > 0 else f"[{int(size_float)} {units[i]}]"
 
-    def return_audio_with_size(self, *args, **kwargs):
+    def return_audio_with_size(self, *args: Any, **kwargs) -> gr.update:
+        """
+        Вернуть аудио с размером в метке
+        
+        Args:
+            *args: Позиционные аргументы
+            **kwargs: Именованные аргументы
+        
+        Returns:
+            Обновление Gradio
+        """
         if "label" in kwargs and "value" in kwargs:
             kwargs["label"] = f"{self.get_file_size(kwargs['value'])} {kwargs['label']}"
-        elif not "label" in kwargs and "value" in kwargs:
+        elif "label" not in kwargs and "value" in kwargs:
             kwargs["label"] = f"{self.get_file_size(kwargs['value'])}"
         return gr.update(**kwargs)
 
-    def define_audio_with_size(self, *args, **kwargs):
+    def define_audio_with_size(self, *args: Any, **kwargs) -> gr.Audio:
+        """
+        Создать аудио компонент с размером в метке
+        
+        Args:
+            *args: Позиционные аргументы
+            **kwargs: Именованные аргументы
+        
+        Returns:
+            Компонент Audio
+        """
         if "label" in kwargs and "value" in kwargs:
             kwargs["label"] = f"{self.get_file_size(kwargs['value'])} {kwargs['label']}"
-        elif not "label" in kwargs and "value" in kwargs:
+        elif "label" not in kwargs and "value" in kwargs:
             kwargs["label"] = f"{self.get_file_size(kwargs['value'])}"
         return gr.Audio(**kwargs)
 
-    def create_archive_advanced(self, file_list, archive_name="archive.zip"):
+    def create_archive_advanced(self, file_list: List[Tuple[str, List[Tuple[str, str]]]], archive_name: str = "archive.zip") -> str:
+        """
+        Создать ZIP архив из списка файлов
+        
+        Args:
+            file_list: Список файлов для архивации
+            archive_name: Имя архива
+        
+        Returns:
+            Путь к созданному архиву
+        """
         try:
-            print("Генерация ZIP-архива с результатами разделения...")
+            print(_i18n("creating_zip_archive"))
             with zipfile.ZipFile(
                 archive_name, "w", zipfile.ZIP_DEFLATED
             ) as zipf:
@@ -251,34 +362,37 @@ class GradioHelper:
                                 zipf.write(stem_path, basename_)
                                 successful_files += 1
                                 print(
-                                    f"✓ Добавлен: {stem_path} -> {basename}"
+                                    _i18n("file_added_to_zip", path=stem_path, name=basename)
                                 )
                             else:
                                 print(
-                                    f"✗ Файл не найден или не является файлом: {stem_path}"
+                                    _i18n("file_not_found_for_zip", path=stem_path)
                                 )
 
                         except Exception as e:
                             print(
-                                f"✗ Ошибка при добавлении {stem_path}: {e}"
+                                _i18n("error_adding_to_zip", path=stem_path, error=str(e))
                             )
 
-                print(f"\nАрхив создан: {archive_name}")
-                print(f"Успешно добавлено файлов: {successful_files}")
+                print(_i18n("zip_created", path=archive_name))
+                print(_i18n("files_added_count", count=successful_files))
                 return os.path.abspath(archive_name)
 
         except Exception as e:
-            print(f"Ошибка при создании архива: {e}")
+            print(_i18n("zip_creation_error", error=str(e)))
+            return ""
 
-    def extract_zip(self, zip_file_path, output_dir=None):
+    def extract_zip(self, zip_file_path: str, output_dir: Optional[str] = None) -> List[str]:
         """
-        Распаковывает ZIP-архив с обработкой ошибок
+        Распаковать ZIP архив
         
         Args:
-            zip_file_path: путь к ZIP-архиву
-            output_dir: папка для распаковки (по умолчанию - текущая директория)
-        """
+            zip_file_path: Путь к ZIP архиву
+            output_dir: Директория для распаковки
         
+        Returns:
+            Список распакованных файлов
+        """
         if output_dir is None:
             output_dir = os.path.splitext(zip_file_path)[0]
         
@@ -287,42 +401,44 @@ class GradioHelper:
         try:
             with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
                 if zip_ref.testzip() is not None:
-                    print("Предупреждение: архив может быть поврежден")
+                    print(_i18n("zip_corrupted_warning"))
                 
                 zip_ref.extractall(output_dir)
                 
                 file_count = len(zip_ref.namelist())
-                print(f"Успешно распаковано {file_count} файлов в {output_dir}")                
+                print(_i18n("zip_extracted", count=file_count, dir=output_dir))
+                
         except zipfile.BadZipFile:
-            print("Ошибка: файл не является ZIP-архивом или поврежден")
+            print(_i18n("zip_bad_file"))
             return []
         except PermissionError:
-            print("Ошибка: нет прав на запись в указанную директорию")
+            print(_i18n("zip_permission_error"))
             return []
         except Exception as e:
-            print(f"Неизвестная ошибка: {e}")
+            print(_i18n("zip_unknown_error", error=str(e)))
             return []
         finally:
-            input_files = []
+            input_files: List[str] = []
             for root, dirs, files in os.walk(output_dir):
                 for file in files:
                     input_files.append(os.path.join(root, file))
             return input_files
-        
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
-        description="Скачивание аудио-файлов с интернета"
+        description=_i18n("download_audio_cli_description")
     )
     
-    parser.add_argument("--url", type=str, required=True, help="Ссылка на аудио файл")
-    parser.add_argument("--output_dir", type=str, default=None, help="Папка для сохранения")
-    parser.add_argument("--cookie", type=str, default=None, help="Путь к файлу куки (необязательно)")
-    parser.add_argument("--output_format", type=str, default=output_formats[0], choices=output_formats, help="Формат файла (например, mp3, wav)")
-    parser.add_argument("--title", type=str, default=None, help="Название файла (если не указано, возьмется из сети)")
+    parser.add_argument("--url", type=str, required=True, help=_i18n("url_help"))
+    parser.add_argument("--output_dir", type=str, default=None, help=_i18n("output_dir_help"))
+    parser.add_argument("--cookie", type=str, default=None, help=_i18n("cookie_help"))
+    parser.add_argument("--output_format", type=str, default="mp3", choices=["mp3", "wav", "flac", "ogg", "opus", "m4a", "aac"], help=_i18n("output_format_help"))
+    parser.add_argument("--title", type=str, default=None, help=_i18n("title_help"))
     args = parser.parse_args()
 
-    # Теперь все поля из args соответствуют вызову функции
+    from audio import output_formats
     dw_yt_dlp(
         args.url,
         args.output_dir,

@@ -9,17 +9,28 @@ import gc
 import torch
 import numpy as np
 import torch.nn as nn
-from typing import Literal
+from typing import Literal, Optional, List, Tuple, Any, Dict
 
 from audio import read, multiwrite, output_formats, subtractor, bitrate_to_int
 from namer import Namer
+from i18n import _i18n
 
 namer = Namer()
 
 from infer_utils import demix, get_model_from_config
 
 
-def normalize_peak(audio, peak):
+def normalize_peak(audio: np.ndarray, peak: float) -> np.ndarray:
+    """
+    Нормализовать аудио по пиковому значению
+    
+    Args:
+        audio: Аудиоданные
+        peak: Целевое пиковое значение
+    
+    Returns:
+        Нормализованные аудиоданные
+    """
     current_peak = np.max(np.abs(audio))
     if current_peak == 0:
         return audio
@@ -27,7 +38,30 @@ def normalize_peak(audio, peak):
     return audio * scale_factor
 
 
-def create_output_path(input_path, stem_name, model_name, model_id, output_format, store_dir, template):
+def create_output_path(
+    input_path: str, 
+    stem_name: str, 
+    model_name: str, 
+    model_id: int, 
+    output_format: str, 
+    store_dir: str, 
+    template: str
+) -> str:
+    """
+    Создать путь для выходного файла
+    
+    Args:
+        input_path: Путь к входному файлу
+        stem_name: Имя стема
+        model_name: Имя модели
+        model_id: ID модели
+        output_format: Формат вывода
+        store_dir: Директория для сохранения
+        template: Шаблон имени
+    
+    Returns:
+        Путь к выходному файлу
+    """
     file_name = os.path.splitext(os.path.basename(input_path))[0]
     file_name_shorted = namer.short_input_name_template(
         template, STEM=stem_name, MODEL=model_name, ID=model_id, NAME=file_name
@@ -45,8 +79,17 @@ def create_output_path(input_path, stem_name, model_name, model_id, output_forma
 gc.enable()
 
 
-def cleanup_model(model):
+def cleanup_model(model: Optional[nn.Module]) -> None:
+    """
+    Очистить модель из памяти
+    
+    Args:
+        model: Модель для очистки
+    """
     try:
+        if model is None:
+            return
+            
         if isinstance(model, torch.nn.DataParallel):
             model = model.module
 
@@ -67,11 +110,12 @@ def cleanup_model(model):
     except Exception as e:
         pass
 
+
 def once_inference(
     path: str = None,
-    model: any = None,
-    config: any = None,
-    device: any = None,
+    model: Any = None,
+    config: Any = None,
+    device: Any = None,
     model_type: str = None,
     extract_instrumental: bool = False,
     output_format: Literal[
@@ -80,14 +124,37 @@ def once_inference(
     output_bitrate: str = "320k",
     model_name: str = None,
     sample_rate: int = 44100,
-    instruments: list = [],
+    instruments: List[str] = [],
     store_dir: str = None,
     template: str = None,
-    selected_instruments: list = [],
+    selected_instruments: List[str] = [],
     model_id: int = 0,
     spec_invert_target_instrument: bool = False
-):
-
+) -> List[Tuple[str, str]]:
+    """
+    Однократный инференс
+    
+    Args:
+        path: Путь к входному файлу
+        model: Модель
+        config: Конфигурация
+        device: Устройство
+        model_type: Тип модели
+        extract_instrumental: Извлечь инструментал
+        output_format: Формат вывода
+        output_bitrate: Битрейт
+        model_name: Имя модели
+        sample_rate: Частота дискретизации
+        instruments: Список инструментов
+        store_dir: Директория для сохранения
+        template: Шаблон имени
+        selected_instruments: Выбранные инструменты
+        model_id: ID модели
+        spec_invert_target_instrument: Инвертировать спектрограмму для целевого инструмента
+    
+    Returns:
+        Список кортежей (имя стема, путь к файлу)
+    """
     results = []
     sys.stdout.write(json.dumps({"reading": path}, ensure_ascii=False) + "\n")
     sys.stdout.flush()
@@ -106,7 +173,7 @@ def once_inference(
     try:
         mix, sr = read(path=path, sr=sample_rate, mono=mono_bool)
     except Exception as e:
-        error_msg = f"Не удалось прочитать аудио: {path}\nОшибка: {e}"
+        error_msg = _i18n("audio_read_error", path=path, error=str(e))
         sys.stdout.write(json.dumps({"error": error_msg}, ensure_ascii=False) + "\n")
         sys.stdout.flush()
         return results
@@ -128,7 +195,7 @@ def once_inference(
         )
     except Exception as e:
         sys.stdout.write(
-            json.dumps({"error": f"Ошибка при демиксе: {e}"}, ensure_ascii=False)
+            json.dumps({"error": _i18n("demix_error", error=str(e))}, ensure_ascii=False)
             + "\n"
         )
         sys.stdout.flush()
@@ -136,13 +203,14 @@ def once_inference(
 
     if not waveforms:
         sys.stdout.write(
-            json.dumps({"error": "Пустой результат демикса."}, ensure_ascii=False)
+            json.dumps({"error": _i18n("empty_demix_result")}, ensure_ascii=False)
             + "\n"
         )
         sys.stdout.flush()
         return results
 
-    if config.training.target_instrument is not None: # Если обнаружен целевой инструмент и не выбрано ни одного стема:
+    # Если обнаружен целевой инструмент и не выбрано ни одного стема
+    if config.training.target_instrument is not None:
         if not selected_instruments:
             output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
             second_stem = None
@@ -152,7 +220,7 @@ def once_inference(
                     break
             if second_stem:
                 output_waveforms[second_stem] = subtractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
-        else: # Если обнаружен целевой инструмент и выбран хотя бы один стем:
+        else:  # Если обнаружен целевой инструмент и выбран хотя бы один стем
             if config.training.target_instrument in selected_instruments:
                 output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
             second_stem = None
@@ -160,9 +228,8 @@ def once_inference(
                 if instr_ != config.training.target_instrument:
                     second_stem = instr_
                     break
-            if second_stem:
-                if second_stem in selected_instruments:
-                    output_waveforms[second_stem] = subtractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+            if second_stem and second_stem in selected_instruments:
+                output_waveforms[second_stem] = subtractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
     elif config.training.target_instrument is None:
         if not selected_instruments:
@@ -218,19 +285,20 @@ def once_inference(
 
     output_instruments = [instr__ for instr__ in output_waveforms]
 
-    ### Подготовка шаблона
+    # Подготовка шаблона
     template = namer.sanitize(template)
     template = namer.dedup_template(template, keys=["NAME", "MODEL", "STEM", "ID"])
     template = namer.short(template, length=40)
 
     output_paths = [create_output_path(path, instr, model_name, model_id, output_format, store_dir, template) for instr in output_instruments]
+    
     if mean is not None and std is not None:
         output_arrays = [output_waveforms[instr] * std + mean for instr in output_instruments]
     else:
         output_arrays = [output_waveforms[instr] for instr in output_instruments]
-    output_sample_rates = [sample_rate for _ in range(len(output_instruments))]
+    output_sample_rates = [sample_rate for _c in range(len(output_instruments))]
 
-    def flush_writing_file(file):
+    def flush_writing_file(file: str) -> None:
         sys.stdout.write(
             json.dumps({"writing": file}, ensure_ascii=False) + "\n"
         )
@@ -241,14 +309,14 @@ def once_inference(
     except Exception as e:
         sys.stdout.write(
             json.dumps(
-                {"error": f"Ошибка при обработке: {e}"}, ensure_ascii=False
+                {"error": _i18n("write_error", error=str(e))}, ensure_ascii=False
             )
             + "\n"
         )
         sys.stdout.flush()
     gc.collect()
 
-    results = tuple(zip(output_instruments, writed_files))
+    results = list(zip(output_instruments, writed_files))
 
     del mix, mix_orig, waveforms, output_arrays
     gc.collect()
@@ -257,11 +325,11 @@ def once_inference(
 
 
 def run_inference(
-    model: any = None,
-    config: any = None,
+    model: Any = None,
+    config: Any = None,
     input_path: str = None,
     store_dir: str = None,
-    device: any = None,
+    device: Any = None,
     model_type: str = None,
     extract_instrumental: bool = False,
     output_format: Literal[
@@ -270,10 +338,32 @@ def run_inference(
     output_bitrate: str = "320k",
     model_name: str = None,
     template: str = "NAME_STEM",
-    selected_instruments: list = [],
+    selected_instruments: List[str] = [],
     model_id: int = 0,
     spec_invert_target_instrument: bool = False
-):
+) -> List[Tuple[str, str]]:
+    """
+    Запустить инференс
+    
+    Args:
+        model: Модель
+        config: Конфигурация
+        input_path: Путь к входному файлу
+        store_dir: Директория для сохранения
+        device: Устройство
+        model_type: Тип модели
+        extract_instrumental: Извлечь инструментал
+        output_format: Формат вывода
+        output_bitrate: Битрейт
+        model_name: Имя модели
+        template: Шаблон имени
+        selected_instruments: Выбранные инструменты
+        model_id: ID модели
+        spec_invert_target_instrument: Инвертировать спектрограмму для целевого инструмента
+    
+    Returns:
+        Список кортежей (имя стема, путь к файлу)
+    """
     start_time = time.time()
     if model_type != "vr":
         model.eval()
@@ -307,7 +397,7 @@ def run_inference(
     time.sleep(1)
     time_taken = time.time() - start_time
     sys.stdout.write(
-        json.dumps({"time": f"{time_taken:.2f} сек."}, ensure_ascii=False) + "\n"
+        json.dumps({"time": _i18n("time_seconds", seconds=f"{time_taken:.2f}")}, ensure_ascii=False) + "\n"
     )
     sys.stdout.flush()
     sys.stdout.write(json.dumps({"done": results}, ensure_ascii=False) + "\n")
@@ -315,7 +405,24 @@ def run_inference(
     return results
 
 
-def load_model(model_type, config_path, start_check_point, device: str):
+def load_model(
+    model_type: str, 
+    config_path: str, 
+    start_check_point: str, 
+    device: str
+) -> Tuple[Any, Any, torch.device]:
+    """
+    Загрузить модель
+    
+    Args:
+        model_type: Тип модели
+        config_path: Путь к конфигурации
+        start_check_point: Путь к чекпоинту
+        device: Строка устройства
+    
+    Returns:
+        Кортеж (модель, конфигурация, устройство)
+    """
     sys.stdout.write(json.dumps({"device": device}, ensure_ascii=False) + "\n")
     sys.stdout.flush()
     
@@ -454,7 +561,7 @@ def load_model(model_type, config_path, start_check_point, device: str):
                     json.dumps({"stems": [str(e)]}, ensure_ascii=False)
                     + "\n"
                 )
-                print(f"Warning: Error loading state dict: {e}")
+                print(_i18n("state_dict_load_warning", error=str(e)))
                 model.load_state_dict(state_dict, strict=False)
 
         sys.stdout.write(
@@ -469,12 +576,12 @@ def load_model(model_type, config_path, start_check_point, device: str):
         # Используем DataParallel только если есть несколько GPU и это не MPS
         if torch_device.type == "cuda" and len(device_ids) > 1:
             model = nn.DataParallel(model, device_ids=device_ids)
-            print(f"Using DataParallel on devices: {device_ids}")
+            print(_i18n("using_dataparallel", devices=device_ids))
         
         load_time = time.time() - model_load_start_time
 
         sys.stdout.write(
-            json.dumps({"model_load_time": f"{load_time:.2f} сек."}, ensure_ascii=False)
+            json.dumps({"model_load_time": _i18n("time_seconds", seconds=f"{load_time:.2f}")}, ensure_ascii=False)
             + "\n"
         )
         sys.stdout.flush()
@@ -483,21 +590,43 @@ def load_model(model_type, config_path, start_check_point, device: str):
 
 
 def mvsep_offline(
-    input_path,
-    store_dir,
-    model_type,
-    config_path,
-    start_check_point,
-    extract_instrumental,
-    output_format,
-    output_bitrate,
-    model_name,
-    template,
-    device="cpu",
-    selected_instruments=None,
-    model_id=0,
-    spec_invert_target_instrument=False
-):
+    input_path: str,
+    store_dir: str,
+    model_type: str,
+    config_path: str,
+    start_check_point: str,
+    extract_instrumental: bool,
+    output_format: str,
+    output_bitrate: str,
+    model_name: str,
+    template: str,
+    device: str = "cpu",
+    selected_instruments: Optional[List[str]] = None,
+    model_id: int = 0,
+    spec_invert_target_instrument: bool = False
+) -> List[Tuple[str, str]]:
+    """
+    Оффлайн разделение
+    
+    Args:
+        input_path: Путь к входному файлу
+        store_dir: Директория для сохранения
+        model_type: Тип модели
+        config_path: Путь к конфигурации
+        start_check_point: Путь к чекпоинту
+        extract_instrumental: Извлечь инструментал
+        output_format: Формат вывода
+        output_bitrate: Битрейт
+        model_name: Имя модели
+        template: Шаблон имени
+        device: Устройство
+        selected_instruments: Выбранные инструменты
+        model_id: ID модели
+        spec_invert_target_instrument: Инвертировать спектрограмму для целевого инструмента
+    
+    Returns:
+        Список кортежей (имя стема, путь к файлу)
+    """
     model, config, device = load_model(
         model_type, config_path, start_check_point, device
     )
@@ -514,7 +643,7 @@ def mvsep_offline(
         output_bitrate=output_bitrate,
         model_name=model_name,
         template=template,
-        selected_instruments=selected_instruments,
+        selected_instruments=selected_instruments or [],
         model_id=model_id,
         spec_invert_target_instrument=spec_invert_target_instrument
     )
@@ -526,14 +655,15 @@ def mvsep_offline(
     return results
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
+    """Парсинг аргументов командной строки"""
     parser = argparse.ArgumentParser(
-        description="Модифицированный Music-Source-Separation-Training для разделения аудио на источники"
+        description=_i18n("infer_description")
     )
 
-    parser.add_argument("--input", type=str, required=True, help="Путь к входному файлу или папке")
+    parser.add_argument("--input", type=str, required=True, help=_i18n("input_path_help"))
     parser.add_argument(
-        "--store_dir", type=str, required=True, help="Путь для сохранения результатов"
+        "--store_dir", type=str, required=True, help=_i18n("store_dir_help")
     )
 
     parser.add_argument(
@@ -554,16 +684,16 @@ def parse_args():
             "vr",
             "medley_vox"
         ],
-        help="Тип модели (по умолчанию: htdemucs)",
+        help=_i18n("model_type_help"),
     )
     parser.add_argument(
         "--config_path",
         type=str,
         required=True,
-        help="Путь к конфигурационному файлу модели",
+        help=_i18n("config_path_help"),
     )
     parser.add_argument(
-        "--start_check_point", type=str, required=True, help="Путь к чекпоинту модели"
+        "--start_check_point", type=str, required=True, help=_i18n("checkpoint_help")
     )
 
     parser.add_argument(
@@ -571,49 +701,50 @@ def parse_args():
         type=str,
         default="wav",
         choices=output_formats,
-        help="Формат выходных файлов",
+        help=_i18n("output_format_help"),
     )
     parser.add_argument(
-        "--output_bitrate", type=str, required=True, help="Битрейт выходного файла"
+        "--output_bitrate", type=str, required=True, help=_i18n("output_bitrate_help")
     )
 
     parser.add_argument(
         "--selected_instruments",
         nargs="+",
-        help="Список стемов для сохранения (например: vocals drums)",
+        help=_i18n("selected_instruments_help"),
     )
     parser.add_argument(
         "--extract_instrumental",
         action="store_true",
-        help="Извлечь инструментальную версию",
+        help=_i18n("extract_instrumental_help"),
     )
     parser.add_argument(
         "--use_spec_invert",
         action="store_true",
-        help="При извлечь инструментальной версии, использовать спектрограмму",
+        help=_i18n("use_spec_invert_help"),
     )
     parser.add_argument(
         "--template",
         type=str,
         default="NAME_STEM",
-        help="Шаблон для имен выходных файлов",
+        help=_i18n("template_help"),
     )
     parser.add_argument(
         "--model_name",
         type=str,
         default="model",
-        help="Имя модели для шаблона имен файлов",
+        help=_i18n("model_name_help"),
     )
-    parser.add_argument("-m_id", "--model_id", type=int, required=True, help="Model ID")
+    parser.add_argument("-m_id", "--model_id", type=int, required=True, help=_i18n("model_id_help"))
     parser.add_argument(
-        "--device", type=str, help="Какой девайс используется для разделения", default="cuda:0"
+        "--device", type=str, help=_i18n("device_help"), default="cuda:0"
     )
-    parser.add_argument("--verbose", action="store_true", help="Подробный вывод")
+    parser.add_argument("--verbose", action="store_true", help=_i18n("verbose_help"))
 
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Главная функция"""
     args = parse_args()
 
     results = mvsep_offline(
@@ -632,6 +763,7 @@ def main():
         model_id=args.model_id,
         spec_invert_target_instrument=args.use_spec_invert
     )
+
 
 if __name__ == "__main__":
     main()

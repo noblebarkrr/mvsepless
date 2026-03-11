@@ -10,9 +10,21 @@ import librosa
 import torch.nn.functional as F
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
-from typing import Dict, List, Tuple, Any, List, Optional
+from typing import Dict, List, Tuple, Any, Optional
+from i18n import _i18n
+
 
 def load_config(model_type: str, config_path: str) -> Any:
+    """
+    Загрузить конфигурацию модели
+    
+    Args:
+        model_type: Тип модели
+        config_path: Путь к конфигурационному файлу
+    
+    Returns:
+        Конфигурация
+    """
     try:
         with open(config_path, "r") as f:
             if model_type == "htdemucs":
@@ -30,11 +42,22 @@ def load_config(model_type: str, config_path: str) -> Any:
                         config.audio.dim_t = config.audio.new_dim_t
             return config
     except FileNotFoundError:
-        raise FileNotFoundError(f"Configuration file not found at {config_path}")
+        raise FileNotFoundError(_i18n("config_not_found", path=config_path))
     except Exception as e:
-        raise ValueError(f"Error loading configuration: {e}")
+        raise ValueError(_i18n("config_load_error", error=str(e)))
 
-def get_model_from_config(model_type: str, config_path: str) -> Tuple:
+
+def get_model_from_config(model_type: str, config_path: str) -> Tuple[Any, Any]:
+    """
+    Получить модель из конфигурации
+    
+    Args:
+        model_type: Тип модели
+        config_path: Путь к конфигурации
+    
+    Returns:
+        Кортеж (модель, конфигурация)
+    """
     config = load_config(model_type, config_path)
 
     if model_type == "mdx23c":
@@ -106,10 +129,21 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
         from models.medley_vox import load_model_with_args
         model = load_model_with_args(config.model)
     else:
-        raise ValueError(f"Unknown model type: {model_type}")
+        raise ValueError(_i18n("unknown_model_type", model_type=model_type))
     return model, config
 
+
 def _getWindowingArray(window_size: int, fade_size: int) -> torch.Tensor:
+    """
+    Создать массив окна для плавного склеивания
+    
+    Args:
+        window_size: Размер окна
+        fade_size: Размер зоны затухания
+    
+    Returns:
+        Массив окна
+    """
     fadein = torch.linspace(0, 1, fade_size)
     fadeout = torch.linspace(1, 0, fade_size)
 
@@ -118,12 +152,25 @@ def _getWindowingArray(window_size: int, fade_size: int) -> torch.Tensor:
     window[:fade_size] = fadein
     return window
 
+
 def demix_mdxnet(
     config: Any,
     model: Any,
     mix: np.ndarray,
     device: torch.device,
 ) -> Dict[str, np.ndarray]:
+    """
+    Демикс для MDXNet
+    
+    Args:
+        config: Конфигурация
+        model: Модель
+        mix: Микс
+        device: Устройство
+    
+    Returns:
+        Словарь с разделенными стемами
+    """
     mix_tensor = torch.tensor(mix, dtype=torch.float32).to(device)
     batch_size = 1
     num_overlap = config.inference.num_overlap
@@ -195,6 +242,7 @@ def demix_mdxnet(
                     "processing": {
                         "processed": min(i, wave.shape[1]),
                         "total": wave.shape[1],
+                        "unit": _i18n("unit_samples")
                     }
                 }
                 sys.stdout.write(
@@ -225,6 +273,18 @@ def demix_vr(
     mix: np.ndarray,
     device: torch.device,
 ) -> Dict[str, np.ndarray]:
+    """
+    Демикс для VR
+    
+    Args:
+        config: Конфигурация
+        model: Модель
+        mix: Микс
+        device: Устройство
+    
+    Returns:
+        Словарь с разделенными стемами
+    """
     from models.vr_arch import spec_utils, NON_ACCOM_STEMS
     aggression = config.inference.aggression
     sr = config.audio.sample_rate
@@ -236,7 +296,7 @@ def demix_vr(
     }
     X_spec = model.loading_mix(mix, sr)
 
-    def _execute(X_mag_pad, roi_size):
+    def _execute(X_mag_pad: np.ndarray, roi_size: int) -> np.ndarray:
         X_dataset = []
         patches = (X_mag_pad.shape[2] - 2 * model.model_run.offset) // roi_size
         total = patches
@@ -259,7 +319,7 @@ def demix_vr(
                 processed = min(i + model.batch_size, patches)
                 sys.stdout.write(
                     json.dumps(
-                        {"processing": {"processed": processed, "total": total, "unit": "патчей"}},
+                        {"processing": {"processed": processed, "total": total, "unit": _i18n("unit_patches")}},
                         ensure_ascii=False,
                     )
                     + "\n"
@@ -270,20 +330,24 @@ def demix_vr(
                 pred = model.model_run.predict_mask(X_batch)
                 if not pred.size()[3] > 0:
                     raise ValueError(
-                        f"Window size error: h1_shape[3] must be greater than h2_shape[3]"
+                        _i18n("window_size_error")
                     )
                 pred = pred.detach().cpu().numpy()
                 pred = np.concatenate(pred, axis=2)
                 mask.append(pred)
             if len(mask) == 0:
                 raise ValueError(
-                    f"Window size error: h1_shape[3] must be greater than h2_shape[3]"
+                    _i18n("window_size_error")
                 )
 
             mask = np.concatenate(mask, axis=2)
         return mask
 
-    def postprocess(mask, X_mag, X_phase):
+    def postprocess(
+        mask: np.ndarray, 
+        X_mag: np.ndarray, 
+        X_phase: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
         is_non_accom_stem = False
         for stem in NON_ACCOM_STEMS:
             if stem == model.primary_stem.lower():
@@ -334,7 +398,24 @@ def demix_vr(
     }
 
 
-def demix_demucs(config, model, mix, device):
+def demix_demucs(
+    config: Any, 
+    model: Any, 
+    mix: np.ndarray, 
+    device: torch.device
+) -> Dict[str, np.ndarray]:
+    """
+    Демикс для Demucs
+    
+    Args:
+        config: Конфигурация
+        model: Модель
+        mix: Микс
+        device: Устройство
+    
+    Returns:
+        Словарь с разделенными стемами
+    """
     mix = torch.tensor(mix, dtype=torch.float32)
     chunk_size = config.training.samplerate * config.training.segment
     num_instruments = len(config.training.instruments)
@@ -388,7 +469,7 @@ def demix_demucs(config, model, mix, device):
                     total = mix.shape[1]
                     sys.stdout.write(
                         json.dumps(
-                            {"processing": {"processed": processed, "total": total}}
+                            {"processing": {"processed": processed, "total": total, "unit": _i18n("unit_samples")}}
                         )
                         + "\n"
                     )
@@ -414,6 +495,18 @@ def demix_generic(
     mix: torch.Tensor,
     device: torch.device,
 ) -> Dict[str, np.ndarray]:
+    """
+    Общий демикс для большинства моделей
+    
+    Args:
+        config: Конфигурация
+        model: Модель
+        mix: Микс
+        device: Устройство
+    
+    Returns:
+        Словарь с разделенными стемами
+    """
     mix = torch.tensor(mix, dtype=torch.float32)
     chunk_size = config.audio.chunk_size
     instruments = prefer_target_instrument(config)
@@ -475,7 +568,7 @@ def demix_generic(
                     total = mix.shape[1]
                     sys.stdout.write(
                         json.dumps(
-                            {"processing": {"processed": processed, "total": total}},
+                            {"processing": {"processed": processed, "total": total, "unit": _i18n("unit_samples")}},
                             ensure_ascii=False,
                         )
                         + "\n"
@@ -494,15 +587,28 @@ def demix_generic(
 
     return {k: v for k, v in zip(instruments, estimated_sources)}
 
+
 def demix_medley_vox(
     config: ConfigDict,
-    model: torch.nn.Module,
+    model: Any,
     mix: np.ndarray,
     device: torch.device
 ) -> Dict[str, np.ndarray]:
+    """
+    Демикс для Medley Vox
+    
+    Args:
+        config: Конфигурация
+        model: Модель
+        mix: Микс
+        device: Устройство
+    
+    Returns:
+        Словарь с разделенными стемами
+    """
     import pyloudnorm as pyln
     from models.medley_vox.loudness_utils import loudnorm, db2linear
-    stems: list = config.training.instruments
+    stems: List[str] = config.training.instruments
     
     # Корректная обработка входного аудио
     original_shape = mix.shape
@@ -550,7 +656,7 @@ def demix_medley_vox(
                 mixture_d = mixture_d.reshape(1, -1)
                 
     except Exception as e:
-        print(f"Ошибка в loudnorm: {e}")
+        print(_i18n("loudnorm_error", error=str(e)))
         # Альтернативный подход - нормализация вручную
         mixture_d = mix.copy()
         rms = np.sqrt(np.mean(mix**2))
@@ -627,7 +733,7 @@ def demix_medley_vox(
             "processing": {
                 "processed": min(end_idx, length_init),
                 "total": length_init,
-                "unit": "сэмплов",
+                "unit": _i18n("unit_samples"),
             }
         }
         sys.stdout.write(json.dumps(progress_data, ensure_ascii=False) + "\n")
@@ -635,15 +741,16 @@ def demix_medley_vox(
     
     # Нормализация результатов делением на счетчик
     for stem in stems:
-        counters[stem] = counters[stem].cpu().numpy()
+        counters_np = counters[stem].cpu().numpy()
         # Избегаем деления на ноль
-        mask = counters[stem] > 0
-        result_stems[stem][mask] /= counters[stem][mask]
+        mask = counters_np > 0
+        result_stems[stem][mask] /= counters_np[mask]
         
         # Применяем обратную нормализацию громкости
         result_stems[stem] = result_stems[stem] * db2linear(-adjusted_gain)
     
     return result_stems
+
 
 def demix(
     config: ConfigDict,
@@ -652,6 +759,19 @@ def demix(
     device: torch.device,
     model_type: str,
 ) -> Dict[str, np.ndarray]:
+    """
+    Основная функция демикса, выбирает подходящий метод в зависимости от типа модели
+    
+    Args:
+        config: Конфигурация
+        model: Модель
+        mix: Микс
+        device: Устройство
+        model_type: Тип модели
+    
+    Returns:
+        Словарь с разделенными стемами
+    """
     if model_type == "vr":
         return demix_vr(config, model, mix, device)
     elif model_type == "mdxnet":
@@ -663,15 +783,36 @@ def demix(
     else:
         return demix_generic(config, model, mix, device)
 
+
 def prefer_target_instrument(config: ConfigDict) -> List[str]:
+    """
+    Получить предпочтительный инструмент из конфигурации
+    
+    Args:
+        config: Конфигурация
+    
+    Returns:
+        Список инструментов
+    """
     if config.training.get("target_instrument"):
         return [config.training.target_instrument]
     else:
         return config.training.instruments
 
+
 def prefer_target_instrument_test(
     config: ConfigDict, selected_instruments: Optional[List[str]] = None
 ) -> List[str]:
+    """
+    Получить предпочтительный инструмент для тестирования
+    
+    Args:
+        config: Конфигурация
+        selected_instruments: Выбранные инструменты
+    
+    Returns:
+        Список инструментов
+    """
     available_instruments = config.training.instruments
 
     if selected_instruments is not None:

@@ -1,9 +1,24 @@
-import os, subprocess, argparse
+import os
+import subprocess
+import argparse
 import re
+import sys
+from typing import List, Optional, Tuple, Union
+from i18n import _i18n
 
-def get_latest_version(package_name, index_url=None):
-    """Получает последнюю версию пакета из вывода pip index versions"""
-    cmd = [os.sys.executable, "-m", "pip", "index", "versions", package_name]
+
+def get_latest_version(package_name: str, index_url: Optional[str] = None) -> Optional[str]:
+    """
+    Получает последнюю версию пакета из вывода pip index versions
+    
+    Args:
+        package_name: Имя пакета
+        index_url: URL индекса пакетов
+    
+    Returns:
+        Последняя версия пакета или None
+    """
+    cmd = [sys.executable, "-m", "pip", "index", "versions", package_name]
     if index_url:
         cmd.extend(["--index-url", index_url])
     
@@ -16,15 +31,24 @@ def get_latest_version(package_name, index_url=None):
         )
         
         if result.returncode != 0:
-            print(f"Предупреждение: pip index вернул код {result.returncode}")
+            print(_i18n("pip_index_warning", code=result.returncode))
             print(f"stderr: {result.stderr}")
             return None
             
     except Exception as e:
-        print(f"Ошибка при выполнении pip index: {e}")
+        print(_i18n("pip_index_error", error=str(e)))
         return None
     
-    def parse_version_from_output(pip_output):
+    def parse_version_from_output(pip_output: str) -> Optional[str]:
+        """
+        Парсит версию из вывода pip
+        
+        Args:
+            pip_output: Вывод pip
+        
+        Returns:
+            Версия пакета или None
+        """
         if not pip_output:
             return None
             
@@ -66,16 +90,32 @@ def get_latest_version(package_name, index_url=None):
     
     latest_version = parse_version_from_output(result.stdout)
     
-    print(f"Получена версия для {package_name}: {latest_version}")
+    print(_i18n("version_retrieved", package=package_name, version=latest_version or _i18n("unknown")))
     
     return latest_version
 
-def fno_compitable(index_url=None):
+
+def fno_compitable(index_url: Optional[str] = None) -> bool:
+    """
+    Проверяет совместимость с FNO (Fourier Neural Operator)
+    
+    Args:
+        index_url: URL индекса пакетов
+    
+    Returns:
+        True если совместимо
+    """
     is_torch_2 = False
     fno_c = False
     latest_version_torch = get_latest_version("torch", index_url)
+    
+    if not latest_version_torch:
+        print(_i18n("torch_version_not_found"))
+        return False
+        
     lvt = latest_version_torch.split(".")
     lvt = [int(n_) for n_ in lvt if n_.isdigit()]
+    
     for i, num in enumerate(lvt, start=1):
         if i == 1:
             if num == 2:
@@ -83,9 +123,17 @@ def fno_compitable(index_url=None):
         elif i == 2:
             if num >= 4 and is_torch_2:
                 fno_c = True
+                
     return fno_c
 
-def is_nvidia_gpu_present():
+
+def is_nvidia_gpu_present() -> bool:
+    """
+    Проверяет наличие NVIDIA GPU в системе
+    
+    Returns:
+        True если GPU обнаружен
+    """
     try:
         # Пытаемся выполнить команду nvidia-smi
         result = subprocess.run(
@@ -98,46 +146,73 @@ def is_nvidia_gpu_present():
         
         # Если код возврата 0 — команда выполнилась успешно
         if result.returncode == 0:
-            print("Видеокарта NVIDIA обнаружена!")
+            print(_i18n("nvidia_gpu_detected"))
             return True
         else:
-            print("Команда nvidia-smi выполнена с ошибкой. Возможно, видеокарта NVIDIA отсутствует или драйверы не установлены.")
+            print(_i18n("nvidia_smi_error"))
             return False
 
     except FileNotFoundError:
         # Команда nvidia-smi не найдена в системе
-        print("Утилита nvidia-smi не найдена. Вероятно, драйверы NVIDIA не установлены.")
+        print(_i18n("nvidia_smi_not_found"))
         return False
     except Exception as e:
-        print(f"Произошла неожиданная ошибка: {e}")
+        print(_i18n("nvidia_check_error", error=str(e)))
         return False
 
-cuda_available = is_nvidia_gpu_present()
-def install_uv():
-    print("Установка uv...")
-    result = subprocess.run([os.sys.executable, "-m", "pip", "install", "uv"])
-    print("uv установлен")
 
-def install_requirements(requirements: list, force=False, index_url=None):
-    if requirements:
-        cmd = [os.sys.executable, "-m", "uv", "pip", "install", "--no-cache-dir", "-qq"]
-        if force:
-            cmd.append("--upgrade")
-            cmd.append("--force-reinstall")
-        if index_url:
-            cmd.extend(["--index-url", index_url])
-        for pkg in requirements:
-            cmd.append(pkg)
-        result = subprocess.run(cmd)
+cuda_available: bool = is_nvidia_gpu_present()
 
-torch_requirements = [
+
+def install_uv() -> None:
+    """Устанавливает uv - быстрый установщик пакетов Python"""
+    print(_i18n("installing_uv"))
+    result = subprocess.run([sys.executable, "-m", "pip", "install", "uv"])
+    if result.returncode == 0:
+        print(_i18n("uv_installed"))
+    else:
+        print(_i18n("uv_install_error"))
+
+
+def install_requirements(requirements: List[str], force: bool = False, index_url: Optional[str] = None) -> None:
+    """
+    Устанавливает зависимости
+    
+    Args:
+        requirements: Список зависимостей
+        force: Принудительная установка
+        index_url: URL индекса пакетов
+    """
+    if not requirements:
+        return
+        
+    cmd = [sys.executable, "-m", "uv", "pip", "install", "--no-cache-dir", "-qq"]
+    
+    if force:
+        cmd.append("--upgrade")
+        cmd.append("--force-reinstall")
+        
+    if index_url:
+        cmd.extend(["--index-url", index_url])
+        
+    for pkg in requirements:
+        cmd.append(pkg)
+        
+    result = subprocess.run(cmd)
+    
+    if result.returncode != 0:
+        print(_i18n("requirements_install_error", count=len(requirements)))
+
+
+# Списки зависимостей
+torch_requirements: List[str] = [
     "torch",
     "torchvision",
     "torchaudio",
     "torchcrepe",
 ]
 
-universal_requirements = [
+universal_requirements: List[str] = [
     "numpy==2.0.2",
     "pandas",
     "scipy",
@@ -188,14 +263,14 @@ universal_requirements = [
     "gdown"
 ]
 
-torch_old_requirements = [
+torch_old_requirements: List[str] = [
     "torch==1.13.1",
     "torchvision==0.14.1",
     "torchaudio==0.13.1",
     "torchcrepe==0.0.24",
 ]
 
-old_requirements = [
+old_requirements: List[str] = [
     "numpy==1.26.4",
     "pandas==2.3.3",
     "scipy==1.15.3",
@@ -245,26 +320,37 @@ old_requirements = [
     "gdown"
 ]
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Установщик зависимостей")
-    parser.add_argument("--old", action="store_true", help="Старые зависимости (только python 3.10)")
-    parser.add_argument("--force", action="store_true", help="Принудительная установка")
-    parser.add_argument("--index_url", type=str, default=None, help="Ссылка на индекс (только torch)")
+    parser = argparse.ArgumentParser(description=_i18n("installer_description"))
+    parser.add_argument("--old", action="store_true", help=_i18n("old_deps_help"))
+    parser.add_argument("--force", action="store_true", help=_i18n("force_install_help"))
+    parser.add_argument("--index_url", type=str, default=None, help=_i18n("index_url_help"))
     args = parser.parse_args()
+    
     if args.old:
         torch_reqs = torch_old_requirements
         reqs = old_requirements
+        print(_i18n("installing_old_deps"))
     else:
         torch_reqs = torch_requirements
         reqs = universal_requirements
         if fno_compitable(args.index_url):
             reqs.append("neuraloperator==1.0.2")
+            print(_i18n("fno_compatible_detected"))
+            
     if args.force:
-        print("Предупреждение! Зависимости устанавливаются принудительно")
+        print(_i18n("force_install_warning"))
+        
     install_uv()
-    print("Установка torch...")
+    
+    print(_i18n("installing_torch"))
     install_requirements(torch_reqs, force=args.force, index_url=args.index_url)
-    print("Установка остальных зависимостей...")
+    
+    print(_i18n("installing_other_deps"))
     install_requirements(reqs, force=args.force)
+    
+    print(_i18n("installing_setuptools"))
     install_requirements(["setuptools<76.0"], force=True)
-    print("Все зависимости установлены")
+    
+    print(_i18n("installation_complete"))

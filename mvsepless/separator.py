@@ -1,30 +1,57 @@
-import os, sys, json, subprocess, argparse, gradio as gr, yaml
+import os
+import sys
+import json
+import subprocess
+import argparse
+import gradio as gr
+import yaml
 import numpy as np
 import tempfile
 import shutil
 import traceback
 import torch
 from packaging import version
-script_dir = os.path.dirname(os.path.abspath(__file__))
-env = os.environ.copy()
+from typing import List, Tuple, Optional, Union, Dict, Any, Callable
+from pathlib import Path
+
+script_dir: str = os.path.dirname(os.path.abspath(__file__))
+env: Dict[str, str] = os.environ.copy()
 env['PYTHONPATH'] = script_dir
+
 from gradio_helper import dw_file, all_ids, set_device, cuda_available
 from audio import check, output_formats, multiread, write, ensemble, read, subtractor, split_mid_side, get_duration_from_array
 from namer import Namer
-is_pytorch2 = version.parse(torch.__version__) >= version.parse("2.0.0")
-is_pytorch2_4 = version.parse(torch.__version__) >= version.parse("2.4.0")
-unsupported_models = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not is_pytorch2_4 else []
-MVSEPLESS_ECONOM = not cuda_available
-MVSEPLESS_ECONOM_SEGMENT = int(os.environ.get("MVSEPLESS_ECO_SEG", "7"))
+from i18n import _i18n, CURRENT_LANGUAGE, set_language
 
-def get_files_from_list(input: list, only_files: bool = False):
-    input_list = []
-    for path in input:
+is_pytorch2: bool = version.parse(torch.__version__) >= version.parse("2.0.0")
+is_pytorch2_4: bool = version.parse(torch.__version__) >= version.parse("2.4.0")
+unsupported_models: List[str] = ["bs_inst_fno_unwa", "mbr_wsa"] if not is_pytorch2 else ["bs_inst_fno_unwa"] if not is_pytorch2_4 else []
+MVSEPLESS_ECONOM: bool = not cuda_available
+MVSEPLESS_ECONOM_SEGMENT: int = int(os.environ.get("MVSEPLESS_ECO_SEG", "7"))
+
+
+def get_files_from_list(input_paths: Union[str, List[str]], only_files: bool = False) -> List[str]:
+    """
+    Получить список аудиофайлов из переданных путей
+    
+    Args:
+        input_paths: Путь к файлу или директории или список путей
+        only_files: Только файлы (не рекурсивно)
+    
+    Returns:
+        Список путей к аудиофайлам
+    """
+    input_list: List[str] = []
+    
+    if isinstance(input_paths, str):
+        input_paths = [input_paths]
+    
+    for path in input_paths:
         if os.path.isdir(path):
             if not only_files:
                 for root, dirs, files in os.walk(path):
                     for file in files:
-                        full_path = os.path.join(root, file)
+                        full_path: str = os.path.join(root, file)
                         if check(full_path):
                             input_list.append(full_path)
         elif os.path.isfile(path):
@@ -34,233 +61,453 @@ def get_files_from_list(input: list, only_files: bool = False):
             pass
     return input_list
 
-def format_end_count_models(count: int):
-    if count % 10 == 1 and count % 100 != 11:
-        return "ь"  # 1 модель, 21 модель, 101 модель
-    elif (count % 10 in [2, 3, 4]) and (count % 100 not in [12, 13, 14]):
-        return "и"  # 2-4 модели, 22-24 модели
+
+def format_end_count_models(count: int) -> str:
+    """
+    Форматирование окончания для слова "модель" в зависимости от числа
+    
+    Args:
+        count: Количество моделей
+    
+    Returns:
+        Окончание слова
+    """
+    if CURRENT_LANGUAGE == "ru":
+        if count % 10 == 1 and count % 100 != 11:
+            return "ь"  # 1 модель, 21 модель, 101 модель
+        elif (count % 10 in [2, 3, 4]) and (count % 100 not in [12, 13, 14]):
+            return "и"  # 2-4 модели, 22-24 модели
+        else:
+            return "ей"  # 5-20 моделей, 25-30 моделей и т.д.
     else:
-        return "ей"  # 5-20 моделей, 25-30 моделей и т.д.
+        return "s" if count != 1 else ""
+
 
 class MvseplessModelManager:
+    """Менеджер моделей для MVSepless"""
+    
     def __init__(
         self,
-        models_info_path=os.path.join(script_dir, "models.json"),
-        cache_dir=os.path.join(script_dir, "mvsepless_models_cache"),
-    ):
-        self.models_cache_dir = cache_dir
-        self.models_info_path = models_info_path
+        models_info_path: str = os.path.join(script_dir, "models.json"),
+        cache_dir: str = os.path.join(script_dir, "mvsepless_models_cache"),
+    ) -> None:
+        """
+        Инициализация менеджера моделей
+        
+        Args:
+            models_info_path: Путь к файлу с информацией о моделях
+            cache_dir: Директория для кэша моделей
+        """
+        self.models_cache_dir: str = cache_dir
+        self.models_info_path: str = models_info_path
+        
         with open(self.models_info_path, "r", encoding="utf-8") as f:
-            models_info = json.load(f)
-        self.models_info = models_info
+            models_info: Dict = json.load(f)
+        self.models_info: Dict = models_info
 
-    def get_mt(self, model_name):
-        return self.models_info.get(model_name).get("model_type")
+    def get_mt(self, model_name: str) -> str:
+        """
+        Получить тип модели
+        
+        Args:
+            model_name: Имя модели
+        
+        Returns:
+            Тип модели
+        """
+        return self.models_info.get(model_name, {}).get("model_type", "")
 
-    def get_mn(self):
+    def get_mn(self) -> List[str]:
+        """
+        Получить список всех доступных моделей
+        
+        Returns:
+            Список имен моделей
+        """
         return [mn for mn in self.models_info if mn not in unsupported_models]
 
-    def get_stems(self, model_name):
+    def get_stems(self, model_name: Optional[str]) -> List[str]:
+        """
+        Получить список стемов для модели
+        
+        Args:
+            model_name: Имя модели
+        
+        Returns:
+            Список стемов
+        """
         if model_name is not None and model_name != "":
             return [
                 stem
                 for stem in self.models_info
-                .get(model_name)
+                .get(model_name, {})
                 .get("stems", [])
             ]
         else:
             return []
         
-    def get_id(self, model_name):
+    def get_id(self, model_name: str) -> int:
+        """
+        Получить ID модели
+        
+        Args:
+            model_name: Имя модели
+        
+        Returns:
+            ID модели
+        """
         if model_name is not None and model_name != "":
-            return self.models_info.get(model_name).get("id", 0)
+            return self.models_info.get(model_name, {}).get("id", 0)
         else:
             return 0
 
-    def get_tgt_inst(self, model_name):
+    def get_tgt_inst(self, model_name: str) -> Optional[str]:
+        """
+        Получить целевой инструмент модели
+        
+        Args:
+            model_name: Имя модели
+        
+        Returns:
+            Название целевого инструмента или None
+        """
         if model_name is not None and model_name != "":
             return (
                 self.models_info
-                .get(model_name)
+                .get(model_name, {})
                 .get("target_instrument", None)
             )
         else:
             return None
 
-    def get_category(self, model_name):
+    def get_category(self, model_name: str) -> str:
+        """
+        Получить категорию модели
+        
+        Args:
+            model_name: Имя модели
+        
+        Returns:
+            Категория модели
+        """
         if model_name is not None and model_name != "":
-            return self.models_info.get(model_name).get("category", "")
+            return self.models_info.get(model_name, {}).get("category", "")
         else:
             return ""
 
-    def calculate_dimensions(self, chunk_size, hop_length=441):
-        # Находим dim_t
-        dim_t = (chunk_size // hop_length) + 1
+    def calculate_dimensions(self, chunk_size: int, hop_length: int = 441) -> Tuple[int, int]:
+        """
+        Рассчитать размерности для чанка
         
-        # Проверяем, чтобы chunk_size был кратен hop_length для идеального совмещения
-        actual_chunk_size = (dim_t - 1) * hop_length
+        Args:
+            chunk_size: Размер чанка
+            hop_length: Длина шага
         
+        Returns:
+            Кортеж (dim_t, actual_chunk_size)
+        """
+        dim_t: int = (chunk_size // hop_length) + 1
+        actual_chunk_size: int = (dim_t - 1) * hop_length
         return dim_t, actual_chunk_size
 
-    def generate_econom_params(self, sr=44100, seconds=MVSEPLESS_ECONOM_SEGMENT, hop_length=441):
-        chunk_size = sr * seconds
+    def generate_econom_params(self, sr: int = 44100, seconds: int = MVSEPLESS_ECONOM_SEGMENT, hop_length: int = 441) -> Tuple[int, int]:
+        """
+        Сгенерировать параметры для эконом-режима
+        
+        Args:
+            sr: Частота дискретизации
+            seconds: Длительность в секундах
+            hop_length: Длина шага
+        
+        Returns:
+            Кортеж (dim_t, chunk_size)
+        """
+        chunk_size: int = sr * seconds
         dim_t, chunk_size = self.calculate_dimensions(chunk_size, hop_length)
         return dim_t, chunk_size
 
-    def get_list_supported_models(self, limit: None | int = None, stem: None | str = None, model_types: None | list = None, category: None | list = None, only_installed: bool = False):
-        models = self.get_list_mn_from_category(category, model_types)
+    def get_list_supported_models(
+        self, 
+        limit: Optional[int] = None, 
+        stem: Optional[str] = None, 
+        model_types: Optional[List[str]] = None, 
+        category: Optional[List[str]] = None, 
+        only_installed: bool = False
+    ) -> None:
+        """
+        Вывести список поддерживаемых моделей с фильтрацией
+        
+        Args:
+            limit: Ограничение количества
+            stem: Фильтр по стему
+            model_types: Фильтр по типам моделей
+            category: Фильтр по категориям
+            only_installed: Только установленные модели
+        """
+        models: List[str] = self.get_list_mn_from_category(category, model_types)
         if not models:
             return
-        installed_models = [model for model in models if self.install_model(model, only_check=True)]
+            
+        installed_models: List[str] = [model for model in models if self.install_model(model, only_check=True)]
+        
         if stem and stem != "":
-            models = [model for model in models if (stem in self.get_stems(model) or stem.lower() in self.get_stems(model) or stem.upper() in self.get_stems(model) or stem.capitalize() in self.get_stems(model) or stem.title() in self.get_stems(model))]
+            models = [
+                model for model in models 
+                if (stem in self.get_stems(model) or 
+                    stem.lower() in self.get_stems(model) or 
+                    stem.upper() in self.get_stems(model) or 
+                    stem.capitalize() in self.get_stems(model) or 
+                    stem.title() in self.get_stems(model))
+            ]
+        
         if limit:
             models = models[:limit]
-        f_key, s_key = "Имя модели", "Выходные стемы"
+            
+        f_key: str = _i18n("model_name")
+        s_key: str = _i18n("output_stems")
 
-        filename_width = max(len(f_key), max(len(model) for model in models)) + 2
-        stems_width = max(len(s_key), max(len(", ".join(self.get_stems(model))) for model in models)) + 1
+        filename_width: int = max(len(f_key), max(len(model) for model in models)) + 2
+        stems_width: int = max(len(s_key), max(len(", ".join(self.get_stems(model))) for model in models)) + 1
+        
         print("|-", "-" * filename_width, "---", "-" * stems_width, "-|", sep="")
 
         if only_installed:
-            print(f"| {f'[Установленные модели]':<{filename_width + stems_width}}    |")
+            print(f"| {_i18n('installed_models'):<{filename_width + stems_width}}    |")
         else:
-            print(f"| {f'✔ - установлено':<{filename_width + stems_width}}    |")
-        print(f"| {f'* - целевой стем':<{filename_width + stems_width}}    |")
+            print(f"| {_i18n('installed_marker'):<{filename_width + stems_width}}    |")
+        print(f"| {_i18n('target_stem_marker'):<{filename_width + stems_width}}    |")
         print("|-", "-" * filename_width, "---", "-" * stems_width, "-|", sep="")
+        
         if category:
-            print(f"| {f'Категории:':<{filename_width + stems_width}}    |")
+            print(f"| {_i18n('categories')}:{'':<{filename_width + stems_width - len(_i18n('categories')) - 2}}     |")
             for c in category:
-                print(f"| {f'  - {c}':<{filename_width + stems_width}}    |")
+                print(f"|  - {c:<{filename_width + stems_width - 4}}     |")
         else:
-            print(f"| {f'Категории: Все':<{filename_width + stems_width}}    |")
+            print(f"| {_i18n('categories_all')}:{'':<{filename_width + stems_width - len(_i18n('categories_all')) - 2}}     |")
 
         if model_types:
-            print(f"| {f'Типы моделей:':<{filename_width + stems_width}}    |")
+            print(f"| {_i18n('model_types')}:{'':<{filename_width + stems_width - len(_i18n('model_types')) - 2}}     |")
             for mt_ in model_types:
-                print(f"| {f'  - {mt_}':<{filename_width + stems_width}}    |")
+                print(f"|  - {mt_:<{filename_width + stems_width - 4}}     |")
         else:
-            print(f"| {f'Типы моделей: Все':<{filename_width + stems_width}}    |")
+            print(f"| {_i18n('model_types_all')}:{'':<{filename_width + stems_width - len(_i18n('model_types_all')) - 2}}     |")
 
         if stem and stem != "":
-             print(f"| {f'Выбранный стем: {stem}':<{filename_width + stems_width}}    |")
+             print(f"| {_i18n('selected_stem')}: {stem:<{filename_width + stems_width - len(_i18n('selected_stem')) - 3}}     |")
+             
         print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
         print(f"| {f_key:<{filename_width}} | {s_key:<{stems_width}} |")
         print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
+        
         if only_installed:
             if installed_models:
                 for model in installed_models:
-                    stems = ", ".join([_st+'*' if _st == self.get_tgt_inst(model) else _st for _st in self.get_stems(model)])
-                    print(f"| {model:<{filename_width}} | {stems:<{stems_width}} |")
+                    stems_list: List[str] = self.get_stems(model)
+                    stems_str: str = ", ".join([
+                        _stem + '*' if _stem == self.get_tgt_inst(model) else _stem 
+                        for _stem in stems_list
+                    ])
+                    print(f"| {model:<{filename_width}} | {stems_str:<{stems_width}} |")
                     print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
             else:
-                print(f"| {'н/д':<{filename_width}} | {'н/д':<{stems_width}} |")
+                print(f"| {'n/a':<{filename_width}} | {'n/a':<{stems_width}} |")
                 print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
         else:
             if models:
                 for model in models:
-                    stems = ", ".join([_st+'*' if _st == self.get_tgt_inst(model) else _st for _st in self.get_stems(model)])
+                    stems_list: List[str] = self.get_stems(model)
+                    stems_str: str = ", ".join([
+                        _stem + '*' if _stem == self.get_tgt_inst(model) else _stem 
+                        for _stem in stems_list
+                    ])
                     if model in installed_models:
-                        print(f"| {f'{model} ✔':<{filename_width}} | {stems:<{stems_width}} |")
+                        print(f"| {model} {_i18n('installed')}:{'':<{filename_width - len(model) - 2}} | {stems_str:<{stems_width}} |")
                     else:
-                        print(f"| {model:<{filename_width}} | {stems:<{stems_width}} |")
+                        print(f"| {model:<{filename_width}} | {stems_str:<{stems_width}} |")
                     print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
             else:
-                print(f"| {'н/д':<{filename_width}} | {'н/д':<{stems_width}} |")
+                print(f"| {'n/a':<{filename_width}} | {'n/a':<{stems_width}} |")
                 print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
 
-    def get_list_mn_from_category(self, category: list | str, model_type: list | None = None):
-        list_models = []
-        categories = []
+    def get_list_mn_from_category(
+        self, 
+        category: Optional[Union[str, List[str]]] = None, 
+        model_type: Optional[List[str]] = None
+    ) -> List[str]:
+        """
+        Получить список моделей по категориям и типам
+        
+        Args:
+            category: Категория или список категорий
+            model_type: Список типов моделей
+        
+        Returns:
+            Список имен моделей
+        """
+        list_models: List[str] = []
+        categories: List[str] = []
+        
         if category:
             if isinstance(category, str) and category != "":
                 categories.append(category)
             elif isinstance(category, list):
                 categories.extend(category)
+                
             if categories:
                 if not model_type:
-                    list_models = [model for model in self.get_mn() if self.get_category(model) in category]
+                    list_models = [
+                        model for model in self.get_mn() 
+                        if self.get_category(model) in category
+                    ]
                 else:
-                    list_models = [model for model in self.get_mn() if self.get_category(model) in category and self.get_mt(model) in model_type]
+                    list_models = [
+                        model for model in self.get_mn() 
+                        if self.get_category(model) in category and self.get_mt(model) in model_type
+                    ]
             else:
                 if not model_type:
                     list_models = [model for model in self.get_mn()]
                 else:
-                    list_models = [model for model in self.get_mn() if self.get_mt(model) in model_type]
+                    list_models = [
+                        model for model in self.get_mn() 
+                        if self.get_mt(model) in model_type
+                    ]
         else:
             if not model_type:
                 list_models = [model for model in self.get_mn()]
             else:
-                list_models = [model for model in self.get_mn() if self.get_mt(model) in model_type]
+                list_models = [
+                    model for model in self.get_mn() 
+                    if self.get_mt(model) in model_type
+                ]
+                
         return list_models
 
-    def get_list_categories(self):
-        categories = self.get_categories()
-        categories_with_count_models = [[cat__, len([m__ for m__ in self.get_mn() if self.get_category(m__) == cat__])] for cat__ in categories]
-        f_key, s_key = "Категории:", " ({count} модел{end})"
-        category_width = max(len(f_key), max(len(c_) for c_ in categories))
-        models_count_width = max([len(_c1+s_key.format(count=_n, end=format_end_count_models(_n))) for (_c1, _n) in categories_with_count_models])
+    def get_list_categories(self) -> None:
+        """Вывести список категорий моделей"""
+        categories: List[str] = self.get_categories()
+        categories_with_count: List[List[Union[str, int]]] = [
+            [cat__, len([m__ for m__ in self.get_mn() if self.get_category(m__) == cat__])] 
+            for cat__ in categories
+        ]
+        
+        f_key: str = _i18n("categories")
+        s_key: str = _i18n("models_count")
+        
+        category_width: int = max(len(f_key), max(len(c_) for c_ in categories))
+        models_count_width: int = max([
+            len(_c1 + " " + s_key.format(count=_n, end=format_end_count_models(_n))) 
+            for (_c1, _n) in categories_with_count
+        ])
+        
         print("|-", "-" * models_count_width, "-|", sep="")
         print(f"| {f_key:<{models_count_width}} |")
         print("|-", "-" * models_count_width, "-|", sep="")
-        if categories_with_count_models:
-            for (cat_, num_) in categories_with_count_models:
-                print(f"| {cat_+s_key.format(count=num_, end=format_end_count_models(num_)):<{models_count_width}} |")
+        
+        if categories_with_count:
+            for (cat_, num_) in categories_with_count:
+                print(f"| {cat_} ({num_} {_i18n('model')}{format_end_count_models(num_)}):{'':<{models_count_width - len(cat_) - len(str(num_)) - 5}} |")
                 print("|-", "-" * models_count_width, "-|", sep="")
         else:
-            print(f"| {'н/д':<{models_count_width}} |")
+            print(f"| {'n/a':<{models_count_width}} |")
             print("|-", "-" * models_count_width, "-|", sep="")
 
-    def get_list_model_types(self):
-        mtypes = self.get_model_types()
-        mtypes_with_count_models = [[mt__, len([m__ for m__ in self.get_mn() if self.get_mt(m__) == mt__])] for mt__ in mtypes]
-        f_key, s_key = "Типы моделей:", " ({count} модел{end})"
-        mtype_width = max(len(f_key), max([len(c_) for c_ in mtypes]))
-        models_count_width = max([len(_c1+s_key.format(count=_n, end=format_end_count_models(_n))) for (_c1, _n) in mtypes_with_count_models])
+    def get_list_model_types(self) -> None:
+        """Вывести список типов моделей"""
+        mtypes: List[str] = self.get_model_types()
+        mtypes_with_count: List[List[Union[str, int]]] = [
+            [mt__, len([m__ for m__ in self.get_mn() if self.get_mt(m__) == mt__])] 
+            for mt__ in mtypes
+        ]
+        
+        f_key: str = _i18n("model_types")
+        s_key: str = _i18n("models_count")
+        
+        mtype_width: int = max(len(f_key), max([len(c_) for c_ in mtypes]))
+        models_count_width: int = max([
+            len(_c1 + " " + s_key.format(count=_n, end=format_end_count_models(_n))) 
+            for (_c1, _n) in mtypes_with_count
+        ])
+        
         print("|-", "-" * models_count_width, "-|", sep="")
         print(f"| {f_key:<{models_count_width}} |")
         print("|-", "-" * models_count_width, "-|", sep="")
-        if mtypes_with_count_models:
-            for (mt_, num_) in mtypes_with_count_models:
-                print(f"| {mt_+s_key.format(count=num_, end=format_end_count_models(num_)):<{models_count_width}} |")
+        
+        if mtypes_with_count:
+            for (mt_, num_) in mtypes_with_count:
+                print(f"| {mt_} ({num_} {_i18n('model')}{format_end_count_models(num_)}):{'':<{models_count_width - len(mt_) - len(str(num_)) - 5}} |")
                 print("|-", "-" * models_count_width, "-|", sep="")
         else:
-            print(f"| {'н/д':<{models_count_width}} |")
+            print(f"| {'n/a':<{models_count_width}} |")
             print("|-", "-" * models_count_width, "-|", sep="")
 
-    def get_categories(self):
-        categories = []
+    def get_categories(self) -> List[str]:
+        """
+        Получить список всех категорий
+        
+        Returns:
+            Список категорий
+        """
+        categories: List[str] = []
         for model in self.get_mn():
-            c_ = self.get_category(model)
-            if c_ not in categories:
+            c_: str = self.get_category(model)
+            if c_ and c_ not in categories:
                 categories.append(c_)
         return categories
     
-    def get_model_types(self):
-        model_types = []
+    def get_model_types(self) -> List[str]:
+        """
+        Получить список всех типов моделей
+        
+        Returns:
+            Список типов моделей
+        """
+        model_types: List[str] = []
         for model in self.get_mn():
-            mt_ = self.get_mt(model)
-            if mt_ not in model_types:
+            mt_: str = self.get_mt(model)
+            if mt_ and mt_ not in model_types:
                 model_types.append(mt_)
         return model_types
 
-    def download_model(self, model_paths, model_name, model_type, ckpt_url, conf_url, only_check_exists=False):
-        model_dir = os.path.join(model_paths, model_type)
+    def download_model(
+        self, 
+        model_paths: str, 
+        model_name: str, 
+        model_type: str, 
+        ckpt_url: str, 
+        conf_url: str, 
+        only_check_exists: bool = False
+    ) -> Union[bool, Tuple[str, str]]:
+        """
+        Скачать модель
+        
+        Args:
+            model_paths: Путь для сохранения модели
+            model_name: Имя модели
+            model_type: Тип модели
+            ckpt_url: URL чекпоинта
+            conf_url: URL конфига
+            only_check_exists: Только проверить существование
+        
+        Returns:
+            True если только проверка, иначе кортеж (config_path, checkpoint_path)
+        """
+        model_dir: str = os.path.join(model_paths, model_type)
         os.makedirs(model_dir, exist_ok=True)
 
-        config_path = os.path.join(model_dir, f"{model_name}_config.yaml")
-        checkpoint_path = os.path.join(
+        config_path: str = os.path.join(model_dir, f"{model_name}_config.yaml")
+        checkpoint_path: str = os.path.join(
             model_dir,
             f"{model_name}.onnx" if model_type == "mdxnet" else f"{model_name}.ckpt",
         )
 
         if config_path is None or checkpoint_path is None:
-            raise RuntimeError()
+            raise RuntimeError(_i18n("model_paths_error"))
 
         if os.path.exists(checkpoint_path) and os.path.exists(config_path):
             if (
                 os.path.getsize(checkpoint_path) == 0
-                or os.path.getsize(checkpoint_path) == 0
+                or os.path.getsize(config_path) == 0
             ):
                 if only_check_exists:
                     return False
@@ -283,18 +530,38 @@ class MvseplessModelManager:
                     (config_path, conf_url),
                 ]:
                     if not os.path.exists(local_path):
-
                         dw_file(url_model, local_path)
 
         return config_path, checkpoint_path
 
-    def conf_editor(self, config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type, econom_mode):
+    def conf_editor(
+        self, 
+        config_path: str, 
+        mdx_denoise: bool, 
+        vr_aggr: int, 
+        vr_enable_post_process: bool, 
+        vr_high_end_process: bool, 
+        model_type: str, 
+        econom_mode: bool
+    ) -> None:
+        """
+        Редактирование конфигурации модели
+        
+        Args:
+            config_path: Путь к конфигу
+            mdx_denoise: Шумоподавление для MDX
+            vr_aggr: Агрессивность для VR
+            vr_enable_post_process: Постобработка для VR
+            vr_high_end_process: Обработка высоких частот для VR
+            model_type: Тип модели
+            econom_mode: Эконом-режим
+        """
 
         class IndentDumper(yaml.Dumper):
-            def increase_indent(self, flow=False, indentless=False):
+            def increase_indent(self, flow: bool = False, indentless: bool = False) -> str:
                 return super(IndentDumper, self).increase_indent(flow, False)
 
-        def tuple_constructor(loader, node):
+        def tuple_constructor(loader: yaml.Loader, node: yaml.Node) -> tuple:
             values = loader.construct_sequence(node)
             return tuple(values)
 
@@ -302,51 +569,73 @@ class MvseplessModelManager:
             "tag:yaml.org,2002:python/tuple", tuple_constructor
         )
 
-        def conf_edit(config_path: str, mdx_denoise: bool, vr_aggr: int, vr_enable_post_process: bool, vr_high_end_process: bool, model_type: str, econom_mode: bool):
+        def conf_edit(
+            config_path: str, 
+            mdx_denoise: bool, 
+            vr_aggr: int, 
+            vr_enable_post_process: bool, 
+            vr_high_end_process: bool, 
+            model_type: str, 
+            econom_mode: bool
+        ) -> None:
             with open(config_path, "r") as f:
-                data = yaml.load(f, Loader=yaml.SafeLoader)
+                data: Dict = yaml.load(f, Loader=yaml.SafeLoader)
 
             if "use_amp" not in data.keys():
+                if "training" not in data:
+                    data["training"] = {}
                 data["training"]["use_amp"] = True
 
             if model_type not in ["vr", "htdemucs"]:
-                if data["inference"]["num_overlap"] != 2:
+                if "inference" not in data:
+                    data["inference"] = {}
+                if data["inference"].get("num_overlap") != 2:
                     data["inference"]["num_overlap"] = 2
 
-            if data["inference"]["batch_size"] != 1:
+            if "inference" in data and data["inference"].get("batch_size") != 1:
                 data["inference"]["batch_size"] = 1
 
             if model_type == "mdxnet":
+                if "inference" not in data:
+                    data["inference"] = {}
                 data["inference"]["denoise"] = mdx_denoise
 
             elif model_type == "vr":
+                if "inference" not in data:
+                    data["inference"] = {}
                 data["inference"]["aggression"] = vr_aggr
                 data["inference"]["enable_post_process"] = vr_enable_post_process
                 data["inference"]["high_end_process"] = vr_high_end_process
 
             if econom_mode:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
-                    old_chunk_size = data["audio"]["chunk_size"]
-                    hop_length = data["audio"]["hop_length"]
+                    if "audio" not in data:
+                        data["audio"] = {}
+                    old_chunk_size: int = data["audio"].get("chunk_size", 0)
+                    hop_length: int = data["audio"].get("hop_length", 441)
                     dim_t, new_chunk_size = self.generate_econom_params(hop_length=hop_length)
                     if old_chunk_size >= new_chunk_size:
-                        print(f"Для экономии ресурсов размер чанка был изменен на {new_chunk_size}")
+                        print(_i18n("economy_chunk_resize", new_size=new_chunk_size))
                         data["audio"]["new_chunk_size"] = new_chunk_size
                         data["audio"]["new_dim_t"] = dim_t
                 elif model_type in ["htdemucs"]:
-                    old_segment = data["training"]["segment"]
+                    if "training" not in data:
+                        data["training"] = {}
+                    old_segment: int = data["training"].get("segment", 0)
                     if old_segment >= MVSEPLESS_ECONOM_SEGMENT:
-                        print(f"Для экономии ресурсов размер сегмента был изменен на {MVSEPLESS_ECONOM_SEGMENT}")
+                        print(_i18n("economy_segment_resize", new_segment=MVSEPLESS_ECONOM_SEGMENT))
                         data["training"]["new_segment"] = MVSEPLESS_ECONOM_SEGMENT
             else:
                 if model_type in ["mel_band_roformer", "bs_roformer"]:
-                    if "new_chunk_size" in data["audio"]:
-                        del data["audio"]["new_chunk_size"]
-                    if "new_dim_t" in data["audio"]:
-                        del data["audio"]["new_dim_t"]
+                    if "audio" in data:
+                        if "new_chunk_size" in data["audio"]:
+                            del data["audio"]["new_chunk_size"]
+                        if "new_dim_t" in data["audio"]:
+                            del data["audio"]["new_dim_t"]
                 elif model_type in ["htdemucs"]:
-                    if "new_segment" in data["training"]:
-                        del data["training"]["new_segment"]
+                    if "training" in data:
+                        if "new_segment" in data["training"]:
+                            del data["training"]["new_segment"]
 
             with open(config_path, "w") as f:
                 yaml.dump(
@@ -358,27 +647,52 @@ class MvseplessModelManager:
                     allow_unicode=True,
                 )
 
-        conf_edit(config_path, mdx_denoise, vr_aggr, vr_enable_post_process, vr_high_end_process, model_type, econom_mode)
+        conf_edit(
+            config_path, 
+            mdx_denoise, 
+            vr_aggr, 
+            vr_enable_post_process, 
+            vr_high_end_process, 
+            model_type, 
+            econom_mode
+        )
 
     def install_model(
         self,
         model_name: str,
         mdx_denoise: bool = False,
-        vr_aggr: bool = 5,
+        vr_aggr: int = 5,
         vr_post_process: bool = False,
         vr_high_end_process: bool = False,
         econom_mode: bool = False,
         only_check: bool = False,
-        progress: any = None,
-    ) -> tuple[int, str, str, str] | bool:
-
-        info = self.models_info.get(model_name, None)
+        progress: Optional[gr.Progress] = None,
+    ) -> Union[bool, Tuple[int, str, str, str]]:
+        """
+        Установить модель
+        
+        Args:
+            model_name: Имя модели
+            mdx_denoise: Шумоподавление для MDX
+            vr_aggr: Агрессивность для VR
+            vr_post_process: Постобработка для VR
+            vr_high_end_process: Обработка высоких частот для VR
+            econom_mode: Эконом-режим
+            only_check: Только проверить наличие
+            progress: Прогресс
+        
+        Returns:
+            True если только проверка, иначе кортеж (id, conf, ckpt, model_type)
+        """
+        info: Optional[Dict] = self.models_info.get(model_name, None)
         if not info:
             raise ValueError(
-                f"Модель {model_name} не найдена"
+                _i18n("model_not_found", model=model_name)
             )
-        id = self.get_id(model_name)
-        model_type = self.get_mt(model_name)
+            
+        id: int = self.get_id(model_name)
+        model_type: str = self.get_mt(model_name)
+        
         result = self.download_model(
             model_paths=self.models_cache_dir,
             model_name=model_name,
@@ -387,167 +701,218 @@ class MvseplessModelManager:
             conf_url=info["config_url"],
             only_check_exists=only_check
         )
+        
         if isinstance(result, tuple):
             conf, ckpt = result[0], result[1]
-            self.conf_editor(conf, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, model_type, econom_mode)
+            self.conf_editor(
+                conf, 
+                mdx_denoise, 
+                vr_aggr, 
+                vr_post_process, 
+                vr_high_end_process, 
+                model_type, 
+                econom_mode
+            )
             return id, conf, ckpt, model_type
         elif isinstance(result, bool):
             return result
+        else:
+            return False
     
-    def get_mn_dwloaded(self):
+    def get_mn_dwloaded(self) -> List[str]:
+        """
+        Получить список установленных моделей
+        
+        Returns:
+            Список имен установленных моделей
+        """
         return [model for model in self.get_mn() if self.install_model(model, only_check=True)]
 
-class Separator(MvseplessModelManager):
 
-    def __init__(self, chunk_duration: float = 300):
+class Separator(MvseplessModelManager):
+    """Основной класс для разделения аудио"""
+    
+    def __init__(self, chunk_duration: float = 300) -> None:
+        """
+        Инициализация разделителя
+        
+        Args:
+            chunk_duration: Длительность чанка в секундах
+        """
         super().__init__()
-        self.device = set_device(0)
-        self.chunk_duration = chunk_duration
-        self.ensemble_methods = ("min_fft", "max_fft", "avg_fft", "median_fft")
-        self.methods_subtract = ("waveform", "spectrogram")
-        self.ensemble_invert_methods_map = {
+        self.device: str = set_device(0)
+        self.chunk_duration: float = chunk_duration
+        self.ensemble_methods: Tuple[str, ...] = ("min_fft", "max_fft", "avg_fft", "median_fft")
+        self.methods_subtract: Tuple[str, ...] = ("waveform", "spectrogram")
+        self.ensemble_invert_methods_map: Dict[str, str] = {
             "min_fft": "max_fft",
             "max_fft": "min_fft",
             "avg_fft": "avg_fft",
             "median_fft": "median_fft",
         }
-        self.namer = Namer()
+        self.namer: Namer = Namer()
 
-    def check_duration_audio(self, path):
+    def check_duration_audio(self, path: str) -> bool:
+        """
+        Проверить длительность аудио
+        
+        Args:
+            path: Путь к аудиофайлу
+        
+        Returns:
+            True если длительность превышает chunk_duration
+        """
         mixture, sr = read(path, sr=16000, mono=True, dtype="int8", flatten=True)
-        duration = get_duration_from_array(mixture, sr)
+        duration: float = get_duration_from_array(mixture, sr)
         del mixture, sr
         if self.chunk_duration:
             return duration > self.chunk_duration
         return False
 
     def chunk_wise_processing(
-        self, 
-        path, 
-        output_dir, 
-        model_type, 
-        model_name, 
-        ext_inst, 
-        output_format, 
-        output_bitrate, 
-        template,
-        selected_stems,
-        ckpt,
-        conf,
-        id,
-        progress,
-        use_spec_invert,
-        add_text_progress,
-    ):
-        print("Обрезка аудио на чанки с минимальным перекрытием...")
-        temp_dir = tempfile.mkdtemp()
+        self,
+        path: str,
+        output_dir: str,
+        model_type: str,
+        model_name: str,
+        ext_inst: bool,
+        output_format: str,
+        output_bitrate: str,
+        template: str,
+        selected_stems: List[str],
+        ckpt: str,
+        conf: str,
+        id: int,
+        progress: gr.Progress,
+        use_spec_invert: bool,
+        add_text_progress: str,
+    ) -> List[Tuple[str, str]]:
+        """
+        Обработка длинного аудио по частям
+        
+        Args:
+            path: Путь к аудиофайлу
+            output_dir: Директория для вывода
+            model_type: Тип модели
+            model_name: Имя модели
+            ext_inst: Извлечь инструментал
+            output_format: Формат вывода
+            output_bitrate: Битрейт
+            template: Шаблон имени
+            selected_stems: Выбранные стемы
+            ckpt: Путь к чекпоинту
+            conf: Путь к конфигу
+            id: ID модели
+            progress: Прогресс
+            use_spec_invert: Использовать инверсию спектрограммы
+            add_text_progress: Дополнительный текст прогресса
+        
+        Returns:
+            Список кортежей (имя стема, путь к файлу)
+        """
+        print(_i18n("msg_trimming"))
+        temp_dir: str = tempfile.mkdtemp()
         
         # Читаем исходное аудио
         mixture, sr = read(path, sr=44100)
-        duration = get_duration_from_array(mixture)
+        duration: float = get_duration_from_array(mixture)
         
         # Параметры для нарезки с минимальным перекрытием
-        chunk_size = int(self.chunk_duration * sr)
-        overlap_duration = 2  # перекрытие в секундах (можно регулировать)
-        overlap_samples = int(overlap_duration * sr)
-        fade_size = overlap_samples // 2  # плавный переход на половине перекрытия
+        chunk_size: int = int(self.chunk_duration * sr)
+        overlap_duration: float = 2.0  # перекрытие в секундах
+        overlap_samples: int = int(overlap_duration * sr)
+        fade_size: int = overlap_samples // 2  # плавный переход на половине перекрытия
         
-        # Шаг между чанками (почти полный chunk_size, минус перекрытие)
-        step = chunk_size - overlap_samples
+        # Шаг между чанками
+        step: int = chunk_size - overlap_samples
         
-        print(f"Размер чанка: {self.chunk_duration}с ({chunk_size} сэмплов)")
-        print(f"Перекрытие: {overlap_duration}с ({overlap_samples} сэмплов)")
-        print(f"Шаг: {step/chunk_size*100:.1f}% от размера чанка")
+        print(_i18n("msg_chunk_size", duration=self.chunk_duration, samples=chunk_size))
+        print(_i18n("msg_overlap", duration=overlap_duration, samples=overlap_samples))
+        print(_i18n("msg_step_percent", percent=(step/chunk_size*100)))
         
         # Создаем окно для плавного склеивания
-        # Окно теперь имеет плавный спад только в конце
-        window = np.ones(chunk_size)
+        window: np.ndarray = np.ones(chunk_size)
         
         # Плавное затухание в конце
-        fadeout = np.linspace(1, 0, fade_size)
+        fadeout: np.ndarray = np.linspace(1, 0, fade_size)
         window[-fade_size:] = fadeout
         
         # Для первого чанка добавим плавное нарастание в начале
-        # (опционально, чтобы избежать щелчка в самом начале)
-        fadein = np.linspace(0, 1, fade_size)
+        fadein: np.ndarray = np.linspace(0, 1, fade_size)
         window[:fade_size] = fadein
         
         # Нарезаем аудио на чанки
-        input_chunks = []
-        chunk_positions = []  # храним позиции начала и длину каждого чанка
+        input_chunks: List[Tuple[str, np.ndarray]] = []
+        chunk_positions: List[Tuple[int, int]] = []  # храним позиции начала и длину каждого чанка
         
-        i = 0
-        chunk_index = 0
+        i: int = 0
+        chunk_index: int = 0
         
         while i < mixture.shape[1]:
             # Вырезаем чанк
-            end_pos = min(i + chunk_size, mixture.shape[1])
-            part = mixture[:, i:end_pos]
-            chunk_len = part.shape[1]
+            end_pos: int = min(i + chunk_size, mixture.shape[1])
+            part: np.ndarray = mixture[:, i:end_pos]
+            chunk_len: int = part.shape[1]
             
             # Сохраняем позицию и длину
             chunk_positions.append((i, chunk_len))
             
-            # Дополняем до нужного размера если нужно (только для последнего чанка)
+            # Дополняем до нужного размера если нужно
             if chunk_len < chunk_size:
-                pad_len = chunk_size - chunk_len
-                pad_mode = "reflect" if chunk_len > chunk_size // 2 else "constant"
+                pad_len: int = chunk_size - chunk_len
+                pad_mode: str = "reflect" if chunk_len > chunk_size // 2 else "constant"
                 part = np.pad(part, ((0, 0), (0, pad_len)), mode=pad_mode)
                 
                 # Корректируем окно для последнего чанка
-                last_window = np.ones(chunk_size)
+                last_window: np.ndarray = np.ones(chunk_size)
                 last_window[-fade_size:] = fadeout
                 last_window[chunk_len:] = 0  # обнуляем заполненную часть
             else:
                 last_window = window
             
             # Сохраняем чанк во временный файл
-            chunk_path = os.path.join(temp_dir, f"chunk_{chunk_index:04d}.wav")
+            chunk_path: str = os.path.join(temp_dir, f"chunk_{chunk_index:04d}.wav")
             write(chunk_path, part, sr)
             input_chunks.append((chunk_path, last_window if chunk_len < chunk_size else window))
             
             i += step
             chunk_index += 1
         
-        total_chunks = len(input_chunks)
+        total_chunks: int = len(input_chunks)
         
         # Определяем стемы, которые будут получены от модели
-        if len(self.get_stems(model_name)) == 2:
-            stems_list = [stem for stem in selected_stems] if selected_stems else self.get_stems(model_name)
-        elif len(self.get_stems(model_name)) >= 3:
-            stems_list = [stem for stem in selected_stems] if selected_stems else self.get_stems(model_name)
+        stems_list: List[str] = []
+        model_stems: List[str] = self.get_stems(model_name)
+        
+        if len(model_stems) == 2:
+            stems_list = [stem for stem in selected_stems] if selected_stems else model_stems
+        elif len(model_stems) >= 3:
+            stems_list = [stem for stem in selected_stems] if selected_stems else model_stems
             if ext_inst:
                 if selected_stems:
                     stems_list.extend(["inverted +", "inverted -"])
                 else:
-                    if (
-                        all(
-                            instr in self.get_stems(model_name)
-                            for instr in ["bass", "drums", "other", "vocals"]
-                        )
-                        or all(
-                            instr in self.get_stems(model_name)
-                            for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"]
-                        )
-                    ):
+                    if (all(instr in model_stems for instr in ["bass", "drums", "other", "vocals"]) or
+                        all(instr in model_stems for instr in ["bass", "drums", "other", "vocals", "piano", "guitar"])):
                         stems_list.extend(["instrumental +", "instrumental -"])
+        
         # Словарь для накопления результатов по каждому стему
-        result_accumulators = {stem: np.zeros_like(mixture) for stem in stems_list}
-        counter_accumulators = {stem: np.zeros(mixture.shape[1]) for stem in stems_list}
+        result_accumulators: Dict[str, np.ndarray] = {stem: np.zeros_like(mixture) for stem in stems_list}
+        counter_accumulators: Dict[str, np.ndarray] = {stem: np.zeros(mixture.shape[1]) for stem in stems_list}
         
         # Обрабатываем каждый чанк
         for chunk_idx, (chunk_path, chunk_window) in enumerate(input_chunks):
-            print(f"Чанк {chunk_idx + 1}/{total_chunks}")
+            print(_i18n("msg_processing_chunk", current=chunk_idx + 1, total=total_chunks))
             
             # Обрабатываем чанк
-            chunk_results = self.separator_base(
+            chunk_results: List[Tuple[str, str]] = self.separator_base(
                 input_file=chunk_path,
                 output_dir=os.path.join(temp_dir, f"output_chunk_{chunk_idx:04d}"),
                 model_type=model_type,
                 model_name=model_name,
                 ext_inst=ext_inst,
                 output_format="wav",
-                output_bitrate=320,
+                output_bitrate="320k",
                 template=template,
                 selected_stems=selected_stems,
                 ckpt=ckpt,
@@ -555,7 +920,7 @@ class Separator(MvseplessModelManager):
                 id=id,
                 progress=progress,
                 use_spec_invert=use_spec_invert,
-                add_text_progress=f"{add_text_progress} [Чанк {chunk_idx + 1}/{total_chunks}]",
+                add_text_progress=f"{_i18n('msg_processing_chunk', current=chunk_idx + 1, total=total_chunks)}",
             )
             
             start_pos, chunk_len = chunk_positions[chunk_idx]
@@ -564,10 +929,10 @@ class Separator(MvseplessModelManager):
             for stem_name, stem_path in chunk_results:
                 if stem_name in result_accumulators:
                     # Читаем обработанный стем
-                    stem_audio, _ = read(stem_path)
+                    stem_audio, _c = read(stem_path)
                     
                     # Применяем окно для плавного склеивания
-                    window_segment = chunk_window[:chunk_len]
+                    window_segment: np.ndarray = chunk_window[:chunk_len]
                     
                     # Добавляем в аккумулятор с применением окна
                     result_accumulators[stem_name][:, start_pos:start_pos + chunk_len] += \
@@ -582,37 +947,37 @@ class Separator(MvseplessModelManager):
                 pass
         
         # Финальное усреднение и сохранение результатов
-        print("Сборка обработанных чанков в единое аудио")
-        progress(1, desc="Сборка обработанных чанков")
-        final_results = []
+        print(_i18n("msg_assembling_chunks"))
+        progress(1, desc=_i18n("msg_assembling_chunks"))
+        final_results: List[Tuple[str, str]] = []
         os.makedirs(output_dir, exist_ok=True)
         
         for stem_name in stems_list:
-            counter = counter_accumulators[stem_name]
-            valid_mask = counter > 1e-6
+            counter: np.ndarray = counter_accumulators[stem_name]
+            valid_mask: np.ndarray = counter > 1e-6
             
-            final_audio = np.zeros_like(result_accumulators[stem_name])
+            final_audio: np.ndarray = np.zeros_like(result_accumulators[stem_name])
             final_audio[:, valid_mask] = result_accumulators[stem_name][:, valid_mask] / counter[valid_mask]
             final_audio = np.nan_to_num(final_audio, nan=0.0, posinf=0.0, neginf=0.0)
             
             # Генерируем имя файла
-            file_name = os.path.splitext(os.path.basename(path))[0]
-            file_name_shorted = self.namer.short_input_name_template(
+            file_name: str = os.path.splitext(os.path.basename(path))[0]
+            file_name_shorted: str = self.namer.short_input_name_template(
                 template, STEM=stem_name, MODEL=model_name, ID=id, NAME=file_name
             )
-            custom_name = self.namer.template(
+            custom_name: str = self.namer.template(
                 template,
                 STEM=stem_name,
                 MODEL=model_name,
                 ID=id,
                 NAME=file_name_shorted,
             )
-            output_path = os.path.join(output_dir, f"{custom_name}.{output_format}")
+            output_path: str = os.path.join(output_dir, f"{custom_name}.{output_format}")
             
             write(output_path, final_audio, sr, output_bitrate)
             final_results.append((stem_name, output_path))
             
-            print(f"Сохранен стем {stem_name}: {output_path}")
+            print(_i18n("msg_saved_stem", stem=stem_name, path=output_path))
         
         # Очищаем временную директорию
         try:
@@ -623,89 +988,157 @@ class Separator(MvseplessModelManager):
         return final_results
 
     def _get_windowing_array(self, window_size: int, fade_size: int) -> np.ndarray:
-        """Создает окно для плавного склеивания чанков"""
-        fadein = np.linspace(0, 1, fade_size)
-        fadeout = np.linspace(1, 0, fade_size)
+        """
+        Создает окно для плавного склеивания чанков
         
-        window = np.ones(window_size)
+        Args:
+            window_size: Размер окна
+            fade_size: Размер зоны затухания
+        
+        Returns:
+            Массив окна
+        """
+        fadein: np.ndarray = np.linspace(0, 1, fade_size)
+        fadeout: np.ndarray = np.linspace(1, 0, fade_size)
+        
+        window: np.ndarray = np.ones(window_size)
         window[:fade_size] = fadein
         window[-fade_size:] = fadeout
         return window
 
-    def print_error_list(self, errors: list):
+    def print_error_list(self, errors: List[str]) -> None:
+        """
+        Вывести список ошибок
+        
+        Args:
+            errors: Список ошибок
+        """
         if errors:
-            print("Неудачные разделения:")
+            print(_i18n("failed_separations"))
             for _e in errors:
                 print(f"  - {_e}")
 
     class OutputReader:
-        def __init__(self, debug=False):
-            self.debug = debug
+        """Читатель вывода процесса"""
+        
+        def __init__(self, debug: bool = False) -> None:
+            self.debug: bool = debug
 
-        def parse_json_line(self, line):
+        def parse_json_line(self, line: str) -> Optional[Dict]:
+            """
+            Парсинг JSON строки
+            
+            Args:
+                line: Строка для парсинга
+            
+            Returns:
+            """
             try:
                 return json.loads(line)
             except json.JSONDecodeError:
                 return None
 
-        def reaction_line(self, line, progress, add_text):
-            _add_text = ""
-            if add_text != "" or add_text is not None:
+        def reaction_line(
+            self, 
+            line: str, 
+            progress: gr.Progress, 
+            add_text: str
+        ) -> Optional[List]:
+            """
+            Обработка строки вывода
+            
+            Args:
+                line: Строка вывода
+                progress: Прогресс
+                add_text: Дополнительный текст
+            
+            Returns:
+                Результат обработки или None
+            """
+            _add_text: str = ""
+            if add_text:
                 _add_text = f"| {add_text}"
 
-            data = self.parse_json_line(line)
+            data: Optional[Dict] = self.parse_json_line(line)
             if data is None:
                 return None
             elif "reading" in data:
-                progress(0.05, desc=f"Чтение файла {_add_text}")
-                print("Чтение файла")
+                progress(0.05, desc=_i18n("progress_reading", text=_add_text))
+                print(_i18n("msg_reading_file"))
                 return None
             elif "stems" in data:
-                progress(0.05, desc=f"Стемы: {','.join(data['stems'])} {_add_text}")
-                print(f"Стемы: {data['stems']}")
+                stems_str: str = ','.join(data['stems'])
+                progress(0.05, desc=_i18n("progress_stems", stems=stems_str, text=_add_text))
+                print(_i18n("msg_stems", stems=stems_str))
                 return None
             elif "processing" in data:
-                progress_a = data["processing"]
-                processed = progress_a.get("processed", 0)
-                total = progress_a.get("total", 1)
+                progress_a: Dict = data["processing"]
+                processed: int = progress_a.get("processed", 0)
+                total: int = progress_a.get("total", 1)
                 if total > 0:
-                    percent = int((processed / total) * 100)
-                    progress((processed, total), desc=f"Обработано: {percent}% {_add_text}", unit=progress_a.get("unit", "сэмплов"))
-                    print(f"\rОбработано: {percent}%", end="")
+                    percent: int = int((processed / total) * 100)
+                    progress(
+                        (processed, total), 
+                        desc=_i18n("progress_processing", percent=percent, text=_add_text),
+                        unit=progress_a.get("unit", _i18n("unit_samples"))
+                    )
+                    print(f"\r{_i18n('msg_processed_percent', percent=percent)}", end="")
                 return None
             elif "writing" in data:
-                progress(0.9, desc=f"Запись результатов {_add_text}")
-                print(f"\rЗапись в файл {data['writing']}", end="")
+                progress(0.9, desc=_i18n("progress_writing", text=_add_text))
+                print(f"\r{_i18n('msg_writing_file', file=data['writing'])}", end="")
                 return None
             elif "done" in data:
-                progress(1.0, desc=f"Завершено {_add_text}")
-                print("\rЗавершено", end="\n")
+                progress(1.0, desc=_i18n("progress_completed", text=_add_text))
+                print(f"\r{_i18n('msg_completed')}", end="\n")
                 return data["done"]
             elif "error" in data:
                 raise Exception(data["error"])
 
-    output_reader = OutputReader()
+    output_reader: OutputReader = OutputReader()
 
     def separator_base(
         self,
         input_file: str,
         output_dir: str,
-        model_type: str = "mel_band_roformer",
-        model_name: str = "bs_6stem",
-        ext_inst: bool = True,
-        output_format: str = "mp3",
-        output_bitrate: str = "320k",
-        template: str = "NAME_(STEM)_MODEL",
-        selected_stems: list = None,
-        ckpt: str = None,
-        conf: str = None,
-        id: int = None,
-        progress: any = None,
+        model_type: str,
+        model_name: str,
+        ext_inst: bool,
+        output_format: str,
+        output_bitrate: str,
+        template: str,
+        selected_stems: List[str],
+        ckpt: str,
+        conf: str,
+        id: int,
+        progress: gr.Progress,
         use_spec_invert: bool = False,
         add_text_progress: str = "",
-    ) -> list[tuple[str, str]]:
-
-        cmd = [
+    ) -> List[Tuple[str, str]]:
+        """
+        Базовый метод разделения
+        
+        Args:
+            input_file: Входной файл
+            output_dir: Выходная директория
+            model_type: Тип модели
+            model_name: Имя модели
+            ext_inst: Извлечь инструментал
+            output_format: Формат вывода
+            output_bitrate: Битрейт
+            template: Шаблон имени
+            selected_stems: Выбранные стемы
+            ckpt: Путь к чекпоинту
+            conf: Путь к конфигу
+            id: ID модели
+            progress: Прогресс
+            use_spec_invert: Использовать инверсию спектрограммы
+            add_text_progress: Дополнительный текст прогресса
+        
+        Returns:
+            Список кортежей (имя стема, путь к файлу)
+        """
+        cmd: List[str] = [
             os.sys.executable,
             "-m",
             "infer",
@@ -732,6 +1165,7 @@ class Separator(MvseplessModelManager):
             "--device",
             self.device
         ]
+        
         if ext_inst:
             cmd.append("--extract_instrumental")
         if use_spec_invert:
@@ -740,6 +1174,8 @@ class Separator(MvseplessModelManager):
             cmd.append("--selected_instruments")
             cmd.extend(selected_stems)
 
+        process: Optional[subprocess.Popen] = None
+        
         try:
             process = subprocess.Popen(
                 cmd,
@@ -753,88 +1189,107 @@ class Separator(MvseplessModelManager):
                 errors="replace",
             )
 
-            result = None
-            error_lines = []
+            result: Optional[List] = None
+            error_lines: List[str] = []
 
             # Чтение stdout построчно
-            for line in process.stdout:
-                line = line.strip()
-                if line:
-                    if self.output_reader.debug:
-                        print(f"[stdout] {line}")
-                    
-                    # Обработка строки для получения прогресса и результата
-                    line_result = self.output_reader.reaction_line(
-                        line, progress, add_text_progress
-                    )
-                    if line_result is not None:
-                        result = line_result
+            if process.stdout:
+                for line in process.stdout:
+                    line = line.strip()
+                    if line:
+                        if self.output_reader.debug:
+                            print(f"[stdout] {line}")
+                        
+                        # Обработка строки для получения прогресса и результата
+                        line_result = self.output_reader.reaction_line(
+                            line, progress, add_text_progress
+                        )
+                        if line_result is not None:
+                            result = line_result
 
             # Чтение stderr построчно
-            for line in process.stderr:
-                line = line.strip()
-                if line:
-                    if self.output_reader.debug:
-                        print(f"[stderr] {line}")
-                    error_lines.append(line)
-                    
-                    # Также проверяем stderr на наличие JSON-сообщений
-                    line_result = self.output_reader.reaction_line(
-                        line, progress, add_text_progress
-                    )
-                    if line_result is not None:
-                        result = line_result
+            if process.stderr:
+                for line in process.stderr:
+                    line = line.strip()
+                    if line:
+                        if self.output_reader.debug:
+                            print(f"[stderr] {line}")
+                        error_lines.append(line)
+                        
+                        # Также проверяем stderr на наличие JSON-сообщений
+                        line_result = self.output_reader.reaction_line(
+                            line, progress, add_text_progress
+                        )
+                        if line_result is not None:
+                            result = line_result
 
             # Ожидание завершения процесса
             process.wait()
 
             if process.returncode != 0:
-                error_text = "\n".join(error_lines[-5:]) if error_lines else "Неизвестная ошибка"
+                error_text: str = "\n".join(error_lines[-5:]) if error_lines else _i18n("unknown_error")
                 raise Exception(
-                    f"Процесс завершился с ошибкой. Код возврата: {process.returncode}. Сообщения об ошибках:\n{error_text}"
+                    _i18n("process_error", code=process.returncode, error=error_text)
                 )
 
             if result is not None:
                 return result
             else:
-                raise Exception("Процесс завершился без возврата результата")
+                raise Exception(_i18n("no_result_error"))
 
         except Exception as e:
             raise e
         finally:
-            try:
-                if process.poll() is None:
+            if process and process.poll() is None:
+                try:
                     process.terminate()
                     process.wait(timeout=5)
-            except:
-                try:
-                    process.kill()
                 except:
-                    pass
+                    try:
+                        process.kill()
+                    except:
+                        pass
 
     def separate(
         self,
-        input: str | list = None,
-        output_dir: str = None,
+        input: Union[str, List[str], None] = None,
+        output_dir: Optional[str] = None,
         model_name: str = "bs_6stem",
         ext_inst: bool = True,
         output_format: str = "mp3",
         output_bitrate: str = "320k",
         template: str = "NAME_(STEM)_MODEL",
-        selected_stems: list = None,
-        add_settings: dict = {
+        selected_stems: Optional[List[str]] = None,
+        add_settings: Dict[str, Any] = {
             "mdx_denoise": False,
             "vr_aggr": 5,
             "vr_post_process": False,
             "vr_high_end_process": False,
-            #"econom_mode": False,
             "add_single_sep_text_progress": None,
         },
         use_spec_invert: bool = False,
-        progress: any = gr.Progress(track_tqdm=True),
-    ) -> list[tuple[str, str]] | list[str, list[tuple[str, str]]]:
-
-        progress(0, desc="Начало обработки")
+        progress: gr.Progress = gr.Progress(track_tqdm=True),
+    ) -> Union[List[Tuple[str, str]], List[Tuple[str, List[Tuple[str, str]]]]]:
+        """
+        Разделение аудио
+        
+        Args:
+            input: Входной файл или список файлов
+            output_dir: Выходная директория
+            model_name: Имя модели
+            ext_inst: Извлечь инструментал
+            output_format: Формат вывода
+            output_bitrate: Битрейт
+            template: Шаблон имени
+            selected_stems: Выбранные стемы
+            add_settings: Дополнительные настройки
+            use_spec_invert: Использовать инверсию спектрограммы
+            progress: Прогресс
+        
+        Returns:
+            Результаты разделения
+        """
+        progress(0, desc=_i18n("start_processing"))
 
         if output_format not in output_formats:
             output_format = "flac"
@@ -846,7 +1301,7 @@ class Separator(MvseplessModelManager):
             selected_stems = []
 
         if not input:
-            raise ValueError("Входной файл не указан")
+            raise ValueError(_i18n("no_input_error"))
 
         if "STEM" not in template and template is not None:
             template = template + "_STEM_"
@@ -855,21 +1310,21 @@ class Separator(MvseplessModelManager):
 
         os.makedirs(output_dir, exist_ok=True)
 
-        mdx_denoise = add_settings.get("mdx_denoise", False)
-        vr_aggr = add_settings.get("vr_aggr", 5)
-        vr_post_process = add_settings.get("vr_post_process", False)
-        vr_high_end_process = add_settings.get("vr_high_end_process", False)
-        econom_mode = add_settings.get("econom_mode", MVSEPLESS_ECONOM)
-        single_mode = add_settings.get("single_mode", True)
-        add_progress_text_custom = add_settings.get("add_single_sep_text_progress", "")
+        mdx_denoise: bool = add_settings.get("mdx_denoise", False)
+        vr_aggr: int = add_settings.get("vr_aggr", 5)
+        vr_post_process: bool = add_settings.get("vr_post_process", False)
+        vr_high_end_process: bool = add_settings.get("vr_high_end_process", False)
+        econom_mode: bool = add_settings.get("econom_mode", MVSEPLESS_ECONOM)
+        single_mode: bool = add_settings.get("single_mode", True)
+        add_progress_text_custom: str = add_settings.get("add_single_sep_text_progress", "")
 
         id, conf, ckpt, model_type = self.install_model(
-            model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, econom_mode, progress
+            model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, econom_mode, progress=progress
         )
 
-        input_list = []
-        errors = []
-        output_state = []
+        input_list: List[str] = []
+        errors: List[str] = []
+        output_state: List = []
 
         if isinstance(input, str):
             input = [input]
@@ -877,14 +1332,13 @@ class Separator(MvseplessModelManager):
         input_list = get_files_from_list(input)
 
         if len(input_list) == 0:
-            print("Входные файлы не указаны")
+            print(_i18n("no_input_files"))
 
-        print(f"Входных файлов: {len(input_list)}")
+        print(_i18n("input_files_count", count=len(input_list)))
 
         if single_mode:
             if len(input_list) == 1:
-                _input_file = input_list[0]
-                basename = os.path.splitext(os.path.basename(_input_file))[0]
+                _input_file: str = input_list[0]
                 try:
                     if self.check_duration_audio(_input_file):
                         output_state = self.chunk_wise_processing(
@@ -932,12 +1386,14 @@ class Separator(MvseplessModelManager):
         if not single_mode:
             if len(input_list) >= 1:
                 for i, f in enumerate(input_list, 1):
-                    print(f"Файл {i} из {len(input_list)}: {f}")
-                    gr.Warning(title=f"Файл {i} из {len(input_list)}: {f}", message="")
-                    basename = os.path.splitext(os.path.basename(f))[0]
+                    print(_i18n("processing_file", current=i, total=len(input_list), file=f))
+                    gr.Warning(
+                        title=_i18n("processing_file_title", current=i, total=len(input_list)), 
+                        message=f
+                    )
                     try:
                         if self.check_duration_audio(f):
-                            seped = self.chunk_wise_processing(
+                            seped: List[Tuple[str, str]] = self.chunk_wise_processing(
                                 path=f,
                                 output_dir=output_dir,
                                 model_type=model_type,
@@ -952,7 +1408,7 @@ class Separator(MvseplessModelManager):
                                 id=id,
                                 progress=progress,
                                 use_spec_invert=use_spec_invert,
-                                add_text_progress=f"{i} из {len(input_list)}",
+                                add_text_progress=_i18n("file_progress", current=i, total=len(input_list)),
                             )
                         else:
                             seped = self.separator_base(
@@ -970,8 +1426,9 @@ class Separator(MvseplessModelManager):
                                 id=id,
                                 progress=progress,
                                 use_spec_invert=use_spec_invert,
-                                add_text_progress=f"{i} из {len(input_list)}",
+                                add_text_progress=_i18n("file_progress", current=i, total=len(input_list)),
                             )
+                        basename: str = os.path.splitext(os.path.basename(f))[0]
                         output_state.append([basename, seped])
                     except Exception as e:
                         errors.append(f)
@@ -984,75 +1441,109 @@ class Separator(MvseplessModelManager):
 
     def manual_ensemble(
         self,
-        files: list,
-        weights: list,
+        files: List[str],
+        weights: List[float],
         output_name: str,
         ensemble_type: str,
-        out_format="mp3",
-        add_wav=False
-    ):
+        out_format: str = "mp3",
+        add_wav: bool = False
+    ) -> Union[str, Tuple[str, str], None]:
+        """
+        Ручной ансамбль из готовых файлов
+        
+        Args:
+            files: Список файлов
+            weights: Веса файлов
+            output_name: Имя выходного файла
+            ensemble_type: Тип ансамбля
+            out_format: Формат вывода
+            add_wav: Добавить WAV версию
+        
+        Returns:
+            Путь к выходному файлу или кортеж (mp3, wav)
+        """
         if not files:
-            print("Входные файлы не указаны")
-            return None, None if add_wav else None
-        valid_files = get_files_from_list(files, only_files=True)
+            print(_i18n("no_input_files"))
+            return (None, None) if add_wav else None
+            
+        valid_files: List[str] = get_files_from_list(files, only_files=True)
         if not valid_files:
-            print("Входные файлы не содержат аудио")
-            return None, None if add_wav else None
+            print(_i18n("no_audio_files"))
+            return (None, None) if add_wav else None
         
         arrays, srs = multiread(valid_files)
         results, max_sr = ensemble(arrays, srs, weights, ensemble_type)
 
         if add_wav:
-            print(f"Запись в файлы: {output_name}.{out_format} и {output_name}_orig.wav")
-            return write(self.namer.iter(f"{output_name}.{out_format}"), results, max_sr), write(self.namer.iter(f"{output_name}_orig.wav"), results, max_sr)
+            print(_i18n("writing_files", file1=f"{output_name}.{out_format}", file2=f"{output_name}_orig.wav"))
+            return (
+                write(self.namer.iter(f"{output_name}.{out_format}"), results, max_sr),
+                write(self.namer.iter(f"{output_name}_orig.wav"), results, max_sr)
+            )
         else:
-            print(f"Запись в файл: {output_name}.{out_format}")
+            print(_i18n("writing_file", file=f"{output_name}.{out_format}"))
             return write(self.namer.iter(f"{output_name}.{out_format}"), results, max_sr)
 
     def auto_ensemble(
         self,
         input_file: str,
-        ensemble_state: list[list[str, str, str, int]],
+        ensemble_state: List[List[Union[str, int, float]]],
         output_dir: str,
         method: str,
         out_format: str,
         invert_ensemble: bool,
-        progress=gr.Progress(track_tqdm=True),
-    ):
-        ensemble_state = ensemble_state
-        invert_methods_map = self.ensemble_invert_methods_map
+        progress: gr.Progress = gr.Progress(track_tqdm=True),
+    ) -> Tuple[Optional[str], Optional[str], Optional[str], List[str]]:
+        """
+        Автоматический ансамбль
+        
+        Args:
+            input_file: Входной файл
+            ensemble_state: Состояние ансамбля
+            output_dir: Выходная директория
+            method: Метод объединения
+            out_format: Формат вывода
+            invert_ensemble: Инвертировать ансамбль
+            progress: Прогресс
+        
+        Returns:
+            Кортеж (выходной файл, WAV файл, инвертированный файл, список исходников)
+        """
+        invert_methods_map: Dict[str, str] = self.ensemble_invert_methods_map
+        
         if not input_file:
-            print("Входной файл не указан")
+            print(_i18n("no_input_error"))
             return None, None, None, []
         if not os.path.exists(input_file):
-            print("Входного файла не существует")
+            print(_i18n("file_not_exists"))
             return None, None, None, []
         if not check(input_file):
-            print("Входной файл не содержит аудио")
+            print(_i18n("file_no_audio"))
             return None, None, None, []
         
-        o = output_dir
+        o: str = output_dir
         os.makedirs(o, exist_ok=True)
 
-        basename = os.path.splitext(os.path.basename(input_file))[0]
+        basename: str = os.path.splitext(os.path.basename(input_file))[0]
 
-        def invert_weights(weights):
-            total_weight = sum(weights)
+        def invert_weights(weights: List[float]) -> List[float]:
+            """Инвертировать веса"""
+            total_weight: float = sum(weights)
             return [total_weight - w for w in weights]
 
-        success_separations = []
-        ensemble_sources_list = []
+        success_separations: List[Tuple[str, Optional[str], Optional[str], float]] = []
+        ensemble_sources_list: List[str] = []
+        
         if ensemble_state:
-            total_ensemble_models = len(ensemble_state)
+            total_ensemble_models: int = len(ensemble_state)
             for i, model in enumerate(ensemble_state, start=1):
+                ens_mn: str = str(model[0])
+                ens_s_stem: str = str(model[1])
+                ens_i_stem: str = str(model[2])
+                weight: float = float(model[3])
 
-                ens_mn = model[0]
-                ens_s_stem = model[1]
-                ens_i_stem = model[2]
-                weight = model[3]
-
-                s_stem = None
-                i_stem = None
+                s_stem: Optional[str] = None
+                i_stem: Optional[str] = None
 
                 try:
                     result_seped_auto_ensemble = self.separate(
@@ -1063,17 +1554,19 @@ class Separator(MvseplessModelManager):
                         template="NAME - MODEL - STEM",
                         output_format="wav",
                         add_settings={
-                            "add_single_sep_text_progress": f"{i} из {total_ensemble_models}"
+                            "add_single_sep_text_progress": _i18n("ensemble_progress", current=i, total=total_ensemble_models)
                         },
                         progress=progress,
                     )
+                    
                     if result_seped_auto_ensemble:
-                        for stem, path in result_seped_auto_ensemble:
-                            ensemble_sources_list.append(path)
-                            if stem == ens_s_stem:
-                                s_stem = path
-                            elif stem == ens_i_stem:
-                                i_stem = path
+                        if isinstance(result_seped_auto_ensemble, list):
+                            for stem, path in result_seped_auto_ensemble:
+                                ensemble_sources_list.append(path)
+                                if stem == ens_s_stem:
+                                    s_stem = path
+                                elif stem == ens_i_stem:
+                                    i_stem = path
 
                     if invert_ensemble:
                         if not i_stem:
@@ -1086,44 +1579,45 @@ class Separator(MvseplessModelManager):
                                 output_format="wav",
                                 selected_stems=[ens_s_stem],
                                 add_settings={
-                                    "add_single_sep_text_progress": f"{i} из {total_ensemble_models} (инверт.)"
+                                    "add_single_sep_text_progress": _i18n("ensemble_invert_progress", current=i, total=total_ensemble_models)
                                 },
                                 progress=progress,
                             )
                             if result_seped_auto_ensemble_invert:
-                                for stem, path in result_seped_auto_ensemble_invert:
-                                    if stem == ens_i_stem:
-                                        i_stem = path
-                                        ensemble_sources_list.append(path)
+                                if isinstance(result_seped_auto_ensemble_invert, list):
+                                    for stem, path in result_seped_auto_ensemble_invert:
+                                        if stem == ens_i_stem:
+                                            i_stem = path
+                                            ensemble_sources_list.append(path)
 
                 except Exception as e:
-                    print(f"\nПроизошла ошибка при разделении: {e}")
-                    progress(
-                        0,
-                        desc="Произошла ошибка при разделении, модель пропускается...",
-                    )
+                    print(f"\n{_i18n('msg_error_occurred', error=str(e))}")
+                    progress(0, desc=_i18n("msg_skipping_model"))
                     continue
                 finally:
                     if s_stem:
                         success_separations.append((ens_mn, s_stem, i_stem, weight))
 
-        ensemble_sources_stems = []
-        ensemble_sources_invert_stems = []
-        weights = []
+        ensemble_sources_stems: List[str] = []
+        ensemble_sources_invert_stems: List[str] = []
+        weights: List[float] = []
 
         for out_mn, out_s_stem, out_i_stem, out_weight in success_separations:
-            ensemble_sources_stems.append(out_s_stem)
-            ensemble_sources_invert_stems.append(out_i_stem)
+            if out_s_stem:
+                ensemble_sources_stems.append(out_s_stem)
+            if out_i_stem:
+                ensemble_sources_invert_stems.append(out_i_stem)
             weights.append(out_weight)
 
-        auto_ensemble_invout_file = None
-        auto_ensemble_invout_file_wav = None
+        auto_ensemble_invout_file: Optional[str] = None
 
         if not ensemble_sources_stems:
             return None, None, None, []
-        auto_ensemble_output_name = f"ensembless_{self.namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{method}"
-        auto_ensemble_inverted_output_name = f"ensembless_{self.namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{invert_methods_map[method]}_invert"
-        auto_ensemble_out_file, auto_ensemble_out_file_wav = self.manual_ensemble(
+            
+        auto_ensemble_output_name: str = f"ensembless_{self.namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{method}"
+        auto_ensemble_inverted_output_name: str = f"ensembless_{self.namer.short(basename, length=50)}_{len(ensemble_sources_stems)}_{invert_methods_map[method]}_invert"
+        
+        ensemble_result = self.manual_ensemble(
             files=ensemble_sources_stems,
             weights=weights,
             output_name=os.path.join(o, auto_ensemble_output_name),
@@ -1131,19 +1625,26 @@ class Separator(MvseplessModelManager):
             out_format=out_format,
             add_wav=True,
         )
+        
+        if isinstance(ensemble_result, tuple):
+            auto_ensemble_out_file, auto_ensemble_out_file_wav = ensemble_result
+        else:
+            auto_ensemble_out_file, auto_ensemble_out_file_wav = ensemble_result, None
 
-        if invert_ensemble:
-            if ensemble_sources_invert_stems:
-                auto_ensemble_invout_file, auto_ensemble_invout_file_wav = (
-                    self.manual_ensemble(
-                        files=ensemble_sources_invert_stems,
-                        weights=invert_weights(weights),
-                        output_name=os.path.join(o, auto_ensemble_inverted_output_name),
-                        ensemble_type=invert_methods_map[method],
-                        out_format=out_format,
-                        add_wav=True,
-                    )
-                )
+        if invert_ensemble and ensemble_sources_invert_stems:
+            invert_result = self.manual_ensemble(
+                files=ensemble_sources_invert_stems,
+                weights=invert_weights(weights),
+                output_name=os.path.join(o, auto_ensemble_inverted_output_name),
+                ensemble_type=invert_methods_map[method],
+                out_format=out_format,
+                add_wav=True,
+            )
+            if isinstance(invert_result, tuple):
+                auto_ensemble_invout_file, _c = invert_result
+            else:
+                auto_ensemble_invout_file = invert_result
+                
         return (
             auto_ensemble_out_file,
             auto_ensemble_out_file_wav,
@@ -1153,144 +1654,186 @@ class Separator(MvseplessModelManager):
 
     def subtract(
         self,
-        audio1_path,
-        audio2_path,
-        method,
-        output_path="./inverted.mp3",
-    ):
+        audio1_path: str,
+        audio2_path: str,
+        method: str,
+        output_path: str = "./inverted.mp3",
+    ) -> Optional[str]:
+        """
+        Вычитание одного аудио из другого
+        
+        Args:
+            audio1_path: Путь к первому аудио (оригинал)
+            audio2_path: Путь ко второму аудио (стем для вычитания)
+            method: Метод вычитания
+            output_path: Путь для сохранения результата
+        
+        Returns:
+            Путь к выходному файлу или None
+        """
         if not audio1_path or not audio2_path:
             if not audio1_path:
-                print(f"Оригинал - не указано")
+                print(_i18n("original_not_specified"))
             if not audio2_path:
-                print(f"Стем - не указано")
+                print(_i18n("stem_not_specified"))
             return None
+            
         if not os.path.exists(audio1_path) or not os.path.exists(audio2_path):
             if not os.path.exists(audio1_path):
-                print(f"Оригинал - не существует")
+                print(_i18n("original_not_exists"))
             if not os.path.exists(audio2_path):
-                print(f"Стем - не существует")
+                print(_i18n("stem_not_exists"))
             return None
+            
         if not check(audio1_path) or not check(audio2_path):
             if not check(audio1_path):
-                print(f"Оригинал - не содержит аудио")
+                print(_i18n("original_no_audio"))
             if not check(audio2_path):
-                print(f"Стем - не содержит аудио")
+                print(_i18n("stem_no_audio"))
             return None
+            
         y1, sr1 = read(audio1_path)
         y2, sr2 = read(audio2_path)
-        inverted, min_sr = subtractor(y1, y2, sr1, sr2, spectrogram=method == "spectrogram")
-        print(f"Запись в файл: {output_path}")
+        inverted, min_sr = subtractor(y1, y2, sr1, sr2, spectrogram=(method == "spectrogram"))
+        
+        print(_i18n("writing_file", file=output_path))
         return write(self.namer.iter(output_path), inverted, min_sr)
 
-    def extract_phantom_center(self, i, output_path_mid=None, output_path_side=None):
-        if not i:
-            print("Входной файл не указан")
+    def extract_phantom_center(
+        self, 
+        input_path: str, 
+        output_path_mid: Optional[str] = None, 
+        output_path_side: Optional[str] = None
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Извлечение фантомного центра (Mid/Side)
+        
+        Args:
+            input_path: Входной файл
+            output_path_mid: Путь для Mid канала
+            output_path_side: Путь для Side канала
+        
+        Returns:
+            Кортеж (путь к Mid, путь к Side)
+        """
+        if not input_path:
+            print(_i18n("no_input_error"))
             return None, None
-        if not os.path.exists(i):
-            print("Входного файла не существует")
+            
+        if not os.path.exists(input_path):
+            print(_i18n("file_not_exists"))
             return None, None
-        if not check(i):
-            print("Входной файл не содержит аудио")
+            
+        if not check(input_path):
+            print(_i18n("file_no_audio"))
             return None, None
-        dirname = os.path.dirname(i)
-        basename, ext = os.path.splitext(os.path.basename(i))
+            
+        dirname: str = os.path.dirname(input_path)
+        basename, ext = os.path.splitext(os.path.basename(input_path))
+        
         if not output_path_mid:
             output_path_mid = os.path.join(dirname, f"{self.namer.short(basename, length=80)}_mid{ext}")
         if not output_path_side:
             output_path_side = os.path.join(dirname, f"{self.namer.short(basename, length=80)}_side{ext}")
-        y, sr = read(i)
+            
+        y, sr = read(input_path)
         mid, side = split_mid_side(y, var=3, sr=sr)
-        print(f"Запись в файлы: {output_path_mid} и {output_path_side}")
-        return write(self.namer.iter(output_path_mid), mid, sr), write(self.namer.iter(output_path_side), side, sr)
+        
+        print(_i18n("writing_files", file1=output_path_mid, file2=output_path_side))
+        return (
+            write(self.namer.iter(output_path_mid), mid, sr),
+            write(self.namer.iter(output_path_side), side, sr)
+        )
+
 
 if __name__ == "__main__":
-
-    mvsepless = Separator()
+    mvsepless: Separator = Separator()
 
     parser = argparse.ArgumentParser(
-        description="MVSepless: Обертка для MSST и UVR (audio-separator)",
+        description=_i18n("cli_description"),
         formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=60)
     )
-    parser._positionals.title = 'Дополнительные режимы'
-    parser._optionals.title = 'Основные параметры'
+    parser._positionals.title = _i18n("additional_modes")
+    parser._optionals.title = _i18n("main_parameters")
 
     # --- Общие параметры ---
-    parser.add_argument("-i", "--input", nargs='+', default=[], help="Путь к входному аудиофайлу или папке.")
-    parser.add_argument("-o", "--output_dir", type=str, default="", help="Директория для сохранения (по умолчанию: текущая).")
-    parser.add_argument("-of", "--output_format", type=str, default="mp3", choices=output_formats, help="Формат вывода (по умолчанию: %(default)s).")
-    parser.add_argument("-ob", "--output_bitrate", type=str, default="320k", help="Битрейт аудио (например, 320k).", metavar="BITRATE")
-    parser.add_argument("-on", "--output_name", type=str, default="ensemble", help="Имя выходного файла. (путь/к/файлу_без_расширения)")
-    parser.add_argument("-op", "--output_path", type=str, default="inverted.mp3", help="Путь к выходному файлу. (путь/к/файлу)")
+    parser.add_argument("-i", "--input", nargs='+', default=[], help=_i18n("input_path_help"))
+    parser.add_argument("-o", "--output_dir", type=str, default="", help=_i18n("output_dir_help"))
+    parser.add_argument("-of", "--output_format", type=str, default="mp3", choices=output_formats, help=_i18n("output_format_help"))
+    parser.add_argument("-ob", "--output_bitrate", type=str, default="320k", help=_i18n("output_bitrate_help"), metavar="BITRATE")
+    parser.add_argument("-on", "--output_name", type=str, default="ensemble", help=_i18n("output_name_help"))
+    parser.add_argument("-op", "--output_path", type=str, default="inverted.mp3", help=_i18n("output_path_help"))
+    
     subparsers = parser.add_subparsers(dest="command", help=None)
-    sep_p = subparsers.add_parser("separator", help="Разделение. Общие параметры: --input, --output_dir, --output_format, --output_bitrate")
-    sep_p.add_argument("-mn", "--model_name", type=str, default="bs_6stem", help="Имя модели (по умолчанию: %(default)s).")
-    sep_p.add_argument("-tmpl", "--template", type=str, default="NAME_(STEM)_MODEL", help="Шаблон имени: NAME, STEM, MODEL.")
-    sep_p.add_argument("-stem", "--selected_stems", type=str, nargs="*", default=None, help="Список стемов (напр. Vocals Drums).", metavar="STEM")
-    sep_p.add_argument("-inst", "--ext_inst", action="store_true", help="Извлечь инструментал вычитанием.")
-    sep_p.add_argument("-invspec", "--use_spec_invert", action="store_true", help="Инверсия спектрограммы для вторичного стема.")
-    sep_p.add_argument("-dw", "--install_only", action="store_true", help="Только установка модели")
-    sep_p.add_argument("--mdx_enable_denoise", action="store_true", help="Шумоподавление для MDX-NET моделей")
-    sep_p.add_argument("--vr_aggression", type=int, default=5, help="Агрессивность для VR моделей (по умолчанию: %(default)s).", metavar="AGGR")
-    sep_p.add_argument("--vr_high_end_process", action="store_true", help="Восстановление недостающих высоких частот на VR моделях")
-    sep_p.add_argument("--vr_enable_post_process", action="store_true", help="Дополнительная обработка для улучшения качества разделения VR модели")
-    sep_p.add_argument("--econom_mode", action="store_true", help="Эконом-режим для Demucs и BS/Mel-Band Roformer (Уменьшение размера чанка)")
-    sep_p.add_argument("--chunk_duration", type=float, default=None, help="Разделить аудио на фрагменты указанной длительности в секундах (по умолчанию: %(default)s = без разделения). Полезно для обработки очень длинных аудиофайлов в системах с ограниченной памятью. Рекомендуемое значение: 600 (10 минут) для файлов длительностью более 1 часа.")
+    
+    # Команда separator
+    sep_p = subparsers.add_parser("separator", help=_i18n("separator_help"))
+    sep_p.add_argument("-mn", "--model_name", type=str, default="bs_6stem", help=_i18n("model_name_help"))
+    sep_p.add_argument("-tmpl", "--template", type=str, default="NAME_(STEM)_MODEL", help=_i18n("template_help"))
+    sep_p.add_argument("-stem", "--selected_stems", type=str, nargs="*", default=None, help=_i18n("selected_stems_help"), metavar="STEM")
+    sep_p.add_argument("-inst", "--ext_inst", action="store_true", help=_i18n("ext_inst_help"))
+    sep_p.add_argument("-invspec", "--use_spec_invert", action="store_true", help=_i18n("use_spec_invert_help"))
+    sep_p.add_argument("-dw", "--install_only", action="store_true", help=_i18n("install_only_help"))
+    sep_p.add_argument("--mdx_enable_denoise", action="store_true", help=_i18n("mdx_denoise_help"))
+    sep_p.add_argument("--vr_aggression", type=int, default=5, help=_i18n("vr_aggression_help"), metavar="AGGR")
+    sep_p.add_argument("--vr_high_end_process", action="store_true", help=_i18n("vr_high_end_help"))
+    sep_p.add_argument("--vr_enable_post_process", action="store_true", help=_i18n("vr_post_process_help"))
+    sep_p.add_argument("--econom_mode", action="store_true", help=_i18n("econom_mode_help"))
+    sep_p.add_argument("--chunk_duration", type=float, default=None, help=_i18n("chunk_duration_help"))
 
-    info_p = subparsers.add_parser("info", help="Показать список всех поддерживаемых моделей с фильтрацией.")
-    info_p.add_argument("-limit", "--limit", type=int, default=0, help="Ограничить количество выводимых моделей (0 — без лимита).")
-    info_p.add_argument("-stem", "--stem", type=str, default=None, help="Фильтровать по конкретному стему (напр. vocals, drums, bass).")
-    info_p.add_argument("-t","--model_types", nargs='*', help="Фильтровать по типу архитектуры (напр. mdxnet, mel_band_roformer, scnet).")
-    info_p.add_argument("-c", "--categories", nargs='*', help="Фильтровать по категории (напр. Вокал, Инструментал).")
-    info_p.add_argument("-oi", "--only_installed", action="store_true", help="Фильтровать по факту установки")
+    # Команда info
+    info_p = subparsers.add_parser("info", help=_i18n("info_help"))
+    info_p.add_argument("-limit", "--limit", type=int, default=0, help=_i18n("limit_help"))
+    info_p.add_argument("-stem", "--stem", type=str, default=None, help=_i18n("stem_filter_help"))
+    info_p.add_argument("-t","--model_types", nargs='*', help=_i18n("model_types_help"))
+    info_p.add_argument("-c", "--categories", nargs='*', help=_i18n("categories_help"))
+    info_p.add_argument("-oi", "--only_installed", action="store_true", help=_i18n("only_installed_help"))
+    
     info_other_group = info_p.add_mutually_exclusive_group(required=False)
-    info_other_group.add_argument("-lc", "--list_categories", action="store_true", help="Показать доступные категории")
-    info_other_group.add_argument("-lt", "--list_model_types", action="store_true", help="Показать доступные типы моделей")
-    info_other_group.add_argument("-u", "--update", action="store_true", help="Обновить информацию о моделях")
+    info_other_group.add_argument("-lc", "--list_categories", action="store_true", help=_i18n("list_categories_help"))
+    info_other_group.add_argument("-lt", "--list_model_types", action="store_true", help=_i18n("list_model_types_help"))
+    info_other_group.add_argument("-u", "--update", action="store_true", help=_i18n("update_help"))
    
-    auto_p = subparsers.add_parser("auto_ensemble", help="Автоматический ансамбль из нескольких моделей. Общие параметры: --input, --output_dir, --output_format")
-    auto_p.add_argument("-m", "--method", type=str, default="avg_fft", choices=("min_fft", "max_fft", "avg_fft", "median_fft"), help="Метод объединения.")
-    auto_p.add_argument("-inv", "--invert", action="store_true", help="Включить инверсию для ансамбля.")
+    # Команда auto_ensemble
+    auto_p = subparsers.add_parser("auto_ensemble", help=_i18n("auto_ensemble_help"))
+    auto_p.add_argument("-m", "--method", type=str, default="avg_fft", 
+                       choices=("min_fft", "max_fft", "avg_fft", "median_fft"), 
+                       help=_i18n("method_help"))
+    auto_p.add_argument("-inv", "--invert", action="store_true", help=_i18n("invert_ensemble_help"))
+    
     auto_group = auto_p.add_mutually_exclusive_group(required=True)
-    auto_group.add_argument("-ml", '--model_list', nargs='+', help="Список моделей формата: MODEL,STEM1,STEM2,WEIGHT", metavar="MODEL,STEM1,STEM2,WEIGHT")
-    auto_group.add_argument("-json", "--json", type=str, help="Путь к JSON конфигурации ансамбля.")
+    auto_group.add_argument("-ml", '--model_list', nargs='+', 
+                           help=_i18n("model_list_help"), 
+                           metavar="MODEL,STEM1,STEM2,WEIGHT")
+    auto_group.add_argument("-json", "--json", type=str, help=_i18n("json_help"))
 
-    manual_p = subparsers.add_parser("manual_ensemble", help="Сборка ансамбля из готовых файлов. Общие параметры: --input, --output_name, --output_format")
-    manual_p.add_argument("-w", "--weights", nargs='+', type=float, help="Веса файлов.")
-    manual_p.add_argument("-m", "--method", type=str, default="avg_fft", choices=("min_fft", "max_fft", "avg_fft", "median_fft"), help="Метод объединения.")
+    # Команда manual_ensemble
+    manual_p = subparsers.add_parser("manual_ensemble", help=_i18n("manual_ensemble_help"))
+    manual_p.add_argument("-w", "--weights", nargs='+', type=float, help=_i18n("weights_help"))
+    manual_p.add_argument("-m", "--method", type=str, default="avg_fft", 
+                         choices=("min_fft", "max_fft", "avg_fft", "median_fft"), 
+                         help=_i18n("method_help"))
 
-    sub_p = subparsers.add_parser("subtract", help="Вычитание стемов. Общие параметры: --input, --output_path")
-    sub_p.add_argument("--stem", type=str, required=True, help="Файл стема для вычитания.")
-    sub_p.add_argument("--method", choices=["waveform", "spectrogram"], default="waveform", help="Метод вычитания.")
+    # Команда subtract
+    sub_p = subparsers.add_parser("subtract", help=_i18n("subtract_help"))
+    sub_p.add_argument("--stem", type=str, required=True, help=_i18n("stem_path_help"))
+    sub_p.add_argument("--method", choices=["waveform", "spectrogram"], 
+                      default="waveform", help=_i18n("subtract_method_help"))
 
-    center_p = subparsers.add_parser("ext_phantom_center", help="Извлечение фантомного центра (Mid/Side). Общие параметры: --input")
-    center_p.add_argument("--mid", type=str, help="Путь для Mid канала.")
-    center_p.add_argument("--side", type=str, help="Путь для Side канала.")
+    # Команда ext_phantom_center
+    center_p = subparsers.add_parser("ext_phantom_center", help=_i18n("phantom_center_help"))
+    center_p.add_argument("--mid", type=str, help=_i18n("mid_path_help"))
+    center_p.add_argument("--side", type=str, help=_i18n("side_path_help"))
 
-    app_p = subparsers.add_parser("app", help="Веб-приложение")
-    app_p.add_argument(
-        "-p", "--port", type=int, default=None, help="Порт для запуска сервера Gradio."
-    )
-    app_p.add_argument(
-        "-s", "--share",
-        action="store_true",
-        help="Создать публичную ссылку для приложения Gradio.",
-    )
-    app_p.add_argument(
-        "-a", "--add_app",
-        action="store_true",
-        help="Включить вкладку с дополнительными приложениями",
-    )
-    app_p.add_argument(
-        "-pl", "--use_plugins",
-        action="store_true",
-        help="Включить плагины",
-    )
-    app_p.add_argument(
-        "-vb", "--vbach",
-        action="store_true",
-        help="Включить вкладку Vbach",
-    )
-    app_p.add_argument("-udir", "--user_dir", type=str, default=None, help="Путь к пользовательской папке")
+    # Команда app
+    app_p = subparsers.add_parser("app", help=_i18n("app_help"))
+    app_p.add_argument("-p", "--port", type=int, default=None, help=_i18n("port_help"))
+    app_p.add_argument("-s", "--share", action="store_true", help=_i18n("share_help"))
+    app_p.add_argument("-a", "--add_app", action="store_true", help=_i18n("add_app_help"))
+    app_p.add_argument("-pl", "--use_plugins", action="store_true", help=_i18n("plugins_help"))
+    app_p.add_argument("-vb", "--vbach", action="store_true", help=_i18n("vbach_help"))
+    app_p.add_argument("-udir", "--user_dir", type=str, default=None, help=_i18n("user_dir_help"))
+    
     args = parser.parse_args()
 
     # 1. Список моделей
@@ -1300,18 +1843,24 @@ if __name__ == "__main__":
         elif args.list_model_types:
             mvsepless.get_list_model_types()
         elif args.update:
-            file_path = MvseplessModelManager().models_info_path
-            url_link = "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/models.json?download=true"
+            file_path: str = MvseplessModelManager().models_info_path
+            url_link: str = "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/models.json?download=true"
             dw_file(url_link, file_path, retries=999999)
         else:
-            mvsepless.get_list_supported_models(limit=args.limit, stem=args.stem, model_types=args.model_types, category=args.categories, only_installed=args.only_installed)
+            mvsepless.get_list_supported_models(
+                limit=args.limit, 
+                stem=args.stem, 
+                model_types=args.model_types, 
+                category=args.categories, 
+                only_installed=args.only_installed
+            )
         sys.exit(0)
 
     # 2. Логика подкоманд
     if args.command == "auto_ensemble":
-        ensemble_state = []
+        ensemble_state: List[List] = []
         if args.json:
-            with open(args.json, 'r') as f:
+            with open(args.json, 'r', encoding='utf-8') as f:
                 ensemble_state = json.load(f)
         else:
             for i, item in enumerate(args.model_list):
@@ -1320,12 +1869,13 @@ if __name__ == "__main__":
                     parts[3] = float(parts[3])
                     ensemble_state.append(parts)
                 else:
-                    print(f"Ошибка в формате модели: {item}")
+                    print(_i18n("model_format_error", item=item))
                     sys.exit(1)
+                    
         if not args.input:
             sys.exit(1)
         else:
-            first_file = args.input[0]
+            first_file: str = args.input[0]
             mvsepless.auto_ensemble(
                 input_file=first_file,
                 ensemble_state=ensemble_state,
@@ -1336,7 +1886,7 @@ if __name__ == "__main__":
             )
 
     elif args.command == "manual_ensemble":
-        weights = args.weights if args.weights else [1.0] * len(args.input)
+        weights: List[float] = args.weights if args.weights else [1.0] * len(args.input)
         if len(weights) < len(args.input):
             weights += [1.0] * (len(args.input) - len(weights))
         
@@ -1364,20 +1914,27 @@ if __name__ == "__main__":
 
     elif args.command == "app":
         from app import SeparatorGradio, user_directory
-        if args.user_dir != "" and args.user_dir:
+        
+        if args.user_dir:
             user_directory.change_dir(args.user_dir)
-        SeparatorGradio().UI(gr.themes.Citrus(
-            primary_hue="teal",
-            secondary_hue="blue",
-            neutral_hue="blue",
-            spacing_size="sm",
-            font=[
-                gr.themes.GoogleFont("Montserrat"),
-                "ui-sans-serif",
-                "system-ui",
-                "sans-serif",
-            ],
-        ), args.add_app, args.use_plugins, args.vbach).launch(
+            
+        SeparatorGradio().UI(
+            gr.themes.Citrus(
+                primary_hue="teal",
+                secondary_hue="blue",
+                neutral_hue="blue",
+                spacing_size="sm",
+                font=[
+                    gr.themes.GoogleFont("Montserrat"),
+                    "ui-sans-serif",
+                    "system-ui",
+                    "sans-serif",
+                ],
+            ),
+            args.add_app, 
+            args.use_plugins, 
+            args.vbach
+        ).launch(
             server_name="0.0.0.0",
             server_port=args.port,
             share=args.share,
@@ -1390,7 +1947,9 @@ if __name__ == "__main__":
         if args.install_only:
             mvsepless.install_model(args.model_name)
         else:
-            mvsepless.chunk_duration = args.chunk_duration
+            if args.chunk_duration is not None:
+                mvsepless.chunk_duration = args.chunk_duration
+                
             mvsepless.separate(
                 input=args.input,
                 output_dir=args.output_dir,

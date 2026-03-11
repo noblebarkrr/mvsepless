@@ -10,51 +10,87 @@ import hashlib
 import json
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, List, Tuple, Optional, Any, Union
+from functools import wraps
+
 from audio import check, read, write, output_formats
 from namer import Namer
 from separator import Separator
-from vbach import f0_methods
+from vbach import f0_methods, VbachModelManager
 from gradio_helper import GradioHelper, tz
+from i18n import _i18n, CURRENT_LANGUAGE
+
 
 class VbachGen(Separator, GradioHelper):
-    def __init__(self, model_manager, input_files, upload_files, user_directory, vbach_inference, device):
+    """Класс для генерации каверов с использованием Vbach"""
+    
+    def __init__(
+        self, 
+        model_manager: VbachModelManager, 
+        input_files: List[str], 
+        upload_files_func: callable, 
+        user_directory: Any, 
+        vbach_inference: callable, 
+        device: str
+    ) -> None:
+        """
+        Инициализация генератора каверов
+        
+        Args:
+            model_manager: Менеджер моделей Vbach
+            input_files: Список входных файлов
+            upload_files_func: Функция загрузки файлов
+            user_directory: Пользовательская директория
+            vbach_inference: Функция инференса Vbach
+            device: Устройство
+        """
         super().__init__()
-        self.device = device
-        self.namer = Namer()
-        self.processing_data = {}
-        self.separation_stages = {}
-        self.conversion_cache = {}
-        self.vbach_model_manager = model_manager
-        self.vbach_inference = vbach_inference
-        self.input_files = input_files
-        self.upload_files = upload_files
-        self.user_directory = user_directory
+        self.device: str = device
+        self.namer: Namer = Namer()
+        self.processing_data: Dict[str, Any] = {}
+        self.separation_stages: Dict[str, Dict[str, Any]] = {}
+        self.conversion_cache: Dict[str, Dict[str, Any]] = {}
+        self.vbach_model_manager: VbachModelManager = model_manager
+        self.vbach_inference: callable = vbach_inference
+        self.input_files: List[str] = input_files
+        self.upload_files_func: callable = upload_files_func
+        self.user_directory: Any = user_directory
         
         # Создаем базовую директорию для хранения результатов
-        self.output_base_directory = os.path.join(self.user_directory.path, "output", "vbachgen")
+        self.output_base_directory: str = os.path.join(self.user_directory.path, "output", "vbachgen")
         os.makedirs(self.output_base_directory, exist_ok=True)
         
-        self.fairseq_embedders = list(
+        self.fairseq_embedders: List[str] = list(
             self.vbach_model_manager.huberts_fairseq_dict.keys()
         )
-        self.transformers_embedders = list(
+        self.transformers_embedders: List[str] = list(
             self.vbach_model_manager.huberts_transformers_dict.keys()
         )
 
-    def get_output_directory(self, input_audio_path, stage, model_name=""):
-        """Создает путь для сохранения файлов в постоянной директории"""
-        basename = os.path.splitext(os.path.basename(input_audio_path))[0]
+    def get_output_directory(self, input_audio_path: str, stage: str, model_name: str = "") -> str:
+        """
+        Создает путь для сохранения файлов в постоянной директории
+        
+        Args:
+            input_audio_path: Путь к входному аудио
+            stage: Этап обработки
+            model_name: Имя модели
+        
+        Returns:
+            Путь к директории для сохранения
+        """
+        basename: str = os.path.splitext(os.path.basename(input_audio_path))[0]
         # Заменяем недопустимые символы в имени файла
         basename = "".join(c if c.isalnum() or c in " _-" else "_" for c in basename)
         
-        timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
+        timestamp: str = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
         
         if model_name:
-            model_suffix = f"_{model_name}"
+            model_suffix: str = f"_{model_name}"
         else:
             model_suffix = ""
             
-        output_dir = os.path.join(
+        output_dir: str = os.path.join(
             self.output_base_directory, 
             basename, 
             f"{timestamp}_{stage}{model_suffix}"
@@ -62,37 +98,76 @@ class VbachGen(Separator, GradioHelper):
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
 
-    def get_cache_key(self, params_dict):
-        params_str = json.dumps(params_dict, sort_keys=True)
+    def get_cache_key(self, params_dict: Dict[str, Any]) -> str:
+        """
+        Получить ключ кэша на основе параметров
+        
+        Args:
+            params_dict: Словарь параметров
+        
+        Returns:
+            Хеш-ключ
+        """
+        params_str: str = json.dumps(params_dict, sort_keys=True)
         return hashlib.md5(params_str.encode()).hexdigest()
 
-    def parse_voice_models_actual(self):
+    def parse_voice_models_actual(self) -> List[str]:
+        """
+        Получить список голосовых моделей
+        
+        Returns:
+            Список имен моделей
+        """
         return self.vbach_model_manager.parse_voice_models()
 
-    def find_file_from_stem(self, results, stem_names=["Vocals", "vocals"]):
+    def find_file_from_stem(self, results: List[Tuple[str, str]], stem_names: List[str]) -> Optional[str]:
+        """
+        Найти файл по имени стема
+        
+        Args:
+            results: Список результатов разделения
+            stem_names: Список имен стемов для поиска
+        
+        Returns:
+            Путь к файлу или None
+        """
         for stem_name, stem_file in results:
             if stem_name in stem_names:
                 return stem_file
         return None
 
-    def extract_inst_voc(self, input_audio, model_name, progress=None):
-        key = f"inst_voc_{hashlib.md5(input_audio.encode()).hexdigest()}_{model_name}"
+    def extract_inst_voc(
+        self, 
+        input_audio: str, 
+        model_name: str, 
+        progress: Optional[gr.Progress] = None
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Извлечь инструментал и вокал
+        
+        Args:
+            input_audio: Путь к входному аудио
+            model_name: Имя модели
+            progress: Прогресс
+        
+        Returns:
+            Кортеж (путь к инструменталу, путь к вокалу)
+        """
+        key: str = f"inst_voc_{hashlib.md5(input_audio.encode()).hexdigest()}_{model_name}"
 
         if key in self.separation_stages:
-            print(
-                f"Пропускаем разделение на инструментал и вокал (уже выполнено с моделью: {model_name})"
-            )
-            inst_file = self.separation_stages[key]["inst_file"]
-            voc_file = self.separation_stages[key]["voc_file"]
+            print(_i18n("skip_separation", model=model_name))
+            inst_file: Optional[str] = self.separation_stages[key].get("inst_file")
+            voc_file: Optional[str] = self.separation_stages[key].get("voc_file")
             return inst_file, voc_file
 
         if progress:
-            progress(0.2, desc="Извлечение инструментала и вокала...")
+            progress(0.2, desc=_i18n("extract_inst_voc_progress"))
 
         # Используем постоянную директорию вместо временной
-        output_dir = self.get_output_directory(input_audio, "inst_voc", model_name)
+        output_dir: str = self.get_output_directory(input_audio, "inst_voc", model_name)
         
-        inst_output = self.separate(
+        inst_output: List[Tuple[str, str]] = self.separate(
             input=input_audio,
             output_dir=output_dir,
             model_name=model_name,
@@ -100,7 +175,7 @@ class VbachGen(Separator, GradioHelper):
             output_format="flac",
             template="VbachGen_NAME_STEM",
             add_settings={
-                "add_single_sep_text_progress": "Извлечение инструментала и вокала..."
+                "add_single_sep_text_progress": _i18n("extract_inst_voc_progress")
             },
             progress=progress,
         )
@@ -127,27 +202,41 @@ class VbachGen(Separator, GradioHelper):
 
         return inst_file, voc_file
 
-    def extract_lead_back(self, vocals_file, model_name, progress=None):
+    def extract_lead_back(
+        self, 
+        vocals_file: Optional[str], 
+        model_name: str, 
+        progress: Optional[gr.Progress] = None
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Извлечь лид и бэк-вокал
+        
+        Args:
+            vocals_file: Путь к файлу вокала
+            model_name: Имя модели
+            progress: Прогресс
+        
+        Returns:
+            Кортеж (путь к лид-вокалу, путь к бэк-вокалу)
+        """
         if not vocals_file:
             return None, None
 
-        key = f"lead_back_{hashlib.md5(vocals_file.encode()).hexdigest()}_{model_name}"
+        key: str = f"lead_back_{hashlib.md5(vocals_file.encode()).hexdigest()}_{model_name}"
 
         if key in self.separation_stages:
-            print(
-                f"Пропускаем разделение на лид и бэк-вокал (уже выполнено с моделью: {model_name})"
-            )
-            lead_file = self.separation_stages[key]["lead_file"]
-            back_file = self.separation_stages[key]["back_file"]
+            print(_i18n("skip_lead_back_separation", model=model_name))
+            lead_file: Optional[str] = self.separation_stages[key].get("lead_file")
+            back_file: Optional[str] = self.separation_stages[key].get("back_file")
             return lead_file, back_file
 
         if progress:
-            progress(0.4, desc="Извлечение лид и бэк-вокала...")
+            progress(0.4, desc=_i18n("extract_lead_back_progress"))
 
         # Используем постоянную директорию
-        output_dir = self.get_output_directory(vocals_file, "lead_back", model_name)
+        output_dir: str = self.get_output_directory(vocals_file, "lead_back", model_name)
         
-        karaoke_output = self.separate(
+        karaoke_output: List[Tuple[str, str]] = self.separate(
             input=vocals_file,
             output_dir=output_dir,
             model_name=model_name,
@@ -155,7 +244,7 @@ class VbachGen(Separator, GradioHelper):
             output_format="flac",
             template="karaoke_NAME_STEM",
             add_settings={
-                "add_single_sep_text_progress": "Извлечение лид и бэк-вокала..."
+                "add_single_sep_text_progress": _i18n("extract_lead_back_progress")
             },
             progress=progress,
         )
@@ -177,36 +266,52 @@ class VbachGen(Separator, GradioHelper):
 
         return lead_file, back_file
 
-    def clear_vocals(self, vocals_file, model_name, progress=None, vocal_type="vocals"):
+    def clear_vocals(
+        self, 
+        vocals_file: Optional[str], 
+        model_name: str, 
+        progress: Optional[gr.Progress] = None, 
+        vocal_type: str = "vocals"
+    ) -> Optional[str]:
+        """
+        Очистить вокал от реверберации/эха
+        
+        Args:
+            vocals_file: Путь к файлу вокала
+            model_name: Имя модели
+            progress: Прогресс
+            vocal_type: Тип вокала
+        
+        Returns:
+            Путь к очищенному файлу или None
+        """
         if not vocals_file:
             return None
 
-        key = f"clear_{vocal_type}_{hashlib.md5(vocals_file.encode()).hexdigest()}_{model_name}"
+        key: str = f"clear_{vocal_type}_{hashlib.md5(vocals_file.encode()).hexdigest()}_{model_name}"
 
         if key in self.separation_stages:
-            print(
-                f"Пропускаем очистку {vocal_type} (уже выполнено с моделью: {model_name})"
-            )
-            return self.separation_stages[key]["cleared_file"]
+            print(_i18n("skip_clear", vocal_type=vocal_type, model=model_name))
+            return self.separation_stages[key].get("cleared_file")
 
         if progress:
-            progress(0.6, desc=f"Очистка {vocal_type}...")
+            progress(0.6, desc=_i18n("clear_vocals_progress", vocal_type=vocal_type))
 
         # Используем постоянную директорию
-        output_dir = self.get_output_directory(vocals_file, f"clear_{vocal_type}", model_name)
+        output_dir: str = self.get_output_directory(vocals_file, f"clear_{vocal_type}", model_name)
         
-        clear_output = self.separate(
+        clear_output: List[Tuple[str, str]] = self.separate(
             input=vocals_file,
             output_dir=output_dir,
             model_name=model_name,
             ext_inst=True,
             output_format="flac",
             template="precleared_NAME_STEM",
-            add_settings={"add_single_sep_text_progress": f"Очистка {vocal_type}..."},
+            add_settings={"add_single_sep_text_progress": _i18n("clear_vocals_progress", vocal_type=vocal_type)},
             progress=progress,
         )
 
-        cleared_file = self.find_file_from_stem(
+        cleared_file: Optional[str] = self.find_file_from_stem(
             clear_output, ["No Echo", "No Reverb", "Dry"]
         )
 
@@ -221,67 +326,81 @@ class VbachGen(Separator, GradioHelper):
 
     def separation_only(
         self,
-        input_audio,
-        anti_instrum_model,
-        karaoke_model,
-        dereverb_model,
-        karaoke_check,
-        preclear_vocals_check,
-        progress=None,
-    ):
+        input_audio: str,
+        anti_instrum_model: str,
+        karaoke_model: str,
+        dereverb_model: str,
+        karaoke_check: bool,
+        preclear_vocals_check: bool,
+        progress: Optional[gr.Progress] = None,
+    ) -> Dict[str, Any]:
+        """
+        Только разделение аудио
+        
+        Args:
+            input_audio: Путь к входному аудио
+            anti_instrum_model: Модель для извлечения инструментала
+            karaoke_model: Модель для караоке
+            dereverb_model: Модель для удаления реверберации
+            karaoke_check: Разделить на лид/бэк
+            preclear_vocals_check: Очистить вокал
+            progress: Прогресс
+        
+        Returns:
+            Словарь с результатами разделения
+        """
         if progress is None:
             progress = gr.Progress(track_tqdm=True)
 
-        progress(0, desc="Начало разделения...")
+        progress(0, desc=_i18n("start_separation"))
 
-        progress(0.1, desc="Проверка предыдущих результатов разделения...")
+        progress(0.1, desc=_i18n("check_previous_results"))
 
-        inst_file = None
-        full_vocals_file = None
-        back_vocals_file = None
-        lead_vocals_file = None
+        inst_file: Optional[str] = None
+        full_vocals_file: Optional[str] = None
+        back_vocals_file: Optional[str] = None
+        lead_vocals_file: Optional[str] = None
 
-        inst_voc_key = f"inst_voc_{hashlib.md5(input_audio.encode()).hexdigest()}_{anti_instrum_model}"
+        inst_voc_key: str = f"inst_voc_{hashlib.md5(input_audio.encode()).hexdigest()}_{anti_instrum_model}"
 
         if inst_voc_key in self.separation_stages:
-            print("Используем ранее извлеченные инструментал и вокал")
-            inst_file = self.separation_stages[inst_voc_key]["inst_file"]
-            full_vocals_file = self.separation_stages[inst_voc_key]["voc_file"]
-            progress(0.2, desc="Пропуск: инструментал и вокал уже извлечены")
+            print(_i18n("using_cached_inst_voc"))
+            inst_file = self.separation_stages[inst_voc_key].get("inst_file")
+            full_vocals_file = self.separation_stages[inst_voc_key].get("voc_file")
+            progress(0.2, desc=_i18n("skip_inst_voc_extracted"))
         else:
-            progress(0.2, desc="Извлечение инструментала и вокала...")
+            progress(0.2, desc=_i18n("extract_inst_voc_progress"))
             inst_file, full_vocals_file = self.extract_inst_voc(
                 input_audio, anti_instrum_model, progress
             )
 
         if karaoke_check and full_vocals_file:
-            lead_back_key = f"lead_back_{hashlib.md5(full_vocals_file.encode()).hexdigest()}_{karaoke_model}"
+            lead_back_key: str = f"lead_back_{hashlib.md5(full_vocals_file.encode()).hexdigest()}_{karaoke_model}"
 
             if lead_back_key in self.separation_stages:
-                print("Используем ранее извлеченные лид и бэк-вокалы")
-                lead_vocals_file = self.separation_stages[lead_back_key]["lead_file"]
-                back_vocals_file = self.separation_stages[lead_back_key]["back_file"]
-                progress(0.4, desc="Пропуск: лид и бэк-вокалы уже извлечены")
+                print(_i18n("using_cached_lead_back"))
+                lead_vocals_file = self.separation_stages[lead_back_key].get("lead_file")
+                back_vocals_file = self.separation_stages[lead_back_key].get("back_file")
+                progress(0.4, desc=_i18n("skip_lead_back_extracted"))
             else:
-                progress(0.4, desc="Извлечение лид и бэк-вокала...")
+                progress(0.4, desc=_i18n("extract_lead_back_progress"))
                 lead_vocals_file, back_vocals_file = self.extract_lead_back(
                     full_vocals_file, karaoke_model, progress
                 )
 
-        cleared_vocals = []
+        cleared_vocals: List[Tuple[str, str]] = []
         if preclear_vocals_check:
             if full_vocals_file:
-                clear_key = f"clear_vocals_{hashlib.md5(full_vocals_file.encode()).hexdigest()}_{dereverb_model}"
+                clear_key: str = f"clear_vocals_{hashlib.md5(full_vocals_file.encode()).hexdigest()}_{dereverb_model}"
 
                 if clear_key in self.separation_stages:
-                    print("Используем ранее очищенный полный вокал")
-                    cleared_full_vocals = self.separation_stages[clear_key][
-                        "cleared_file"
-                    ]
-                    cleared_vocals.append(("full_vocals", cleared_full_vocals))
-                    progress(0.6, desc="Пропуск: полный вокал уже очищен")
+                    print(_i18n("using_cached_clear_full"))
+                    cleared_full_vocals: Optional[str] = self.separation_stages[clear_key].get("cleared_file")
+                    if cleared_full_vocals:
+                        cleared_vocals.append(("full_vocals", cleared_full_vocals))
+                    progress(0.6, desc=_i18n("skip_clear_full"))
                 else:
-                    progress(0.6, desc="Очистка полного вокала...")
+                    progress(0.6, desc=_i18n("clear_full_vocals_progress"))
                     cleared_full_vocals = self.clear_vocals(
                         full_vocals_file, dereverb_model, progress, vocal_type="vocals"
                     )
@@ -292,11 +411,10 @@ class VbachGen(Separator, GradioHelper):
                 clear_key = f"clear_lead_{hashlib.md5(lead_vocals_file.encode()).hexdigest()}_{dereverb_model}"
 
                 if clear_key in self.separation_stages:
-                    print("Используем ранее очищенный лид-вокал")
-                    cleared_lead_vocals = self.separation_stages[clear_key][
-                        "cleared_file"
-                    ]
-                    cleared_vocals.append(("lead_vocals", cleared_lead_vocals))
+                    print(_i18n("using_cached_clear_lead"))
+                    cleared_lead_vocals = self.separation_stages[clear_key].get("cleared_file")
+                    if cleared_lead_vocals:
+                        cleared_vocals.append(("lead_vocals", cleared_lead_vocals))
                 else:
                     cleared_lead_vocals = self.clear_vocals(
                         lead_vocals_file, dereverb_model, progress, vocal_type="lead"
@@ -308,11 +426,10 @@ class VbachGen(Separator, GradioHelper):
                 clear_key = f"clear_back_{hashlib.md5(back_vocals_file.encode()).hexdigest()}_{dereverb_model}"
 
                 if clear_key in self.separation_stages:
-                    print("Используем ранее очищенный бэк-вокал")
-                    cleared_back_vocals = self.separation_stages[clear_key][
-                        "cleared_file"
-                    ]
-                    cleared_vocals.append(("back_vocals", cleared_back_vocals))
+                    print(_i18n("using_cached_clear_back"))
+                    cleared_back_vocals = self.separation_stages[clear_key].get("cleared_file")
+                    if cleared_back_vocals:
+                        cleared_vocals.append(("back_vocals", cleared_back_vocals))
                 else:
                     cleared_back_vocals = self.clear_vocals(
                         back_vocals_file, dereverb_model, progress, vocal_type="back"
@@ -320,7 +437,7 @@ class VbachGen(Separator, GradioHelper):
                     if cleared_back_vocals:
                         cleared_vocals.append(("back_vocals", cleared_back_vocals))
 
-        list_vocals = [
+        list_vocals: List[Tuple[str, Optional[str]]] = [
             ("full_vocals", full_vocals_file),
             ("back_vocals", back_vocals_file),
             ("lead_vocals", lead_vocals_file),
@@ -332,77 +449,130 @@ class VbachGen(Separator, GradioHelper):
                     list_vocals[i] = (name, cleared_file)
                     break
 
-        generated_files = []
+        generated_files: List[str] = []
         if inst_file:
             generated_files.append(inst_file)
         for name, file in list_vocals:
             if file:
                 generated_files.append(file)
 
-        progress(1.0, desc="Разделение завершено")
+        progress(1.0, desc=_i18n("separation_complete"))
 
         # Создаем директорию для результатов разделения
-        separation_dir = self.get_output_directory(input_audio, "separation_results")
+        separation_dir: str = self.get_output_directory(input_audio, "separation_results")
         
         return {
             "inst_file": inst_file,
             "list_vocals": list_vocals,
-            "temp_dir": separation_dir,  # Используем постоянную директорию
+            "temp_dir": separation_dir,
             "generated_files": generated_files,
         }
 
-    def clear_separation_cache(self):
+    def clear_separation_cache(self) -> None:
+        """Очистить кэш разделения"""
         self.separation_stages.clear()
-        print("Кэш разделения очищен")
+        print(_i18n("separation_cache_cleared"))
 
     def conversion_only(
         self,
-        separation_result,
-        voice_name,
-        conversion_mode,
-        pitch1_val,
-        pitch2_val,
-        method_pitch,
-        index_rate,
-        fr,
-        rms,
-        protect,
-        hop_mangio_crepe,
-        f0_max,
-        output_format,
-        unconv_vocals_check,
-        use_effects,
-        instrumental_gain,
-        vocal1_gain,
-        vocal2_gain,
-        echo_delay,
-        echo_feedback,
-        echo_mix,
-        reverb_rm_size,
-        reverb_width,
-        reverb_wet,
-        reverb_dry,
-        reverb_damping,
-        chorus_rate_hz,
-        chorus_depth,
-        chorus_centre_delay_ms,
-        chorus_feedback,
-        chorus_mix,
-        compressor_ratio,
-        compressor_threshold,
-        compressor_attack,
-        compressor_release,
-        noise_gate_threshold,
-        noise_gate_ratio,
-        noise_gate_attack,
-        noise_gate_release,
-        embedder_name=None,
-        transformers_mode=False,
-        input_audio=None,
-        progress=None,
-        always_new_conversion=True,
-    ):
-        conversion_params = {
+        separation_result: Dict[str, Any],
+        voice_name: str,
+        conversion_mode: str,
+        pitch1_val: float,
+        pitch2_val: float,
+        method_pitch: str,
+        index_rate: float,
+        fr: int,
+        rms: float,
+        protect: float,
+        hop_mangio_crepe: int,
+        f0_max: int,
+        output_format: str,
+        unconv_vocals_check: bool,
+        use_effects: bool,
+        instrumental_gain: float,
+        vocal1_gain: float,
+        vocal2_gain: float,
+        echo_delay: float,
+        echo_feedback: float,
+        echo_mix: float,
+        reverb_rm_size: float,
+        reverb_width: float,
+        reverb_wet: float,
+        reverb_dry: float,
+        reverb_damping: float,
+        chorus_rate_hz: float,
+        chorus_depth: float,
+        chorus_centre_delay_ms: float,
+        chorus_feedback: float,
+        chorus_mix: float,
+        compressor_ratio: float,
+        compressor_threshold: float,
+        compressor_attack: float,
+        compressor_release: float,
+        noise_gate_threshold: float,
+        noise_gate_ratio: float,
+        noise_gate_attack: float,
+        noise_gate_release: float,
+        embedder_name: Optional[str] = None,
+        transformers_mode: bool = False,
+        input_audio: Optional[str] = None,
+        progress: Optional[gr.Progress] = None,
+        always_new_conversion: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Только преобразование голоса
+        
+        Args:
+            separation_result: Результаты разделения
+            voice_name: Имя голосовой модели
+            conversion_mode: Режим преобразования
+            pitch1_val: Высота тона для первого вокала
+            pitch2_val: Высота тона для второго вокала
+            method_pitch: Метод извлечения тона
+            index_rate: Влияние индекса
+            fr: Радиус фильтра
+            rms: Огибающая громкости
+            protect: Защита согласных
+            hop_mangio_crepe: Длина шага
+            f0_max: Максимальная частота F0
+            output_format: Формат вывода
+            unconv_vocals_check: Добавить непреобразованный вокал
+            use_effects: Использовать эффекты
+            instrumental_gain: Громкость инструментала
+            vocal1_gain: Громкость первого вокала
+            vocal2_gain: Громкость второго вокала
+            echo_delay: Задержка эха
+            echo_feedback: Обратная связь эха
+            echo_mix: Смешение эха
+            reverb_rm_size: Размер комнаты реверберации
+            reverb_width: Ширина реверберации
+            reverb_wet: Влажность реверберации
+            reverb_dry: Сухость реверберации
+            reverb_damping: Демпфирование реверберации
+            chorus_rate_hz: Скорость хоруса
+            chorus_depth: Глубина хоруса
+            chorus_centre_delay_ms: Задержка центра хоруса
+            chorus_feedback: Обратная связь хоруса
+            chorus_mix: Смешение хоруса
+            compressor_ratio: Соотношение компрессора
+            compressor_threshold: Порог компрессора
+            compressor_attack: Атака компрессора
+            compressor_release: Спад компрессора
+            noise_gate_threshold: Порог шумоподавления
+            noise_gate_ratio: Соотношение шумоподавления
+            noise_gate_attack: Атака шумоподавления
+            noise_gate_release: Спад шумоподавления
+            embedder_name: Имя эмбеддера
+            transformers_mode: Режим transformers
+            input_audio: Входное аудио
+            progress: Прогресс
+            always_new_conversion: Всегда создавать новое преобразование
+        
+        Returns:
+            Словарь с результатами преобразования
+        """
+        conversion_params: Dict[str, Any] = {
             "voice_name": voice_name,
             "conversion_mode": conversion_mode,
             "pitch1_val": pitch1_val,
@@ -444,23 +614,23 @@ class VbachGen(Separator, GradioHelper):
             "embedder_name": embedder_name,
             "transformers_mode": transformers_mode,
         }
-        cache_key = self.get_cache_key(conversion_params)
+        cache_key: str = self.get_cache_key(conversion_params)
 
         if not always_new_conversion:
             if cache_key in self.conversion_cache:
-                print("Используем кэшированные результаты преобразования")
+                print(_i18n("using_cached_conversion"))
                 return self.conversion_cache[cache_key]
 
         if progress is None:
             progress = gr.Progress(track_tqdm=True)
 
-        progress(0, desc="Начало преобразования...")
+        progress(0, desc=_i18n("start_conversion"))
 
-        inst_path = separation_result["inst_file"]
-        list_vocals = separation_result["list_vocals"]
-        temp_dir = separation_result["temp_dir"]
+        inst_path: Optional[str] = separation_result.get("inst_file")
+        list_vocals: List[Tuple[str, Optional[str]]] = separation_result.get("list_vocals", [])
+        temp_dir: str = separation_result.get("temp_dir", "")
 
-        rvc_params = {
+        rvc_params: Dict[str, Any] = {
             "model_name": voice_name,
             "pitch1": pitch1_val,
             "pitch2": pitch2_val,
@@ -475,9 +645,9 @@ class VbachGen(Separator, GradioHelper):
             "transformers_mode": transformers_mode,
         }
 
-        params = {"output_format": output_format, "conversion_mode": conversion_mode}
+        params: Dict[str, Any] = {"output_format": output_format, "conversion_mode": conversion_mode}
 
-        mix_params = {
+        mix_params: Dict[str, Any] = {
             "add_unconverted_vocals_to_instrumental": unconv_vocals_check,
             "use_effects": use_effects,
             "gain": {
@@ -520,14 +690,17 @@ class VbachGen(Separator, GradioHelper):
             },
         }
 
-        progress(0.3, desc="Преобразование вокалов...")
+        progress(0.3, desc=_i18n("converting_vocals"))
 
-        converted_vocals_list = []
+        converted_vocals_list: List[str] = []
         
         # Создаем директорию для преобразованных файлов
-        conversion_dir = self.get_output_directory(input_audio, "converted", voice_name)
+        if input_audio:
+            conversion_dir: str = self.get_output_directory(input_audio, "converted", voice_name)
+        else:
+            conversion_dir = tempfile.mkdtemp()
         
-        full_vocals_file = next(
+        full_vocals_file: Optional[str] = next(
             (f[1] for f in list_vocals if f[0] == "full_vocals"), None
         )
         back_vocals_file = next(
@@ -537,15 +710,15 @@ class VbachGen(Separator, GradioHelper):
             (f[1] for f in list_vocals if f[0] == "lead_vocals"), None
         )
 
-        stack = "transformers" if transformers_mode else "fairseq"
+        stack: str = "transformers" if transformers_mode else "fairseq"
 
         if conversion_mode == "full" and full_vocals_file:
-            full_vocals_converted_path = self.vbach_inference(
+            full_vocals_converted_path: Optional[str] = self.vbach_inference(
                 input_file=full_vocals_file,
                 output_dir=conversion_dir,
                 model_name=rvc_params["model_name"],
                 format_name=False,
-                output_name=f"full_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}",
+                output_name=f"full_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}" if input_audio else "full_vocals_converted",
                 pitch=rvc_params["pitch1"],
                 method_pitch=rvc_params["f0_method"],
                 output_bitrate=320,
@@ -565,7 +738,8 @@ class VbachGen(Separator, GradioHelper):
                 },
                 device=self.device
             )
-            converted_vocals_list.append(full_vocals_converted_path)
+            if full_vocals_converted_path:
+                converted_vocals_list.append(full_vocals_converted_path)
 
         elif conversion_mode == "lead/back" and lead_vocals_file and back_vocals_file:
             lead_vocals_converted_path = self.vbach_inference(
@@ -573,7 +747,7 @@ class VbachGen(Separator, GradioHelper):
                 output_dir=conversion_dir,
                 model_name=rvc_params["model_name"],
                 format_name=False,
-                output_name=f"lead_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}",
+                output_name=f"lead_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}" if input_audio else "lead_vocals_converted",
                 pitch=rvc_params["pitch1"],
                 method_pitch=rvc_params["f0_method"],
                 output_bitrate=320,
@@ -599,7 +773,7 @@ class VbachGen(Separator, GradioHelper):
                 output_dir=conversion_dir,
                 model_name=rvc_params["model_name"],
                 format_name=False,
-                output_name=f"back_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}",
+                output_name=f"back_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}" if input_audio else "back_vocals_converted",
                 pitch=rvc_params["pitch2"],
                 method_pitch=rvc_params["f0_method"],
                 output_bitrate=320,
@@ -620,8 +794,10 @@ class VbachGen(Separator, GradioHelper):
                 device=self.device
             )
 
-            converted_vocals_list.append(back_vocals_converted_path)
-            converted_vocals_list.append(lead_vocals_converted_path)
+            if back_vocals_converted_path:
+                converted_vocals_list.append(back_vocals_converted_path)
+            if lead_vocals_converted_path:
+                converted_vocals_list.append(lead_vocals_converted_path)
 
         elif conversion_mode == "back" and back_vocals_file:
             back_vocals_converted_path = self.vbach_inference(
@@ -629,7 +805,7 @@ class VbachGen(Separator, GradioHelper):
                 output_dir=conversion_dir,
                 model_name=rvc_params["model_name"],
                 format_name=False,
-                output_name=f"back_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}",
+                output_name=f"back_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}" if input_audio else "back_vocals_converted",
                 pitch=rvc_params["pitch2"],
                 method_pitch=rvc_params["f0_method"],
                 output_bitrate=320,
@@ -649,7 +825,8 @@ class VbachGen(Separator, GradioHelper):
                 },
                 device=self.device
             )
-            converted_vocals_list.append(back_vocals_converted_path)
+            if back_vocals_converted_path:
+                converted_vocals_list.append(back_vocals_converted_path)
 
         elif conversion_mode == "lead" and lead_vocals_file:
             lead_vocals_converted_path = self.vbach_inference(
@@ -657,7 +834,7 @@ class VbachGen(Separator, GradioHelper):
                 output_dir=conversion_dir,
                 model_name=rvc_params["model_name"],
                 format_name=False,
-                output_name=f"lead_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}",
+                output_name=f"lead_vocals_converted-{self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}" if input_audio else "lead_vocals_converted",
                 pitch=rvc_params["pitch1"],
                 method_pitch=rvc_params["f0_method"],
                 output_bitrate=320,
@@ -677,9 +854,10 @@ class VbachGen(Separator, GradioHelper):
                 },
                 device=self.device
             )
-            converted_vocals_list.append(lead_vocals_converted_path)
+            if lead_vocals_converted_path:
+                converted_vocals_list.append(lead_vocals_converted_path)
 
-        generated_files = []
+        generated_files: List[str] = []
         if inst_path:
             generated_files.append(inst_path)
         for name, file in list_vocals:
@@ -696,55 +874,85 @@ class VbachGen(Separator, GradioHelper):
             "input_audio": input_audio,
         }
 
-        progress(0.7, desc="Сведение итогового кавера...")
+        progress(0.7, desc=_i18n("mixing_final_cover"))
 
-        final_path = self.mix_and_save(
-            inst_path,
-            list_vocals,
-            converted_vocals_list,
-            mix_params,
-            params,
-            rvc_params,
-            temp_dir,
-            input_audio,
-        )
+        if input_audio:
+            final_path: Optional[str] = self.mix_and_save(
+                inst_path,
+                list_vocals,
+                converted_vocals_list,
+                mix_params,
+                params,
+                rvc_params,
+                temp_dir,
+                input_audio,
+            )
+        else:
+            final_path = None
 
-        generated_files.append(final_path)
+        if final_path:
+            generated_files.append(final_path)
 
-        result = {
+        result: Dict[str, Any] = {
             "generated_files": generated_files,
             "final_path": final_path,
             "converted_vocals_list": converted_vocals_list,
         }
         self.conversion_cache[cache_key] = result
 
-        progress(1.0, desc="Преобразование завершено")
+        progress(1.0, desc=_i18n("conversion_complete"))
 
         return result
 
     def mix_and_save(
         self,
-        inst_path,
-        list_vocals,
-        converted_vocals_list,
-        mix_params,
-        params,
-        rvc_params,
-        temp_dir,
-        input_audio,
-    ):
-        final_audio = None
-        samplerate = 44100
+        inst_path: Optional[str],
+        list_vocals: List[Tuple[str, Optional[str]]],
+        converted_vocals_list: List[str],
+        mix_params: Dict[str, Any],
+        params: Dict[str, Any],
+        rvc_params: Dict[str, Any],
+        temp_dir: str,
+        input_audio: Optional[str],
+    ) -> Optional[str]:
+        """
+        Смешать и сохранить финальный кавер
+        
+        Args:
+            inst_path: Путь к инструменталу
+            list_vocals: Список вокалов
+            converted_vocals_list: Список преобразованных вокалов
+            mix_params: Параметры сведения
+            params: Параметры
+            rvc_params: Параметры RVC
+            temp_dir: Временная директория
+            input_audio: Входное аудио
+        
+        Returns:
+            Путь к финальному файлу или None
+        """
+        final_audio: Optional[np.ndarray] = None
+        samplerate: int = 44100
         
         # Функция для выравнивания длин аудио
-        def align_audio_length(audio1, audio2):
+        def align_audio_length(audio1: Optional[np.ndarray], audio2: Optional[np.ndarray]) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+            """
+            Выровнять длины двух аудио массивов
+            
+            Args:
+                audio1: Первый аудио массив
+                audio2: Второй аудио массив
+            
+            Returns:
+                Кортеж выровненных массивов
+            """
             if audio1 is None:
-                return audio2
+                return audio2, None
             if audio2 is None:
-                return audio1
+                return audio1, None
                 
             # Получаем минимальную длину
-            min_len = min(audio1.shape[1], audio2.shape[1])
+            min_len: int = min(audio1.shape[1], audio2.shape[1])
             
             # Обрезаем оба массива до минимальной длины
             if audio1.shape[1] > min_len:
@@ -758,7 +966,7 @@ class VbachGen(Separator, GradioHelper):
             inst_data, samplerate = read(
                 path=inst_path, mono=False, sr=None, dtype="float32"
             )
-            inst_gain = 10 ** (mix_params["gain"]["instrum"] / 20.0)
+            inst_gain: float = 10 ** (mix_params["gain"]["instrum"] / 20.0)
             inst_data *= inst_gain
             final_audio = inst_data.copy()
 
@@ -773,9 +981,9 @@ class VbachGen(Separator, GradioHelper):
                 (f[1] for f in list_vocals if f[0] == "lead_vocals"), None
             )
 
-            conversion_mode = params.get("conversion_mode", "full")
+            conversion_mode: str = params.get("conversion_mode", "full")
             
-            if conversion_mode == "lead" and back_vocals_file:
+            if conversion_mode == "lead" and back_vocals_file and os.path.exists(back_vocals_file):
                 back_vocals, sr = read(
                     path=back_vocals_file, mono=False, sr=samplerate, dtype="float32"
                 )
@@ -786,9 +994,10 @@ class VbachGen(Separator, GradioHelper):
                 else:
                     # Выравниваем длины перед сложением
                     final_audio, back_vocals = align_audio_length(final_audio, back_vocals)
-                    final_audio = final_audio + back_vocals
+                    if final_audio is not None and back_vocals is not None:
+                        final_audio = final_audio + back_vocals
                     
-            elif conversion_mode == "back" and lead_vocals_file:
+            elif conversion_mode == "back" and lead_vocals_file and os.path.exists(lead_vocals_file):
                 lead_vocals, sr = read(
                     path=lead_vocals_file, mono=False, sr=samplerate, dtype="float32"
                 )
@@ -799,10 +1008,11 @@ class VbachGen(Separator, GradioHelper):
                 else:
                     # Выравниваем длины перед сложением
                     final_audio, lead_vocals = align_audio_length(final_audio, lead_vocals)
-                    final_audio = final_audio + lead_vocals
+                    if final_audio is not None and lead_vocals is not None:
+                        final_audio = final_audio + lead_vocals
                     
             elif conversion_mode == "lead/back":
-                # В режиме lead/back НЕ добавляем непереобразованные вокалы
+                # В режиме lead/back НЕ добавляем непреобразованные вокалы
                 # так как мы преобразовываем и лид, и бэк отдельно
                 pass
 
@@ -902,7 +1112,8 @@ class VbachGen(Separator, GradioHelper):
             else:
                 # Выравниваем длины перед сложением
                 final_audio, vocal_data = align_audio_length(final_audio, vocal_data)
-                final_audio = final_audio + vocal_data
+                if final_audio is not None and vocal_data is not None:
+                    final_audio = final_audio + vocal_data
 
         # Убеждаемся, что final_audio не None
         if final_audio is None:
@@ -914,15 +1125,18 @@ class VbachGen(Separator, GradioHelper):
         if max_amplitude > 0:
             final_audio = final_audio / max_amplitude
             
-        filename = (
+        filename: str = (
             f"{rvc_params['model_name']} - {self.namer.short(os.path.splitext(os.path.basename(input_audio))[0], length=60)}.{params['output_format']}"
             if input_audio
             else f"remixed.{params['output_format']}"
         )
         
         # Сохраняем в постоянной директории
-        final_dir = self.get_output_directory(input_audio, "final_cover")
-        final_path = os.path.join(final_dir, filename)
+        if input_audio:
+            final_dir: str = self.get_output_directory(input_audio, "final_cover")
+            final_path: str = os.path.join(final_dir, filename)
+        else:
+            final_path = os.path.join(temp_dir, filename)
         
         final_path = write(
             final_path,
@@ -935,63 +1149,117 @@ class VbachGen(Separator, GradioHelper):
 
     def gen_cover(
         self,
-        input_audio,
-        anti_instrum_model,
-        karaoke_model,
-        dereverb_model,
-        output_format,
-        karaoke_check,
-        conversion_mode,
-        preclear_vocals_check,
-        voice_name,
-        pitch1_val,
-        pitch2_val,
-        method_pitch,
-        index_rate,
-        fr,
-        rms,
-        protect,
-        hop_mangio_crepe,
-        f0_max,
-        unconv_vocals_check,
-        use_effects,
-        instrumental_gain,
-        vocal1_gain,
-        vocal2_gain,
-        echo_delay,
-        echo_feedback,
-        echo_mix,
-        reverb_rm_size,
-        reverb_width,
-        reverb_wet,
-        reverb_dry,
-        reverb_damping,
-        chorus_rate_hz,
-        chorus_depth,
-        chorus_centre_delay_ms,
-        chorus_feedback,
-        chorus_mix,
-        compressor_ratio,
-        compressor_threshold,
-        compressor_attack,
-        compressor_release,
-        noise_gate_threshold,
-        noise_gate_ratio,
-        noise_gate_attack,
-        noise_gate_release,
-        embedder_name,
-        transformers_mode,
-    ):
+        input_audio: Optional[str],
+        anti_instrum_model: str,
+        karaoke_model: str,
+        dereverb_model: str,
+        output_format: str,
+        karaoke_check: bool,
+        conversion_mode: str,
+        preclear_vocals_check: bool,
+        voice_name: str,
+        pitch1_val: float,
+        pitch2_val: float,
+        method_pitch: str,
+        index_rate: float,
+        fr: int,
+        rms: float,
+        protect: float,
+        hop_mangio_crepe: int,
+        f0_max: int,
+        unconv_vocals_check: bool,
+        use_effects: bool,
+        instrumental_gain: float,
+        vocal1_gain: float,
+        vocal2_gain: float,
+        echo_delay: float,
+        echo_feedback: float,
+        echo_mix: float,
+        reverb_rm_size: float,
+        reverb_width: float,
+        reverb_wet: float,
+        reverb_dry: float,
+        reverb_damping: float,
+        chorus_rate_hz: float,
+        chorus_depth: float,
+        chorus_centre_delay_ms: float,
+        chorus_feedback: float,
+        chorus_mix: float,
+        compressor_ratio: float,
+        compressor_threshold: float,
+        compressor_attack: float,
+        compressor_release: float,
+        noise_gate_threshold: float,
+        noise_gate_ratio: float,
+        noise_gate_attack: float,
+        noise_gate_release: float,
+        embedder_name: str,
+        transformers_mode: bool,
+    ) -> Tuple[List[str], Optional[Dict]]:
+        """
+        Сгенерировать кавер
+        
+        Args:
+            input_audio: Входное аудио
+            anti_instrum_model: Модель для извлечения инструментала
+            karaoke_model: Модель для караоке
+            dereverb_model: Модель для удаления реверберации
+            output_format: Формат вывода
+            karaoke_check: Разделить на лид/бэк
+            conversion_mode: Режим преобразования
+            preclear_vocals_check: Очистить вокал
+            voice_name: Имя голосовой модели
+            pitch1_val: Высота тона для первого вокала
+            pitch2_val: Высота тона для второго вокала
+            method_pitch: Метод извлечения тона
+            index_rate: Влияние индекса
+            fr: Радиус фильтра
+            rms: Огибающая громкости
+            protect: Защита согласных
+            hop_mangio_crepe: Длина шага
+            f0_max: Максимальная частота F0
+            unconv_vocals_check: Добавить непреобразованный вокал
+            use_effects: Использовать эффекты
+            instrumental_gain: Громкость инструментала
+            vocal1_gain: Громкость первого вокала
+            vocal2_gain: Громкость второго вокала
+            echo_delay: Задержка эха
+            echo_feedback: Обратная связь эха
+            echo_mix: Смешение эха
+            reverb_rm_size: Размер комнаты реверберации
+            reverb_width: Ширина реверберации
+            reverb_wet: Влажность реверберации
+            reverb_dry: Сухость реверберации
+            reverb_damping: Демпфирование реверберации
+            chorus_rate_hz: Скорость хоруса
+            chorus_depth: Глубина хоруса
+            chorus_centre_delay_ms: Задержка центра хоруса
+            chorus_feedback: Обратная связь хоруса
+            chorus_mix: Смешение хоруса
+            compressor_ratio: Соотношение компрессора
+            compressor_threshold: Порог компрессора
+            compressor_attack: Атака компрессора
+            compressor_release: Спад компрессора
+            noise_gate_threshold: Порог шумоподавления
+            noise_gate_ratio: Соотношение шумоподавления
+            noise_gate_attack: Атака шумоподавления
+            noise_gate_release: Спад шумоподавления
+            embedder_name: Имя эмбеддера
+            transformers_mode: Режим transformers
+        
+        Returns:
+            Кортеж (список сгенерированных файлов, аудио для отображения)
+        """
         if not input_audio:
-            raise gr.Error("Сначала загрузите аудио")
+            raise gr.Error(_i18n("upload_audio_first"))
 
         if not voice_name:
-            raise gr.Error("Сначала выберите модель")
+            raise gr.Error(_i18n("select_model_first"))
 
         progress = gr.Progress(track_tqdm=True)
-        progress(0, desc="Начало обработки...")
+        progress(0, desc=_i18n("start_processing"))
 
-        progress(0.1, desc="Этап разделения...")
+        progress(0.1, desc=_i18n("separation_stage"))
         separation_result = self.separation_only(
             input_audio=input_audio,
             anti_instrum_model=anti_instrum_model,
@@ -1002,7 +1270,7 @@ class VbachGen(Separator, GradioHelper):
             progress=progress,
         )
 
-        progress(0.5, desc="Этап преобразования и сведения...")
+        progress(0.5, desc=_i18n("conversion_mixing_stage"))
         conversion_result = self.conversion_only(
             separation_result=separation_result,
             voice_name=voice_name,
@@ -1049,60 +1317,108 @@ class VbachGen(Separator, GradioHelper):
             progress=progress,
         )
 
-        return conversion_result["generated_files"], self.return_audio_with_size(value=conversion_result["final_path"], label="Финальный результат")
+        return conversion_result["generated_files"], self.return_audio_with_size(value=conversion_result.get("final_path"), label=_i18n("final_result"))
 
     def regenerate_conversion(
         self,
-        voice_name,
-        conversion_mode,
-        pitch1_val,
-        pitch2_val,
-        method_pitch,
-        index_rate,
-        fr,
-        rms,
-        protect,
-        hop_mangio_crepe,
-        f0_max,
-        output_format,
-        unconv_vocals_check,
-        use_effects,
-        instrumental_gain,
-        vocal1_gain,
-        vocal2_gain,
-        echo_delay,
-        echo_feedback,
-        echo_mix,
-        reverb_rm_size,
-        reverb_width,
-        reverb_wet,
-        reverb_dry,
-        reverb_damping,
-        chorus_rate_hz,
-        chorus_depth,
-        chorus_centre_delay_ms,
-        chorus_feedback,
-        chorus_mix,
-        compressor_ratio,
-        compressor_threshold,
-        compressor_attack,
-        compressor_release,
-        noise_gate_threshold,
-        noise_gate_ratio,
-        noise_gate_attack,
-        noise_gate_release,
-        embedder_name,
-        transformers_mode,
-    ):
+        voice_name: str,
+        conversion_mode: str,
+        pitch1_val: float,
+        pitch2_val: float,
+        method_pitch: str,
+        index_rate: float,
+        fr: int,
+        rms: float,
+        protect: float,
+        hop_mangio_crepe: int,
+        f0_max: int,
+        output_format: str,
+        unconv_vocals_check: bool,
+        use_effects: bool,
+        instrumental_gain: float,
+        vocal1_gain: float,
+        vocal2_gain: float,
+        echo_delay: float,
+        echo_feedback: float,
+        echo_mix: float,
+        reverb_rm_size: float,
+        reverb_width: float,
+        reverb_wet: float,
+        reverb_dry: float,
+        reverb_damping: float,
+        chorus_rate_hz: float,
+        chorus_depth: float,
+        chorus_centre_delay_ms: float,
+        chorus_feedback: float,
+        chorus_mix: float,
+        compressor_ratio: float,
+        compressor_threshold: float,
+        compressor_attack: float,
+        compressor_release: float,
+        noise_gate_threshold: float,
+        noise_gate_ratio: float,
+        noise_gate_attack: float,
+        noise_gate_release: float,
+        embedder_name: str,
+        transformers_mode: bool,
+    ) -> Tuple[List[str], Optional[Dict]]:
+        """
+        Перегенерировать преобразование
+        
+        Args:
+            voice_name: Имя голосовой модели
+            conversion_mode: Режим преобразования
+            pitch1_val: Высота тона для первого вокала
+            pitch2_val: Высота тона для второго вокала
+            method_pitch: Метод извлечения тона
+            index_rate: Влияние индекса
+            fr: Радиус фильтра
+            rms: Огибающая громкости
+            protect: Защита согласных
+            hop_mangio_crepe: Длина шага
+            f0_max: Максимальная частота F0
+            output_format: Формат вывода
+            unconv_vocals_check: Добавить непреобразованный вокал
+            use_effects: Использовать эффекты
+            instrumental_gain: Громкость инструментала
+            vocal1_gain: Громкость первого вокала
+            vocal2_gain: Громкость второго вокала
+            echo_delay: Задержка эха
+            echo_feedback: Обратная связь эха
+            echo_mix: Смешение эха
+            reverb_rm_size: Размер комнаты реверберации
+            reverb_width: Ширина реверберации
+            reverb_wet: Влажность реверберации
+            reverb_dry: Сухость реверберации
+            reverb_damping: Демпфирование реверберации
+            chorus_rate_hz: Скорость хоруса
+            chorus_depth: Глубина хоруса
+            chorus_centre_delay_ms: Задержка центра хоруса
+            chorus_feedback: Обратная связь хоруса
+            chorus_mix: Смешение хоруса
+            compressor_ratio: Соотношение компрессора
+            compressor_threshold: Порог компрессора
+            compressor_attack: Атака компрессора
+            compressor_release: Спад компрессора
+            noise_gate_threshold: Порог шумоподавления
+            noise_gate_ratio: Соотношение шумоподавления
+            noise_gate_attack: Атака шумоподавления
+            noise_gate_release: Спад шумоподавления
+            embedder_name: Имя эмбеддера
+            transformers_mode: Режим transformers
+        
+        Returns:
+            Кортеж (список сгенерированных файлов, аудио для отображения)
+        """
         if not self.processing_data:
-            raise gr.Error("Сначала выполните полную генерацию!")
+            raise gr.Error(_i18n("generate_first"))
 
         progress = gr.Progress(track_tqdm=True)
-        progress(0, desc="Перегенерация преобразования...")
+        progress(0, desc=_i18n("regenerating_conversion"))
 
-        separation_result = {
-            "inst_file": self.processing_data["inst_path"],
-            "list_vocals": self.processing_data["list_vocals"],
+        separation_result: Dict[str, Any] = {
+            "inst_file": self.processing_data.get("inst_path"),
+            "list_vocals": self.processing_data.get("list_vocals", []),
             "temp_dir": tempfile.mkdtemp(),
         }
 
@@ -1152,43 +1468,76 @@ class VbachGen(Separator, GradioHelper):
             progress=progress,
         )
 
-        return conversion_result["generated_files"], self.return_audio_with_size(value=conversion_result["final_path"], label="Финальный результат")
+        return conversion_result["generated_files"], self.return_audio_with_size(value=conversion_result.get("final_path"), label=_i18n("final_result"))
 
     def remix_cover(
         self,
-        use_effects,
-        instrumental_gain,
-        vocal1_gain,
-        vocal2_gain,
-        echo_delay,
-        echo_feedback,
-        echo_mix,
-        reverb_rm_size,
-        reverb_width,
-        reverb_wet,
-        reverb_dry,
-        reverb_damping,
-        chorus_rate_hz,
-        chorus_depth,
-        chorus_centre_delay_ms,
-        chorus_feedback,
-        chorus_mix,
-        compressor_ratio,
-        compressor_threshold,
-        compressor_attack,
-        compressor_release,
-        noise_gate_threshold,
-        noise_gate_ratio,
-        noise_gate_attack,
-        noise_gate_release,
-    ):
+        use_effects: bool,
+        instrumental_gain: float,
+        vocal1_gain: float,
+        vocal2_gain: float,
+        echo_delay: float,
+        echo_feedback: float,
+        echo_mix: float,
+        reverb_rm_size: float,
+        reverb_width: float,
+        reverb_wet: float,
+        reverb_dry: float,
+        reverb_damping: float,
+        chorus_rate_hz: float,
+        chorus_depth: float,
+        chorus_centre_delay_ms: float,
+        chorus_feedback: float,
+        chorus_mix: float,
+        compressor_ratio: float,
+        compressor_threshold: float,
+        compressor_attack: float,
+        compressor_release: float,
+        noise_gate_threshold: float,
+        noise_gate_ratio: float,
+        noise_gate_attack: float,
+        noise_gate_release: float,
+    ) -> Optional[Dict]:
+        """
+        Пересвести кавер
+        
+        Args:
+            use_effects: Использовать эффекты
+            instrumental_gain: Громкость инструментала
+            vocal1_gain: Громкость первого вокала
+            vocal2_gain: Громкость второго вокала
+            echo_delay: Задержка эха
+            echo_feedback: Обратная связь эха
+            echo_mix: Смешение эха
+            reverb_rm_size: Размер комнаты реверберации
+            reverb_width: Ширина реверберации
+            reverb_wet: Влажность реверберации
+            reverb_dry: Сухость реверберации
+            reverb_damping: Демпфирование реверберации
+            chorus_rate_hz: Скорость хоруса
+            chorus_depth: Глубина хоруса
+            chorus_centre_delay_ms: Задержка центра хоруса
+            chorus_feedback: Обратная связь хоруса
+            chorus_mix: Смешение хоруса
+            compressor_ratio: Соотношение компрессора
+            compressor_threshold: Порог компрессора
+            compressor_attack: Атака компрессора
+            compressor_release: Спад компрессора
+            noise_gate_threshold: Порог шумоподавления
+            noise_gate_ratio: Соотношение шумоподавления
+            noise_gate_attack: Атака шумоподавления
+            noise_gate_release: Спад шумоподавления
+        
+        Returns:
+            Аудио для отображения
+        """
         if not self.processing_data:
-            raise gr.Error("Сначала сгенерируйте кавер хотя бы один раз!")
+            raise gr.Error(_i18n("generate_cover_first"))
 
-        data = self.processing_data
-        temp_dir = tempfile.mkdtemp()
+        data: Dict[str, Any] = self.processing_data
+        temp_dir: str = tempfile.mkdtemp()
 
-        mix_params = {
+        mix_params: Dict[str, Any] = {
             "add_unconverted_vocals_to_instrumental": True,
             "use_effects": use_effects,
             "gain": {
@@ -1231,68 +1580,87 @@ class VbachGen(Separator, GradioHelper):
             },
         }
 
-        final_path = self.mix_and_save(
-            data["inst_path"],
-            data["list_vocals"],
-            data["converted_vocals_list"],
+        final_path: Optional[str] = self.mix_and_save(
+            data.get("inst_path"),
+            data.get("list_vocals", []),
+            data.get("converted_vocals_list", []),
             mix_params,
-            data["params"],
-            data["rvc_params"],
+            data.get("params", {}),
+            data.get("rvc_params", {}),
             temp_dir,
-            data["input_audio"],
+            data.get("input_audio"),
         )
 
-        return self.return_audio_with_size(value=final_path, label="Финальный результат")
+        return self.return_audio_with_size(value=final_path, label=_i18n("final_result"))
 
-    def UI(self):
-
+    def UI(self) -> None:
+        """Создать пользовательский интерфейс"""
         with gr.Row(equal_height=False, variant="panel"):
             with gr.Column():
                 with gr.Group():
                     upload = gr.File(show_label=False, type="filepath", interactive=True)
-                    refresh_input_btn = gr.Button("Обновить", variant="primary", interactive=True)
+                    refresh_input_btn = gr.Button(_i18n("refresh"), variant="primary", interactive=True)
                     list_input_files = gr.Dropdown(
-                        label="Загрузить файлы",
-                        choices=reversed(self.input_files),
+                        label=_i18n("select_input_files"),
+                        choices=reversed(self.input_files) if self.input_files else [],
                         value=None,
                         multiselect=False,
                         interactive=True,
-                        filterable=False, scale=15
+                        filterable=False,
+                        scale=15
                     )
-                    gr.on(fn=lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files, trigger_mode="once")
-                    refresh_input_btn.click(lambda: gr.update(choices=reversed(self.input_files), value=None), outputs=list_input_files)
+                    
+                    gr.on(
+                        fn=lambda: gr.update(choices=reversed(self.input_files) if self.input_files else [], value=None), 
+                        outputs=list_input_files, 
+                        trigger_mode="once"
+                    )
+                    
+                    refresh_input_btn.click(
+                        lambda: gr.update(choices=reversed(self.input_files) if self.input_files else [], value=None), 
+                        outputs=list_input_files
+                    )
                         
                     @upload.upload(inputs=[upload], outputs=[list_input_files, upload])
-                    def upload_files(input_file):
-                        files = self.upload_files([input_file])
-                        return gr.update(
-                            choices=reversed(self.input_files), value=files[0]
-                        ), gr.update(value=None)
+                    def upload_files(input_file: str) -> Tuple[gr.update, gr.update]:
+                        files = self.upload_files_func([input_file])
+                        return (
+                            gr.update(choices=reversed(self.input_files) if self.input_files else [], value=files[0] if files else None),
+                            gr.update(value=None)
+                        )
 
             with gr.Column():
-
                 with gr.Group():
                     model_name = gr.Dropdown(
-                        label="Имя модели", interactive=True, filterable=False, scale=6
+                        label=_i18n("model_name"), 
+                        interactive=True, 
+                        filterable=False, 
+                        scale=6
                     )
                     model_update_btn = gr.Button(
-                        "Обновить", variant="primary", scale=3, size="lg"
+                        _i18n("refresh"), 
+                        variant="primary", 
+                        scale=3, 
+                        size="lg"
                     )
+                    
                     with gr.Column(variant="panel"):
-                        with gr.Tab("Разделение"):
+                        with gr.Tab(_i18n("tab_separation")):
                             with gr.Group():
                                 preclear_vocals_check = gr.Checkbox(
-                                    label="Очистить вокал от реверба/эха", value=False
+                                    label=_i18n("clear_vocals_reverb"), 
+                                    value=False
                                 )
                                 karaoke_check = gr.Checkbox(
-                                    label="Разделить вокал на лид/бэк-вокалы", value=False
+                                    label=_i18n("split_lead_back"), 
+                                    value=False
                                 )
 
                                 with gr.Group() as extract_vocals_group:
                                     anti_instrum_model = gr.Dropdown(
-                                        label="Вокальная модель",
+                                        label=_i18n("vocal_model"),
                                         choices=self.get_list_mn_from_category(
-                                            ["Инструментал", "Вокал", "Инструментал и вокал"],
+                                            [_i18n("instrumental"), _i18n("vocals"), _i18n("instrumental_vocals")],
                                             [
                                                 "mel_band_roformer",
                                                 "bs_roformer",
@@ -1307,9 +1675,9 @@ class VbachGen(Separator, GradioHelper):
 
                                 with gr.Group(visible=False) as deecho_group:
                                     dereverb_model = gr.Dropdown(
-                                        label="Dereverb/Deecho модель",
+                                        label=_i18n("dereverb_model"),
                                         choices=self.get_list_mn_from_category(
-                                            ["Реверб и эхо", "Реверб", "Эхо"], ["vr"]
+                                            [_i18n("reverb_echo"), _i18n("reverb"), _i18n("echo")], ["vr"]
                                         ),
                                         interactive=True,
                                         filterable=False,
@@ -1317,32 +1685,32 @@ class VbachGen(Separator, GradioHelper):
 
                                 with gr.Group(visible=False) as karaoke_group:
                                     karaoke_model = gr.Dropdown(
-                                        label="Караоке модель",
-                                        choices=self.get_list_mn_from_category(["Караоке"]),
+                                        label=_i18n("karaoke_model"),
+                                        choices=self.get_list_mn_from_category([_i18n("karaoke")]),
                                         interactive=True,
                                         filterable=False,
                                     )
 
                                 with gr.Group(visible=False):
                                     separate_only_btn = gr.Button(
-                                        "Только разделение", variant="primary"
+                                        _i18n("separate_only"), variant="primary"
                                     )
                                     clear_cache_btn = gr.Button(
-                                        "Очистить кэш разделения", variant="stop", size="sm"
+                                        _i18n("clear_separation_cache"), variant="stop", size="sm"
                                     )
                                 separation_status = gr.Textbox(
-                                    label="Статус разделения", interactive=False, visible=False
+                                    label=_i18n("separation_status"), interactive=False, visible=False
                                 )
 
-                        with gr.Tab("Настройки преобразования голоса"):
+                        with gr.Tab(_i18n("voice_conversion_settings")):
                             with gr.Group():
                                 conversion_mode = gr.Dropdown(
-                                    label="Режим преобразования",
+                                    label=_i18n("conversion_mode"),
                                     choices=["lead", "back", "lead/back", "full"],
                                     value="full",
                                     filterable=False,
                                     visible=False,
-                                    info="lead - только основной вокал\nback - только бэк-вокал\nlead/back - основной и бэк-вокалы\nfull - весь вокал",
+                                    info=_i18n("conversion_mode_info"),
                                 )
                                 with gr.Row():
                                     pitch1 = gr.Slider(
@@ -1350,7 +1718,7 @@ class VbachGen(Separator, GradioHelper):
                                         48,
                                         value=0,
                                         step=12,
-                                        label="Высота тона вокала",
+                                        label=_i18n("vocal_pitch"),
                                         interactive=True,
                                     )
                                     pitch2 = gr.Slider(
@@ -1358,15 +1726,15 @@ class VbachGen(Separator, GradioHelper):
                                         48,
                                         value=0,
                                         step=12,
-                                        label="Высота тона бэк-вокала",
+                                        label=_i18n("back_vocal_pitch"),
                                         visible=False,
                                         interactive=True,
                                     )
                                 with gr.Row():
                                     method_pitch = gr.Dropdown(
-                                        label="Метод извлечения тона",
+                                        label=_i18n("f0_method"),
                                         choices=f0_methods,
-                                        value=f0_methods[0],
+                                        value=f0_methods[0] if f0_methods else "rmvpe+",
                                         interactive=True,
                                         filterable=False,
                                     )
@@ -1375,7 +1743,7 @@ class VbachGen(Separator, GradioHelper):
                                         2000,
                                         value=1100,
                                         step=50,
-                                        label="Верхний лимит определения высоты тона",
+                                        label=_i18n("f0_max_limit"),
                                         interactive=True,
                                     )
                                 with gr.Row():
@@ -1385,7 +1753,7 @@ class VbachGen(Separator, GradioHelper):
                                             1,
                                             value=0,
                                             step=0.05,
-                                            label="Влияние индекса",
+                                            label=_i18n("index_rate"),
                                             interactive=True,
                                         )
                                         fr = gr.Slider(
@@ -1393,7 +1761,7 @@ class VbachGen(Separator, GradioHelper):
                                             7,
                                             value=3,
                                             step=1,
-                                            label="Радиус фильтра",
+                                            label=_i18n("filter_radius"),
                                             interactive=True,
                                         )
                                     with gr.Column(scale=1):
@@ -1402,7 +1770,7 @@ class VbachGen(Separator, GradioHelper):
                                             1,
                                             value=0.25,
                                             step=0.05,
-                                            label="Огибающая громкости",
+                                            label=_i18n("rms_envelope"),
                                             interactive=True,
                                         )
                                         protect = gr.Slider(
@@ -1410,7 +1778,7 @@ class VbachGen(Separator, GradioHelper):
                                             maximum=0.5,
                                             step=0.01,
                                             value=0.33,
-                                            label="Защита согласных",
+                                            label=_i18n("protect"),
                                             interactive=True,
                                         )
                                 hop_mangio_crepe = gr.Slider(
@@ -1418,19 +1786,19 @@ class VbachGen(Separator, GradioHelper):
                                     512,
                                     value=128,
                                     step=8,
-                                    label="Длина шага",
+                                    label=_i18n("hop_length"),
                                     interactive=True,
                                     visible=False,
                                 )
-                                with gr.Accordion(label="Эмбеддер", open=False):
+                                with gr.Accordion(label=_i18n("embedder"), open=False):
                                     with gr.Group():
                                         embedder_name = gr.Radio(
-                                            label="Модель Hubert",
+                                            label=_i18n("hubert_model"),
                                             choices=self.fairseq_embedders,
-                                            value=self.fairseq_embedders[0],
+                                            value=self.fairseq_embedders[0] if self.fairseq_embedders else None,
                                         )
                                         transformers_mode = gr.Checkbox(
-                                            label="Использовать стек Transformers",
+                                            label=_i18n("use_transformers"),
                                             value=False,
                                             interactive=True,
                                         )
@@ -1438,27 +1806,27 @@ class VbachGen(Separator, GradioHelper):
                                         @transformers_mode.change(
                                             inputs=[transformers_mode], outputs=[embedder_name]
                                         )
-                                        def change_embedders(tr_m):
+                                        def change_embedders(tr_m: bool) -> gr.update:
                                             if tr_m:
                                                 return gr.update(
-                                                    value=self.transformers_embedders[0],
+                                                    value=self.transformers_embedders[0] if self.transformers_embedders else None,
                                                     choices=self.transformers_embedders,
                                                 )
                                             else:
                                                 return gr.update(
                                                     choices=self.fairseq_embedders,
-                                                    value=self.fairseq_embedders[0],
+                                                    value=self.fairseq_embedders[0] if self.fairseq_embedders else None,
                                                 )
 
-                        with gr.Tab("Настройки сведения аудио"):
-                            gr.Markdown("<center>Изменение громкости</center>", container=True)
+                        with gr.Tab(_i18n("mixing_settings")):
+                            gr.Markdown(f"<center>{_i18n('volume_adjustment')}</center>", container=True)
                             with gr.Group():
                                 vocal1_gain = gr.Slider(
                                     -60,
                                     60,
                                     value=-3,
                                     step=1,
-                                    label="Вокал",
+                                    label=_i18n("vocals"),
                                     scale=3,
                                     interactive=True,
                                 )
@@ -1467,7 +1835,7 @@ class VbachGen(Separator, GradioHelper):
                                     60,
                                     value=-3,
                                     step=1,
-                                    label="Бэк-вокал",
+                                    label=_i18n("back_vocals"),
                                     scale=3,
                                     visible=False,
                                     interactive=True,
@@ -1477,67 +1845,67 @@ class VbachGen(Separator, GradioHelper):
                                     60,
                                     value=0,
                                     step=1,
-                                    label="Инструментал",
+                                    label=_i18n("instrumental"),
                                     scale=3,
                                     interactive=True,
                                 )
 
                                 output_format = gr.Dropdown(
-                                    label="Формат вывода",
+                                    label=_i18n("output_format"),
                                     choices=output_formats,
-                                    value=output_formats[0],
+                                    value=output_formats[0] if output_formats else "wav",
                                     interactive=True,
                                     filterable=False,
                                 )
                                 unconv_vocals_check = gr.Checkbox(
-                                    label="Добавить к инструменталу непреобразованный вокал",
+                                    label=_i18n("add_unconverted_vocals"),
                                     visible=False,
                                 )
                                 use_effects = gr.Checkbox(
-                                    label="Добавить эффекты на голос", value=True
+                                    label=_i18n("add_effects"), value=True
                                 )
                                 with gr.Column(variant="panel", visible=True) as effects_accordion:
-                                    with gr.Tab("Эффекты"):
-                                        with gr.Tab("Эхо"):
+                                    with gr.Tab(_i18n("effects")):
+                                        with gr.Tab(_i18n("echo")):
                                             with gr.Group():
                                                 with gr.Row():
                                                     echo_delay = gr.Slider(
                                                         0,
                                                         3,
                                                         value=0,
-                                                        label="Время задержки (сек)",
+                                                        label=_i18n("delay_time"),
                                                         interactive=True,
                                                     )
                                                     echo_feedback = gr.Slider(
                                                         0,
                                                         1,
                                                         value=0,
-                                                        label="Обратная связь",
+                                                        label=_i18n("feedback"),
                                                         interactive=True,
                                                     )
                                                     echo_mix = gr.Slider(
                                                         0,
                                                         1,
                                                         value=0,
-                                                        label="Смешение",
+                                                        label=_i18n("mix"),
                                                         interactive=True,
                                                     )
 
-                                        with gr.Tab("Реверберация"):
+                                        with gr.Tab(_i18n("reverb")):
                                             with gr.Group():
                                                 with gr.Row():
                                                     reverb_rm_size = gr.Slider(
                                                         0,
                                                         1,
                                                         value=0.1,
-                                                        label="Размер комнаты",
+                                                        label=_i18n("room_size"),
                                                         interactive=True,
                                                     )
                                                     reverb_width = gr.Slider(
                                                         0,
                                                         1,
                                                         value=1.0,
-                                                        label="Ширина реверберации",
+                                                        label=_i18n("reverb_width"),
                                                         interactive=True,
                                                     )
                                                 with gr.Row():
@@ -1545,14 +1913,14 @@ class VbachGen(Separator, GradioHelper):
                                                         0,
                                                         1,
                                                         value=0.3,
-                                                        label="Уровень влажности",
+                                                        label=_i18n("wet_level"),
                                                         interactive=True,
                                                     )
                                                     reverb_dry = gr.Slider(
                                                         0,
                                                         1,
                                                         value=0.8,
-                                                        label="Уровень сухости",
+                                                        label=_i18n("dry_level"),
                                                         interactive=True,
                                                     )
                                                 with gr.Row():
@@ -1560,25 +1928,25 @@ class VbachGen(Separator, GradioHelper):
                                                         0,
                                                         1,
                                                         value=0.9,
-                                                        label="Уровень демпфирования",
+                                                        label=_i18n("damping"),
                                                         interactive=True,
                                                     )
 
-                                        with gr.Tab("Хорус"):
+                                        with gr.Tab(_i18n("chorus")):
                                             with gr.Group():
                                                 with gr.Row():
                                                     chorus_rate_hz = gr.Slider(
                                                         0,
                                                         10,
                                                         value=0,
-                                                        label="Скорость хоруса",
+                                                        label=_i18n("chorus_rate"),
                                                         interactive=True,
                                                     )
                                                     chorus_depth = gr.Slider(
                                                         0,
                                                         1,
                                                         value=0,
-                                                        label="Глубина хоруса",
+                                                        label=_i18n("chorus_depth"),
                                                         interactive=True,
                                                     )
                                                 with gr.Row():
@@ -1586,14 +1954,14 @@ class VbachGen(Separator, GradioHelper):
                                                         0,
                                                         50,
                                                         value=0,
-                                                        label="Задержка центра (мс)",
+                                                        label=_i18n("center_delay"),
                                                         interactive=True,
                                                     )
                                                     chorus_feedback = gr.Slider(
                                                         0,
                                                         1,
                                                         value=0,
-                                                        label="Обратная связь",
+                                                        label=_i18n("feedback"),
                                                         interactive=True,
                                                     )
                                                 with gr.Row():
@@ -1601,58 +1969,58 @@ class VbachGen(Separator, GradioHelper):
                                                         0,
                                                         1,
                                                         value=0,
-                                                        label="Смешение",
+                                                        label=_i18n("mix"),
                                                         interactive=True,
                                                     )
 
-                                    with gr.Tab("Обработка"):
-                                        with gr.Tab("Компрессор"):
+                                    with gr.Tab(_i18n("processing")):
+                                        with gr.Tab(_i18n("compressor")):
                                             with gr.Group():
                                                 with gr.Row():
                                                     compressor_ratio = gr.Slider(
                                                         1,
                                                         50,
                                                         value=16,
-                                                        label="Соотношение",
+                                                        label=_i18n("ratio"),
                                                         interactive=True,
                                                     )
                                                     compressor_threshold = gr.Slider(
                                                         -60,
                                                         0,
                                                         value=-16,
-                                                        label="Порог",
+                                                        label=_i18n("threshold"),
                                                         interactive=True,
                                                     )
                                                     compressor_attack = gr.Slider(
                                                         0,
                                                         2000,
                                                         value=40,
-                                                        label="Время атаки (мс)",
+                                                        label=_i18n("attack_ms"),
                                                         interactive=True,
                                                     )
                                                     compressor_release = gr.Slider(
                                                         0,
                                                         2000,
                                                         value=100,
-                                                        label="Время спада (мс)",
+                                                        label=_i18n("release_ms"),
                                                         interactive=True,
                                                     )
 
-                                        with gr.Tab("Подавление шума"):
+                                        with gr.Tab(_i18n("noise_gate")):
                                             with gr.Group():
                                                 with gr.Row():
                                                     noise_gate_threshold = gr.Slider(
                                                         -60,
                                                         0,
                                                         value=-40,
-                                                        label="Порог",
+                                                        label=_i18n("threshold"),
                                                         interactive=True,
                                                     )
                                                     noise_gate_ratio = gr.Slider(
                                                         1,
                                                         20,
                                                         value=8,
-                                                        label="Соотношение",
+                                                        label=_i18n("ratio"),
                                                         interactive=True,
                                                     )
                                                 with gr.Row():
@@ -1660,35 +2028,38 @@ class VbachGen(Separator, GradioHelper):
                                                         0,
                                                         100,
                                                         value=10,
-                                                        label="Время атаки (мс)",
+                                                        label=_i18n("attack_ms"),
                                                         interactive=True,
                                                     )
                                                     noise_gate_release = gr.Slider(
                                                         0,
                                                         1000,
                                                         value=100,
-                                                        label="Время спада (мс)",
+                                                        label=_i18n("release_ms"),
                                                         interactive=True,
                                                     )
-                        with gr.Tab("Промежуточные файлы"):
+                        with gr.Tab(_i18n("intermediate_files")):
                             with gr.Group():
                                 generated_files_list = gr.Files(
-                                    label="Промежуточные файлы", interactive=False, type="filepath", show_label=False
+                                    label=_i18n("intermediate_files"), 
+                                    interactive=False, 
+                                    type="filepath", 
+                                    show_label=False
                                 )
                 final_ai_cover = gr.Audio(
-                    label="Финальный результат",
+                    label=_i18n("final_result"),
                     interactive=False,
                     show_download_button=True,
                 )
                 with gr.Group():
                     with gr.Row(equal_height=True):
-                        generate_btn = gr.Button("Сгенерировать кавер", variant="primary")
+                        generate_btn = gr.Button(_i18n("generate_cover"), variant="primary")
                         regenerate_btn = gr.Button(
-                            "Перегенерировать вокал", variant="secondary"
+                            _i18n("regenerate_vocals"), variant="secondary"
                         )
-                        remix_btn = gr.Button("Пересвести кавер", variant="huggingface")
+                        remix_btn = gr.Button(_i18n("remix_cover"), variant="huggingface")
 
-        status_text = gr.Textbox(label="Статус", interactive=False, visible=False)
+        status_text = gr.Textbox(label=_i18n("status"), interactive=False, visible=False)
 
         method_pitch.change(
             fn=lambda x: gr.update(
@@ -1703,19 +2074,18 @@ class VbachGen(Separator, GradioHelper):
         )
 
         @model_update_btn.click(inputs=None, outputs=model_name)
-        def update_voice_models():
+        def update_voice_models() -> gr.update:
             models = self.parse_voice_models_actual()
-            first_model = None
-            if len(models) > 0:
-                first_model = models[0]
+            first_model = models[0] if models else None
             return gr.update(choices=models, value=first_model)
 
-        @gr.on(fn="decorator", inputs=None, outputs=model_name)
-        def update_voice_models():
+        @gr.on(
+            inputs=None, 
+            outputs=model_name
+        )
+        def update_voice_models() -> gr.update:
             models = self.parse_voice_models_actual()
-            first_model = None
-            if len(models) > 0:
-                first_model = models[0]
+            first_model = models[0] if models else None
             return gr.update(choices=models, value=first_model)
 
         use_effects.change(
@@ -1773,10 +2143,10 @@ class VbachGen(Separator, GradioHelper):
                         karaoke_check=k_check,
                         preclear_vocals_check=p_check,
                     )["generated_files"],
-                    "Разделение завершено!",
+                    _i18n("separation_complete"),
                 )
                 if audio and a_model
-                else (gr.update(), "Загрузите аудио и выберите модель!")
+                else (gr.update(), _i18n("upload_and_select_model"))
             ),
             inputs=[
                 list_input_files,
@@ -1790,7 +2160,7 @@ class VbachGen(Separator, GradioHelper):
         )
 
         clear_cache_btn.click(
-            fn=lambda: (self.clear_separation_cache(), "Кэш разделения очищен!"),
+            fn=lambda: (self.clear_separation_cache(), _i18n("separation_cache_cleared")),
             inputs=None,
             outputs=[separation_status],
         )
