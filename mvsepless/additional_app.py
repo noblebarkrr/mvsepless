@@ -43,6 +43,7 @@ class AutoEnsembless(Separator, GradioHelper):
 
     class ModelManager(Separator):
         def __init__(self):
+            super().__init__()
             self.data: list[list[str, str, str, int]] = []
             self.dir_presets = os.path.join(tempfile.tempdir, "presets")
             os.makedirs(self.dir_presets, exist_ok=True)
@@ -941,6 +942,7 @@ class PluginManager(Separator):
 
 
         self.parse_plugins()
+
 
 
 
