@@ -1,40 +1,41 @@
 import os
 import sys
 import shutil
-import logging
-import zipfile
 import importlib.util
-from pathlib import Path
-from typing import Literal
 import gradio as gr
 import pandas as pd
 import subprocess
 import json
-import threading
-import queue
 import time
-import argparse
 from datetime import datetime
 import tempfile
-import ast
-import numpy as np
-import librosa
 from functools import wraps
 from separator import Separator, script_dir
 from gradio_helper import GradioHelper, tz
-from namer import Namer
-from ensemble import ensemble_audio_files, auto_ensemble_run
-from inverter import Inverter
-from trim_concat import trim_, concat
-from extract_phantom_center import extract_phantom_center
-from audio import input_extensions, output_formats, check, read, write, get_sr, multiread, multiwrite, ensemble, substractor, concatenate, trim, get_duration_from_array, split_mid_side
+from audio import output_formats, check, read, get_sr, get_duration_from_array, multiread, write, trim, concatenate
 
-namer = Namer()
-        
+def trim_(i, s=0, e=-1, output_path="./trimmed.mp3"):
+    y, sr = read(i)
+    end_sample = int(e * sr) if e != -1 else -1
+    y = trim(y, int(s * sr), end_sample)
+    return write(output_path, y, sr)
+
+def concat(files, output_path):
+    # Фильтруем файлы с помощью функции check
+    valid_files = [f for f in files if check(f)]
+    
+    if not valid_files:
+        print("Ошибка: Не найдено подходящих аудиофайлов для склейки.")
+        return
+
+    print(f"Обработка {len(valid_files)} файлов...")
+    arrays, srs = multiread(valid_files)
+    full_audio, max_sr = concatenate(arrays, srs, dtype="float32")
+    return write(output_path, full_audio, max_sr)
+
 class AutoEnsembless(Separator, GradioHelper):
     def __init__(self, input_files, upload_files, user_directory, device):
         super().__init__()
-        self.inverter = Inverter()
         self.input_files = input_files
         self.upload_files = upload_files
         self.user_directory = user_directory
@@ -51,7 +52,7 @@ class AutoEnsembless(Separator, GradioHelper):
                 name = "ensembless_preset"
             filepath = os.path.join(
                 self.dir_presets,
-                f"{namer.short(namer.sanitize(name), length=50)}.json",
+                f"{self.namer.short(self.namer.sanitize(name), length=50)}.json",
             )
             with open(filepath, "w") as f:
                 json.dump(self.data, f, indent=4, ensure_ascii=False)
@@ -113,7 +114,8 @@ class AutoEnsembless(Separator, GradioHelper):
     class History:
         def __init__(self, user_directory):
             self.info = {}
-            self.path = os.path.join(user_directory.path, "history_auto_ensemble.json")
+            self.path = os.path.join(user_directory.path, "history", "ensembless.json")
+            os.makedirs(os.path.join(user_directory.path, "history"), exist_ok=True)
             self.load_from_file()
         
         def _save_to_file(func):
@@ -128,6 +130,9 @@ class AutoEnsembless(Separator, GradioHelper):
         def _write_file(self):
             """Записывает текущее состояние в файл"""
             try:
+                dir = os.path.dirname(self.path)
+                if dir != "":
+                    os.makedirs(dir, exist_ok=True)
                 with open(self.path, 'w', encoding='utf-8') as f:
                     json.dump(self.info, f, indent=4, ensure_ascii=False)
             except Exception as e:
@@ -449,9 +454,9 @@ class AutoEnsembless(Separator, GradioHelper):
                 )
                 with gr.Group():
                     invert_method = gr.Radio(
-                        choices=self.inverter.methods,
+                        choices=self.methods_subtract,
                         label="Метод создания инверсии",
-                        value=self.inverter.methods[0],
+                        value=self.methods_subtract[0],
                     )
                     invert_btn = gr.Button("Инвертировать")
                 output_inverted_audio = gr.Audio(
@@ -476,9 +481,9 @@ class AutoEnsembless(Separator, GradioHelper):
                         basename = os.path.splitext(os.path.basename(input_file))[0]
                         output_path = os.path.join(
                             o_dir,
-                            f"ensembless_{namer.short(basename, length=50)}_{method}_invert.{out_format}",
+                            f"ensembless_{self.namer.short(basename, length=50)}_{method}_invert.{out_format}",
                         )
-                        inverted = self.inverter.process_audio(
+                        inverted = self.subtract(
                             audio1_path=input_file,
                             audio2_path=output_file,
                             method=method,
@@ -526,10 +531,10 @@ class AutoEnsembless(Separator, GradioHelper):
             progress=gr.Progress(track_tqdm=True),
         ):
             timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
-            o = os.path.join(self.user_directory.path, "ensembless_output", f"ensembless_outputs_{timestamp}")
+            o = os.path.join(self.user_directory.path, "output", "ensembless", f"auto_{timestamp}")
             os.makedirs(o, exist_ok=True)
             ensemble_state = ensemble_model_manager.data
-            auto_ensemble_out_file, auto_ensemble_out_file_wav, auto_ensemble_invout_file, ensemble_sources_list = auto_ensemble_run(input_file, ensemble_state, o, method, out_format, invert_ensemble, progress=progress)
+            auto_ensemble_out_file, auto_ensemble_out_file_wav, auto_ensemble_invout_file, ensemble_sources_list = self.auto_ensemble(input_file, ensemble_state, o, method, out_format, invert_ensemble, progress=progress)
             history.add(input_file, auto_ensemble_out_file, auto_ensemble_out_file_wav, auto_ensemble_invout_file, ensemble_sources_list, method, timestamp, ensemble_state)
             return (
                 self.return_audio_with_size(value=auto_ensemble_out_file, label="Результат"),
@@ -538,7 +543,7 @@ class AutoEnsembless(Separator, GradioHelper):
                 ensemble_sources_list,
             )
 
-class ManualEnsembless(GradioHelper):
+class ManualEnsembless(Separator, GradioHelper):
     def __init__(self, user_directory):
         super().__init__()
         self.user_directory = user_directory
@@ -672,13 +677,13 @@ class ManualEnsembless(GradioHelper):
             weights: str,
         ):
             timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
-            o = os.path.join(self.user_directory.path, "manual_ensembless", f"ensembless_outputs_{timestamp}")
+            o = os.path.join(self.user_directory.path, "output", "ensembless", f"manual_{timestamp}")
             os.makedirs(o, exist_ok=True)
 
-            o_filename = namer.sanitize(o_filename)
-            o_filename = namer.short(o_filename)
+            o_filename = self.namer.sanitize(o_filename)
+            o_filename = self.namer.short(o_filename)
 
-            output_file = ensemble_audio_files(
+            output_file = self.manual_ensemble(
                 files=input_files_list,
                 output_name=os.path.join(o, o_filename),
                 weights=[float(x) for x in weights.split(",")],
@@ -687,10 +692,9 @@ class ManualEnsembless(GradioHelper):
             )
             return self.return_audio_with_size(value=output_file, label="Результат")
 
-class Inverter_UI(GradioHelper):
+class Inverter_UI(Separator, GradioHelper):
     def __init__(self):
         super().__init__()
-        self.inverter = Inverter()
     def UI(self):
         with gr.Group():
             with gr.Row():
@@ -715,9 +719,9 @@ class Inverter_UI(GradioHelper):
                     filterable=False,
                 )
                 method = gr.Radio(
-                    choices=self.inverter.methods,
+                    choices=self.methods_subtract,
                     label="Метод вычитания",
-                    value=self.inverter.methods[0],
+                    value=self.methods_subtract[0],
                 )
                 btn = gr.Button("Вычесть")
         output_audio = gr.Audio(
@@ -737,9 +741,9 @@ class Inverter_UI(GradioHelper):
                 basename = os.path.splitext(os.path.basename(input_file))[0]
                 output_path = os.path.join(
                     o_dir,
-                    f"inverter_{namer.short(basename, length=50)}_{method}.{out_format}",
+                    f"inverter_{self.namer.short(basename, length=50)}_{method}.{out_format}",
                 )
-                inverted = self.inverter.process_audio(
+                inverted = self.subtract(
                     audio1_path=input_file,
                     audio2_path=output_file,
                     method=method,
@@ -749,7 +753,7 @@ class Inverter_UI(GradioHelper):
             else:
                 return None
 
-class AudioApp(GradioHelper):
+class AudioApp(Separator, GradioHelper):
     def __init__(self, user_directory):
         super().__init__()
         self.user_directory = user_directory
@@ -775,7 +779,7 @@ class AudioApp(GradioHelper):
             @concat_btn.click(inputs=[input_concat_files, output_format], outputs=concated_audio)
             def concat_fn(files, of):
                 timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
-                o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
+                o = os.path.join(self.user_directory.path, "output", "audio-editor", f"{timestamp}")
                 os.makedirs(o, exist_ok=True)
                 output_path = os.path.join(o, f"concated_{timestamp}.{of}")
                 return self.return_audio_with_size(value=concat(files, output_path), label="Результат")
@@ -813,10 +817,10 @@ class AudioApp(GradioHelper):
             @trim_btn.click(inputs=[input_trim_file, start_num, end_num, out_format2], outputs=trimmed_audio)
             def trim_fn(i, s, e, of):            
                 timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
-                o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
+                o = os.path.join(self.user_directory.path, "output", "audio-editor", f"{timestamp}")
                 os.makedirs(o, exist_ok=True)
                 basename, ext = os.path.splitext(os.path.basename(i))
-                basename = namer.short(basename, length=50)
+                basename = self.namer.short(basename, length=50)
                 filename = f"{basename}_trimmed_{timestamp}.{of}"
                 output_path = os.path.join(o, filename)
                 return self.return_audio_with_size(value=trim_(i, s, e, output_path), label="Результат")
@@ -850,15 +854,15 @@ class AudioApp(GradioHelper):
             @separate_mid_side_btn.click(inputs=[input_stereo_file, out_format3], outputs=[mid_audio, side_audio])
             def sep_ms_fn(i, of):            
                 timestamp = datetime.now(tz).strftime("%Y%m%d_%H%M%S")
-                o = os.path.join(self.user_directory.path, "audio-editor", f"{timestamp}")
+                o = os.path.join(self.user_directory.path, "output", "audio-editor", f"{timestamp}")
                 os.makedirs(o, exist_ok=True)
                 basename, ext = os.path.splitext(os.path.basename(i))
-                basename = namer.short(basename, length=50)
+                basename = self.namer.short(basename, length=50)
                 filename_mid = f"{basename}_center_{timestamp}.{of}"
                 filename_side = f"{basename}_stereo_base_{timestamp}.{of}"
                 output_path_mid = os.path.join(o, filename_mid)
                 output_path_side = os.path.join(o, filename_side)
-                output_path_mid, output_path_side = extract_phantom_center(i, output_path_mid, output_path_side)
+                output_path_mid, output_path_side = self.extract_phantom_center(i, output_path_mid, output_path_side)
                 return self.return_audio_with_size(value=output_path_mid, label="Фантомный центр"), self.return_audio_with_size(value=output_path_side, label="Стерео-база")
 
 class PluginManager(Separator):

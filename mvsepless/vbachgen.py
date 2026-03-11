@@ -14,7 +14,6 @@ from audio import check, read, write, output_formats
 from namer import Namer
 from separator import Separator
 from vbach import f0_methods
-from downloader import dw_yt_dlp
 from gradio_helper import GradioHelper, tz
 
 class VbachGen(Separator, GradioHelper):
@@ -32,7 +31,7 @@ class VbachGen(Separator, GradioHelper):
         self.user_directory = user_directory
         
         # Создаем базовую директорию для хранения результатов
-        self.output_base_directory = os.path.join(self.user_directory.path, "vbachgen")
+        self.output_base_directory = os.path.join(self.user_directory.path, "output", "vbachgen")
         os.makedirs(self.output_base_directory, exist_ok=True)
         
         self.fairseq_embedders = list(

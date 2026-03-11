@@ -102,6 +102,9 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple:
     elif model_type == 'scnet_tran':
         from models.scnet.scnet_tran import SCNet_Tran
         model = SCNet_Tran(**config.model)
+    elif model_type == 'medley_vox':
+        from models.medley_vox import load_model_with_args
+        model = load_model_with_args(config.model)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     return model, config
@@ -120,7 +123,6 @@ def demix_mdxnet(
     model: Any,
     mix: np.ndarray,
     device: torch.device,
-    pbar: bool = False,
 ) -> Dict[str, np.ndarray]:
     mix_tensor = torch.tensor(mix, dtype=torch.float32).to(device)
     batch_size = 1
@@ -188,17 +190,17 @@ def demix_mdxnet(
                     counter[:, start : start + seg_len] += window_segment
 
                 processed_chunks += len(batch_data)
-                if pbar:
-                    progress_data = {
-                        "processing": {
-                            "processed": min(i, wave.shape[1]),
-                            "total": wave.shape[1],
-                        }
+
+                progress_data = {
+                    "processing": {
+                        "processed": min(i, wave.shape[1]),
+                        "total": wave.shape[1],
                     }
-                    sys.stdout.write(
-                        json.dumps(progress_data, ensure_ascii=False) + "\n"
-                    )
-                    sys.stdout.flush()
+                }
+                sys.stdout.write(
+                    json.dumps(progress_data, ensure_ascii=False) + "\n"
+                )
+                sys.stdout.flush()
 
                 batch_data.clear()
                 batch_locations.clear()
@@ -222,7 +224,6 @@ def demix_vr(
     model: Any,
     mix: np.ndarray,
     device: torch.device,
-    pbar: bool = False,
 ) -> Dict[str, np.ndarray]:
     from models.vr_arch import spec_utils, NON_ACCOM_STEMS
     aggression = config.inference.aggression
@@ -333,7 +334,7 @@ def demix_vr(
     }
 
 
-def demix_demucs(config, model, mix, device, pbar=False):
+def demix_demucs(config, model, mix, device):
     mix = torch.tensor(mix, dtype=torch.float32)
     chunk_size = config.training.samplerate * config.training.segment
     num_instruments = len(config.training.instruments)
@@ -412,7 +413,6 @@ def demix_generic(
     model: torch.nn.Module,
     mix: torch.Tensor,
     device: torch.device,
-    pbar: bool = False,
 ) -> Dict[str, np.ndarray]:
     mix = torch.tensor(mix, dtype=torch.float32)
     chunk_size = config.audio.chunk_size
@@ -494,6 +494,156 @@ def demix_generic(
 
     return {k: v for k, v in zip(instruments, estimated_sources)}
 
+def demix_medley_vox(
+    config: ConfigDict,
+    model: torch.nn.Module,
+    mix: np.ndarray,
+    device: torch.device
+) -> Dict[str, np.ndarray]:
+    import pyloudnorm as pyln
+    from models.medley_vox.loudness_utils import loudnorm, db2linear
+    stems: list = config.training.instruments
+    
+    # Корректная обработка входного аудио
+    original_shape = mix.shape
+    
+    # Проверяем размерность и приводим к формату [каналы, сэмплы]
+    if mix.ndim == 1:  # Моно
+        mix = np.expand_dims(mix, axis=0)  # [1, samples]
+        num_channels = 1
+    elif mix.ndim == 2:
+        if mix.shape[0] <= mix.shape[1]:  # Предполагаем [каналы, сэмплы]
+            num_channels = mix.shape[0]
+        else:  # Вероятно [сэмплы, каналы]
+            mix = mix.T  # Транспонируем в [каналы, сэмплы]
+            num_channels = mix.shape[0]
+    
+    # Параметры обработки
+    samplerate = config.model.sample_rate
+    segment_sec = config.model.seq_dur
+    chunk_size = int(samplerate * segment_sec)
+    overlap = config.inference.num_overlap 
+    step = chunk_size // overlap
+    fade_size = chunk_size // 10
+    
+    # Нормализация громкости всего микса
+    meter = pyln.Meter(model.sample_rate)
+    try:
+        # loudnorm ожидает [samples, channels] или [samples]
+        # Преобразуем для loudnorm
+        if num_channels > 1:
+            mix_for_loudnorm = mix.T  # [samples, channels]
+        else:
+            mix_for_loudnorm = mix[0]  # [samples]
+        
+        mixture_d, adjusted_gain = loudnorm(mix_for_loudnorm, -24.0, meter)
+        
+        # Преобразуем обратно в [channels, samples]
+        if num_channels > 1:
+            if isinstance(mixture_d, np.ndarray) and mixture_d.ndim == 2:
+                mixture_d = mixture_d.T  # [channels, samples]
+            else:
+                # Если вернулось моно, дублируем на все каналы
+                mixture_d = np.tile(mixture_d, (num_channels, 1))
+        else:
+            if mixture_d.ndim == 1:
+                mixture_d = mixture_d.reshape(1, -1)
+                
+    except Exception as e:
+        print(f"Ошибка в loudnorm: {e}")
+        # Альтернативный подход - нормализация вручную
+        mixture_d = mix.copy()
+        rms = np.sqrt(np.mean(mix**2))
+        target_rms = 0.1  # -20 dB примерно
+        if rms > 0:
+            adjusted_gain = 20 * np.log10(target_rms / rms)
+            mixture_d = mix * (target_rms / rms)
+        else:
+            adjusted_gain = 0
+    
+    length_init = mixture_d.shape[1]
+    
+    # Подготавливаем окна для каждого стема
+    windowing_array = _getWindowingArray(chunk_size, fade_size).to(device)
+    
+    # Результирующие массивы для каждого стема [каналы, сэмплы]
+    result_stems = {stem: np.zeros((num_channels, length_init), dtype=np.float32) 
+                   for stem in stems}
+    
+    # Преобразуем микс в тензор [каналы, сэмплы]
+    mix_tensor = torch.tensor(mixture_d, dtype=torch.float32).to(device)
+    
+    # Счетчики для каждого стема [каналы, сэмплы]
+    counters = {stem: torch.zeros((num_channels, length_init), dtype=torch.float32, device=device) 
+                for stem in stems}
+    
+    i = 0
+    while i < length_init:
+        # Берем чанк для всех каналов одновременно [каналы, chunk_size]
+        end_idx = min(i + chunk_size, length_init)
+        chunk = mix_tensor[:, i:end_idx]
+        cur_chunk_len = chunk.shape[1]
+        
+        # Создаем тензор для результатов этого чанка [каналы, 2, cur_chunk_len]
+        chunk_results = torch.zeros((num_channels, 2, cur_chunk_len), dtype=torch.float32, device=device)
+        
+        # Обрабатываем каждый канал отдельно для этого чанка
+        for ch in range(num_channels):
+            # Берем один канал [1, cur_chunk_len]
+            channel_chunk = chunk[ch:ch+1, :]
+            
+            # Паддинг если нужно
+            if cur_chunk_len < chunk_size:
+                pad_len = chunk_size - cur_chunk_len
+                channel_chunk = torch.nn.functional.pad(
+                    channel_chunk, (0, pad_len), mode='constant', value=0
+                )
+            
+            # Добавляем batch dimension [1, 1, chunk_size]
+            channel_chunk = channel_chunk.unsqueeze(0)
+            
+            with torch.no_grad():
+                # Модель возвращает [1, 2, chunk_size]
+                out_chunk = model.separate(channel_chunk)
+            
+            # Сохраняем результат для этого канала (обрезаем паддинг)
+            chunk_results[ch, :, :cur_chunk_len] = out_chunk[0, :, :cur_chunk_len].cpu()
+        
+        # Применяем окно
+        window = windowing_array[:cur_chunk_len].clone()
+        if i == 0:
+            window[:fade_size] = 1
+        if end_idx >= length_init:
+            window[-fade_size:] = 1
+        
+        # Добавляем результаты в общие массивы
+        for stem_idx, stem in enumerate(stems):
+            result_stems[stem][:, i:end_idx] += chunk_results[:, stem_idx, :].cpu().numpy() * window.cpu().numpy()
+            counters[stem][:, i:end_idx] += window
+        
+        i += step
+        
+        progress_data = {
+            "processing": {
+                "processed": min(end_idx, length_init),
+                "total": length_init,
+                "unit": "сэмплов",
+            }
+        }
+        sys.stdout.write(json.dumps(progress_data, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
+    
+    # Нормализация результатов делением на счетчик
+    for stem in stems:
+        counters[stem] = counters[stem].cpu().numpy()
+        # Избегаем деления на ноль
+        mask = counters[stem] > 0
+        result_stems[stem][mask] /= counters[stem][mask]
+        
+        # Применяем обратную нормализацию громкости
+        result_stems[stem] = result_stems[stem] * db2linear(-adjusted_gain)
+    
+    return result_stems
 
 def demix(
     config: ConfigDict,
@@ -501,16 +651,17 @@ def demix(
     mix: np.ndarray,
     device: torch.device,
     model_type: str,
-    pbar: bool = False,
 ) -> Dict[str, np.ndarray]:
     if model_type == "vr":
-        return demix_vr(config, model, mix, device, pbar)
+        return demix_vr(config, model, mix, device)
     elif model_type == "mdxnet":
-        return demix_mdxnet(config, model, mix, device, pbar)
+        return demix_mdxnet(config, model, mix, device)
     elif model_type == "htdemucs":
-        return demix_demucs(config, model, mix, device, pbar)
+        return demix_demucs(config, model, mix, device)
+    elif model_type == "medley_vox":
+        return demix_medley_vox(config, model, mix, device)
     else:
-        return demix_generic(config, model, mix, device, pbar)
+        return demix_generic(config, model, mix, device)
 
 def prefer_target_instrument(config: ConfigDict) -> List[str]:
     if config.training.get("target_instrument"):

@@ -1,6 +1,4 @@
-import os, sys, subprocess, argparse, time
-from check_colab import easy_check_is_colab
-import json
+import os, subprocess, argparse
 import re
 
 def get_latest_version(package_name, index_url=None):
@@ -130,9 +128,7 @@ def install_requirements(requirements: list, force=False, index_url=None):
             cmd.extend(["--index-url", index_url])
         for pkg in requirements:
             cmd.append(pkg)
-        print("Установка зависимостей через uv...")
         result = subprocess.run(cmd)
-        print("Установка зависимостей завершена")
 
 torch_requirements = [
     "torch",
@@ -266,6 +262,9 @@ if __name__ == "__main__":
     if args.force:
         print("Предупреждение! Зависимости устанавливаются принудительно")
     install_uv()
+    print("Установка torch...")
     install_requirements(torch_reqs, force=args.force, index_url=args.index_url)
+    print("Установка остальных зависимостей...")
     install_requirements(reqs, force=args.force)
     install_requirements(["setuptools<76.0"], force=True)
+    print("Все зависимости установлены")

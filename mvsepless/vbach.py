@@ -30,24 +30,21 @@ import tempfile
 import secrets
 import gradio as gr
 import subprocess
+from separator import get_files_from_list
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
+
 FILTER_ORDER = 5
 CUTOFF_FREQUENCY = 48
 SAMPLE_RATE = 16000
 bh, ah = signal.butter(
     N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE
 )
-from device import all_ids, set_device
 from multiprocessing import cpu_count
 from audio import check, read, write, output_formats, split_mid_side, split_channels, easy_resampler, stereo_to_mono, mono_to_stereo, convert_to_dtype, gain, add_zero_to_end, multi_channel_array_from_arrays, trim, fit_arrays
 from namer import Namer
-from gradio_helper import GradioHelper, tz
-from downloader import dw_file
-from str2bool import str2bool
-from check_colab import easy_check_is_colab
+from gradio_helper import GradioHelper, tz, dw_file, easy_check_is_colab, str2bool, all_ids, set_device
 from vbach_lib.fairseq import load_model_ensemble_and_task, load_checkpoint_to_cpu
 from vbach_lib.algorithm.synthesizers import Synthesizer
 from vbach_lib.predictors.FCPE import FCPEF0Predictor
@@ -88,14 +85,14 @@ def generate_secure_random(length=10):
 class VbachModelManager:
     def __init__(self, user_directory):
         self.user_directory = user_directory
-        self.rmvpe_path = os.path.join(script_dir, "predictors", "rmvpe.pt")
-        self.hpa_rmvpe_path = os.path.join(script_dir, "predictors", "hpa_rmvpe.pt")
-        self.fcpe_path = os.path.join(script_dir, "predictors", "fcpe.pt")
+        self.rmvpe_path = os.path.join(script_dir, "vbach_lib", "predictors", "rmvpe.pt")
+        self.hpa_rmvpe_path = os.path.join(script_dir, "vbach_lib", "predictors", "hpa_rmvpe.pt")
+        self.fcpe_path = os.path.join(script_dir, "vbach_lib", "predictors", "fcpe.pt")
         self.custom_fairseq_huberts_dir = os.path.join(
-            script_dir, "custom_fairseq_embedders"
+            script_dir, "vbach_lib", "huberts", "fairseq"
         )
         self.custom_transformers_huberts_dir = os.path.join(
-            script_dir, "custom_transformers_embedders"
+            script_dir, "vbach_lib", "huberts", "transformers"
         )
         self.huberts_fairseq_dict = {
             "hubert_base": {
@@ -1747,7 +1744,7 @@ def rvc_infer(
         audio_opt = convert_to_dtype((mono_to_stereo(midaudio_opt, index=1) + difaudio_opt), output_dtype)
 
     output_path = write(
-        output_path, audio_opt, tgt_sr, output_bitrate
+        namer.iter(output_path), audio_opt, tgt_sr, output_bitrate
     )
     return output_path
 
@@ -1963,7 +1960,7 @@ def vbach_inference(
     if not input_file:
         raise ValueError("Входной файл не указан")
     if not os.path.exists(input_file):
-        raise ValueError(f"Входной файл не найден: {input}")
+        raise ValueError("Входного файла не существует")
     if not check(input_file):
         raise ValueError("Входной файл не содержит аудио")
     basename = os.path.splitext(os.path.basename(input_file))[0]
@@ -2027,7 +2024,8 @@ class History:
     def __init__(self, user_directory):
         self.info = {}
         self.user_directory = user_directory
-        self.path = os.path.join(self.user_directory.path, "history_vbach.json")
+        self.path = os.path.join(self.user_directory.path, "history", "vbach.json")
+        os.makedirs(os.path.join(self.user_directory.path, "history"), exist_ok=True)
         self.load_from_file()
     
     def _save_to_file(func):
@@ -2042,6 +2040,9 @@ class History:
     def _write_file(self):
         """Записывает текущее состояние в файл"""
         try:
+            dir = os.path.dirname(self.path)
+            if dir != "":
+                os.makedirs(dir, exist_ok=True)
             with open(self.path, 'w', encoding='utf-8') as f:
                 json.dump(self.info, f, indent=4, ensure_ascii=False)
         except Exception as e:
@@ -2088,10 +2089,11 @@ class Vbach(GradioHelper):
         self.last_converted_state = []
         self.input_files = []
         self.user_directory = user_directory
+
         model_manager.__init__(self.user_directory)
-        self.inputs_json_path = os.path.join(user_directory.path, "inputs_vbach.json")
-        self.input_base_dir = os.path.join(user_directory.path, "input_vocals")
-        self.output_base_dir = os.path.join(user_directory.path, "output_converted_vocals")
+        self.input_base_dir = os.path.join(user_directory.path, "input")
+        self.inputs_json_path = os.path.join(self.input_base_dir, "inputs.json")
+        self.output_base_dir = os.path.join(user_directory.path, "output", "vbach")
         self.history = History(self.user_directory)
         self.load_from_file()
 
@@ -3174,7 +3176,7 @@ if __name__ == "__main__":
     
     # CLI режим
     cli_parser = subparsers.add_parser("cli", help="Консольный режим")
-    cli_parser.add_argument("--input", type=str, help="Путь к входному файлу или папке")
+    cli_parser.add_argument("--input", nargs="*", help="Путь к входному файлу или папке")
     cli_parser.add_argument(
         "--output_dir", type=str, required=True, help="Путь для сохранения результатов"
     )
@@ -3342,11 +3344,12 @@ if __name__ == "__main__":
     if args.mode == "cli":
         if not args.input:
             cli_parser.error("Для CLI режима требуется указать --input")
-        
-        if os.path.exists(args.input) and os.path.isfile(args.input):
-            if check(args.input):
+        list_valid_files = get_files_from_list(args.input)
+        if list_valid_files:
+            for i, vocals_file in enumerate(list_valid_files, start=1):
+                print(f"Файл {i} из {len(list_valid_files)}: {vocals_file}")
                 vbach_inference(
-                    input_file=args.input,
+                    input_file=vocals_file,
                     model_name=args.model_name,
                     output_dir=args.output_dir,
                     output_name=args.output_name,
@@ -3354,7 +3357,9 @@ if __name__ == "__main__":
                     output_format=args.output_format,
                     pitch=args.pitch,
                     method_pitch=args.method_pitch,
-                    format_name=args.format_name,
+                    format_name=(
+                        True if len(list_valid_files) > 1 else args.format_name
+                    ),
                     add_params={
                         "index_rate": args.index_rate,
                         "filter_radius": args.filter_radius,
@@ -3370,49 +3375,11 @@ if __name__ == "__main__":
                     stack="transformers" if args.use_transformers else "fairseq",
                     device=set_device()
                 )
-        elif os.path.exists(args.input) and os.path.isdir(args.input):
-            list_valid_files = []
-            for file in os.listdir(args.input):
-                if os.path.isfile(os.path.join(args.input, file)):
-                    if check(os.path.join(args.input, file)):
-                        list_valid_files.append(os.path.join(args.input, file))
-            if list_valid_files:
-                for i, vocals_file in enumerate(list_valid_files, start=1):
-                    print(f"Файл {i} из {len(list_valid_files)}: {vocals_file}")
-                    vbach_inference(
-                        input_file=vocals_file,
-                        model_name=args.model_name,
-                        output_dir=args.output_dir,
-                        output_name=args.output_name,
-                        output_bitrate=args.output_bitrate,
-                        output_format=args.output_format,
-                        pitch=args.pitch,
-                        method_pitch=args.method_pitch,
-                        format_name=(
-                            True if len(list_valid_files) > 1 else args.format_name
-                        ),
-                        add_params={
-                            "index_rate": args.index_rate,
-                            "filter_radius": args.filter_radius,
-                            "protect": args.protect,
-                            "rms": args.rms,
-                            "mangio_crepe_hop_length": args.hop_length,
-                            "f0_min": args.f0_min,
-                            "f0_max": args.f0_max,
-                            "stereo_mode": args.stereo_mode,
-                        },
-                        pipeline_mode="alt" if args.alt_pipeline == True else "orig",
-                        embedder_name=args.embedder_name,
-                        stack="transformers" if args.use_transformers else "fairseq",
-                        device=set_device()
-                    )
-            else:
-                print(f"В папке {args.input} не найдено подходящих файлов")
         else:
-            print(f"Путь не существует: {args.input}")
+            sys.exit(1)
     
     elif args.mode == "app":
-        Vbach(user_directory, set_device()).UI().launch(
+        Vbach(user_directory, set_device(0)).UI().launch(
             server_name="0.0.0.0",
             server_port=args.port,
             share=args.share,

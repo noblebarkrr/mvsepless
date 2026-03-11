@@ -13,7 +13,6 @@ from . import (
 )
 from .super_resolution_net import SFSRNet, SFSRNet_ConvNext
 
-
 def load_model_with_args(args):
     if args.architecture == "conv_tasnet_stft":
         encoder, decoder = make_enc_dec(
@@ -109,6 +108,7 @@ def load_model_with_args(args):
             mask_act=args.mask_act,
             # causal=causal,
         )
+
     elif args.architecture == "sepformer_stft":
         encoder, decoder = make_enc_dec(
             "torch_stft",
@@ -140,6 +140,7 @@ def load_model_with_args(args):
             decoder,
             encoder_activation=args.encoder_activation,
         )
+
     elif args.mixture_consistency == "sfsrnet":
         if args.srnet == "orig":
             sr_net = SFSRNet(n_src=args.n_src, norm_type="gLN")
@@ -160,6 +161,7 @@ def load_model_with_args(args):
             if hasattr(args, "sr_out_mix_consistency")
             else False,
         )
+
     else:
         model = BaseEncoderMaskerDecoder(
             encoder,

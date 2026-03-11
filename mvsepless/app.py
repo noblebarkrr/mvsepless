@@ -1,12 +1,9 @@
-import os, sys, gradio as gr, tempfile, zipfile, ast, json, pickle, argparse, shutil, re, subprocess
+import os, gradio as gr, tempfile, ast, json, argparse, shutil, subprocess
 from separator import Separator, script_dir
-from downloader import dw_yt_dlp
-from check_colab import easy_check_is_colab
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from functools import wraps
-from device import all_ids, set_device, cuda_available, mps_available
-from audio import output_formats, input_extensions, check
-from gradio_helper import GradioHelper, tz
+from audio import output_formats, check
+from gradio_helper import GradioHelper, tz, all_ids, set_device, cuda_available, easy_check_is_colab, dw_yt_dlp
 
 class UserDirectory:
     path = ""
@@ -36,7 +33,8 @@ if IS_COLAB:
 class History:
     def __init__(self):
         self.info = {}
-        self.path = os.path.join(user_directory.path, "history.json")
+        self.path = os.path.join(user_directory.path, "history", "mvsepless.json")
+        os.makedirs(os.path.join(user_directory.path, "history"), exist_ok=True)
         self.load_from_file()
     
     def _save_to_file(func):
@@ -51,6 +49,9 @@ class History:
     def _write_file(self):
         """Записывает текущее состояние в файл"""
         try:
+            dir = os.path.dirname(self.path)
+            if dir != "":
+                os.makedirs(dir, exist_ok=True)
             with open(self.path, 'w', encoding='utf-8') as f:
                 json.dump(self.info, f, indent=4, ensure_ascii=False)
         except Exception as e:
@@ -98,8 +99,8 @@ class DownloadModelManager(Separator):
             for i, key in enumerate(keys, start=1):
                 progress(i / total, desc=f"Модель {i}/{total}")
                 print(f"Модель {i}/{total}")
-                if key in self.models_info:
-                    self.install_model(self.get_mt(key), key)
+                if key in self.get_mn():
+                    self.install_model(key)
                 else:
                     print(f"Указанной модели {key} не существует... Пропускаем")
                     gr.Warning(message="", title=f"Указанной модели {key} не существует... Пропускаем")
@@ -118,8 +119,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         super().__init__()
         self.input_files = []
         self.input_base_dir = os.path.join(user_directory.path, "input")
-        self.output_base_dir = os.path.join(user_directory.path, "output")
-        self.inputs_json_path = os.path.join(user_directory.path, "inputs.json")
+        self.output_base_dir = os.path.join(user_directory.path, "output", "mvsepless")
+        self.inputs_json_path = os.path.join(self.input_base_dir, "inputs.json")
         self.history = History()
         self.load_from_file()
 
@@ -186,9 +187,11 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         mdx_denoise=False,
         use_spec_invert=False,
         econom_mode=None,
+        chunk_duration=300,
         progress=gr.Progress(track_tqdm=True),
     ):
         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        self.chunk_duration = chunk_duration
         results = self.separate(
             input=input,
             output_dir=os.path.join(self.output_base_dir, timestamp),
@@ -205,12 +208,14 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                 "vr_high_end_process": vr_high_end_process,
                 "econom_mode": econom_mode,
                 "add_single_sep_text_progress": None,
+                "single_mode": False
             } if econom_mode is not None else {
                 "mdx_denoise": mdx_denoise,
                 "vr_aggr": vr_aggr,
                 "vr_post_process": vr_post_process,
                 "vr_high_end_process": vr_high_end_process,
                 "add_single_sep_text_progress": None,
+                "single_mode": False
             },
             use_spec_invert=use_spec_invert,
             progress=progress,
@@ -218,7 +223,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         self.history.add(results, model_name, timestamp)
         return results
 
-    def UI(self, theme, add_app=True, plugins=True, add_vbach=False, medley_vox=False):
+    def UI(self, theme, add_app=True, plugins=True, add_vbach=False):
         with gr.Blocks(theme=theme, title="Разделение музыки и вокала") as MVSEPLESS_LITE_UI:
             if not cuda_available:
                 gr.Markdown("<h2><center>ВНИМАНИЕ! Используется CPU, инференс слишком медленно работает<center><h2>")
@@ -334,7 +339,15 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     )
                                     gr.Markdown("<h4>Экономия</h4>", container=True)
                                     econom_mode = gr.Checkbox(
-                                        label="Включить эконом-режим", value=False, interactive=True
+                                        label="Включить эконом-режим (уменьшение размера чанка на Demucs и BS/Mel-Band Roformer)", value=False, interactive=True
+                                    )
+                                    chunk_dur_slider = gr.Slider(
+                                        label="Длина чанка для обработки слишком длинных аудио (мин)",
+                                        minimum=1,
+                                        maximum=10,
+                                        value=5,
+                                        step=0.1,
+                                        interactive=True,
                                     )
 
                             @model_name.change(
@@ -357,7 +370,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     filterable=False,
                                 )
                                 output_bitrate = gr.Slider(
-                                    label="Битрейт выходного файла",
+                                    label="Битрейт выходного файла (кбит/сек)",
                                     minimum=64,
                                     maximum=512,
                                     step=32,
@@ -401,7 +414,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     vr_enable_post_process,
                                     vr_enable_high_end_process,
                                     use_spec_for_extract_instrumental,
-                                    econom_mode
+                                    econom_mode,
+                                    chunk_dur_slider
                                 ],
                                 outputs=[sep_state, status],
                                 show_progress="full",
@@ -420,6 +434,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 vr_hip,
                                 u_spec,
                                 ec_mode,
+                                ch_dur,
                                 progress=gr.Progress(track_tqdm=True),
                             ):
                                 results = self._separate_batch(
@@ -436,6 +451,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     mdx_denoise,
                                     u_spec,
                                     ec_mode,
+                                    ch_dur * 60,
                                     progress=progress,
                                 )
                                 return gr.update(value=str(results)), gr.update(visible=False)
@@ -634,12 +650,6 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                     delete_models_cache_btn = gr.Button("Удалить ВСЁ!")
                     delete_models_cache_btn.click(self.delete_models_cache, inputs=None, outputs=None)
 
-            if medley_vox:
-                from medley_vox_infer import MedleyVoxSeparator
-                with gr.Tab("Разделение вокалов (Medley-Vox)"):
-                    _medley_vox = MedleyVoxSeparator(self.input_files, self.upload_files, user_directory, device=self.device)
-                    _medley_vox.UI()
-
             from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI, AudioApp
             if add_app:
                 with gr.Tab("Обработка аудио"):
@@ -660,6 +670,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                 from vbach import Vbach, vbach_inference, model_manager as voice_model_manager
                 with gr.Tab("Преобразование"):
                     _vbach = Vbach(user_directory, device=self.device)
+                    _vbach.upload_files = self.upload_files
+                    _vbach.input_files = self.input_files
                     _vbach.UI()
                 if add_app:
                     with gr.Tab("Генерация каверов"):
@@ -691,56 +703,4 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                 device_radio.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device, trigger_mode="once")
                 pref_cuda.change(show_device, inputs=[device_radio, pref_cuda], outputs=current_device, trigger_mode="once")
 
-
         return MVSEPLESS_LITE_UI
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MVSepless")
-    parser.add_argument(
-        "--port", type=int, default=None, help="Порт для запуска сервера Gradio."
-    )
-    parser.add_argument(
-        "--share",
-        action="store_true",
-        help="Создать публичную ссылку для приложения Gradio.",
-    )
-    parser.add_argument(
-        "--add_app",
-        action="store_true",
-        help="Включить дополнительные приложения",
-    )
-    parser.add_argument(
-        "--use_plugins",
-        action="store_true",
-        help="Включить плагины",
-    )
-    parser.add_argument(
-        "--vbach",
-        action="store_true",
-        help="Включить Vbach",
-    )
-    parser.add_argument(
-        "--medley_vox",
-        action="store_true",
-        help="Включить Medley-Vox",
-    )
-    args = parser.parse_args()
-    SeparatorGradio().UI(gr.themes.Citrus(
-            primary_hue="teal",
-            secondary_hue="blue",
-            neutral_hue="blue",
-            spacing_size="sm",
-            font=[
-                gr.themes.GoogleFont("Montserrat"),
-                "ui-sans-serif",
-                "system-ui",
-                "sans-serif",
-            ],
-        ), args.add_app, args.use_plugins, args.vbach, args.medley_vox).launch(
-            server_name="0.0.0.0",
-            server_port=args.port,
-            share=args.share,
-            allowed_paths=["/"],
-            debug=True,
-            inbrowser=True
-        )

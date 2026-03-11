@@ -5,23 +5,18 @@ sys.stderr.reconfigure(encoding='utf-8')
 import json
 import argparse
 import time
-from datetime import datetime
 import gc
-import glob
-import yaml
 import torch
 import numpy as np
-import soundfile as sf
 import torch.nn as nn
-import tempfile
 from typing import Literal
 
-from audio import read, multiwrite, output_formats, substractor
+from audio import read, multiwrite, output_formats, subtractor, bitrate_to_int
 from namer import Namer
 
 namer = Namer()
 
-from infer_utils import prefer_target_instrument, demix, get_model_from_config
+from infer_utils import demix, get_model_from_config
 
 
 def normalize_peak(audio, peak):
@@ -79,7 +74,6 @@ def once_inference(
     device: any = None,
     model_type: str = None,
     extract_instrumental: bool = False,
-    detailed_pbar: bool = False,
     output_format: Literal[
         "mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"
     ] = "mp3",
@@ -93,6 +87,7 @@ def once_inference(
     model_id: int = 0,
     spec_invert_target_instrument: bool = False
 ):
+
     results = []
     sys.stdout.write(json.dumps({"reading": path}, ensure_ascii=False) + "\n")
     sys.stdout.flush()
@@ -129,7 +124,7 @@ def once_inference(
 
     try:
         waveforms = demix(
-            config, model, mix_orig, device, pbar=detailed_pbar, model_type=model_type
+            config, model, mix_orig, device, model_type
         )
     except Exception as e:
         sys.stdout.write(
@@ -156,7 +151,7 @@ def once_inference(
                     second_stem = instr_
                     break
             if second_stem:
-                output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+                output_waveforms[second_stem] = subtractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
         else: # Если обнаружен целевой инструмент и выбран хотя бы один стем:
             if config.training.target_instrument in selected_instruments:
                 output_waveforms[config.training.target_instrument] = waveforms[config.training.target_instrument]
@@ -167,7 +162,7 @@ def once_inference(
                     break
             if second_stem:
                 if second_stem in selected_instruments:
-                    output_waveforms[second_stem] = substractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+                    output_waveforms[second_stem] = subtractor(mix_orig, waveforms[config.training.target_instrument], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
     elif config.training.target_instrument is None:
         if not selected_instruments:
@@ -185,7 +180,7 @@ def once_inference(
                     )
                 ):
                     output_waveforms["instrumental -"] = mix_orig.copy()
-                    output_waveforms["instrumental -"] = substractor(output_waveforms["instrumental -"], waveforms["vocals"], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+                    output_waveforms["instrumental -"] = subtractor(output_waveforms["instrumental -"], waveforms["vocals"], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
                     non_vocal_stems = [s for s in instruments if s not in ["vocals"]]
                     if non_vocal_stems:
@@ -205,7 +200,7 @@ def once_inference(
                     output_waveforms["inverted -"] = mix_orig.copy()
                     for instr_ in selected_instruments:
                         if instr_ in waveforms:
-                            output_waveforms["inverted -"] = substractor(output_waveforms["inverted -"], waveforms[instr_], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
+                            output_waveforms["inverted -"] = subtractor(output_waveforms["inverted -"], waveforms[instr_], sample_rate, sample_rate, spectrogram=spec_invert_target_instrument)[0]
 
                     unselected_stems = [
                         s for s in instruments if s not in selected_instruments
@@ -269,7 +264,6 @@ def run_inference(
     device: any = None,
     model_type: str = None,
     extract_instrumental: bool = False,
-    disable_detailed_pbar: bool = False,
     output_format: Literal[
         "mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"
     ] = "mp3",
@@ -291,8 +285,6 @@ def run_inference(
 
     os.makedirs(store_dir, exist_ok=True)
 
-    detailed_pbar = not disable_detailed_pbar
-
     results = once_inference(
         path=input_path,
         model=model,
@@ -300,7 +292,6 @@ def run_inference(
         device=device,
         model_type=model_type,
         extract_instrumental=extract_instrumental,
-        detailed_pbar=detailed_pbar,
         output_format=output_format,
         output_bitrate=output_bitrate,
         model_name=model_name,
@@ -350,10 +341,17 @@ def load_model(model_type, config_path, start_check_point, device: str):
     
     # Устанавливаем оптимизации только для CUDA
     if torch_device.type == "cuda":
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cudnn.allow_tf32 = True
-    
+        if hasattr(torch, 'backends'):
+            if hasattr(torch.backends, 'cudnn'):
+                torch.backends.cudnn.benchmark = True
+                
+                if hasattr(torch.backends.cudnn, 'allow_tf32'):
+                    torch.backends.cudnn.allow_tf32 = True
+            
+            if hasattr(torch.backends, 'cuda') and hasattr(torch.backends.cuda, 'matmul'):
+                if hasattr(torch.backends.cuda.matmul, 'allow_tf32'):
+                    torch.backends.cuda.matmul.allow_tf32 = True
+
     model, config = get_model_from_config(model_type, config_path)
 
     if model_type == "vr":
@@ -372,6 +370,38 @@ def load_model(model_type, config_path, start_check_point, device: str):
         )
         return model, config, torch_device
 
+    elif model_type == "medley_vox":
+        if start_check_point != "":
+            checkpoint = torch.load(start_check_point, map_location=torch_device)
+            if config.model.ema:
+                model_dict = model.state_dict()
+                # 1. filter out unnecessary keys
+                checkpoint = {
+                    k.replace("ema_model.module.", ""): v
+                    for k, v in checkpoint.items()
+                    if k.replace("ema_model.module.", "") in model_dict
+                }
+                # 2. overwrite entries in the existing state dict
+                model_dict.update(checkpoint)
+                # 3. load the new state dict
+                model.load_state_dict(model_dict)
+            elif not config.model.ema:
+                model_dict = model.state_dict()
+                # 1. filter out unnecessary keys
+                checkpoint = {
+                    k.replace("online_model.module.", ""): v
+                    for k, v in checkpoint.items()
+                    if k.replace("online_model.module.", "") in model_dict
+                }
+                # 2. overwrite entries in the existing state dict
+                model_dict.update(checkpoint)
+                # 3. load the new state dict
+                model.load_state_dict(model_dict)
+            else:
+                model.load_state_dict(checkpoint)
+            model.eval()
+        return model, config, torch_device
+    
     elif model_type == "mdxnet":
         if start_check_point != "":
             sys.stdout.write(json.dumps({"checkpoint": start_check_point}) + "\n")
@@ -464,7 +494,6 @@ def mvsep_offline(
     model_name,
     template,
     device="cpu",
-    disable_detailed_pbar=False,
     selected_instruments=None,
     model_id=0,
     spec_invert_target_instrument=False
@@ -481,7 +510,6 @@ def mvsep_offline(
         device=device,
         model_type=model_type,
         extract_instrumental=extract_instrumental,
-        disable_detailed_pbar=disable_detailed_pbar,
         output_format=output_format,
         output_bitrate=output_bitrate,
         model_name=model_name,
@@ -524,6 +552,7 @@ def parse_args():
             "bandit_v2",
             "mdxnet",
             "vr",
+            "medley_vox"
         ],
         help="Тип модели (по умолчанию: htdemucs)",
     )
@@ -579,14 +608,6 @@ def parse_args():
     parser.add_argument(
         "--device", type=str, help="Какой девайс используется для разделения", default="cuda:0"
     )
-    parser.add_argument(
-        "--use_tta", action="store_true", help="Использовать тестовую аугментацию"
-    )
-    parser.add_argument(
-        "--disable_detailed_pbar",
-        action="store_true",
-        help="Отключить детальный прогресс-бар",
-    )
     parser.add_argument("--verbose", action="store_true", help="Подробный вывод")
 
     return parser.parse_args()
@@ -607,7 +628,6 @@ def main():
         model_name=args.model_name,
         template=args.template,
         device=args.device,
-        disable_detailed_pbar=args.disable_detailed_pbar,
         selected_instruments=args.selected_instruments,
         model_id=args.model_id,
         spec_invert_target_instrument=args.use_spec_invert

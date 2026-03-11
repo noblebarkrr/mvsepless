@@ -9,8 +9,8 @@ from asteroid.models.base_models import (
 from asteroid.utils.torch_utils import pad_x_to_y, jitable_shape
 from asteroid_filterbanks.transforms import mag, magphase, from_magphase
 
-from ..utils import my_magphase, normalize_mag_spec, denormalize_mag_spec
-
+from .loudness_utils import normalize_mag_spec, denormalize_mag_spec
+from .stft_utils import my_magphase
 
 class BaseEncoderMaskerDecoder_output_maksed_tf(BaseEncoderMaskerDecoder):
     def __init__(self, encoder, masker, decoder, encoder_activation=None):

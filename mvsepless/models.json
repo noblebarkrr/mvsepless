@@ -5,8 +5,8 @@
         "id": 1000,
         "full_name": "Mel-Band Roformer Vocals by Kimberley Jensen",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_kim.ckpt?download=true",
@@ -18,8 +18,8 @@
         "id": 1910,
         "full_name": "Windowed Sink Attention Mel-Band Roformer Vocals by Smule Labs",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_wsa.ckpt?download=true",
@@ -31,8 +31,8 @@
         "id": 1010,
         "full_name": "Mel-Band Roformer InstVoc Duality v1 by Unwa",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instvoc_duality1_unwa.ckpt?download=true",
@@ -44,8 +44,8 @@
         "id": 1011,
         "full_name": "Mel-Band Roformer InstVoc Duality v2 by Unwa",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instvoc_duality2_unwa.ckpt?download=true",
@@ -70,8 +70,8 @@
         "id": 1021,
         "full_name": "Mel-Band Roformer Kim FT v2 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2_unwa.ckpt?download=true",
@@ -83,8 +83,8 @@
         "id": 1022,
         "full_name": "Mel-Band Roformer Kim FT v2 Bleedless by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2b_unwa.ckpt?download=true",
@@ -96,8 +96,8 @@
         "id": 1023,
         "full_name": "Mel-Band Roformer Kim FT v3 preview by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft3_prev_unwa.ckpt?download=true",
@@ -109,8 +109,8 @@
         "id": 1030,
         "full_name": "Mel-Band Roformer Big Beta v1 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta1_unwa.ckpt?download=true",
@@ -122,8 +122,8 @@
         "id": 1031,
         "full_name": "Mel-Band Roformer Big Beta v2 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta2_unwa.ckpt?download=true",
@@ -135,8 +135,8 @@
         "id": 1032,
         "full_name": "Mel-Band Roformer Big Beta v3 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta3_unwa.ckpt?download=true",
@@ -148,8 +148,8 @@
         "id": 1033,
         "full_name": "Mel-Band Roformer Big Beta v4 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta4_unwa.ckpt?download=true",
@@ -161,8 +161,8 @@
         "id": 1034,
         "full_name": "Mel-Band Roformer Vocals Big Beta v5e by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta5e_unwa.ckpt?download=true",
@@ -174,8 +174,8 @@
         "id": 1035,
         "full_name": "Mel-Band Roformer Big Beta v6 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6_unwa.ckpt?download=true",
@@ -187,12 +187,25 @@
         "id": 1036,
         "full_name": "Mel-Band Roformer Big Beta v6x by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6x_unwa.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta6x_unwa_config.yaml?download=true"
+    },
+    "mbr_bigbeta7_unwa": {
+        "model_type": "mel_band_roformer",
+        "category": "Вокал",
+        "id": 1037,
+        "full_name": "Mel-Band Roformer Big Beta v7 by Unwa",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "vocals",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta7_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigbeta7_unwa_config.yaml?download=true"
     },
     "mbr_inst1_unwa": {
         "model_type": "mel_band_roformer",
@@ -200,8 +213,8 @@
         "id": 1040,
         "full_name": "Mel-Band Roformer Instrumental v1 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1_unwa.ckpt?download=true",
@@ -213,8 +226,8 @@
         "id": 1041,
         "full_name": "Mel-Band Roformer Instrumental v1+ by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1+_unwa.ckpt?download=true",
@@ -226,8 +239,8 @@
         "id": 1042,
         "full_name": "Mel-Band Roformer Instrumental v1e by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1e_unwa.ckpt?download=true",
@@ -239,8 +252,8 @@
         "id": 1043,
         "full_name": "Mel-Band Roformer Instrumental v1e Plus by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst1e+_unwa.ckpt?download=true",
@@ -252,8 +265,8 @@
         "id": 1044,
         "full_name": "Mel-Band Roformer Instrumental v2 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst2_unwa.ckpt?download=true",
@@ -265,8 +278,8 @@
         "id": 1050,
         "full_name": "Mel-Band Roformer Small v1 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_small_unwa.ckpt?download=true",
@@ -278,8 +291,8 @@
         "id": 1051,
         "full_name": "Mel-Band Roformer Bleed Suppressor v1 by Unwa / 97chris",
         "stems": [
-            "Instrumental",
-            "Bleed"
+            "Bleed",
+            "Instrumental"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bleed_supressor_unwa_97chris.ckpt?download=true",
@@ -291,8 +304,8 @@
         "id": 1060,
         "full_name": "Mel-Band Roformer Instrumental by Becruily",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_becruily.ckpt?download=true",
@@ -317,8 +330,8 @@
         "id": 1062,
         "full_name": "Mel-Band Roformer Karaoke by Becruily",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_becruily.ckpt?download=true",
@@ -330,8 +343,8 @@
         "id": 1063,
         "full_name": "Mel-Band Roformer Vocals by Becruily",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_becruily.ckpt?download=true",
@@ -343,8 +356,8 @@
         "id": 1064,
         "full_name": "Mel-Band Roformer DeUX by Becruily",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_deux_becruily.ckpt?download=true",
@@ -356,8 +369,8 @@
         "id": 1070,
         "full_name": "Mel-Band Roformer SYHFT v1 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft1.ckpt?download=true",
@@ -369,8 +382,8 @@
         "id": 1071,
         "full_name": "Mel-Band Roformer SYHFT v2 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft2.ckpt?download=true",
@@ -382,8 +395,8 @@
         "id": 1072,
         "full_name": "Mel-Band Roformer SYHFT v2.5 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft2.5.ckpt?download=true",
@@ -395,8 +408,8 @@
         "id": 1073,
         "full_name": "Mel-Band Roformer SYHFT v3 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft3.ckpt?download=true",
@@ -408,8 +421,8 @@
         "id": 1074,
         "full_name": "Mel-Band Roformer Big SYHFT v1 Fast by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bigsyhft1fast.ckpt?download=true",
@@ -421,8 +434,8 @@
         "id": 1075,
         "full_name": "Mel-Band Roformer Merged Beta v1 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftbeta1.ckpt?download=true",
@@ -434,8 +447,8 @@
         "id": 1076,
         "full_name": "Mel-Band Roformer SYHFT B1 1 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_1.ckpt?download=true",
@@ -447,8 +460,8 @@
         "id": 1077,
         "full_name": "Mel-Band Roformer SYHFT B1 2 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_2.ckpt?download=true",
@@ -460,8 +473,8 @@
         "id": 1078,
         "full_name": "Mel-Band Roformer SYHFT B1 3 by SYH99999",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhftB1_3.ckpt?download=true",
@@ -473,10 +486,10 @@
         "id": 1079,
         "full_name": "Mel-Band Roformer 4 Stems FT Large v1 by SYH99999",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft_4stem.ckpt?download=true",
@@ -488,10 +501,10 @@
         "id": 1080,
         "full_name": "Mel-Band Roformer 4 Stems FT Large v2 by SYH99999",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_syhft_4stem2.ckpt?download=true",
@@ -503,8 +516,8 @@
         "id": 1085,
         "full_name": "Mel-Band Roformer Instrumental by Essid (sdr 16.52)",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_1652_essid.ckpt?download=true",
@@ -516,8 +529,8 @@
         "id": 1086,
         "full_name": "Mel-Band Roformer Instrumental by Essid (sdr 16.81)",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_1681_essid.ckpt?download=true",
@@ -529,8 +542,8 @@
         "id": 1100,
         "full_name": "Mel-Band Roformer Instrumental Fv1 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv1_gabox.ckpt?download=true",
@@ -542,8 +555,8 @@
         "id": 1101,
         "full_name": "Mel-Band Roformer Instrumental Fv2 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv2_gabox.ckpt?download=true",
@@ -555,8 +568,8 @@
         "id": 1102,
         "full_name": "Mel-Band Roformer Instrumental Fv3 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv3_gabox.ckpt?download=true",
@@ -568,8 +581,8 @@
         "id": 1117,
         "full_name": "Mel-Band Roformer Instrumental Fv4 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv4_gabox.ckpt?download=true",
@@ -581,8 +594,8 @@
         "id": 1103,
         "full_name": "Mel-Band Roformer Instrumental Fv4 Noise by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv4n_gabox.ckpt?download=true",
@@ -594,8 +607,8 @@
         "id": 1104,
         "full_name": "Mel-Band Roformer Instrumental Fv5 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv5_gabox.ckpt?download=true",
@@ -607,8 +620,8 @@
         "id": 1105,
         "full_name": "Mel-Band Roformer Instrumental Fv5 Noise by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv5n_gabox.ckpt?download=true",
@@ -620,8 +633,8 @@
         "id": 1106,
         "full_name": "Mel-Band Roformer Instrumental Fv6 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv6_gabox.ckpt?download=true",
@@ -633,8 +646,8 @@
         "id": 1107,
         "full_name": "Mel-Band Roformer Instrumental Fv6 Noise by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv6n_gabox.ckpt?download=true",
@@ -646,8 +659,8 @@
         "id": 1108,
         "full_name": "Mel-Band Roformer Instrumental Fv7 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7_gabox.ckpt?download=true",
@@ -659,8 +672,8 @@
         "id": 1109,
         "full_name": "Mel-Band Roformer Instrumental Fv7 Noise by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7n_gabox.ckpt?download=true",
@@ -672,8 +685,8 @@
         "id": 1110,
         "full_name": "Mel-Band Roformer Instrumental Fv7+ by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7+_gabox.ckpt?download=true",
@@ -685,8 +698,8 @@
         "id": 1111,
         "full_name": "Mel-Band Roformer Instrumental Fv7z by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv7z_gabox.ckpt?download=true",
@@ -698,8 +711,8 @@
         "id": 1112,
         "full_name": "Mel-Band Roformer Instrumental Fv8 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv8_gabox.ckpt?download=true",
@@ -711,8 +724,8 @@
         "id": 1113,
         "full_name": "Mel-Band Roformer Instrumental Fv8b by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv8b_gabox.ckpt?download=true",
@@ -724,8 +737,8 @@
         "id": 11140,
         "full_name": "Mel-Band Roformer Instrumental Fv9 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv9_gabox.ckpt?download=true",
@@ -737,8 +750,8 @@
         "id": 11141,
         "full_name": "Mel-Band Roformer Instrumental Fv9 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv9_2_gabox.ckpt?download=true",
@@ -750,8 +763,8 @@
         "id": 11150,
         "full_name": "Mel-Band Roformer Instrumental Fv10 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfv10_gabox.ckpt?download=true",
@@ -763,8 +776,8 @@
         "id": 11151,
         "full_name": "Mel-Band Roformer Instrumental Flowers v10 by GaboxR67",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instflowersv10_gabox.ckpt?download=true",
@@ -776,8 +789,8 @@
         "id": 1116,
         "full_name": "Mel-Band Roformer Instrumental FvX by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instfvx_gabox.ckpt?download=true",
@@ -789,8 +802,8 @@
         "id": 1120,
         "full_name": "Mel-Band Roformer Instrumental Bv1 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv1_gabox.ckpt?download=true",
@@ -802,8 +815,8 @@
         "id": 1121,
         "full_name": "Mel-Band Roformer Instrumental Bv2 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv2_gabox.ckpt?download=true",
@@ -815,8 +828,8 @@
         "id": 1122,
         "full_name": "Mel-Band Roformer Instrumental Bv3 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_instbv3_gabox.ckpt?download=true",
@@ -828,8 +841,8 @@
         "id": 1130,
         "full_name": "Mel-Band Roformer Vocals Fv1 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv1_gabox.ckpt?download=true",
@@ -841,8 +854,8 @@
         "id": 1131,
         "full_name": "Mel-Band Roformer Vocals Fv2 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv2_gabox.ckpt?download=true",
@@ -854,8 +867,8 @@
         "id": 1132,
         "full_name": "Mel-Band Roformer Vocals Fv3 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv3_gabox.ckpt?download=true",
@@ -867,8 +880,8 @@
         "id": 1133,
         "full_name": "Mel-Band Roformer Vocals Fv4 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv4_gabox.ckpt?download=true",
@@ -880,8 +893,8 @@
         "id": 1134,
         "full_name": "Mel-Band Roformer Vocals Fv5 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv5_gabox.ckpt?download=true",
@@ -893,21 +906,34 @@
         "id": 1135,
         "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv6_gabox.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv6_gabox_config.yaml?download=true"
     },
+    "mbr_vocalsfv7_gabox": {
+        "model_type": "mel_band_roformer",
+        "category": "Вокал",
+        "id": 11361,
+        "full_name": "Mel-Band Roformer Vocals Fv7 Final by GaboxR67",
+        "stems": [
+            "Instrumental",
+            "Vocals"
+        ],
+        "target_instrument": "Vocals",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_gabox_config.yaml?download=true"
+    },
     "mbr_vocalsfv7_beta1_gabox": {
         "model_type": "mel_band_roformer",
         "category": "Вокал",
         "id": 1136,
-        "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
+        "full_name": "Mel-Band Roformer Vocals Fv7 Beta 1 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta1_gabox.ckpt?download=true",
@@ -917,10 +943,10 @@
         "model_type": "mel_band_roformer",
         "category": "Вокал",
         "id": 1137,
-        "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
+        "full_name": "Mel-Band Roformer Vocals Fv7 Beta 2 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta2_gabox.ckpt?download=true",
@@ -930,10 +956,10 @@
         "model_type": "mel_band_roformer",
         "category": "Вокал",
         "id": 1138,
-        "full_name": "Mel-Band Roformer Vocals Fv6 by GaboxR67",
+        "full_name": "Mel-Band Roformer Vocals Fv7 Beta 3 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsfv7_beta3_gabox.ckpt?download=true",
@@ -971,8 +997,8 @@
         "id": 1142,
         "full_name": "Mel-Band Roformer Karaoke v1 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke1_gabox.ckpt?download=true",
@@ -984,12 +1010,25 @@
         "id": 1143,
         "full_name": "Mel-Band Roformer Karaoke v2 by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke2_gabox.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke2_gabox_config.yaml?download=true"
+    },
+    "mbr_karaoke_small_gabox_aufr33": {
+        "model_type": "mel_band_roformer",
+        "category": "Караоке",
+        "id": 11431,
+        "full_name": "Mel-Band Roformer Karaoke Small by GaboxR67 & Aufr33",
+        "stems": [
+            "Instrumental",
+            "Vocals"
+        ],
+        "target_instrument": "Vocals",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_small_gabox_aufr33.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_small_gabox_aufr33_config.yaml?download=true"
     },
     "mbr_leadvoc_dereverb_gabox": {
         "model_type": "mel_band_roformer",
@@ -997,8 +1036,8 @@
         "id": 1144,
         "full_name": "Mel-Band Roformer Lead Vocals DeReverb by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_leadvoc_dereverb_gabox.ckpt?download=true",
@@ -1010,8 +1049,8 @@
         "id": 1150,
         "full_name": "Mel-Band Roformer Denoise DeBleed by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_denoise_debleed_gabox.ckpt?download=true",
@@ -1023,8 +1062,8 @@
         "id": 1160,
         "full_name": "Mel-Band Roformer Karaoke Fusion by Gonzaluigi",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_gonzaluigi.ckpt?download=true",
@@ -1036,8 +1075,8 @@
         "id": 1161,
         "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_aggr_gonzaluigi.ckpt?download=true",
@@ -1049,8 +1088,8 @@
         "id": 1162,
         "full_name": "Mel-Band Roformer BVE by Gonzaluigi",
         "stems": [
-            "Lead",
-            "Back"
+            "Back",
+            "Lead"
         ],
         "target_instrument": "Lead",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bve_gonzaluigi.ckpt?download=true",
@@ -1062,8 +1101,8 @@
         "id": 1163,
         "full_name": "Mel-Band Roformer Karaoke Fusion Aggressive by Gonzaluigi",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion2_aggr_gonzaluigi.ckpt?download=true",
@@ -1075,8 +1114,8 @@
         "id": 1164,
         "full_name": "Mel-Band Roformer Karaoke Fusion Total by Gonzaluigi",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_karaoke_fusion_total_aggr_gonzaluigi.ckpt?download=true",
@@ -1088,8 +1127,8 @@
         "id": 1170,
         "full_name": "Mel-Band Roformer DeReverb by Anvuew",
         "stems": [
-            "reverb",
-            "noreverb"
+            "noreverb",
+            "reverb"
         ],
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_anvuew.ckpt?download=true",
@@ -1101,8 +1140,8 @@
         "id": 1171,
         "full_name": "Mel-Band Roformer DeReverb Less Aggressive by Anvuew",
         "stems": [
-            "reverb",
-            "noreverb"
+            "noreverb",
+            "reverb"
         ],
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_less_aggr_anvuew.ckpt?download=true",
@@ -1114,8 +1153,8 @@
         "id": 1172,
         "full_name": "Mel-Band Roformer DeReverb Mono by Anvuew",
         "stems": [
-            "reverb",
-            "noreverb"
+            "noreverb",
+            "reverb"
         ],
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_dereverb_mono_anvuew.ckpt?download=true",
@@ -1257,8 +1296,8 @@
         "id": 1194,
         "full_name": "Mel-Band Roformer Vocals by ViperX",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocals_viperx.ckpt?download=true",
@@ -1270,8 +1309,8 @@
         "id": 1200,
         "full_name": "Mel-Band Roformer Vocals Fullness by Aname",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_vocalsf_aname.ckpt?download=true",
@@ -1283,8 +1322,8 @@
         "id": 1201,
         "full_name": "Mel-Band Roformer Kim FT v1 by Aname",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft1_aname.ckpt?download=true",
@@ -1296,8 +1335,8 @@
         "id": 1202,
         "full_name": "Mel-Band Roformer Kim FT v2 by Aname",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2_aname.ckpt?download=true",
@@ -1309,8 +1348,8 @@
         "id": 1203,
         "full_name": "Mel-Band Roformer Kim FT v2 Fullness by Aname",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft2f_aname.ckpt?download=true",
@@ -1322,8 +1361,8 @@
         "id": 1204,
         "full_name": "Mel-Band Roformer Kim FT v3 by Aname",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_kimft3_aname.ckpt?download=true",
@@ -1335,8 +1374,8 @@
         "id": 1205,
         "full_name": "Mel-Band Roformer Small by Aname",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_small_aname.ckpt?download=true",
@@ -1348,8 +1387,8 @@
         "id": 1209,
         "full_name": "Mel-Band Roformer Duality v1 by Aname",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_duality1_aname.ckpt?download=true",
@@ -1361,10 +1400,10 @@
         "id": 1206,
         "full_name": "Mel-Band Roformer 4 Stems Large by Aname",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemlarge1_aname.ckpt?download=true",
@@ -1376,10 +1415,10 @@
         "id": 1207,
         "full_name": "Mel-Band Roformer 4 Stems v2 Large by Aname",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemlarge2_aname.ckpt?download=true",
@@ -1391,23 +1430,49 @@
         "id": 1208,
         "full_name": "Mel-Band Roformer 4 Stems XL by Aname",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemxl1_aname.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_4stemxl1_aname_config.yaml?download=true"
     },
+    "mbr_scratch_aname": {
+        "model_type": "mel_band_roformer",
+        "category": "Скретч",
+        "id": 1950,
+        "full_name": "Mel-Band Roformer Scratch Large by Aname",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "vocals",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_scratch_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_scratch_aname_config.yaml?download=true"
+    },
+    "mbr_bgm_jasper": {
+        "model_type": "mel_band_roformer",
+        "category": "Кинематограф",
+        "id": 1951,
+        "full_name": "Mel-Band Roformer BGM by Jasper",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "vocals",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bgm_jasper.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_bgm_jasper_config.yaml?download=true"
+    },
     "mbr_percussion_yolkispaliks": {
         "model_type": "mel_band_roformer",
-        "category": "Ударные",
+        "category": "Перкуссия",
         "id": 1900,
-        "full_name": "Mel-Band Roformer Drums Experimental by yolkispalkis",
+        "full_name": "Mel-Band Roformer Percussion Experimental by yolkispalkis",
         "stems": [
-            "percussions",
-            "other"
+            "other",
+            "percussions"
         ],
         "target_instrument": "percussions",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_percussion_yolkispaliks.ckpt?download=true",
@@ -1416,15 +1481,28 @@
     "mbr_inst_metal_prev_meskvlla33": {
         "model_type": "mel_band_roformer",
         "category": "Инструментал",
-        "id": 1901,
+        "id": 19011,
         "full_name": "Mel-Band Roformer Metal Inst Preview by Mesk",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_metal_prev_meskvlla33.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_metal_prev_meskvlla33_config.yaml?download=true"
+    },
+    "mbr_inst_rifforge_meskvlla33": {
+        "model_type": "mel_band_roformer",
+        "category": "Инструментал",
+        "id": 19012,
+        "full_name": "Mel-Band Roformer Inst Rifforge by Mesk",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "other",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_rifforge_meskvlla33.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_inst_rifforge_meskvlla33_config.yaml?download=true"
     },
     "mbr_neo_inst_vfx": {
         "model_type": "mel_band_roformer",
@@ -1432,12 +1510,38 @@
         "id": 1902,
         "full_name": "Mel-Band Roformer NEO Inst VFX by natanworkspace",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Instrumental",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_neo_inst_vfx.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_neo_inst_vfx_config.yaml?download=true"
+    },
+    "mbr_lead_rhythm_guitar_listra92": {
+        "model_type": "mel_band_roformer",
+        "category": "Гитара",
+        "id": 19027,
+        "full_name": "Mel-Band Roformer Lead-Rhythm Guitar by listra92",
+        "stems": [
+            "Lead",
+            "Rhythm"
+        ],
+        "target_instrument": "Lead",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_lead_rhythm_guitar_listra92.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_lead_rhythm_guitar_listra92_config.yaml?download=true"
+    },
+    "mbr_guitar_chencfd": {
+        "model_type": "mel_band_roformer",
+        "category": "Гитара",
+        "id": 1904,
+        "full_name": "Mel-Band Roformer Guitar by chenCFD",
+        "stems": [
+            "guitar",
+            "others"
+        ],
+        "target_instrument": "guitar",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_guitar_chencfd.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mel_band_roformer/mbr_guitar_chencfd_config.yaml?download=true"
     },
     "bs_cr_4stem_zf_turbo": {
         "model_type": "bs_roformer",
@@ -1445,10 +1549,10 @@
         "id": 12081,
         "full_name": "BS Conformer 4 Stems by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_cr_4stem_zf_turbo.ckpt?download=true",
@@ -1486,8 +1590,8 @@
         "id": 202,
         "full_name": "BS Roformer Vocals (sdr 12.96) by ViperX",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_1296_viperx.ckpt?download=true",
@@ -1499,12 +1603,25 @@
         "id": 203,
         "full_name": "BS Roformer Other by ViperX",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_other_viperx.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_other_viperx_config.yaml?download=true"
+    },
+    "bs_inst_exp_vlp_unwa": {
+        "model_type": "bs_roformer",
+        "category": "Вокал",
+        "id": 21002,
+        "full_name": "BS Roformer Instrumental EXP Value Residual by Unwa",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "other",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_exp_vlp_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_exp_vlp_unwa_config.yaml?download=true"
     },
     "bs_revive1_unwa": {
         "model_type": "bs_roformer",
@@ -1512,8 +1629,8 @@
         "id": 210,
         "full_name": "BS Roformer Vocals Revive v1 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive1_unwa.ckpt?download=true",
@@ -1525,8 +1642,8 @@
         "id": 211,
         "full_name": "BS Roformer Vocals Revive v2 by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive2_unwa.ckpt?download=true",
@@ -1538,12 +1655,25 @@
         "id": 212,
         "full_name": "BS Roformer Vocals Revive v3e by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive3e_unwa.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_revive3e_unwa_config.yaml?download=true"
+    },
+    "bs_vocals_large1_unwa": {
+        "model_type": "bs_roformer",
+        "category": "Вокал",
+        "id": 234,
+        "full_name": "BS Roformer Vocals Large v1 by Unwa",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "vocals",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_large1_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_large1_unwa_config.yaml?download=true"
     },
     "bs_resurrection_unwa": {
         "model_type": "bs_roformer",
@@ -1551,8 +1681,8 @@
         "id": 213,
         "full_name": "BS Roformer Vocals Resurrection by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_unwa.ckpt?download=true",
@@ -1561,15 +1691,28 @@
     "bs_resurrection_inst_unwa": {
         "model_type": "bs_roformer",
         "category": "Инструментал",
-        "id": 214,
+        "id": 2140,
         "full_name": "BS Roformer Instrumental Resurrection by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_inst_unwa.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_inst_unwa_config.yaml?download=true"
+    },
+    "bs_resurrection_inst_gabox": {
+        "model_type": "bs_roformer",
+        "category": "Инструментал",
+        "id": 2141,
+        "full_name": "BS Roformer Instrumental Resurrection by Gabox",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "other",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_inst_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_resurrection_inst_gabox_config.yaml?download=true"
     },
     "bs_inst_fno_unwa": {
         "model_type": "bs_roformer",
@@ -1577,12 +1720,25 @@
         "id": 226,
         "full_name": "BS Roformer Instrumental FNO by Unwa",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_fno_unwa.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_fno_unwa_config.yaml?download=true"
+    },
+    "bs_inst_large2_unwa": {
+        "model_type": "bs_roformer",
+        "category": "Инструментал",
+        "id": 22632,
+        "full_name": "BS Roformer Instrumental Large v2 by Unwa",
+        "stems": [
+            "instrument",
+            "vocals"
+        ],
+        "target_instrument": "instrument",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_large2_unwa.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_large2_unwa_config.yaml?download=true"
     },
     "bs_inst_hyperace_unwa": {
         "model_type": "bs_roformer",
@@ -1590,8 +1746,8 @@
         "id": 250,
         "full_name": "BS Roformer Instrumental HyperACE (finetuned anvuew vocal model) by Unwa",
         "stems": [
-            "vocals",
-            "instrument"
+            "instrument",
+            "vocals"
         ],
         "target_instrument": "instrument",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_hyperace_unwa.ckpt?download=true",
@@ -1603,8 +1759,8 @@
         "id": 252,
         "full_name": "BS Roformer Instrumental HyperACE v2 (finetuned anvuew vocal model) by Unwa",
         "stems": [
-            "vocals",
-            "instrument"
+            "instrument",
+            "vocals"
         ],
         "target_instrument": "instrument",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_inst_hyperace2_unwa.ckpt?download=true",
@@ -1616,8 +1772,8 @@
         "id": 251,
         "full_name": "BS Roformer Vocals HyperACE v2 (finetuned anvuew vocal model) by Unwa",
         "stems": [
-            "vocals",
-            "instrument"
+            "instrument",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_voc_hyperace2_unwa.ckpt?download=true",
@@ -1627,10 +1783,10 @@
         "model_type": "bs_roformer",
         "category": "Караоке",
         "id": 215,
-        "full_name": "BS Roformer Karaoke by GaboxR67",
+        "full_name": "BS Roformer Karaoke by Becrily & Frazer",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_becruily.ckpt?download=true",
@@ -1642,8 +1798,8 @@
         "id": 216,
         "full_name": "BS Roformer Vocals by GaboxR67",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_voctest_gabox.ckpt?download=true",
@@ -1655,12 +1811,25 @@
         "id": 229,
         "full_name": "BS Roformer Karaoke by GaboxR67",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_gabox.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_gabox_config.yaml?download=true"
+    },
+    "bs_karaoke_inv_gabox": {
+        "model_type": "bs_roformer",
+        "category": "Караоке",
+        "id": 22912,
+        "full_name": "BS Roformer Karaoke Inverted by GaboxR67",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "other",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_inv_gabox.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_inv_gabox_config.yaml?download=true"
     },
     "bs_6stem": {
         "model_type": "bs_roformer",
@@ -1670,9 +1839,9 @@
         "stems": [
             "bass",
             "drums",
+            "guitar",
             "other",
             "piano",
-            "guitar",
             "vocals"
         ],
         "target_instrument": null,
@@ -1687,9 +1856,9 @@
         "stems": [
             "bass",
             "drums",
+            "guitar",
             "other",
             "piano",
-            "guitar",
             "vocals"
         ],
         "target_instrument": null,
@@ -1704,9 +1873,9 @@
         "stems": [
             "bass",
             "drums",
+            "guitar",
             "other",
             "piano",
-            "guitar",
             "vocals"
         ],
         "target_instrument": null,
@@ -1719,10 +1888,10 @@
         "id": 218,
         "full_name": "BS Roformer 4 Stems by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_zfturbo.ckpt?download=true",
@@ -1734,10 +1903,10 @@
         "id": 219,
         "full_name": "BS Roformer 4 Stems FT by SYH99999",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stemft_syh99999.ckpt?download=true",
@@ -1749,8 +1918,8 @@
         "id": 220,
         "full_name": "BS Roformer Male-Female (ep 146) by Sucial",
         "stems": [
-            "male",
-            "female"
+            "female",
+            "male"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_146_sucial.ckpt?download=true",
@@ -1762,8 +1931,8 @@
         "id": 221,
         "full_name": "BS Roformer Male-Female (ep 267) by Sucial",
         "stems": [
-            "male",
-            "female"
+            "female",
+            "male"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_267_sucial.ckpt?download=true",
@@ -1775,8 +1944,8 @@
         "id": 222,
         "full_name": "BS Roformer Male-Female by Aufr33",
         "stems": [
-            "male",
-            "female"
+            "female",
+            "male"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_male_female_aufr33.ckpt?download=true",
@@ -1788,8 +1957,8 @@
         "id": 223,
         "full_name": "BS Roformer Deverb 256-8 by Anvuew",
         "stems": [
-            "reverb",
-            "noreverb"
+            "noreverb",
+            "reverb"
         ],
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_256_8_anvuew.ckpt?download=true",
@@ -1801,8 +1970,8 @@
         "id": 224,
         "full_name": "BS Roformer Deverb 384-10 by Anvuew",
         "stems": [
-            "reverb",
-            "noreverb"
+            "noreverb",
+            "reverb"
         ],
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_384_10_anvuew.ckpt?download=true",
@@ -1814,8 +1983,8 @@
         "id": 231,
         "full_name": "BS Roformer Deverb Roon by Anvuew",
         "stems": [
-            "reverb",
-            "noreverb"
+            "noreverb",
+            "reverb"
         ],
         "target_instrument": "noreverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_deverb_room_anvuew.ckpt?download=true",
@@ -1827,8 +1996,8 @@
         "id": 228,
         "full_name": "BS Roformer Karaoke by Anvuew",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": "Vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_anvuew.ckpt?download=true",
@@ -1840,8 +2009,8 @@
         "id": 230,
         "full_name": "BS Roformer Vocals by Anvuew",
         "stems": [
-            "vocals",
-            "instrument"
+            "instrument",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_anvuew.ckpt?download=true",
@@ -1853,14 +2022,210 @@
         "id": 225,
         "full_name": "BS Roformer 4 stems by Aname",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_aname.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_4stem_aname_config.yaml?download=true"
+    },
+    "bs_karaoke_3stem_giantailab": {
+        "model_type": "bs_roformer",
+        "category": "Караоке",
+        "id": 2569,
+        "full_name": "BS Roformer Karaoke by GiantAILAB",
+        "stems": [
+            "backing_vocal",
+            "instrumental",
+            "vocals"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_3stem_giantailab.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_karaoke_3stem_giantailab_config.yaml?download=true"
+    },
+    "bs_vocals1_aname": {
+        "model_type": "bs_roformer",
+        "category": "Вокал",
+        "id": 232,
+        "full_name": "BS Roformer Vocals v1 by Aname",
+        "stems": [
+            "instrument",
+            "vocals"
+        ],
+        "target_instrument": "vocals",
+        "checkpoint_url": "https://huggingface.co/Aname-Tommy/BS-Roformers/resolve/main/bs_vocals_v1.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_anvuew_config.yaml?download=true"
+    },
+    "bs_vocals2_aname": {
+        "model_type": "bs_roformer",
+        "category": "Вокал",
+        "id": 233,
+        "full_name": "BS Roformer Vocals v2 by Aname",
+        "stems": [
+            "other",
+            "vocals"
+        ],
+        "target_instrument": "vocals",
+        "checkpoint_url": "https://huggingface.co/Aname-Tommy/BS-Roformers/resolve/main/v2_weights.ckpt?download=true",
+        "config_url": "https://huggingface.co/Aname-Tommy/BS-Roformers/resolve/main/config_v2.yaml?download=true"
+    },
+    "bs_orch_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Оркестр",
+        "id": 260,
+        "full_name": "BS Roformer Orchestra v1 by Xlance",
+        "stems": [
+            "orch",
+            "other"
+        ],
+        "target_instrument": "orch",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_orch_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_orch_xlancer_config.yaml?download=true"
+    },
+    "bs_orch2_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Оркестр",
+        "id": 261,
+        "full_name": "BS Roformer Orchestra v2 by Xlance",
+        "stems": [
+            "orch",
+            "other"
+        ],
+        "target_instrument": "orch",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_orch2_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_orch_xlancer_config.yaml?download=true"
+    },
+    "bs_keys_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Клавишные",
+        "id": 262,
+        "full_name": "BS Roformer Keys by Xlance",
+        "stems": [
+            "keys",
+            "other"
+        ],
+        "target_instrument": "keys",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_keys_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_keys_xlancer_config.yaml?download=true"
+    },
+    "bs_bass_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Басс",
+        "id": 263,
+        "full_name": "BS Roformer Bass by Xlance",
+        "stems": [
+            "bass",
+            "other"
+        ],
+        "target_instrument": "bass",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_bass_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_bass_xlancer_config.yaml?download=true"
+    },
+    "bs_drums_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Ударные",
+        "id": 264,
+        "full_name": "BS Roformer Drums v1 by Xlance",
+        "stems": [
+            "drums",
+            "other"
+        ],
+        "target_instrument": "drums",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_drums_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_drums_xlancer_config.yaml?download=true"
+    },
+    "bs_drums2_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Ударные",
+        "id": 265,
+        "full_name": "BS Roformer Drums v2 by Xlance",
+        "stems": [
+            "drums",
+            "other"
+        ],
+        "target_instrument": "drums",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_drums2_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_drums2_xlancer_config.yaml?download=true"
+    },
+    "bs_gtr_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Гитара",
+        "id": 266,
+        "full_name": "BS Guitar by Kimberley Xlance",
+        "stems": [
+            "guitar",
+            "other"
+        ],
+        "target_instrument": "gtr",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_gtr_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_gtr_xlancer_config.yaml?download=true"
+    },
+    "bs_perc_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Перкуссия",
+        "id": 267,
+        "full_name": "BS Roformer Percussion v1 by Xlance",
+        "stems": [
+            "other",
+            "percussion"
+        ],
+        "target_instrument": "percussion",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_perc_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_perc_xlancer_config.yaml?download=true"
+    },
+    "bs_perc2_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Перкуссия",
+        "id": 268,
+        "full_name": "BS Roformer Percussion v2 by Xlance",
+        "stems": [
+            "other",
+            "percussion"
+        ],
+        "target_instrument": "percussion",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_perc2_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_perc2_xlancer_config.yaml?download=true"
+    },
+    "bs_syn_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Синтезатор",
+        "id": 269,
+        "full_name": "BS Roformer Synth v1 by Xlance",
+        "stems": [
+            "other",
+            "synth"
+        ],
+        "target_instrument": "synth",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_syn_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_syn_xlancer_config.yaml?download=true"
+    },
+    "bs_syn2_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Синтезатор",
+        "id": 270,
+        "full_name": "BS Roformer Synth v2 by Xlance",
+        "stems": [
+            "other",
+            "synth"
+        ],
+        "target_instrument": "synth",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_syn2_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_syn2_xlancer_config.yaml?download=true"
+    },
+    "bs_vox_xlancer": {
+        "model_type": "bs_roformer",
+        "category": "Вокал",
+        "id": 271,
+        "full_name": "BS Roformer Vox by Xlance",
+        "stems": [
+            "other",
+            "vox"
+        ],
+        "target_instrument": "vox",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vox_xlancer.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vox_xlancer_config.yaml?download=true"
     },
     "mdx23c_instvoc_zfturbo": {
         "model_type": "mdx23c",
@@ -1868,8 +2233,8 @@
         "id": 300,
         "full_name": "MDX23C Inst-Voc HQ by ZFTurbo",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_zfturbo.ckpt?download=true",
@@ -1881,8 +2246,8 @@
         "id": 301,
         "full_name": "MDX23C 8k FFT Inst-Voc HQ v1",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_hq1.ckpt?download=true",
@@ -1894,8 +2259,8 @@
         "id": 302,
         "full_name": "MDX23C 8k FFT Inst-Voc HQ v2",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_instvoc_hq2.ckpt?download=true",
@@ -1907,8 +2272,8 @@
         "id": 303,
         "full_name": "MDX23C D1581",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_d1581.ckpt?download=true",
@@ -1920,12 +2285,12 @@
         "id": 304,
         "full_name": "MDX23C DrumSep 6 stems by Aufr33 & Jarredou",
         "stems": [
-            "kick",
-            "snare",
-            "toms",
+            "crash",
             "hh",
+            "kick",
             "ride",
-            "crash"
+            "snare",
+            "toms"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_drumsep_6stem_aufr33_jarredou.ckpt?download=true",
@@ -1937,11 +2302,11 @@
         "id": 309,
         "full_name": "MDX23C DrumSep 5 stems by Aufr33 & Jarredou",
         "stems": [
+            "cymbals",
+            "hh",
             "kick",
             "snare",
-            "toms",
-            "hh",
-            "cymbals"
+            "toms"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_drumsep_5stem_aufr33_jarredou.ckpt?download=true",
@@ -1966,8 +2331,8 @@
         "id": 306,
         "full_name": "MDX23C Mid-Side by WesleyR36",
         "stems": [
-            "similarity",
-            "difference"
+            "difference",
+            "similarity"
         ],
         "target_instrument": "similarity",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_mid_side_wesleyr36.ckpt?download=true",
@@ -1979,10 +2344,10 @@
         "id": 307,
         "full_name": "MDX23C 4 Stems by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_4stem_zfturbo.ckpt?download=true",
@@ -2000,6 +2365,19 @@
         "target_instrument": "orch",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_orch_verosment.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_orch_verosment_config.yaml?download=true"
+    },
+    "mdx23c_sfx_jasper": {
+        "model_type": "mdx23c",
+        "category": "Кинематограф",
+        "id": 310,
+        "full_name": "MDX23C SFX by Jasper",
+        "stems": [
+            "background",
+            "foreground"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_sfx_jasper.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_sfx_jasper_config.yaml?download=true"
     },
     "mdx_kim_inst": {
         "model_type": "mdxnet",
@@ -2020,8 +2398,8 @@
         "id": 601,
         "full_name": "MDX-Net Model: UVR-MDX-NET Kim Vocal 1",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_vocal1.onnx?download=true",
@@ -2033,8 +2411,8 @@
         "id": 602,
         "full_name": "MDX-Net Model: UVR-MDX-NET Kim Vocal 2",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kim_vocal2.onnx?download=true",
@@ -2072,8 +2450,8 @@
         "id": 605,
         "full_name": "MDX-Net Model: UVR-MDX-NET Kuielab A Other",
         "stems": [
-            "other",
-            "no_other"
+            "no_other",
+            "other"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_other.onnx?download=true",
@@ -2085,8 +2463,8 @@
         "id": 606,
         "full_name": "MDX-Net Model: UVR-MDX-NET Kuielab A Vocals",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_a_vocals.onnx?download=true",
@@ -2124,8 +2502,8 @@
         "id": 609,
         "full_name": "MDX-Net Model: UVR-MDX-NET Kuielab B Other",
         "stems": [
-            "other",
-            "no_other"
+            "no_other",
+            "other"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_other.onnx?download=true",
@@ -2137,8 +2515,8 @@
         "id": 610,
         "full_name": "MDX-Net Model: UVR-MDX-NET Kuielab B Vocals",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_kuielab_b_vocals.onnx?download=true",
@@ -2150,8 +2528,8 @@
         "id": 611,
         "full_name": "MDX-Net Model: UVR-MDX-NET Reverb HQ FoxJoy",
         "stems": [
-            "reverb",
-            "other"
+            "other",
+            "reverb"
         ],
         "target_instrument": "reverb",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_reverb_hq_foxjoy.onnx?download=true",
@@ -2293,8 +2671,8 @@
         "id": 622,
         "full_name": "MDX-Net Model: UVR-MDX-NET Voc FT",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_vocft.onnx?download=true",
@@ -2306,8 +2684,8 @@
         "id": 623,
         "full_name": "MDX-Net Model: UVR-MDX-NET Crowd HQ 1",
         "stems": [
-            "other",
-            "crowd"
+            "crowd",
+            "other"
         ],
         "target_instrument": "other",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_crowd_hq1.onnx?download=true",
@@ -2358,8 +2736,8 @@
         "id": 627,
         "full_name": "MDX-Net Model: UVR-MDX-NET Main 340",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_340.onnx?download=true",
@@ -2371,8 +2749,8 @@
         "id": 628,
         "full_name": "MDX-Net Model: UVR-MDX-NET Main 390",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_390.onnx?download=true",
@@ -2384,8 +2762,8 @@
         "id": 629,
         "full_name": "MDX-Net Model: UVR-MDX-NET Main 406",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_406.onnx?download=true",
@@ -2397,8 +2775,8 @@
         "id": 630,
         "full_name": "MDX-Net Model: UVR-MDX-NET Main 427",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_427.onnx?download=true",
@@ -2410,8 +2788,8 @@
         "id": 631,
         "full_name": "MDX-Net Model: UVR-MDX-NET Main 438",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main_438.onnx?download=true",
@@ -2423,8 +2801,8 @@
         "id": 632,
         "full_name": "MDX-Net Model: UVR-MDX-NET 1 9703",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_1_9703.onnx?download=true",
@@ -2436,8 +2814,8 @@
         "id": 633,
         "full_name": "MDX-Net Model: UVR-MDX-NET 2 9682",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_2_9682.onnx?download=true",
@@ -2449,8 +2827,8 @@
         "id": 634,
         "full_name": "MDX-Net Model: UVR-MDX-NET 3 9662",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_3_9662.onnx?download=true",
@@ -2462,8 +2840,8 @@
         "id": 635,
         "full_name": "MDX-Net Model: UVR-MDX-NET 9482",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_9482.onnx?download=true",
@@ -2475,8 +2853,8 @@
         "id": 636,
         "full_name": "MDX-Net Model: UVR-MDX-NET Karaoke 1",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_karaoke1.onnx?download=true",
@@ -2501,8 +2879,8 @@
         "id": 638,
         "full_name": "MDX-Net Model: UVR-MDX-NET Main",
         "stems": [
-            "vocals",
-            "instrumental"
+            "instrumental",
+            "vocals"
         ],
         "target_instrument": "vocals",
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdxnet/mdx_main.onnx?download=true",
@@ -2540,8 +2918,8 @@
         "id": 502,
         "full_name": "VR Arch Single Model v5: 3_HP-Vocal-UVR",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/3_hp-vocal-uvr.ckpt?download=true",
@@ -2553,8 +2931,8 @@
         "id": 503,
         "full_name": "VR Arch Single Model v5: 4_HP-Vocal-UVR",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/4_hp-vocal-uvr.ckpt?download=true",
@@ -2735,8 +3113,8 @@
         "id": 517,
         "full_name": "VR Arch Single Model v5: UVR-De-Echo-Aggressive by FoxJoy",
         "stems": [
-            "No Echo",
-            "Echo"
+            "Echo",
+            "No Echo"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-echo-aggressive.ckpt?download=true",
@@ -2748,8 +3126,8 @@
         "id": 518,
         "full_name": "VR Arch Single Model v5: UVR-De-Echo-Normal by FoxJoy",
         "stems": [
-            "No Echo",
-            "Echo"
+            "Echo",
+            "No Echo"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-de-echo-normal.ckpt?download=true",
@@ -2774,8 +3152,8 @@
         "id": 520,
         "full_name": "VR Arch Single Model v5: UVR-DeNoise-Lite by FoxJoy",
         "stems": [
-            "Noise",
-            "No Noise"
+            "No Noise",
+            "Noise"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-denoise-lite.ckpt?download=true",
@@ -2787,8 +3165,8 @@
         "id": 521,
         "full_name": "VR Arch Single Model v5: UVR-DeNoise by FoxJoy",
         "stems": [
-            "Noise",
-            "No Noise"
+            "No Noise",
+            "Noise"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-denoise.ckpt?download=true",
@@ -2800,8 +3178,8 @@
         "id": 522,
         "full_name": "VR Arch Single Model v5: UVR-BVE-4B_SN-44100",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-bve-4b_sn-44100-1.ckpt?download=true",
@@ -2813,8 +3191,8 @@
         "id": 523,
         "full_name": "VR Arch Single Model v4: UVR-BVE-v2-4B-SN-44100",
         "stems": [
-            "Vocals",
-            "Instrumental"
+            "Instrumental",
+            "Vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/uvr-bve-v2-4b-sn-44100.ckpt?download=true",
@@ -2943,8 +3321,8 @@
         "id": 533,
         "full_name": "VR Arch Single Model v5: Harmonic_Noise_Sep",
         "stems": [
-            "Noise",
-            "No Noise"
+            "No Noise",
+            "Noise"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/vr/vr_harmonic_noise_sep.ckpt?download=true",
@@ -2956,10 +3334,10 @@
         "id": 400,
         "full_name": "SCNet 4 Stems by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_4stem_zfturbo.ckpt?download=true",
@@ -2971,10 +3349,10 @@
         "id": 401,
         "full_name": "SCNet XL IHF 4 Stems by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_ihf_4stem_zfturbo.ckpt?download=true",
@@ -2986,10 +3364,10 @@
         "id": 402,
         "full_name": "SCNet 4 Stems XL by StarryTong",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_4stem_starrytong.ckpt?download=true",
@@ -3001,10 +3379,10 @@
         "id": 403,
         "full_name": "SCNet 4 Stems XL by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_4stem_zftrubo.ckpt?download=true",
@@ -3014,16 +3392,76 @@
         "model_type": "scnet",
         "category": "4 стема",
         "id": 4903,
-        "full_name": "SCNet 4 Stems Huge by Aname",
+        "full_name": "SCNet 4 Stems Huge v1 by Aname",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_aname.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_aname_config.yaml?download=true"
+    },
+    "scnet_huge_4stem1.2_aname": {
+        "model_type": "scnet",
+        "category": "4 стема",
+        "id": 4904,
+        "full_name": "SCNet 4 Stems Huge v1.2 by Aname",
+        "stems": [
+            "bass",
+            "drums",
+            "other",
+            "vocals"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem1.2_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem1.2_aname_config.yaml?download=true"
+    },
+    "scnet_huge_4stem_fullness_aname": {
+        "model_type": "scnet",
+        "category": "4 стема",
+        "id": 4905,
+        "full_name": "SCNet 4 Stems Huge Fullness by Aname",
+        "stems": [
+            "bass",
+            "drums",
+            "other",
+            "vocals"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_fullness_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_fullness_aname_config.yaml?download=true"
+    },
+    "scnet_huge_4stem_str_fullness_aname": {
+        "model_type": "scnet",
+        "category": "4 стема",
+        "id": 4906,
+        "full_name": "SCNet 4 Stems Huge Storng Fullness by Aname",
+        "stems": [
+            "bass",
+            "drums",
+            "other",
+            "vocals"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_str_fullness_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_str_fullness_aname_config.yaml?download=true"
+    },
+    "scnet_huge_4stem_bleedless_aname": {
+        "model_type": "scnet",
+        "category": "4 стема",
+        "id": 4907,
+        "full_name": "SCNet 4 Stems Huge Bleedless by Aname",
+        "stems": [
+            "bass",
+            "drums",
+            "other",
+            "vocals"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_bleedless_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_huge_4stem_bleedless_aname_config.yaml?download=true"
     },
     "scnet_masked_small_4stem_zftrubo": {
         "model_type": "scnet_masked",
@@ -3031,10 +3469,10 @@
         "id": 430,
         "full_name": "SCNet Masked 4 Stems Small by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_small_4stem_zftrubo.ckpt?download=true",
@@ -3046,10 +3484,10 @@
         "id": 431,
         "full_name": "SCNet Masked 4 Stems XL IHF by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_xl_ihf_4stem_zftrubo.ckpt?download=true",
@@ -3061,10 +3499,10 @@
         "id": 432,
         "full_name": "SCNet Tran 4 Stems by ZFTurbo",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_tran/scnet_tran_4stem_zftrubo.ckpt?download=true",
@@ -3076,10 +3514,10 @@
         "id": 404,
         "full_name": "SCNet Large Jazz model by Joris Vaneyghen",
         "stems": [
-            "piano",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "piano"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_jazz_4stem_jorisvaneyghen.ckpt?download=true",
@@ -3091,10 +3529,10 @@
         "id": 405,
         "full_name": "SCNet XL Jazz model by Joris Vaneyghen",
         "stems": [
-            "piano",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "piano"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_xl_jazz_4stem_jorisvaneyghen.ckpt?download=true",
@@ -3108,12 +3546,27 @@
         "stems": [
             "alto",
             "bass",
-            "tenor",
-            "soprano"
+            "soprano",
+            "tenor"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_choirsep_exp.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_choirsep_exp_config.yaml?download=true"
+    },
+    "scnet_masked_choirsep_exp": {
+        "model_type": "scnet_masked",
+        "category": "Хор",
+        "id": 421,
+        "full_name": "SCNet Masked Choirsep by concert.isolations.business@gmail.com",
+        "stems": [
+            "alto",
+            "bass",
+            "soprano",
+            "tenor"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_choirsep_exp.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet_masked/scnet_masked_choirsep_exp_config.yaml?download=true"
     },
     "demucs4_mvsep_vocals": {
         "model_type": "htdemucs",
@@ -3121,8 +3574,8 @@
         "id": 2,
         "full_name": "HTDemucs4 (MVSep finetuned)",
         "stems": [
-            "vocals",
-            "other"
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_mvsep_vocals.ckpt?download=true",
@@ -3134,10 +3587,10 @@
         "id": 0,
         "full_name": "HTDemucs4",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_4stem.ckpt?download=true",
@@ -3149,12 +3602,12 @@
         "id": 1,
         "full_name": "HTDemucs4 (6 stems)",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other",
+            "drums",
             "guitar",
-            "piano"
+            "other",
+            "piano",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_6stem.ckpt?download=true",
@@ -3166,10 +3619,10 @@
         "id": 3,
         "full_name": "Demucs3 mmi",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs3_mmi.ckpt?download=true",
@@ -3181,10 +3634,10 @@
         "id": 4,
         "full_name": "HTDemucs4 FT Bass",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_bass.ckpt?download=true",
@@ -3196,10 +3649,10 @@
         "id": 5,
         "full_name": "HTDemucs4 FT Drums",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_drums.ckpt?download=true",
@@ -3211,10 +3664,10 @@
         "id": 6,
         "full_name": "HTDemucs4 FT Vocals",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_vocals.ckpt?download=true",
@@ -3226,10 +3679,10 @@
         "id": 7,
         "full_name": "HTDemucs4 FT Other",
         "stems": [
-            "vocals",
-            "drums",
             "bass",
-            "other"
+            "drums",
+            "other",
+            "vocals"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_ft_other.ckpt?download=true",
@@ -3241,8 +3694,8 @@
         "id": 8,
         "full_name": "HTDemucs4 MId-Side by wesleyr36",
         "stems": [
-            "similarity",
-            "difference"
+            "difference",
+            "similarity"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs_mid_side_wesleyr36.ckpt?download=true",
@@ -3256,12 +3709,27 @@
         "stems": [
             "alto",
             "bass",
-            "tenor",
-            "soprano"
+            "soprano",
+            "tenor"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_choirsep.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_choirsep_config.yaml?download=true"
+    },
+    "demucs4_drumsep_4stem_inagoy": {
+        "model_type": "htdemucs",
+        "category": "DrumSep",
+        "id": 90,
+        "full_name": "HTDemucs4 DrumSep 4 Stems by inagoy",
+        "stems": [
+            "cymbals",
+            "kick",
+            "snare",
+            "toms"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_drumsep_4stem_inagoy.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/htdemucs/demucs4_drumsep_4stem_inagoy_config.yaml?download=true"
     },
     "bandit_plus": {
         "model_type": "bandit",
@@ -3269,9 +3737,9 @@
         "id": 10,
         "full_name": "Bandit Plus: Cinematic Bandit Plus (by kwatcharasupat)",
         "stems": [
-            "speech",
+            "effects",
             "music",
-            "effects"
+            "speech"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit/bandit_plus.ckpt?download=true",
@@ -3283,12 +3751,142 @@
         "id": 11,
         "full_name": "Bandit v2: Cinematic Bandit v2 Multilang (by kwatcharasupat)",
         "stems": [
-            "speech",
             "music",
-            "sfx"
+            "sfx",
+            "speech"
         ],
         "target_instrument": null,
         "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit_v2/bandit_v2_multi.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bandit_v2/bandit_v2_multi_config.yaml?download=true"
+    },
+    "multi_singing_librispeech": {
+        "model_type": "medley_vox",
+        "full_name": "Multi singing LibriSpeech model for Medley-Vox",
+        "id": 900,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/multi_singing_librispeech.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/multi_singing_librispeech_config.yaml?download=true"
+    },
+    "multi_singing_librispeech_138": {
+        "model_type": "medley_vox",
+        "full_name": "Multi singing LibriSpeech 138 epoch model for Medley-Vox",
+        "id": 901,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/multi_singing_librispeech_138.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/multi_singing_librispeech_138_config.yaml?download=true"
+    },
+    "singing_librispeech_ft_isrnet": {
+        "model_type": "medley_vox",
+        "full_name": "Singing LibriSpeech Finetuned model IsrNET for Medley-Vox",
+        "id": 902,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/singing_librispeech_ft_isrnet.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/singing_librispeech_ft_isrnet_config.yaml?download=true"
+    },
+    "singing_librispeech_isrnet": {
+        "model_type": "medley_vox",
+        "full_name": "Singing LibriSpeech IsrNET model for Medley-Vox",
+        "id": 903,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/singing_librispeech_isrnet.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/singing_librispeech_isrnet_config.yaml?download=true"
+    },
+    "medley_vox_vocal_231": {
+        "model_type": "medley_vox",
+        "full_name": "Vocal 231 model for Medley-Vox",
+        "id": 904,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocal_231.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocal_231_config.yaml?download=true"
+    },
+    "medley_vox_vocals_135": {
+        "model_type": "medley_vox",
+        "full_name": "Vocals 135 model for Medley-Vox",
+        "id": 905,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_135.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_135_config.yaml?download=true"
+    },
+    "medley_vox_vocals_163": {
+        "model_type": "medley_vox",
+        "full_name": "Vocals 163 model for Medley-Vox",
+        "id": 906,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_163.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_163_config.yaml?download=true"
+    },
+    "medley_vox_vocals_188": {
+        "model_type": "medley_vox",
+        "full_name": "Vocals 188 model for Medley-Vox",
+        "id": 907,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_188.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_188_config.yaml?download=true"
+    },
+    "medley_vox_vocals_200": {
+        "model_type": "medley_vox",
+        "full_name": "Vocals 200 model for Medley-Vox",
+        "id": 908,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_200.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_200_config.yaml?download=true"
+    },
+    "medley_vox_vocals_238": {
+        "model_type": "medley_vox",
+        "full_name": "Vocals 238 model for Medley-Vox",
+        "id": 909,
+        "stems": [
+            "vox_1",
+            "vox_2"
+        ],
+        "category": "Разделение голосов",
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_238.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/medley_vox/medley_vox_vocals_238_config.yaml?download=true"
     }
 }

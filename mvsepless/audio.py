@@ -1,8 +1,7 @@
 import os
 import subprocess
 import numpy as np
-import tempfile
-from str2bool import str2bool
+from gradio_helper import str2bool
 from scipy.signal import ShortTimeFFT, resample
 from scipy.signal.windows import dpss, hann
 from numpy.typing import DTypeLike
@@ -24,6 +23,25 @@ def check_installed():
     ffprobe_version_output = subprocess.check_output(
         [ffprobe_path, "-version"], text=True
     )
+
+def get_ogg_bitrate(sample_rate: int, channels: int = 2) -> dict:
+    """
+    Определяет рекомендуемый битрейт для OGG на основе частоты дискретизации
+    """
+    if sample_rate >= 40000:
+        per_channel = 240
+    elif sample_rate >= 26000:
+        per_channel = 190
+    elif sample_rate >= 15000:
+        per_channel = 90
+    elif sample_rate >= 9000:
+        per_channel = 50
+    elif sample_rate >= 8000:
+        per_channel = 42
+    else:
+        per_channel = 30
+    
+    return int(per_channel * channels)
 
 SAMPLE_FORMATS_DICT = {
     "int16": "s16le",
@@ -614,7 +632,7 @@ def fit_arrays(arrays: tuple[np.ndarray] | list[np.ndarray], srs: tuple[int] | l
     
     return tuple(new_arrays)
 
-def substractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: bool = False) -> tuple[np.ndarray, int]:
+def subtractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: bool = False) -> tuple[np.ndarray, int]:
     channels1, _, array_index1, flatten1 = get_info_array(y)
     channels2, _, array_index2, flatten2 = get_info_array(z)
     orig_dtype1 = y.dtype
@@ -645,8 +663,8 @@ def substractor(y: np.ndarray, z: np.ndarray, sr1: int, sr2: int, spectrogram: b
             res_wav = sft.istft(res_spec, k1=ch_y.shape[-1])
             res_channels.append(res_wav)
             
-        substracted = multi_channel_array_from_arrays(*res_channels, index=1, dtype=orig_dtype1)
-        return substracted, min_sr
+        subtracted = multi_channel_array_from_arrays(*res_channels, index=1, dtype=orig_dtype1)
+        return subtracted, min_sr
     else:
         print("Вычитание противофазой...")
         return convert_to_dtype(y - z, orig_dtype1), min_sr
@@ -793,7 +811,15 @@ def write(path: str, y: np.ndarray, sr: int, bitrate: int | str = 320, prefer_fl
     y = np.nan_to_num(y, nan=0, posinf=0, neginf=0)
     
     bitrate = bitrate_to_int(bitrate)
-    bitrate_fixed = 64 if bitrate < 64 else 320 if bitrate > 320 else bitrate
+    if ext == ".ogg":
+        max_bitrate = get_ogg_bitrate(sr, channels)
+        if bitrate > max_bitrate:
+            bitrate = max_bitrate
+    elif ext == ".opus":
+        max_bitrate = 256 * channels 
+        if bitrate > max_bitrate:
+            bitrate = max_bitrate
+    bitrate_fixed = 32 if bitrate < 32 else 320 if bitrate > 320 else bitrate
     
     cmd = [ffmpeg_path, "-y", "-f", sample_format, "-ar", str(sr), "-ac", str(channels), "-i", "-", *get_codec_args(ext, prefer_float), "-ab", f"{bitrate_fixed}k", path]
 
