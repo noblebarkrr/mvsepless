@@ -321,7 +321,7 @@ class MvseplessModelManager:
                         for _stem in stems_list
                     ])
                     if model in installed_models:
-                        print(f"| {model} {_i18n('installed')}:{'':<{filename_width - len(model) - 2}} | {stems_str:<{stems_width}} |")
+                        print(f"| {model+' ✔':<{filename_width}} | {stems_str:<{stems_width}} |")
                     else:
                         print(f"| {model:<{filename_width}} | {stems_str:<{stems_width}} |")
                     print("|-", "-" * filename_width, "-+-", "-" * stems_width, "-|", sep="")
