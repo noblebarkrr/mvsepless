@@ -51,6 +51,8 @@ python separator.py -i file.mp3 -o test_output separator -mn bs_6stem --chunk_du
 ## Переменные окружения
 
 ```sh
+MVSEPLESS_LANGUAGE={ru|en} - Язык
+
 MVSEPLESS_ECO_SEG={int} - Размер сегмента для эконом-режима при разделении (По умолчанию = 7)
 
 VBACH_ALTPL_BASE_SEG={int} - Базовый размер сегмента для альтернативного пайплайна в Vbach (По умолчанию = 10)
