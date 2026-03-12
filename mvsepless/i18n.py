@@ -85,6 +85,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "directory": "Директория",
         "folder": "Папка",
         "unknown": "Неизвестно",
+        "chunks": "чанков",
         
         # Интерфейс
         "app_title": "Разделение музыки и вокала",
@@ -787,7 +788,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "directory": "Directory",
         "folder": "Folder",
         "unknown": "Unknown",
-        
+        "chunks": "chunks",
         # Interface
         "app_title": "Music and Vocal Separation",
         "tab_separation": "Separation",
@@ -1480,4 +1481,5 @@ def ngettext(singular: str, plural: str, count: int) -> str:
             return _i18n(plural + "_5", count=count)
     else:
         # Английские правила
+
         return _i18n(singular if count == 1 else plural, count=count)
