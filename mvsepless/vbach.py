@@ -1506,7 +1506,7 @@ class VC:
         total_ts: int = len(opt_ts)
 
         for i, t in enumerate(opt_ts, start=1):
-            progress((i, total_ts), desc=f"{_i18n('voice_synthesis')} {add_text}")
+            progress((i, total_ts), desc=f"{_i18n('voice_synthesis')} {add_text}", unit=_i18n("chunks"))
             print(f"\r{_i18n('voice_synthesis')} {int((i / total_ts) * 100)}% {add_text}", end="")
             t = t // self.window * self.window
             
@@ -1744,7 +1744,7 @@ class VC:
             current_chunk += 1
             progress(
                 (current_chunk, chunk_count), 
-                desc=f"{_i18n('voice_synthesis_alt')} {add_text}"
+                desc=f"{_i18n('voice_synthesis_alt')} {add_text}", unit=_i18n("chunks")
             )
             print(f"\r{_i18n('voice_synthesis_alt')} {int((current_chunk / chunk_count) * 100)}% {add_text}", end="")
             
@@ -4466,4 +4466,5 @@ if __name__ == "__main__":
 
         elif args.vbach_command == "remove":
             status = model_manager.del_voice_model(args.model_name)
+
             print(status)
