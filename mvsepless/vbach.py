@@ -4403,7 +4403,7 @@ if __name__ == "__main__":
         list_valid_files = get_files_from_list(args.input)
         if list_valid_files:
             for i, vocals_file in enumerate(list_valid_files, start=1):
-                print(f"{_i18n('processing_file', current=i, total=len(list_valid_files))}: {vocals_file}")
+                print(_i18n('processing_file', current=i, total=len(list_valid_files), file=vocals_file))
                 vbach_inference(
                     input_file=vocals_file,
                     model_name=args.model_name,
@@ -4468,3 +4468,4 @@ if __name__ == "__main__":
             status = model_manager.del_voice_model(args.model_name)
 
             print(status)
+
