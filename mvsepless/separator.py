@@ -1759,7 +1759,7 @@ if __name__ == "__main__":
     parser._optionals.title = _i18n("main_parameters")
 
     # Создаем субпарсеры с required=True
-    subparsers = parser.add_subparsers(dest="command", help=None, required=True)
+    subparsers = parser.add_subparsers(dest="command", help=None, required=False)
     
     # --- Общие параметры переносим в каждый субпарсер ---
     # Создаем функцию для добавления общих аргументов
