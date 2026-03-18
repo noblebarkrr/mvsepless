@@ -1751,23 +1751,30 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=_i18n("cli_description"),
-        formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=60)
+        formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=60),
+        # Добавляем allow_abbrev=False чтобы избежать конфликтов
+        allow_abbrev=False
     )
     parser._positionals.title = _i18n("additional_modes")
     parser._optionals.title = _i18n("main_parameters")
 
-    # --- Общие параметры ---
-    parser.add_argument("-i", "--input", nargs='+', default=[], help=_i18n("input_path_help"))
-    parser.add_argument("-o", "--output_dir", type=str, default="", help=_i18n("output_dir_help"))
-    parser.add_argument("-of", "--output_format", type=str, default="mp3", choices=output_formats, help=_i18n("output_format_help"))
-    parser.add_argument("-ob", "--output_bitrate", type=str, default="320k", help=_i18n("output_bitrate_help"), metavar="BITRATE")
-    parser.add_argument("-on", "--output_name", type=str, default="ensemble", help=_i18n("output_name_help"))
-    parser.add_argument("-op", "--output_path", type=str, default="inverted.mp3", help=_i18n("output_path_help"))
+    # Создаем субпарсеры с required=True
+    subparsers = parser.add_subparsers(dest="command", help=None, required=True)
     
-    subparsers = parser.add_subparsers(dest="command", help=None)
+    # --- Общие параметры переносим в каждый субпарсер ---
+    # Создаем функцию для добавления общих аргументов
+    def add_common_args(subparser):
+        subparser.add_argument("-i", "--input", nargs='+', default=[], help=_i18n("input_path_help"))
+        subparser.add_argument("-o", "--output_dir", type=str, default="", help=_i18n("output_dir_help"))
+        subparser.add_argument("-of", "--output_format", type=str, default="mp3", choices=output_formats, help=_i18n("output_format_help"))
+        subparser.add_argument("-ob", "--output_bitrate", type=str, default="320k", help=_i18n("output_bitrate_help"), metavar="BITRATE")
+        subparser.add_argument("-on", "--output_name", type=str, default="ensemble", help=_i18n("output_name_help"))
+        subparser.add_argument("-op", "--output_path", type=str, default="inverted.mp3", help=_i18n("output_path_help"))
+        return subparser
     
     # Команда separator
     sep_p = subparsers.add_parser("separator", help=_i18n("separator_help"))
+    sep_p = add_common_args(sep_p)
     sep_p.add_argument("-mn", "--model_name", type=str, default="bs_6stem", help=_i18n("model_name_help"))
     sep_p.add_argument("-tmpl", "--template", type=str, default="NAME_(STEM)_MODEL", help=_i18n("template_help"))
     sep_p.add_argument("-stem", "--selected_stems", type=str, nargs="*", default=None, help=_i18n("selected_stems_help"), metavar="STEM")
@@ -1783,6 +1790,7 @@ if __name__ == "__main__":
 
     # Команда info
     info_p = subparsers.add_parser("info", help=_i18n("info_help"))
+    info_p = add_common_args(info_p)
     info_p.add_argument("-limit", "--limit", type=int, default=0, help=_i18n("limit_help"))
     info_p.add_argument("-stem", "--stem", type=str, default=None, help=_i18n("stem_filter_help"))
     info_p.add_argument("-t","--model_types", nargs='*', help=_i18n("model_types_help"))
@@ -1796,6 +1804,7 @@ if __name__ == "__main__":
    
     # Команда auto_ensemble
     auto_p = subparsers.add_parser("auto_ensemble", help=_i18n("auto_ensemble_help"))
+    auto_p = add_common_args(auto_p)
     auto_p.add_argument("-m", "--method", type=str, default="avg_fft", 
                        choices=("min_fft", "max_fft", "avg_fft", "median_fft"), 
                        help=_i18n("method_help"))
@@ -1809,6 +1818,7 @@ if __name__ == "__main__":
 
     # Команда manual_ensemble
     manual_p = subparsers.add_parser("manual_ensemble", help=_i18n("manual_ensemble_help"))
+    manual_p = add_common_args(manual_p)
     manual_p.add_argument("-w", "--weights", nargs='+', type=float, help=_i18n("weights_help"))
     manual_p.add_argument("-m", "--method", type=str, default="avg_fft", 
                          choices=("min_fft", "max_fft", "avg_fft", "median_fft"), 
@@ -1816,17 +1826,20 @@ if __name__ == "__main__":
 
     # Команда subtract
     sub_p = subparsers.add_parser("subtract", help=_i18n("subtract_help"))
+    sub_p = add_common_args(sub_p)
     sub_p.add_argument("--stem", type=str, required=True, help=_i18n("stem_path_help"))
     sub_p.add_argument("--method", choices=["waveform", "spectrogram"], 
                       default="waveform", help=_i18n("subtract_method_help"))
 
     # Команда ext_phantom_center
     center_p = subparsers.add_parser("ext_phantom_center", help=_i18n("phantom_center_help"))
+    center_p = add_common_args(center_p)
     center_p.add_argument("--mid", type=str, help=_i18n("mid_path_help"))
     center_p.add_argument("--side", type=str, help=_i18n("side_path_help"))
 
     # Команда app
     app_p = subparsers.add_parser("app", help=_i18n("app_help"))
+    app_p = add_common_args(app_p)
     app_p.add_argument("-p", "--port", type=int, default=None, help=_i18n("port_help"))
     app_p.add_argument("-s", "--share", action="store_true", help=_i18n("share_help"))
     app_p.add_argument("-a", "--add_app", action="store_true", help=_i18n("add_app_help"))

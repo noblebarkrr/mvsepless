@@ -773,12 +773,13 @@ def split_mid_side(
         # Вычисляем схожесть (когерентность)
         similarity_L = np.real(Lf * np.conj(Rf))
         similarity_R = np.real(Rf * np.conj(Lf))
-        mask = (similarity_L > 0) & (similarity_R > 0)
+        mask_l = similarity_L > 0
+        mask_r = similarity_R > 0
         magL = np.abs(Lf)
         magR = np.abs(Rf)
 
-        magC_L = np.minimum(magL, magR) * mask
-        magC_R = np.minimum(magL, magR) * mask
+        magC_L = np.minimum(magL, magR) * mask_l
+        magC_R = np.minimum(magL, magR) * mask_r
 
         C_L = magC_L * np.exp(1j * np.angle(Rf))
         C_R = magC_R * np.exp(1j * np.angle(Lf))
@@ -791,8 +792,8 @@ def split_mid_side(
         side_l = sft.istft(SL, k1=len_orig)
         side_r = sft.istft(SR, k1=len_orig)
         
-        mid_ch = multi_channel_array_from_arrays(center_l, center_l, index=1, dtype=y.dtype)
-        side_ch = multi_channel_array_from_arrays(side_l, side_r, index=1, dtype=y.dtype)
+        mid_ch = multi_channel_array_from_arrays(center_l, center_r, index=array_index, dtype=y.dtype)
+        side_ch = multi_channel_array_from_arrays(side_l, side_r, index=array_index, dtype=y.dtype)
         
         return mid_ch, side_ch
     elif var == 4:
