@@ -1982,6 +1982,8 @@ if __name__ == "__main__":
                 use_spec_invert=args.use_spec_invert
             )
     else:
+        from app import SeparatorGradio
+
         SeparatorGradio().UI(
             gr.themes.Citrus(
                 primary_hue="teal",
