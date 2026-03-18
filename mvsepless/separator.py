@@ -1982,4 +1982,27 @@ if __name__ == "__main__":
                 use_spec_invert=args.use_spec_invert
             )
     else:
-        parser.print_help()
+        SeparatorGradio().UI(
+            gr.themes.Citrus(
+                primary_hue="teal",
+                secondary_hue="blue",
+                neutral_hue="blue",
+                spacing_size="sm",
+                font=[
+                    gr.themes.GoogleFont("Montserrat"),
+                    "ui-sans-serif",
+                    "system-ui",
+                    "sans-serif",
+                ],
+            ),
+            False, 
+            False, 
+            False
+        ).launch(
+            server_name="0.0.0.0",
+            server_port=None,
+            share=False,
+            allowed_paths=["/"],
+            debug=True,
+            inbrowser=True
+        )
