@@ -37,7 +37,7 @@ python separator.py info
 ## Разделение через CLI
 
 ```sh
-python separator.py -i file.mp3 -o test_output separator -mn bs_6stem --chunk_duration 300
+python separator.py separator -i file.mp3 -o test_output -mn bs_6stem --chunk_duration 300
 
 -i               Входной файл/директория
 -o               Директория вывода
