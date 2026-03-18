@@ -3790,20 +3790,10 @@ class Vbach(GradioHelper):
                             value=output_formats[0] if output_formats else "wav",
                             filterable=False,
                         )
-                        status_duet = gr.Textbox(
-                            container=False, 
-                            lines=3, 
-                            interactive=False, 
-                            max_lines=3, 
-                            visible=False
-                        )
                         convert_btn_duet = gr.Button(
                             _i18n("convert_btn"), 
                             variant="primary", 
                             interactive=True
-                        ).click(
-                            lambda: gr.update(visible=True), 
-                            outputs=[status_duet]
                         )
                         
                     with gr.Row(equal_height=True):
@@ -3858,7 +3848,7 @@ class Vbach(GradioHelper):
                             transformers_mode1, transformers_mode2,
                             mix_duet, mix_duet_ratio
                         ],
-                        outputs=[output_duet_audio_1, output_duet_audio_2, status_duet],
+                        outputs=[output_duet_audio_1, output_duet_audio_2],
                     )
                     def vbach_convert_duet(
                         input_file: Optional[str],
@@ -3963,8 +3953,7 @@ class Vbach(GradioHelper):
                                 print(f"{_i18n('error')}: {e}")
                                 return (
                                     gr.update(value=None), 
-                                    gr.update(value=None), 
-                                    gr.update(visible=False)
+                                    gr.update(value=None)
                                 )
 
                         if mix_duet and output_1 and output_2:
@@ -3993,7 +3982,6 @@ class Vbach(GradioHelper):
                             return (
                                 self.return_audio_with_size(label=_i18n("mixed_result"), value=output_mixed),
                                 gr.update(label=_i18n("model_2_result"), value=None),
-                                gr.update(visible=False)
                             )
                         elif output_1 and output_2:
                             self.history.add(
@@ -4006,13 +3994,11 @@ class Vbach(GradioHelper):
                             return (
                                 self.return_audio_with_size(label=_i18n("model_1_result"), value=output_1),
                                 self.return_audio_with_size(label=_i18n("model_2_result"), value=output_2),
-                                gr.update(visible=False)
                             )
                         else:
                             return (
                                 gr.update(value=None), 
-                                gr.update(value=None), 
-                                gr.update(visible=False)
+                                gr.update(value=None)
                             )
 
             with gr.TabItem(_i18n("tab_manager")):
