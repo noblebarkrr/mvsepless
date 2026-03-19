@@ -322,9 +322,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         if econom_mode is not None:
             add_settings["econom_mode"] = econom_mode
         
-        @hf_spaces_gpu(device=self.device, duration=180)
-        def _separate():
-            return self.separate(
+        results = self.separate(
                 input=input_files,
                 output_dir=os.path.join(self.output_base_dir, timestamp),
                 model_name=model_name,
@@ -337,8 +335,83 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                 use_spec_invert=use_spec_invert,
                 progress=progress,
             )
-        results = _separate()
         
+        self.history.add(results, model_name, timestamp)
+        return results
+    
+    @hf_spaces_gpu
+    def _separate_batch_zero_gpu(
+        self,
+        input_files: Optional[List[str]] = None,
+        model_name: str = "Mel-Band-Roformer_Vocals_kimberley_jensen",
+        ext_inst: bool = True,
+        output_format: str = "mp3",
+        output_bitrate: str = "320k",
+        template: str = "NAME_(STEM)_MODEL",
+        selected_stems: Optional[List[str]] = None,
+        vr_aggr: int = 5,
+        vr_post_process: bool = False,
+        vr_high_end_process: bool = False,
+        mdx_denoise: bool = False,
+        use_spec_invert: bool = False,
+        econom_mode: Optional[bool] = None,
+        chunk_duration: float = 300,
+        progress: gr.Progress = gr.Progress(track_tqdm=True),
+    ) -> List:
+        """
+        Пакетное разделение аудио
+        
+        Args:
+            input_files: Список входных файлов
+            model_name: Имя модели
+            ext_inst: Извлечь инструментал
+            output_format: Формат вывода
+            output_bitrate: Битрейт
+            template: Шаблон имени
+            selected_stems: Выбранные стемы
+            vr_aggr: Агрессивность для VR
+            vr_post_process: Постобработка для VR
+            vr_high_end_process: Обработка высоких частот для VR
+            mdx_denoise: Шумоподавление для MDX
+            use_spec_invert: Использовать инверсию спектрограммы
+            econom_mode: Эконом-режим
+            chunk_duration: Длительность чанка
+            progress: Прогресс
+        
+        Returns:
+            Результаты разделения
+        """
+        timestamp: str = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        self.chunk_duration = chunk_duration
+        orig_device = self.device
+        self.device = "cuda:0"
+        
+        add_settings: Dict[str, Any] = {
+            "mdx_denoise": mdx_denoise,
+            "vr_aggr": vr_aggr,
+            "vr_post_process": vr_post_process,
+            "vr_high_end_process": vr_high_end_process,
+            "add_single_sep_text_progress": None,
+            "single_mode": False
+        }
+        
+        if econom_mode is not None:
+            add_settings["econom_mode"] = econom_mode
+        
+        results = self.separate(
+                input=input_files,
+                output_dir=os.path.join(self.output_base_dir, timestamp),
+                model_name=model_name,
+                ext_inst=ext_inst,
+                output_format=output_format,
+                output_bitrate=output_bitrate,
+                template=template,
+                selected_stems=selected_stems,
+                add_settings=add_settings,
+                use_spec_invert=use_spec_invert,
+                progress=progress,
+            )
+        self.device = orig_device
         self.history.add(results, model_name, timestamp)
         return results
 
@@ -595,6 +668,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 ],
                                 outputs=[sep_state, status],
                                 show_progress="full",
+                                queue=True
                             )
                             def wrap(
                                 input_files: List[str],
@@ -613,7 +687,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 ch_dur: float,
                                 progress: gr.Progress = gr.Progress(track_tqdm=True),
                             ) -> Tuple[gr.update, gr.update]:
-                                results = self._separate_batch(
+                                separate_batch = self._separate_batch_zero_gpu if zerogpu_available else self._separate_batch
+                                results = separate_batch(
                                     input_files,
                                     model_name,
                                     ext_inst,

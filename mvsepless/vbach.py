@@ -1,5 +1,6 @@
 import os
 import gc
+from gradio_helper import GradioHelper, tz, dw_file, easy_check_is_colab, str2bool, all_ids, set_device, zerogpu_available, hf_spaces_gpu
 import torch
 import ast
 from torch import nn
@@ -37,7 +38,6 @@ from pathlib import Path
 from separator import get_files_from_list
 from audio import check, read, write, output_formats, split_mid_side, split_channels, easy_resampler, stereo_to_mono, mono_to_stereo, convert_to_dtype, gain, add_zero_to_end, multi_channel_array_from_arrays, trim, fit_arrays
 from namer import Namer
-from gradio_helper import GradioHelper, tz, dw_file, easy_check_is_colab, str2bool, all_ids, set_device
 from i18n import _i18n, CURRENT_LANGUAGE, set_language
 
 script_dir: str = os.path.dirname(os.path.abspath(__file__))
@@ -3012,6 +3012,463 @@ class Vbach(GradioHelper):
         else:
             return []
 
+    def vbach_convert_batch(
+        self,
+        input_files: List[str],
+        model_name: str,
+        pitch_method: str,
+        pitch: float,
+        hop_length: int,
+        index_rate: float,
+        filter_radius: int,
+        rms: float,
+        protect: float,
+        f0_min: int,
+        f0_max: int,
+        output_name: str,
+        format_name: bool,
+        output_format: str,
+        stereo_mode: str,
+        alt_pipeline: bool,
+        embedder_name: str,
+        transformers_mode: bool,
+    ) -> Tuple[gr.update, gr.update]:
+        output_converted_files: List[str] = []
+        progress = gr.Progress(track_tqdm=True)
+        progress(progress=0, desc=_i18n("starting_conversion"))
+        
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        
+        if input_files:
+            total_files = len(input_files)
+            for i, file in enumerate(input_files, start=1):
+                try:
+                    print(f"{_i18n('processing_file', current=i, total=total_files, file=file)}")
+                    progress(
+                        progress=(i / total_files), 
+                        desc=_i18n("processing_file_title", current=i, total=total_files)
+                    )
+                    gr.Warning(
+                        title=_i18n("processing_file_title", current=i, total=total_files), 
+                        message=file
+                    )
+                    
+                    out_conv = vbach_inference(
+                        input_file=file,
+                        model_name=model_name,
+                        output_dir=os.path.join(self.output_base_dir, timestamp),
+                        output_name=output_name,
+                        format_name=format_name if total_files == 1 else True,
+                        output_format=output_format,
+                        pitch=pitch,
+                        method_pitch=pitch_method,
+                        output_bitrate=320,
+                        add_params={
+                            "index_rate": index_rate,
+                            "filter_radius": filter_radius,
+                            "protect": protect,
+                            "rms": rms,
+                            "mangio_crepe_hop_length": hop_length,
+                            "f0_min": f0_min,
+                            "f0_max": f0_max,
+                            "stereo_mode": stereo_mode,
+                        },
+                        pipeline_mode="alt" if alt_pipeline else "orig",
+                        embedder_name=embedder_name,
+                        stack="transformers" if transformers_mode else "fairseq",
+                        add_text_progress=f"{i}/{total_files}",
+                        device=self.device
+                    )
+                    output_converted_files.append(out_conv)
+                except Exception as e:
+                    print(f"{_i18n('error')}: {e}")
+                    
+        if output_converted_files:
+            self.history.add(output_converted_files, model_name, timestamp, pitch_method, pitch)
+            
+        return gr.update(value=str(output_converted_files)), gr.update(visible=False)
+
+    @hf_spaces_gpu
+    def vbach_convert_batch_zero_gpu(
+        self,
+        input_files: List[str],
+        model_name: str,
+        pitch_method: str,
+        pitch: float,
+        hop_length: int,
+        index_rate: float,
+        filter_radius: int,
+        rms: float,
+        protect: float,
+        f0_min: int,
+        f0_max: int,
+        output_name: str,
+        format_name: bool,
+        output_format: str,
+        stereo_mode: str,
+        alt_pipeline: bool,
+        embedder_name: str,
+        transformers_mode: bool,
+    ) -> Tuple[gr.update, gr.update]:
+        output_converted_files: List[str] = []
+        progress = gr.Progress(track_tqdm=True)
+        progress(progress=0, desc=_i18n("starting_conversion"))
+        
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        
+        if input_files:
+            total_files = len(input_files)
+            for i, file in enumerate(input_files, start=1):
+                try:
+                    print(f"{_i18n('processing_file', current=i, total=total_files, file=file)}")
+                    progress(
+                        progress=(i / total_files), 
+                        desc=_i18n("processing_file_title", current=i, total=total_files)
+                    )
+                    gr.Warning(
+                        title=_i18n("processing_file_title", current=i, total=total_files), 
+                        message=file
+                    )
+                    
+                    out_conv = vbach_inference(
+                        input_file=file,
+                        model_name=model_name,
+                        output_dir=os.path.join(self.output_base_dir, timestamp),
+                        output_name=output_name,
+                        format_name=format_name if total_files == 1 else True,
+                        output_format=output_format,
+                        pitch=pitch,
+                        method_pitch=pitch_method,
+                        output_bitrate=320,
+                        add_params={
+                            "index_rate": index_rate,
+                            "filter_radius": filter_radius,
+                            "protect": protect,
+                            "rms": rms,
+                            "mangio_crepe_hop_length": hop_length,
+                            "f0_min": f0_min,
+                            "f0_max": f0_max,
+                            "stereo_mode": stereo_mode,
+                        },
+                        pipeline_mode="alt" if alt_pipeline else "orig",
+                        embedder_name=embedder_name,
+                        stack="transformers" if transformers_mode else "fairseq",
+                        add_text_progress=f"{i}/{total_files}",
+                        device="cuda:0"
+                    )
+                    output_converted_files.append(out_conv)
+                except Exception as e:
+                    print(f"{_i18n('error')}: {e}")
+                    
+        if output_converted_files:
+            self.history.add(output_converted_files, model_name, timestamp, pitch_method, pitch)
+            
+        return gr.update(value=str(output_converted_files)), gr.update(visible=False)
+
+    def vbach_convert_duet(
+        self,
+        input_file: Optional[str],
+        model_name1: str,
+        model_name2: str,
+        pitch_method1: str,
+        pitch_method2: str,
+        pitch1: float,
+        pitch2: float,
+        hop_length1: int,
+        hop_length2: int,
+        index_rate1: float,
+        index_rate2: float,
+        filter_radius1: int,
+        filter_radius2: int,
+        rms1: float,
+        rms2: float,
+        protect1: float,
+        protect2: float,
+        f0_min1: int,
+        f0_min2: int,
+        f0_max1: int,
+        f0_max2: int,
+        output_format: str,
+        stereo_mode: str,
+        alt_pipeline: bool,
+        embedder_name1: str,
+        embedder_name2: str,
+        transformers_mode1: bool,
+        transformers_mode2: bool,
+        mix_duet: bool,
+        mix_duet_ratio: float
+    ) -> Tuple[Optional[Dict], Optional[Dict], gr.update]:
+        output_1: Optional[str] = None
+        output_2: Optional[str] = None
+        
+        progress = gr.Progress(track_tqdm=True)
+        progress(progress=0, desc=_i18n("starting_conversion"))
+        
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        output_dir = os.path.join(self.output_base_dir, timestamp)
+        
+        if input_file:
+            try:
+                gr.Warning(title=_i18n("model_1"), message="")
+                output_1 = vbach_inference(
+                    input_file=input_file,
+                    model_name=model_name1,
+                    output_dir=output_dir,
+                    output_name="NAME - MODEL 1 - F0METHOD - PITCH",
+                    format_name=True,
+                    output_format=output_format,
+                    pitch=pitch1,
+                    method_pitch=pitch_method1,
+                    output_bitrate=320,
+                    add_params={
+                        "index_rate": index_rate1,
+                        "filter_radius": filter_radius1,
+                        "protect": protect1,
+                        "rms": rms1,
+                        "mangio_crepe_hop_length": hop_length1,
+                        "f0_min": f0_min1,
+                        "f0_max": f0_max1,
+                        "stereo_mode": stereo_mode,
+                    },
+                    pipeline_mode="alt" if alt_pipeline else "orig",
+                    embedder_name=embedder_name1,
+                    stack="transformers" if transformers_mode1 else "fairseq",
+                    add_text_progress=_i18n("model_1"),
+                    device=self.device
+                )
+                
+                gr.Warning(title=_i18n("model_2"), message="")
+                output_2 = vbach_inference(
+                    input_file=input_file,
+                    model_name=model_name2,
+                    output_dir=output_dir,
+                    output_name="NAME - MODEL 2 - F0METHOD - PITCH",
+                    format_name=True,
+                    output_format=output_format,
+                    pitch=pitch2,
+                    method_pitch=pitch_method2,
+                    output_bitrate=320,
+                    add_params={
+                        "index_rate": index_rate2,
+                        "filter_radius": filter_radius2,
+                        "protect": protect2,
+                        "rms": rms2,
+                        "mangio_crepe_hop_length": hop_length2,
+                        "f0_min": f0_min2,
+                        "f0_max": f0_max2,
+                        "stereo_mode": stereo_mode,
+                    },
+                    pipeline_mode="alt" if alt_pipeline else "orig",
+                    embedder_name=embedder_name2,
+                    stack="transformers" if transformers_mode2 else "fairseq",
+                    add_text_progress=_i18n("model_2"),
+                    device=self.device
+                )
+
+            except Exception as e:
+                print(f"{_i18n('error')}: {e}")
+                return (
+                    gr.update(value=None), 
+                    gr.update(value=None)
+                )
+
+        if mix_duet and output_1 and output_2:
+            input_file_basename = os.path.splitext(os.path.basename(input_file))[0] if input_file else "duet"
+            mix1, sr1 = read(output_1)
+            mix2, sr2 = read(output_2)
+            max_sr = max(sr1, sr2)
+            fitted_arrays = fit_arrays([mix1, mix2], [sr1, sr2], min_sr=max_sr)
+            g1 = (1 - mix_duet_ratio) / 2
+            g2 = (1 + mix_duet_ratio) / 2
+            mixed_duet = gain(fitted_arrays[0], g1) + gain(fitted_arrays[1], g2)
+            shorted_name = namer.short(input_file_basename, length=50)
+            sanitized_name = namer.sanitize(f"{model_name1}, {model_name2} - {shorted_name}")
+            output_mixed = write(
+                os.path.join(output_dir, f"{sanitized_name}.{output_format}"), 
+                mixed_duet, 
+                max_sr
+            )
+            self.history.add(
+                [output_mixed], 
+                f"{model_name1}|{model_name2}", 
+                timestamp, 
+                f"{pitch_method1}|{pitch_method2}", 
+                f"{pitch1}|{pitch2}"
+            )
+            return (
+                self.return_audio_with_size(label=_i18n("mixed_result"), value=output_mixed),
+                gr.update(label=_i18n("model_2_result"), value=None),
+            )
+        elif output_1 and output_2:
+            self.history.add(
+                [output_1, output_2], 
+                f"{model_name1}|{model_name2}", 
+                timestamp, 
+                f"{pitch_method1}|{pitch_method2}", 
+                f"{pitch1}|{pitch2}"
+            )
+            return (
+                self.return_audio_with_size(label=_i18n("model_1_result"), value=output_1),
+                self.return_audio_with_size(label=_i18n("model_2_result"), value=output_2),
+            )
+        else:
+            return (
+                gr.update(value=None), 
+                gr.update(value=None)
+            )
+
+    def vbach_convert_duet_zero_gpu(
+        self,
+        input_file: Optional[str],
+        model_name1: str,
+        model_name2: str,
+        pitch_method1: str,
+        pitch_method2: str,
+        pitch1: float,
+        pitch2: float,
+        hop_length1: int,
+        hop_length2: int,
+        index_rate1: float,
+        index_rate2: float,
+        filter_radius1: int,
+        filter_radius2: int,
+        rms1: float,
+        rms2: float,
+        protect1: float,
+        protect2: float,
+        f0_min1: int,
+        f0_min2: int,
+        f0_max1: int,
+        f0_max2: int,
+        output_format: str,
+        stereo_mode: str,
+        alt_pipeline: bool,
+        embedder_name1: str,
+        embedder_name2: str,
+        transformers_mode1: bool,
+        transformers_mode2: bool,
+        mix_duet: bool,
+        mix_duet_ratio: float
+    ) -> Tuple[Optional[Dict], Optional[Dict], gr.update]:
+        output_1: Optional[str] = None
+        output_2: Optional[str] = None
+        
+        progress = gr.Progress(track_tqdm=True)
+        progress(progress=0, desc=_i18n("starting_conversion"))
+        
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        output_dir = os.path.join(self.output_base_dir, timestamp)
+        
+        if input_file:
+            try:
+                gr.Warning(title=_i18n("model_1"), message="")
+                output_1 = vbach_inference(
+                    input_file=input_file,
+                    model_name=model_name1,
+                    output_dir=output_dir,
+                    output_name="NAME - MODEL 1 - F0METHOD - PITCH",
+                    format_name=True,
+                    output_format=output_format,
+                    pitch=pitch1,
+                    method_pitch=pitch_method1,
+                    output_bitrate=320,
+                    add_params={
+                        "index_rate": index_rate1,
+                        "filter_radius": filter_radius1,
+                        "protect": protect1,
+                        "rms": rms1,
+                        "mangio_crepe_hop_length": hop_length1,
+                        "f0_min": f0_min1,
+                        "f0_max": f0_max1,
+                        "stereo_mode": stereo_mode,
+                    },
+                    pipeline_mode="alt" if alt_pipeline else "orig",
+                    embedder_name=embedder_name1,
+                    stack="transformers" if transformers_mode1 else "fairseq",
+                    add_text_progress=_i18n("model_1"),
+                    device="cuda:0"
+                )
+                
+                gr.Warning(title=_i18n("model_2"), message="")
+                output_2 = vbach_inference(
+                    input_file=input_file,
+                    model_name=model_name2,
+                    output_dir=output_dir,
+                    output_name="NAME - MODEL 2 - F0METHOD - PITCH",
+                    format_name=True,
+                    output_format=output_format,
+                    pitch=pitch2,
+                    method_pitch=pitch_method2,
+                    output_bitrate=320,
+                    add_params={
+                        "index_rate": index_rate2,
+                        "filter_radius": filter_radius2,
+                        "protect": protect2,
+                        "rms": rms2,
+                        "mangio_crepe_hop_length": hop_length2,
+                        "f0_min": f0_min2,
+                        "f0_max": f0_max2,
+                        "stereo_mode": stereo_mode,
+                    },
+                    pipeline_mode="alt" if alt_pipeline else "orig",
+                    embedder_name=embedder_name2,
+                    stack="transformers" if transformers_mode2 else "fairseq",
+                    add_text_progress=_i18n("model_2"),
+                    device="cuda:0"
+                )
+
+            except Exception as e:
+                print(f"{_i18n('error')}: {e}")
+                return (
+                    gr.update(value=None), 
+                    gr.update(value=None)
+                )
+
+        if mix_duet and output_1 and output_2:
+            input_file_basename = os.path.splitext(os.path.basename(input_file))[0] if input_file else "duet"
+            mix1, sr1 = read(output_1)
+            mix2, sr2 = read(output_2)
+            max_sr = max(sr1, sr2)
+            fitted_arrays = fit_arrays([mix1, mix2], [sr1, sr2], min_sr=max_sr)
+            g1 = (1 - mix_duet_ratio) / 2
+            g2 = (1 + mix_duet_ratio) / 2
+            mixed_duet = gain(fitted_arrays[0], g1) + gain(fitted_arrays[1], g2)
+            shorted_name = namer.short(input_file_basename, length=50)
+            sanitized_name = namer.sanitize(f"{model_name1}, {model_name2} - {shorted_name}")
+            output_mixed = write(
+                os.path.join(output_dir, f"{sanitized_name}.{output_format}"), 
+                mixed_duet, 
+                max_sr
+            )
+            self.history.add(
+                [output_mixed], 
+                f"{model_name1}|{model_name2}", 
+                timestamp, 
+                f"{pitch_method1}|{pitch_method2}", 
+                f"{pitch1}|{pitch2}"
+            )
+            return (
+                self.return_audio_with_size(label=_i18n("mixed_result"), value=output_mixed),
+                gr.update(label=_i18n("model_2_result"), value=None),
+            )
+        elif output_1 and output_2:
+            self.history.add(
+                [output_1, output_2], 
+                f"{model_name1}|{model_name2}", 
+                timestamp, 
+                f"{pitch_method1}|{pitch_method2}", 
+                f"{pitch1}|{pitch2}"
+            )
+            return (
+                self.return_audio_with_size(label=_i18n("model_1_result"), value=output_1),
+                self.return_audio_with_size(label=_i18n("model_2_result"), value=output_2),
+            )
+        else:
+            return (
+                gr.update(value=None), 
+                gr.update(value=None)
+            )
+
     def UI(self) -> gr.Blocks:
         """
         Создать пользовательский интерфейс
@@ -3291,8 +3748,9 @@ class Vbach(GradioHelper):
                         transformers_mode,
                     ],
                     outputs=[converted_state, status],
+                    queue=True
                 )
-                def vbach_convert_batch(
+                def vbach_convert_batch_fn(
                     input_files: List[str],
                     model_name: str,
                     pitch_method: str,
@@ -3312,60 +3770,30 @@ class Vbach(GradioHelper):
                     embedder_name: str,
                     transformers_mode: bool,
                 ) -> Tuple[gr.update, gr.update]:
-                    output_converted_files: List[str] = []
-                    progress = gr.Progress(track_tqdm=True)
-                    progress(progress=0, desc=_i18n("starting_conversion"))
-                    
-                    timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
-                    
-                    if input_files:
-                        total_files = len(input_files)
-                        for i, file in enumerate(input_files, start=1):
-                            try:
-                                print(f"{_i18n('processing_file', current=i, total=total_files, file=file)}")
-                                progress(
-                                    progress=(i / total_files), 
-                                    desc=_i18n("processing_file_title", current=i, total=total_files)
-                                )
-                                gr.Warning(
-                                    title=_i18n("processing_file_title", current=i, total=total_files), 
-                                    message=file
-                                )
-                                
-                                out_conv = vbach_inference(
-                                    input_file=file,
-                                    model_name=model_name,
-                                    output_dir=os.path.join(self.output_base_dir, timestamp),
-                                    output_name=output_name,
-                                    format_name=format_name if total_files == 1 else True,
-                                    output_format=output_format,
-                                    pitch=pitch,
-                                    method_pitch=pitch_method,
-                                    output_bitrate=320,
-                                    add_params={
-                                        "index_rate": index_rate,
-                                        "filter_radius": filter_radius,
-                                        "protect": protect,
-                                        "rms": rms,
-                                        "mangio_crepe_hop_length": hop_length,
-                                        "f0_min": f0_min,
-                                        "f0_max": f0_max,
-                                        "stereo_mode": stereo_mode,
-                                    },
-                                    pipeline_mode="alt" if alt_pipeline else "orig",
-                                    embedder_name=embedder_name,
-                                    stack="transformers" if transformers_mode else "fairseq",
-                                    add_text_progress=f"{i}/{total_files}",
-                                    device=self.device
-                                )
-                                output_converted_files.append(out_conv)
-                            except Exception as e:
-                                print(f"{_i18n('error')}: {e}")
-                                
-                    if output_converted_files:
-                        self.history.add(output_converted_files, model_name, timestamp, pitch_method, pitch)
-                        
-                    return gr.update(value=str(output_converted_files)), gr.update(visible=False)
+
+                    vbach_batch = self.vbach_convert_batch_zero_gpu if zerogpu_available else self.vbach_convert_batch
+                    return vbach_batch(
+                        input_files=input_files,
+                        model_name=model_name,
+                        pitch_method=pitch_method,
+                        pitch=pitch,
+                        hop_length=hop_length,
+                        index_rate=index_rate,
+                        filter_radius=filter_radius,
+                        rms=rms,
+                        protect=protect,
+                        f0_min=f0_min,
+                        f0_max=f0_max,
+                        output_name=output_name,
+                        format_name=format_name,
+                        output_format=output_format,
+                        stereo_mode=stereo_mode,
+                        alt_pipeline=alt_pipeline,
+                        embedder_name=embedder_name,
+                        transformers_mode=transformers_mode
+                    )
+
+
 
                 with gr.Column(variant="panel"):
                     gr.Markdown(f"<center><h3>{_i18n('results')}</h3></center>")
@@ -3828,7 +4256,7 @@ class Vbach(GradioHelper):
                                     gr.update(visible=True, value=None)
                                 )
 
-                    @convert_btn_duet.then(
+                    @convert_btn_duet(
                         inputs=[
                             list_input_files_duet,
                             model_name1, model_name2,
@@ -3849,8 +4277,9 @@ class Vbach(GradioHelper):
                             mix_duet, mix_duet_ratio
                         ],
                         outputs=[output_duet_audio_1, output_duet_audio_2],
+                        queue=True
                     )
-                    def vbach_convert_duet(
+                    def vbach_convert_duet_fn(
                         input_file: Optional[str],
                         model_name1: str,
                         model_name2: str,
@@ -3882,123 +4311,38 @@ class Vbach(GradioHelper):
                         mix_duet: bool,
                         mix_duet_ratio: float
                     ) -> Tuple[Optional[Dict], Optional[Dict], gr.update]:
-                        output_1: Optional[str] = None
-                        output_2: Optional[str] = None
-                        
-                        progress = gr.Progress(track_tqdm=True)
-                        progress(progress=0, desc=_i18n("starting_conversion"))
-                        
-                        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
-                        output_dir = os.path.join(self.output_base_dir, timestamp)
-                        
-                        if input_file:
-                            try:
-                                gr.Warning(title=_i18n("model_1"), message="")
-                                output_1 = vbach_inference(
-                                    input_file=input_file,
-                                    model_name=model_name1,
-                                    output_dir=output_dir,
-                                    output_name="NAME - MODEL 1 - F0METHOD - PITCH",
-                                    format_name=True,
-                                    output_format=output_format,
-                                    pitch=pitch1,
-                                    method_pitch=pitch_method1,
-                                    output_bitrate=320,
-                                    add_params={
-                                        "index_rate": index_rate1,
-                                        "filter_radius": filter_radius1,
-                                        "protect": protect1,
-                                        "rms": rms1,
-                                        "mangio_crepe_hop_length": hop_length1,
-                                        "f0_min": f0_min1,
-                                        "f0_max": f0_max1,
-                                        "stereo_mode": stereo_mode,
-                                    },
-                                    pipeline_mode="alt" if alt_pipeline else "orig",
-                                    embedder_name=embedder_name1,
-                                    stack="transformers" if transformers_mode1 else "fairseq",
-                                    add_text_progress=_i18n("model_1"),
-                                    device=self.device
-                                )
-                                
-                                gr.Warning(title=_i18n("model_2"), message="")
-                                output_2 = vbach_inference(
-                                    input_file=input_file,
-                                    model_name=model_name2,
-                                    output_dir=output_dir,
-                                    output_name="NAME - MODEL 2 - F0METHOD - PITCH",
-                                    format_name=True,
-                                    output_format=output_format,
-                                    pitch=pitch2,
-                                    method_pitch=pitch_method2,
-                                    output_bitrate=320,
-                                    add_params={
-                                        "index_rate": index_rate2,
-                                        "filter_radius": filter_radius2,
-                                        "protect": protect2,
-                                        "rms": rms2,
-                                        "mangio_crepe_hop_length": hop_length2,
-                                        "f0_min": f0_min2,
-                                        "f0_max": f0_max2,
-                                        "stereo_mode": stereo_mode,
-                                    },
-                                    pipeline_mode="alt" if alt_pipeline else "orig",
-                                    embedder_name=embedder_name2,
-                                    stack="transformers" if transformers_mode2 else "fairseq",
-                                    add_text_progress=_i18n("model_2"),
-                                    device=self.device
-                                )
-
-                            except Exception as e:
-                                print(f"{_i18n('error')}: {e}")
-                                return (
-                                    gr.update(value=None), 
-                                    gr.update(value=None)
-                                )
-
-                        if mix_duet and output_1 and output_2:
-                            input_file_basename = os.path.splitext(os.path.basename(input_file))[0] if input_file else "duet"
-                            mix1, sr1 = read(output_1)
-                            mix2, sr2 = read(output_2)
-                            max_sr = max(sr1, sr2)
-                            fitted_arrays = fit_arrays([mix1, mix2], [sr1, sr2], min_sr=max_sr)
-                            g1 = (1 - mix_duet_ratio) / 2
-                            g2 = (1 + mix_duet_ratio) / 2
-                            mixed_duet = gain(fitted_arrays[0], g1) + gain(fitted_arrays[1], g2)
-                            shorted_name = namer.short(input_file_basename, length=50)
-                            sanitized_name = namer.sanitize(f"{model_name1}, {model_name2} - {shorted_name}")
-                            output_mixed = write(
-                                os.path.join(output_dir, f"{sanitized_name}.{output_format}"), 
-                                mixed_duet, 
-                                max_sr
-                            )
-                            self.history.add(
-                                [output_mixed], 
-                                f"{model_name1}|{model_name2}", 
-                                timestamp, 
-                                f"{pitch_method1}|{pitch_method2}", 
-                                f"{pitch1}|{pitch2}"
-                            )
-                            return (
-                                self.return_audio_with_size(label=_i18n("mixed_result"), value=output_mixed),
-                                gr.update(label=_i18n("model_2_result"), value=None),
-                            )
-                        elif output_1 and output_2:
-                            self.history.add(
-                                [output_1, output_2], 
-                                f"{model_name1}|{model_name2}", 
-                                timestamp, 
-                                f"{pitch_method1}|{pitch_method2}", 
-                                f"{pitch1}|{pitch2}"
-                            )
-                            return (
-                                self.return_audio_with_size(label=_i18n("model_1_result"), value=output_1),
-                                self.return_audio_with_size(label=_i18n("model_2_result"), value=output_2),
-                            )
-                        else:
-                            return (
-                                gr.update(value=None), 
-                                gr.update(value=None)
+                        vbach_duet_ = self.vbach_convert_duet_zero_gpu if zerogpu_available else self.vbach_convert_duet_zero_gpu
+                        return vbach_duet_(
+                                input_file=input_file,
+                                model_name1=model_name1,
+                                model_name2=model_name2,
+                                pitch_method1=pitch_method1,
+                                pitch_method2=pitch_method2,
+                                pitch1=pitch1,
+                                pitch2=pitch2,
+                                hop_length1=hop_length1,
+                                hop_length2=hop_length2,
+                                index_rate1=index_rate1,
+                                index_rate2=index_rate2,
+                                filter_radius1=filter_radius1,
+                                filter_radius2=filter_radius2,
+                                rms1=rms1,
+                                rms2=rms2,
+                                protect1=protect1,
+                                protect2=protect2,
+                                f0_min1=f0_min1,
+                                f0_min2=f0_min2,
+                                f0_max1=f0_max1,
+                                f0_max2=f0_max2,
+                                output_format=output_format,
+                                stereo_mode=stereo_mode,
+                                alt_pipeline=alt_pipeline,
+                                embedder_name1=embedder_name1,
+                                embedder_name2=embedder_name2,
+                                transformers_mode1=transformers_mode1,
+                                transformers_mode2=transformers_mode2,
+                                mix_duet=mix_duet,
+                                mix_duet_ratio=mix_duet_ratio
                             )
 
             with gr.TabItem(_i18n("tab_manager")):

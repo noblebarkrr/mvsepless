@@ -2003,7 +2003,7 @@ if __name__ == "__main__":
             ),
             False, 
             False, 
-            False
+            True
         ).launch(
             server_name="0.0.0.0",
             server_port=None,

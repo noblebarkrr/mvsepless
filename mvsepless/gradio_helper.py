@@ -3,6 +3,11 @@ import gradio as gr
 import zipfile
 from datetime import timezone, timedelta
 import platform
+from functools import wraps
+try:
+    import spaces
+except:
+    spaces = None
 import torch
 from tqdm import tqdm
 import urllib.request
@@ -237,29 +242,21 @@ def easy_check_is_colab() -> bool:
 
 zerogpu_is = str2bool(os.getenv('SPACES_ZERO_GPU', 'False'))
 zerogpu_available = False
-try:
-    import spaces
+if not spaces:
+    def hf_spaces_gpu(*args, **kwargs):
+        if len(args) == 1 and callable(args[0]):
+            return args[0]
+        return lambda f: f
+else:
     if zerogpu_is:
         zerogpu_available = True
-        def hf_spaces_gpu(*args, device="cpu", **kwargs):
-            # Поддержка разных вариантов вызова
-            device = "cuda:0"
-            if len(args) == 1 and callable(args[0]):
-                # @hf_spaces_gpu
-                return spaces.GPU(args[0], **kwargs)
-            else:
-                # @hf_spaces_gpu(duration=30)
-                return spaces.GPU(*args, **kwargs)
+        hf_spaces_gpu = spaces.GPU
     else:
         def hf_spaces_gpu(*args, **kwargs):
             if len(args) == 1 and callable(args[0]):
                 return args[0]
             return lambda f: f
-except ImportError:
-    def hf_spaces_gpu(*args, **kwargs):
-        if len(args) == 1 and callable(args[0]):
-            return args[0]
-        return lambda f: f
+
 
 class GradioHelper:
     """Вспомогательный класс для Gradio интерфейса"""
