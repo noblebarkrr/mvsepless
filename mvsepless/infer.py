@@ -6,6 +6,7 @@ import json
 import argparse
 import time
 import gc
+from gradio_helper import hf_spaces_gpu, zerogpu_available
 import torch
 import numpy as np
 import torch.nn as nn
@@ -742,7 +743,7 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-
+@hf_spaces_gpu(duration=120)
 def main() -> None:
     """Главная функция"""
     args = parse_args()
@@ -758,12 +759,11 @@ def main() -> None:
         output_bitrate=args.output_bitrate,
         model_name=args.model_name,
         template=args.template,
-        device=args.device,
+        device="cuda:0" if zerogpu_available else args.device,
         selected_instruments=args.selected_instruments,
         model_id=args.model_id,
         spec_invert_target_instrument=args.use_spec_invert
     )
-
 
 if __name__ == "__main__":
     main()

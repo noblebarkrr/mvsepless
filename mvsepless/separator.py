@@ -786,6 +786,7 @@ class Separator(MvseplessModelManager):
         progress: gr.Progress,
         use_spec_invert: bool,
         add_text_progress: str,
+        device: str,
     ) -> List[Tuple[str, str]]:
         """
         Обработка длинного аудио по частям
@@ -921,6 +922,7 @@ class Separator(MvseplessModelManager):
                 progress=progress,
                 use_spec_invert=use_spec_invert,
                 add_text_progress=f"{_i18n('msg_processing_chunk', current=chunk_idx + 1, total=total_chunks)}",
+                device=device,
             )
             
             start_pos, chunk_len = chunk_positions[chunk_idx]
@@ -1114,6 +1116,7 @@ class Separator(MvseplessModelManager):
         progress: gr.Progress,
         use_spec_invert: bool = False,
         add_text_progress: str = "",
+        device: str = "cpu",
     ) -> List[Tuple[str, str]]:
         """
         Базовый метод разделения
@@ -1163,7 +1166,7 @@ class Separator(MvseplessModelManager):
             "--template",
             template,
             "--device",
-            self.device
+            device
         ]
         
         if ext_inst:
@@ -1266,6 +1269,7 @@ class Separator(MvseplessModelManager):
             "vr_post_process": False,
             "vr_high_end_process": False,
             "add_single_sep_text_progress": None,
+            "device": "cpu"
         },
         use_spec_invert: bool = False,
         progress: gr.Progress = gr.Progress(track_tqdm=True),
@@ -1317,6 +1321,7 @@ class Separator(MvseplessModelManager):
         econom_mode: bool = add_settings.get("econom_mode", MVSEPLESS_ECONOM)
         single_mode: bool = add_settings.get("single_mode", True)
         add_progress_text_custom: str = add_settings.get("add_single_sep_text_progress", "")
+        device = add_settings.get("device", self.device)
 
         id, conf, ckpt, model_type = self.install_model(
             model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, econom_mode, progress=progress
@@ -1357,6 +1362,7 @@ class Separator(MvseplessModelManager):
                             progress=progress,
                             use_spec_invert=use_spec_invert,
                             add_text_progress=add_progress_text_custom,
+                            device=device
                         )
                     else:
                         output_state = self.separator_base(
@@ -1375,6 +1381,7 @@ class Separator(MvseplessModelManager):
                             progress=progress,
                             use_spec_invert=use_spec_invert,
                             add_text_progress=add_progress_text_custom,
+                            device=device
                         )
 
                 except Exception as e:

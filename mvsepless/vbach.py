@@ -3088,7 +3088,7 @@ class Vbach(GradioHelper):
             
         return gr.update(value=str(output_converted_files)), gr.update(visible=False)
 
-    @hf_spaces_gpu
+    @hf_spaces_gpu(duration=120)
     def vbach_convert_batch_zero_gpu(
         self,
         input_files: List[str],
