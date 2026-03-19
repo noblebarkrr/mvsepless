@@ -14,7 +14,7 @@ from separator import Separator, script_dir
 from datetime import datetime
 from functools import wraps
 from audio import output_formats, check
-from gradio_helper import GradioHelper, tz, all_ids, set_device, cuda_available, easy_check_is_colab, dw_yt_dlp, hf_spaces_gpu
+from gradio_helper import GradioHelper, tz, all_ids, set_device, cuda_available, easy_check_is_colab, dw_yt_dlp, hf_spaces_gpu, zerogpu_available
 from i18n import _i18n, CURRENT_LANGUAGE, set_language
 
 
@@ -322,7 +322,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         if econom_mode is not None:
             add_settings["econom_mode"] = econom_mode
         
-        @hf_spaces_gpu(device=self.device)
+        @hf_spaces_gpu(device=self.device, duration=180)
         def _separate():
             return self.separate(
                 input=input_files,
@@ -362,8 +362,11 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
             Блоки интерфейса Gradio
         """
         with gr.Blocks(theme=theme, title=_i18n("app_title")) as MVSEPLESS_LITE_UI:
-            if not cuda_available:
-                gr.Markdown(f"<h2><center>{_i18n('msg_cpu_warning')}<center><h2>")
+            if zerogpu_available:
+                gr.Markdown(f"<h2><center>{_i18n('msg_zero_warning')}<center><h2>")
+            else:
+                if not cuda_available:
+                    gr.Markdown(f"<h2><center>{_i18n('msg_cpu_warning')}<center><h2>")
             
             # Вкладка разделения
             with gr.Tab(_i18n("tab_separation")):

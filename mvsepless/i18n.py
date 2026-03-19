@@ -381,6 +381,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         
         # Сообщения
         "msg_cpu_warning": "ВНИМАНИЕ! Используется CPU, инференс слишком медленно работает",
+        "msg_zero_warning": "Используется ZeroGPU",
         "msg_colab_detected": "Обнаружена среда выполнения Colab",
         "msg_gdrive_mounted": "Обнаружен привязанный Google Диск\nПуть к привязанному диску: {path}",
         "msg_file_uploaded": "Файл успешно загружен",
@@ -1083,6 +1084,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         
         # Messages
         "msg_cpu_warning": "WARNING! Using CPU, inference is too slow",
+        "msg_zero_warning": "Using ZeroGPU",
         "msg_colab_detected": "Colab environment detected",
         "msg_gdrive_mounted": "Google Drive detected\nMounted drive path: {path}",
         "msg_file_uploaded": "File uploaded successfully",

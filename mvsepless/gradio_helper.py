@@ -235,11 +235,12 @@ def easy_check_is_colab() -> bool:
     else:
         return False
 
+zerogpu_is = str2bool(os.getenv('SPACES_ZERO_GPU', 'False'))
+zerogpu_available = False
 try:
     import spaces
-    zerogpu_available = str2bool(os.getenv('SPACES_ZERO_GPU', 'False'))
-    
-    if zerogpu_available:
+    if zerogpu_is:
+        zerogpu_available = True
         def hf_spaces_gpu(*args, device="cpu", **kwargs):
             # Поддержка разных вариантов вызова
             device = "cuda:0"
