@@ -14,7 +14,7 @@ from separator import Separator, script_dir
 from datetime import datetime
 from functools import wraps
 from audio import output_formats, check
-from gradio_helper import GradioHelper, tz, all_ids, set_device, cuda_available, easy_check_is_colab, dw_yt_dlp
+from gradio_helper import GradioHelper, tz, all_ids, set_device, cuda_available, easy_check_is_colab, dw_yt_dlp, hf_spaces_gpu
 from i18n import _i18n, CURRENT_LANGUAGE, set_language
 
 
@@ -322,19 +322,22 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         if econom_mode is not None:
             add_settings["econom_mode"] = econom_mode
         
-        results = self.separate(
-            input=input_files,
-            output_dir=os.path.join(self.output_base_dir, timestamp),
-            model_name=model_name,
-            ext_inst=ext_inst,
-            output_format=output_format,
-            output_bitrate=output_bitrate,
-            template=template,
-            selected_stems=selected_stems,
-            add_settings=add_settings,
-            use_spec_invert=use_spec_invert,
-            progress=progress,
-        )
+        @hf_spaces_gpu(device=self.device)
+        def _separate():
+            return self.separate(
+                input=input_files,
+                output_dir=os.path.join(self.output_base_dir, timestamp),
+                model_name=model_name,
+                ext_inst=ext_inst,
+                output_format=output_format,
+                output_bitrate=output_bitrate,
+                template=template,
+                selected_stems=selected_stems,
+                add_settings=add_settings,
+                use_spec_invert=use_spec_invert,
+                progress=progress,
+            )
+        results = _separate()
         
         self.history.add(results, model_name, timestamp)
         return results
