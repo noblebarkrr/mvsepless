@@ -743,7 +743,7 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-@hf_spaces_gpu(duration=120)
+@hf_spaces_gpu(duration=80)
 def main() -> None:
     """Главная функция"""
     args = parse_args()
