@@ -65,3 +65,4 @@ MVSEPLESS_WRITE_ABS={True|False} - Возвращать ли абсюлотны�
 ```
 ## Рабочая среда
 - Google Colab  -  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/epsilon/MVSepLess_Epsilon_Colab_v2.ipynb)
+- Hugging Face (ZeroGPU) - [![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_zero_gpu)
