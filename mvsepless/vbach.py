@@ -4256,7 +4256,7 @@ class Vbach(GradioHelper):
                                     gr.update(visible=True, value=None)
                                 )
 
-                    @convert_btn_duet(
+                    @convert_btn_duet.click(
                         inputs=[
                             list_input_files_duet,
                             model_name1, model_name2,
