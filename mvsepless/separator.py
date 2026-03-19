@@ -1982,6 +1982,10 @@ if __name__ == "__main__":
                 use_spec_invert=args.use_spec_invert
             )
     else:
+        # Получение актуального списка моделей
+        file_path: str = MvseplessModelManager().models_info_path
+        url_link: str = "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/models.json?download=true"
+        dw_file(url_link, file_path, retries=999999)
         from app import SeparatorGradio
 
         SeparatorGradio().UI(
