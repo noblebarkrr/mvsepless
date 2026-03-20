@@ -1416,6 +1416,7 @@ class Separator(MvseplessModelManager):
                                 progress=progress,
                                 use_spec_invert=use_spec_invert,
                                 add_text_progress=_i18n("file_progress", current=i, total=len(input_list)),
+                                device=device
                             )
                         else:
                             seped = self.separator_base(
@@ -1434,6 +1435,7 @@ class Separator(MvseplessModelManager):
                                 progress=progress,
                                 use_spec_invert=use_spec_invert,
                                 add_text_progress=_i18n("file_progress", current=i, total=len(input_list)),
+                                device=device
                             )
                         basename: str = os.path.splitext(os.path.basename(f))[0]
                         output_state.append([basename, seped])
