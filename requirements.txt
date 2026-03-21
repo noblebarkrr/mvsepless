@@ -50,5 +50,6 @@ local-attention
 tenacity
 pyworld
 gdown
-
+pyloudnorm
+setuptools<76.0
 
