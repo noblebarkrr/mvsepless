@@ -1448,6 +1448,207 @@ class Separator(MvseplessModelManager):
         self.print_error_list(errors)
         return output_state
 
+    def custom_separate(
+        self,
+        input: Union[str, List[str], None] = None,
+        output_dir: Optional[str] = None,
+        model_type: str = "bs_roformer",
+        ckpt_path: str = "bs_6stem.ckpt",
+        config_path: str = "bs_6stem_config.yaml",
+        ext_inst: bool = True,
+        output_format: str = "mp3",
+        output_bitrate: str = "320k",
+        template: str = "NAME_(STEM)_MODEL",
+        selected_stems: Optional[List[str]] = None,
+        add_settings: Dict[str, Any] = {
+            "mdx_denoise": False,
+            "vr_aggr": 5,
+            "vr_post_process": False,
+            "vr_high_end_process": False,
+            "add_single_sep_text_progress": None,
+            "device": "cpu"
+        },
+        use_spec_invert: bool = False,
+        progress: gr.Progress = gr.Progress(track_tqdm=True),
+    ) -> Union[List[Tuple[str, str]], List[Tuple[str, List[Tuple[str, str]]]]]:
+        """
+        Разделение аудио
+        
+        Args:
+            input: Входной файл или список файлов
+            output_dir: Выходная директория
+            model_type: Тип модели
+            ckpt_path: Путь к чекпоинту модели
+            config_path: Путь к конфигу модели
+            ext_inst: Извлечь инструментал
+            output_format: Формат вывода
+            output_bitrate: Битрейт
+            template: Шаблон имени
+            selected_stems: Выбранные стемы
+            add_settings: Дополнительные настройки
+            use_spec_invert: Использовать инверсию спектрограммы
+            progress: Прогресс
+        
+        Returns:
+            Результаты разделения
+        """
+        progress(0, desc=_i18n("start_processing"))
+
+        if output_format not in output_formats:
+            output_format = "flac"
+
+        if output_dir is None:
+            output_dir = os.getcwd()
+
+        if selected_stems is None:
+            selected_stems = []
+
+        if not ckpt_path or not config_path:
+            raise ValueError(_i18n("ckpt_conf_required"))
+
+        if not input:
+            raise ValueError(_i18n("no_input_error"))
+
+        if "STEM" not in template and template is not None:
+            template = template + "_STEM_"
+        if not template:
+            template = "mvsepless_NAME_(STEM)"
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        mdx_denoise: bool = add_settings.get("mdx_denoise", False)
+        vr_aggr: int = add_settings.get("vr_aggr", 5)
+        vr_post_process: bool = add_settings.get("vr_post_process", False)
+        vr_high_end_process: bool = add_settings.get("vr_high_end_process", False)
+        econom_mode: bool = add_settings.get("econom_mode", MVSEPLESS_ECONOM)
+        single_mode: bool = add_settings.get("single_mode", True)
+        add_progress_text_custom: str = add_settings.get("add_single_sep_text_progress", "")
+        device = add_settings.get("device", self.device)
+
+        id, conf, ckpt = 0, config_path, ckpt_path
+        model_name = os.path.splitext(os.path.basename(ckpt_path))[0]
+
+        input_list: List[str] = []
+        errors: List[str] = []
+        output_state: List = []
+
+        if isinstance(input, str):
+            input = [input]
+
+        input_list = get_files_from_list(input)
+
+        if len(input_list) == 0:
+            print(_i18n("no_input_files"))
+
+        print(_i18n("input_files_count", count=len(input_list)))
+
+        if single_mode:
+            if len(input_list) == 1:
+                _input_file: str = input_list[0]
+                try:
+                    if self.check_duration_audio(_input_file):
+                        output_state = self.chunk_wise_processing(
+                            path=_input_file,
+                            output_dir=output_dir,
+                            model_type=model_type,
+                            model_name=model_name,
+                            ext_inst=ext_inst,
+                            output_format=output_format,
+                            output_bitrate=output_bitrate,
+                            template=template,
+                            selected_stems=selected_stems,
+                            ckpt=ckpt,
+                            conf=conf,
+                            id=id,
+                            progress=progress,
+                            use_spec_invert=use_spec_invert,
+                            add_text_progress=add_progress_text_custom,
+                            device=device
+                        )
+                    else:
+                        output_state = self.separator_base(
+                            input_file=_input_file,
+                            output_dir=output_dir,
+                            model_type=model_type,
+                            model_name=model_name,
+                            ext_inst=ext_inst,
+                            output_format=output_format,
+                            output_bitrate=output_bitrate,
+                            template=template,
+                            selected_stems=selected_stems,
+                            ckpt=ckpt,
+                            conf=conf,
+                            id=id,
+                            progress=progress,
+                            use_spec_invert=use_spec_invert,
+                            add_text_progress=add_progress_text_custom,
+                            device=device
+                        )
+
+                except Exception as e:
+                    errors.append(_input_file)
+                    traceback.print_exc()
+            elif len(input_list) > 1:
+                single_mode = False
+
+        if not single_mode:
+            if len(input_list) >= 1:
+                for i, f in enumerate(input_list, 1):
+                    print(_i18n("processing_file", current=i, total=len(input_list), file=f))
+                    gr.Warning(
+                        title=_i18n("processing_file_title", current=i, total=len(input_list)), 
+                        message=f
+                    )
+                    try:
+                        if self.check_duration_audio(f):
+                            seped: List[Tuple[str, str]] = self.chunk_wise_processing(
+                                path=f,
+                                output_dir=output_dir,
+                                model_type=model_type,
+                                model_name=model_name,
+                                ext_inst=ext_inst,
+                                output_format=output_format,
+                                output_bitrate=output_bitrate,
+                                template=template,
+                                selected_stems=selected_stems,
+                                ckpt=ckpt,
+                                conf=conf,
+                                id=id,
+                                progress=progress,
+                                use_spec_invert=use_spec_invert,
+                                add_text_progress=_i18n("file_progress", current=i, total=len(input_list)),
+                                device=device
+                            )
+                        else:
+                            seped = self.separator_base(
+                                input_file=f,
+                                output_dir=output_dir,
+                                model_type=model_type,
+                                model_name=model_name,
+                                ext_inst=ext_inst,
+                                output_format=output_format,
+                                output_bitrate=output_bitrate,
+                                template=template,
+                                selected_stems=selected_stems,
+                                ckpt=ckpt,
+                                conf=conf,
+                                id=id,
+                                progress=progress,
+                                use_spec_invert=use_spec_invert,
+                                add_text_progress=_i18n("file_progress", current=i, total=len(input_list)),
+                                device=device
+                            )
+                        basename: str = os.path.splitext(os.path.basename(f))[0]
+                        output_state.append([basename, seped])
+                    except Exception as e:
+                        errors.append(f)
+                        traceback.print_exc()
+            else:
+                pass
+
+        self.print_error_list(errors)
+        return output_state
+
     def manual_ensemble(
         self,
         files: List[str],
@@ -1797,6 +1998,22 @@ if __name__ == "__main__":
     sep_p.add_argument("--econom_mode", action="store_true", help=_i18n("econom_mode_help"))
     sep_p.add_argument("--chunk_duration", type=float, default=None, help=_i18n("chunk_duration_help"))
 
+    csep_p = subparsers.add_parser("custom_separator", help=_i18n("separator_help"))
+    csep_p = add_common_args(csep_p)
+    csep_p.add_argument("-ckpt", "--checkpoint_path", type=str, required=True, help=_i18n("ckpt_path_help"))
+    csep_p.add_argument("-conf", "--config_path", type=str, required=True, help=_i18n("conf_path_help"))
+    csep_p.add_argument("-mt", "--model_type", type=str, default="bs_6stem", help=_i18n("model_type_help"))
+    csep_p.add_argument("-tmpl", "--template", type=str, default="NAME_(STEM)_MODEL", help=_i18n("template_help"))
+    csep_p.add_argument("-stem", "--selected_stems", type=str, nargs="*", default=None, help=_i18n("selected_stems_help"), metavar="STEM")
+    csep_p.add_argument("-inst", "--ext_inst", action="store_true", help=_i18n("ext_inst_help"))
+    csep_p.add_argument("-invspec", "--use_spec_invert", action="store_true", help=_i18n("use_spec_invert_help"))
+    csep_p.add_argument("--mdx_enable_denoise", action="store_true", help=_i18n("mdx_denoise_help"))
+    csep_p.add_argument("--vr_aggression", type=int, default=5, help=_i18n("vr_aggression_help"), metavar="AGGR")
+    csep_p.add_argument("--vr_high_end_process", action="store_true", help=_i18n("vr_high_end_help"))
+    csep_p.add_argument("--vr_enable_post_process", action="store_true", help=_i18n("vr_post_process_help"))
+    csep_p.add_argument("--econom_mode", action="store_true", help=_i18n("econom_mode_help"))
+    csep_p.add_argument("--chunk_duration", type=float, default=None, help=_i18n("chunk_duration_help"))
+
     # Команда info
     info_p = subparsers.add_parser("info", help=_i18n("info_help"))
     info_p = add_common_args(info_p)
@@ -1955,7 +2172,8 @@ if __name__ == "__main__":
             ),
             args.add_app, 
             args.use_plugins, 
-            args.vbach
+            args.vbach,
+            True
         ).launch(
             server_name="0.0.0.0",
             server_port=args.port,
@@ -1990,6 +2208,30 @@ if __name__ == "__main__":
                 selected_stems=args.selected_stems,
                 use_spec_invert=args.use_spec_invert
             )
+    elif args.command == "custom_separator":
+        if args.chunk_duration is not None:
+            mvsepless.chunk_duration = args.chunk_duration
+            
+        mvsepless.custom_separate(
+            input=args.input,
+            output_dir=args.output_dir,
+            model_type=args.model_type,
+            ckpt_path=args.checkpoint_path,
+            config_path=args.config_path,
+            ext_inst=args.ext_inst,
+            output_format=args.output_format,
+            output_bitrate=args.output_bitrate,
+            template=args.template,
+            add_settings={
+                "mdx_denoise": args.mdx_enable_denoise,
+                "vr_aggr": args.vr_aggression,
+                "vr_post_process": args.vr_enable_post_process,
+                "vr_high_end_process": args.vr_high_end_process,
+                "econom_mode": args.econom_mode
+            },
+            selected_stems=args.selected_stems,
+            use_spec_invert=args.use_spec_invert
+        )
     else:
         # Получение актуального списка моделей
         file_path: str = MvseplessModelManager().models_info_path
@@ -2012,7 +2254,8 @@ if __name__ == "__main__":
             ),
             False, 
             False, 
-            True
+            True,
+            False
         ).launch(
             server_name="0.0.0.0",
             server_port=None,

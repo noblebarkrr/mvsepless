@@ -1,0 +1,28 @@
+{
+    "mbr_hybrid_aname": {
+        "model_type": "mel_band_roformer",
+        "category": "Инструментал и вокал",
+        "id": 13456,
+        "full_name": "ANAME TEST",
+        "stems": [
+            "vocals",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/MelBandRoformer_Hybrid_Arch.pth?download=true",
+        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config_hybrid.yaml?download=true"
+    },
+    "custom_model": {
+        "model_type": "mel_band_roformer",
+        "category": "custom",
+        "id": 1,
+        "full_name": "",
+        "stems": [
+            "vocals",
+            "other"
+        ],
+        "target_instrument": null,
+        "checkpoint_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/MelBandRoformer_Hybrid_Arch.pth?download=true",
+        "config_url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/resolve/main/config_hybrid.yaml?download=true"
+    }
+}

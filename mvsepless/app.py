@@ -344,7 +344,8 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         theme: gr.Theme, 
         add_app: bool = True, 
         plugins: bool = True, 
-        add_vbach: bool = False
+        add_vbach: bool = False,
+        model_manager_add: bool = True
     ) -> gr.Blocks:
         """
         Создать пользовательский интерфейс
@@ -866,56 +867,66 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 return gr.update(value="")
 
             # Вкладка менеджера моделей
-            with gr.Tab(_i18n("tab_model_manager")):
-                with gr.Tab(_i18n("tab_download_model")):
-                    with gr.Group():
-                        select_dwm_preset = gr.Dropdown(
-                            label=_i18n("select_preset"),
-                            interactive=True,
-                            choices=list(self.dwm_presets.keys()),
-                            value=None,
-                        )
-                        select_dwm_names = gr.Dropdown(
-                            label=_i18n("select_models"),
-                            interactive=True,
-                            choices=default_model,
-                            value=[],
-                            multiselect=True
-                        )
-                        dwm_status = gr.Textbox(
-                            container=False, 
-                            lines=3, 
-                            interactive=False, 
-                            max_lines=3, 
-                            visible=False
-                        )
-                        download_dwm_button = gr.Button(_i18n("download_btn"))
-                        
-                        select_dwm_preset.change(
-                            lambda x: gr.update(value=self.parse_models_from_dwm_preset(x)),
-                            inputs=select_dwm_preset, 
-                            outputs=select_dwm_names, 
-                            trigger_mode="once"
-                        )
-                        
-                        download_dwm_button.click(
-                            lambda: gr.update(visible=True), 
-                            outputs=dwm_status
-                        ).then(
-                            lambda x: (self.batch_download(x), gr.update(visible=False)),
-                            inputs=select_dwm_names, 
-                            outputs=[gr.State(None), dwm_status]
-                        )
-                        
-                with gr.Tab(_i18n("tab_delete_models")):
-                    gr.Markdown(f"<h3><center>{_i18n('delete_all_warning')}</center></h3>")
-                    delete_models_cache_btn = gr.Button(_i18n("delete_all_btn"))
-                    delete_models_cache_btn.click(self.delete_models_cache, inputs=None, outputs=None)
+            if model_manager_add:
+                with gr.Tab(_i18n("tab_model_manager")):
+                    with gr.Tab(_i18n("tab_download_model")):
+                        with gr.Group():
+                            select_dwm_preset = gr.Dropdown(
+                                label=_i18n("select_preset"),
+                                interactive=True,
+                                choices=list(self.dwm_presets.keys()),
+                                value=None,
+                            )
+                            select_dwm_names = gr.Dropdown(
+                                label=_i18n("select_models"),
+                                interactive=True,
+                                choices=default_model,
+                                value=[],
+                                multiselect=True
+                            )
+                            dwm_status = gr.Textbox(
+                                container=False, 
+                                lines=3, 
+                                interactive=False, 
+                                max_lines=3, 
+                                visible=False
+                            )
+                            download_dwm_button = gr.Button(_i18n("download_btn"))
+                            
+                            select_dwm_preset.change(
+                                lambda x: gr.update(value=self.parse_models_from_dwm_preset(x)),
+                                inputs=select_dwm_preset, 
+                                outputs=select_dwm_names, 
+                                trigger_mode="once"
+                            )
+                            
+                            download_dwm_button.click(
+                                lambda: gr.update(visible=True), 
+                                outputs=dwm_status
+                            ).then(
+                                lambda x: (self.batch_download(x), gr.update(visible=False)),
+                                inputs=select_dwm_names, 
+                                outputs=[gr.State(None), dwm_status]
+                            )
+                            
+                    with gr.Tab(_i18n("tab_delete_models")):
+                        gr.Markdown(f"<h3><center>{_i18n('delete_all_warning')}</center></h3>")
+                        delete_models_cache_btn = gr.Button(_i18n("delete_all_btn"), variant="stop")
+                        delete_models_cache_btn.click(self.delete_models_cache, inputs=None, outputs=None)
 
             # Импорт дополнительных модулей
-            from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI, AudioApp
+            from additional_app import AutoEnsembless, ManualEnsembless, PluginManager, Inverter_UI, AudioApp, CustomSeparator
             
             if add_app:
+                with gr.Tab(_i18n("tab_custom_separation")):
+                    _custom_sep = CustomSeparator(
+                        self.input_files, 
+                        self.upload_files, 
+                        user_directory, 
+                        device=self.device,
+                        history=self.history
+                    )
+                    _custom_sep.UI()
                 with gr.Tab(_i18n("tab_audio_processing")):
                     _audio_app = AudioApp(user_directory)
                     _audio_app.UI()
