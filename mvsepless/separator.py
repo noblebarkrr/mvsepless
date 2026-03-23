@@ -584,7 +584,8 @@ class MvseplessModelManager:
             if "use_amp" not in data.keys():
                 if "training" not in data:
                     data["training"] = {}
-                data["training"]["use_amp"] = True
+                if model_type not in ["htdemucs"]:
+                    data["training"]["use_amp"] = True
 
             if model_type not in ["vr", "htdemucs"]:
                 if "inference" not in data:
