@@ -25,15 +25,12 @@ diffq>=0.2.1
 julius>=0.2.3
 openunmix
 asteroid
-prodigyopt
-torch_log_wmse
 rotary_embedding_torch
 gradio<6.0
 omegaconf
 beartype
 spafe
 torch_audiomentations
-auraloss
 onnx>=1.17
 onnx2torch>=0.3.0
 onnxruntime>=1.17
