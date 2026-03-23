@@ -70,7 +70,7 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple[Any, Any]:
         from models.vr_arch import VRNet
         model = VRNet(**dict(config.model))
     elif model_type == "htdemucs":
-        from models.demucs4ht import get_model
+        from models.demucs import get_model
         model = get_model(config)
     elif model_type == "mel_band_roformer":
         if hasattr(config, "windowed"):
