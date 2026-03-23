@@ -422,6 +422,7 @@ def demix_demucs(
     mix = torch.tensor(mix, dtype=torch.float32)
     chunk_size = config.training.samplerate * config.training.segment
     num_instruments = len(config.training.instruments)
+    denoise = config.inference.denoise
     num_overlap = config.inference.num_overlap
     step = chunk_size // num_overlap
     fade_size = chunk_size // 10
@@ -454,8 +455,12 @@ def demix_demucs(
 
                 if len(batch_data) >= batch_size or i >= mix.shape[1]:
                     arr = torch.stack(batch_data, dim=0)
-                    x = model(arr)
-
+                    if denoise:
+                        x1 = model(arr)
+                        x2 = model(-arr)
+                        x = (x1 + -x2) * 0.5
+                    else:
+                        x = model(arr)
                     window = windowing_array.clone()
                     if i - step == 0:
                         window[:fade_size] = 1
@@ -514,6 +519,7 @@ def demix_generic(
     chunk_size = config.audio.chunk_size
     instruments = prefer_target_instrument(config)
     num_instruments = len(instruments)
+    denoise = config.inference.denoise
     num_overlap = config.inference.num_overlap
 
     fade_size = chunk_size // 10
@@ -553,7 +559,12 @@ def demix_generic(
 
                 if len(batch_data) >= batch_size or i >= mix.shape[1]:
                     arr = torch.stack(batch_data, dim=0)
-                    x = model(arr)
+                    if denoise:
+                        x1 = model(arr)
+                        x2 = model(-arr)
+                        x = (x1 + -x2) * 0.5
+                    else:
+                        x = model(arr)
 
                     window = windowing_array.clone()
                     if i - step == 0:

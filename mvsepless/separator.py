@@ -537,7 +537,7 @@ class MvseplessModelManager:
     def conf_editor(
         self, 
         config_path: str, 
-        mdx_denoise: bool, 
+        denoise: bool, 
         vr_aggr: int, 
         vr_enable_post_process: bool, 
         vr_high_end_process: bool, 
@@ -549,7 +549,7 @@ class MvseplessModelManager:
         
         Args:
             config_path: Путь к конфигу
-            mdx_denoise: Шумоподавление для MDX
+            denoise: Шумоподавление для MDX
             vr_aggr: Агрессивность для VR
             vr_enable_post_process: Постобработка для VR
             vr_high_end_process: Обработка высоких частот для VR
@@ -571,7 +571,7 @@ class MvseplessModelManager:
 
         def conf_edit(
             config_path: str, 
-            mdx_denoise: bool, 
+            denoise: bool, 
             vr_aggr: int, 
             vr_enable_post_process: bool, 
             vr_high_end_process: bool, 
@@ -596,10 +596,10 @@ class MvseplessModelManager:
             if "inference" in data and data["inference"].get("batch_size") != 1:
                 data["inference"]["batch_size"] = 1
 
-            if model_type == "mdxnet":
+            if model_type not in ["vr"]:
                 if "inference" not in data:
                     data["inference"] = {}
-                data["inference"]["denoise"] = mdx_denoise
+                data["inference"]["denoise"] = denoise
 
             elif model_type == "vr":
                 if "inference" not in data:
@@ -650,7 +650,7 @@ class MvseplessModelManager:
 
         conf_edit(
             config_path, 
-            mdx_denoise, 
+            denoise, 
             vr_aggr, 
             vr_enable_post_process, 
             vr_high_end_process, 
@@ -661,7 +661,7 @@ class MvseplessModelManager:
     def install_model(
         self,
         model_name: str,
-        mdx_denoise: bool = False,
+        denoise: bool = False,
         vr_aggr: int = 5,
         vr_post_process: bool = False,
         vr_high_end_process: bool = False,
@@ -674,7 +674,7 @@ class MvseplessModelManager:
         
         Args:
             model_name: Имя модели
-            mdx_denoise: Шумоподавление для MDX
+            denoise: Шумоподавление для MDX
             vr_aggr: Агрессивность для VR
             vr_post_process: Постобработка для VR
             vr_high_end_process: Обработка высоких частот для VR
@@ -707,7 +707,7 @@ class MvseplessModelManager:
             conf, ckpt = result[0], result[1]
             self.conf_editor(
                 conf, 
-                mdx_denoise, 
+                denoise, 
                 vr_aggr, 
                 vr_post_process, 
                 vr_high_end_process, 
@@ -1265,7 +1265,7 @@ class Separator(MvseplessModelManager):
         template: str = "NAME_(STEM)_MODEL",
         selected_stems: Optional[List[str]] = None,
         add_settings: Dict[str, Any] = {
-            "mdx_denoise": False,
+            "denoise": False,
             "vr_aggr": 5,
             "vr_post_process": False,
             "vr_high_end_process": False,
@@ -1315,7 +1315,7 @@ class Separator(MvseplessModelManager):
 
         os.makedirs(output_dir, exist_ok=True)
 
-        mdx_denoise: bool = add_settings.get("mdx_denoise", False)
+        denoise: bool = add_settings.get("denoise", False)
         vr_aggr: int = add_settings.get("vr_aggr", 5)
         vr_post_process: bool = add_settings.get("vr_post_process", False)
         vr_high_end_process: bool = add_settings.get("vr_high_end_process", False)
@@ -1325,7 +1325,7 @@ class Separator(MvseplessModelManager):
         device = add_settings.get("device", self.device)
 
         id, conf, ckpt, model_type = self.install_model(
-            model_name, mdx_denoise, vr_aggr, vr_post_process, vr_high_end_process, econom_mode, progress=progress
+            model_name, denoise, vr_aggr, vr_post_process, vr_high_end_process, econom_mode, progress=progress
         )
 
         input_list: List[str] = []
@@ -1462,7 +1462,7 @@ class Separator(MvseplessModelManager):
         template: str = "NAME_(STEM)_MODEL",
         selected_stems: Optional[List[str]] = None,
         add_settings: Dict[str, Any] = {
-            "mdx_denoise": False,
+            "denoise": False,
             "vr_aggr": 5,
             "vr_post_process": False,
             "vr_high_end_process": False,
@@ -1517,7 +1517,7 @@ class Separator(MvseplessModelManager):
 
         os.makedirs(output_dir, exist_ok=True)
 
-        mdx_denoise: bool = add_settings.get("mdx_denoise", False)
+        denoise: bool = add_settings.get("denoise", False)
         vr_aggr: int = add_settings.get("vr_aggr", 5)
         vr_post_process: bool = add_settings.get("vr_post_process", False)
         vr_high_end_process: bool = add_settings.get("vr_high_end_process", False)
@@ -1992,7 +1992,7 @@ if __name__ == "__main__":
     sep_p.add_argument("-inst", "--ext_inst", action="store_true", help=_i18n("ext_inst_help"))
     sep_p.add_argument("-invspec", "--use_spec_invert", action="store_true", help=_i18n("use_spec_invert_help"))
     sep_p.add_argument("-dw", "--install_only", action="store_true", help=_i18n("install_only_help"))
-    sep_p.add_argument("--mdx_enable_denoise", action="store_true", help=_i18n("mdx_denoise_help"))
+    sep_p.add_argument("--mdx_enable_denoise", action="store_true", help=_i18n("denoise_help"))
     sep_p.add_argument("--vr_aggression", type=int, default=5, help=_i18n("vr_aggression_help"), metavar="AGGR")
     sep_p.add_argument("--vr_high_end_process", action="store_true", help=_i18n("vr_high_end_help"))
     sep_p.add_argument("--vr_enable_post_process", action="store_true", help=_i18n("vr_post_process_help"))
@@ -2008,7 +2008,7 @@ if __name__ == "__main__":
     csep_p.add_argument("-stem", "--selected_stems", type=str, nargs="*", default=None, help=_i18n("selected_stems_help"), metavar="STEM")
     csep_p.add_argument("-inst", "--ext_inst", action="store_true", help=_i18n("ext_inst_help"))
     csep_p.add_argument("-invspec", "--use_spec_invert", action="store_true", help=_i18n("use_spec_invert_help"))
-    csep_p.add_argument("--mdx_enable_denoise", action="store_true", help=_i18n("mdx_denoise_help"))
+    csep_p.add_argument("--mdx_enable_denoise", action="store_true", help=_i18n("denoise_help"))
     csep_p.add_argument("--vr_aggression", type=int, default=5, help=_i18n("vr_aggression_help"), metavar="AGGR")
     csep_p.add_argument("--vr_high_end_process", action="store_true", help=_i18n("vr_high_end_help"))
     csep_p.add_argument("--vr_enable_post_process", action="store_true", help=_i18n("vr_post_process_help"))
@@ -2200,7 +2200,7 @@ if __name__ == "__main__":
                 output_bitrate=args.output_bitrate,
                 template=args.template,
                 add_settings={
-                    "mdx_denoise": args.mdx_enable_denoise,
+                    "denoise": args.mdx_enable_denoise,
                     "vr_aggr": args.vr_aggression,
                     "vr_post_process": args.vr_enable_post_process,
                     "vr_high_end_process": args.vr_high_end_process,
@@ -2224,7 +2224,7 @@ if __name__ == "__main__":
             output_bitrate=args.output_bitrate,
             template=args.template,
             add_settings={
-                "mdx_denoise": args.mdx_enable_denoise,
+                "denoise": args.mdx_enable_denoise,
                 "vr_aggr": args.vr_aggression,
                 "vr_post_process": args.vr_enable_post_process,
                 "vr_high_end_process": args.vr_high_end_process,

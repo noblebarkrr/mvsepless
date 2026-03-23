@@ -279,6 +279,7 @@ class CustomSeparator(Separator, GradioHelper):
         use_spec_invert: bool = False,
         econom_mode: Optional[bool] = None,
         chunk_duration: float = 300,
+        denoise: bool = False,
         progress: gr.Progress = gr.Progress(track_tqdm=True),
     ) -> List:
         """
@@ -295,7 +296,7 @@ class CustomSeparator(Separator, GradioHelper):
             vr_aggr: Агрессивность для VR
             vr_post_process: Постобработка для VR
             vr_high_end_process: Обработка высоких частот для VR
-            mdx_denoise: Шумоподавление для MDX
+            denoise: Шумоподавление для MDX
             use_spec_invert: Использовать инверсию спектрограммы
             econom_mode: Эконом-режим
             chunk_duration: Длительность чанка
@@ -309,7 +310,8 @@ class CustomSeparator(Separator, GradioHelper):
         
         add_settings: Dict[str, Any] = {
             "add_single_sep_text_progress": None,
-            "single_mode": False
+            "single_mode": False,
+            "denoise": denoise
         }
         
         if econom_mode is not None:
@@ -412,6 +414,11 @@ class CustomSeparator(Separator, GradioHelper):
                                     value=False, 
                                     interactive=True
                                 )
+                                denoise = gr.Checkbox(
+                                    label=_i18n("denoise"),
+                                    value=False,
+                                    interactive=True,
+                                )
                                 
                                 gr.Markdown(f"<h4>{_i18n('economy_settings')}</h4>", container=True)
                                 econom_mode = gr.Checkbox(
@@ -497,7 +504,8 @@ class CustomSeparator(Separator, GradioHelper):
                                 stems,
                                 use_spec_for_extract_instrumental,
                                 econom_mode,
-                                chunk_dur_slider
+                                chunk_dur_slider,
+                                denoise
                             ],
                             outputs=[sep_state, status],
                             show_progress="full",
@@ -514,6 +522,7 @@ class CustomSeparator(Separator, GradioHelper):
                             u_spec: bool,
                             ec_mode: bool,
                             ch_dur: float,
+                            den: bool,
                             progress: gr.Progress = gr.Progress(track_tqdm=True),
                         ) -> Tuple[gr.update, gr.update]:
                             results = self._separate_batch(
@@ -527,6 +536,7 @@ class CustomSeparator(Separator, GradioHelper):
                                 u_spec,
                                 ec_mode,
                                 ch_dur * 60,
+                                den,
                                 progress=progress,
                             )
                             return gr.update(value=str(results)), gr.update(visible=False)
@@ -801,10 +811,11 @@ class CustomSeparator(Separator, GradioHelper):
         def refresh_all_models() -> Tuple[gr.update, gr.update, gr.update]:
             models = self.get_mn()
             first_model = models[0] if models else None
+            first_model2 = [models[0]] if models else []
             return (
                 gr.update(choices=models, value=first_model),
                 gr.update(choices=models, value=first_model),
-                gr.update(choices=models, value=[first_model]),
+                gr.update(choices=models, value=first_model2),
             )
 
 class AutoEnsembless(Separator, GradioHelper):

@@ -278,7 +278,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         vr_aggr: int = 5,
         vr_post_process: bool = False,
         vr_high_end_process: bool = False,
-        mdx_denoise: bool = False,
+        denoise: bool = False,
         use_spec_invert: bool = False,
         econom_mode: Optional[bool] = None,
         chunk_duration: float = 300,
@@ -298,7 +298,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
             vr_aggr: Агрессивность для VR
             vr_post_process: Постобработка для VR
             vr_high_end_process: Обработка высоких частот для VR
-            mdx_denoise: Шумоподавление для MDX
+            denoise: Шумоподавление для MDX
             use_spec_invert: Использовать инверсию спектрограммы
             econom_mode: Эконом-режим
             chunk_duration: Длительность чанка
@@ -311,7 +311,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
         self.chunk_duration = chunk_duration
         
         add_settings: Dict[str, Any] = {
-            "mdx_denoise": mdx_denoise,
+            "denoise": denoise,
             "vr_aggr": vr_aggr,
             "vr_post_process": vr_post_process,
             "vr_high_end_process": vr_high_end_process,
@@ -487,18 +487,16 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                         interactive=True
                                     )
                                     
-                                    gr.Markdown(f"<h4>{_i18n('mdx_settings')}</h4>", container=True)
-                                    mdx_denoise = gr.Checkbox(
-                                        label=_i18n("mdx_denoise"),
-                                        value=False,
-                                        interactive=True,
-                                    )
-                                    
                                     gr.Markdown(f"<h4>{_i18n('invert_settings')}</h4>", container=True)
                                     use_spec_for_extract_instrumental = gr.Checkbox(
                                         label=_i18n("use_spectrogram_invert"), 
                                         value=False, 
                                         interactive=True
+                                    )
+                                    denoise = gr.Checkbox(
+                                        label=_i18n("denoise"),
+                                        value=False,
+                                        interactive=True,
                                     )
                                     
                                     gr.Markdown(f"<h4>{_i18n('economy_settings')}</h4>", container=True)
@@ -583,7 +581,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     output_bitrate,
                                     template,
                                     stems,
-                                    mdx_denoise,
+                                    denoise,
                                     vr_aggr,
                                     vr_enable_post_process,
                                     vr_enable_high_end_process,
@@ -603,7 +601,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                 output_bitrate: int,
                                 template: str,
                                 stems: List[str],
-                                mdx_denoise: bool,
+                                denoise: bool,
                                 vr_aggr: int,
                                 vr_pp: bool,
                                 vr_hip: bool,
@@ -623,7 +621,7 @@ class SeparatorGradio(GradioHelper, DownloadModelManager):
                                     vr_aggr,
                                     vr_pp,
                                     vr_hip,
-                                    mdx_denoise,
+                                    denoise,
                                     u_spec,
                                     ec_mode,
                                     ch_dur * 60,
