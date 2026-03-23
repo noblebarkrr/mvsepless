@@ -1,3 +1,4 @@
+import os
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
@@ -70,7 +71,9 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple[Any, Any]:
         from models.vr_arch import VRNet
         model = VRNet(**dict(config.model))
     elif model_type == "htdemucs":
-        from models.demucs import get_model
+        models_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+        sys.path.append(models_path)
+        from demucs import get_model
         model = get_model(config)
     elif model_type == "mel_band_roformer":
         if hasattr(config, "windowed"):
