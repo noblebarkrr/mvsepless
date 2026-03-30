@@ -43,7 +43,7 @@ class VRNet:
         self,
         model_params={},
         nout=None,
-        nout_lstm=None,
+        nout_lstm=None, **kwargs
     ):
         self.enable_post_process = False
         self.post_process_threshold = 0.2
