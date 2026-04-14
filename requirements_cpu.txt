@@ -47,5 +47,6 @@ tenacity
 pyworld
 gdown
 pyloudnorm
+pope-pytorch
 setuptools<76.0
 
