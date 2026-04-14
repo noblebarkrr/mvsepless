@@ -126,6 +126,36 @@ def fno_compitable(index_url: Optional[str] = None) -> bool:
                 
     return fno_c
 
+def pope_compitable(index_url: Optional[str] = None) -> bool:
+    """
+    Проверяет совместимость с FNO (Fourier Neural Operator)
+    
+    Args:
+        index_url: URL индекса пакетов
+    
+    Returns:
+        True если совместимо
+    """
+    is_torch_2 = False
+    fno_c = False
+    latest_version_torch = get_latest_version("torch", index_url)
+    
+    if not latest_version_torch:
+        print(_i18n("torch_version_not_found"))
+        return False
+        
+    lvt = latest_version_torch.split(".")
+    lvt = [int(n_) for n_ in lvt if n_.isdigit()]
+    
+    for i, num in enumerate(lvt, start=1):
+        if i == 1:
+            if num == 2:
+                is_torch_2 = True
+        elif i == 2:
+            if num >= 5 and is_torch_2:
+                fno_c = True
+                
+    return fno_c
 
 def is_nvidia_gpu_present() -> bool:
     """
@@ -329,6 +359,9 @@ if __name__ == "__main__":
         if fno_compitable(args.index_url):
             reqs.append("neuraloperator==1.0.2")
             print(_i18n("fno_compatible_detected"))
+        if pope_compitable(args.index_url):
+            reqs.append("pope-pytorch")
+            print(_i18n("pope_compatible_detected"))
             
     if args.force:
         print(_i18n("force_install_warning"))
