@@ -448,16 +448,17 @@ class BSRoformer(Module):
             freq_rotary_embed = RotaryEmbedding(dim = dim_head)
             time_pope_embed = freq_pope_embed = None
 
-        for _ in range(depth):
+        for layer_index in range(depth):
             tran_modules = []
+            is_first = layer_index == 0
             if linear_transformer_depth > 0:
-                tran_modules.append(Transformer(depth=linear_transformer_depth, linear_attn=True, add_value_residual=residual_value, **transformer_kwargs))
+                tran_modules.append(Transformer(depth=linear_transformer_depth, linear_attn=True, add_value_residual=not is_first, **transformer_kwargs))
             tran_modules.append(
                 Transformer(
                     depth=time_transformer_depth,
                     rotary_embed=time_rotary_embed,
                     pope_embed=time_pope_embed,
-                    add_value_residual=residual_value,
+                    add_value_residual=not is_first,
                     **transformer_kwargs
                 )
             )
@@ -466,7 +467,7 @@ class BSRoformer(Module):
                     depth=freq_transformer_depth,
                     rotary_embed=freq_rotary_embed,
                     pope_embed=freq_pope_embed,
-                    add_value_residual=residual_value,
+                    add_value_residual=not is_first,
                     **transformer_kwargs
                 )
             )
