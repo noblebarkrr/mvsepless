@@ -379,7 +379,7 @@ DEFAULT_FREQS_PER_BANDS = (
     128, 129,
 )
 
-class BSRoformer(Module):
+class BSSiameseRoformer(Module):
 
     @beartype
     def __init__(
