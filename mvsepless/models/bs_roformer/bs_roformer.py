@@ -92,7 +92,8 @@ class Attention(Module):
             dropout=0.,
             rotary_embed=None,
             flash=True,
-            pope_embed=None
+            pope_embed=None,
+            learned_value_residual_mix = False
     ):
         super().__init__()
         self.heads = heads
@@ -109,6 +110,8 @@ class Attention(Module):
         self.norm = RMSNorm(dim)
         self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=False)
 
+        self.to_value_residual_mix = nn.Linear(dim, heads) if learned_value_residual_mix else None
+
         self.to_gates = nn.Linear(dim, heads)
 
         self.to_out = nn.Sequential(
@@ -116,13 +119,14 @@ class Attention(Module):
             nn.Dropout(dropout)
         )
 
-    def forward(self, x):
+    def forward(self, x, value_residual = None):
         x = self.norm(x)
 
         q, k, v = rearrange(self.to_qkv(x), 'b n (qkv h d) -> qkv b h n d', qkv=3, h=self.heads)
 
+        orig_v = v
+
         if exists(self.pope_embed):
-            assert _HAS_POPE, "PoPE requested but PoPE_pytorch is not installed"
             out = flash_attn_with_pope(
                 q, k, v,
                 pos_emb=self.pope_embed(q.shape[-2]),
@@ -132,6 +136,13 @@ class Attention(Module):
             q = self.rotary_embed.rotate_queries_or_keys(q)
             k = self.rotary_embed.rotate_queries_or_keys(k)
             out = self.attend(q, k, v)
+        elif exists(self.to_value_residual_mix):
+            mix = self.to_value_residual_mix(x)
+            mix = rearrange(mix, 'b n h -> b h n 1').sigmoid()
+
+            assert exists(value_residual)
+            v = v.lerp(value_residual, mix)
+            out = self.attend(q, k, v)
         else:
             out = self.attend(q, k, v)
 
@@ -139,7 +150,7 @@ class Attention(Module):
         out = out * rearrange(gates, 'b n h -> b h n 1').sigmoid()
 
         out = rearrange(out, 'b h n d -> b n (h d)')
-        return self.to_out(out)
+        return self.to_out(out), orig_v
 
 
 class LinearAttention(Module):
@@ -212,6 +223,7 @@ class Transformer(Module):
             pope_embed=None,
             flash_attn=True,
             linear_attn=False,
+            add_value_residual = False
     ):
         super().__init__()
         self.layers = ModuleList([])
@@ -233,7 +245,8 @@ class Transformer(Module):
                     dropout=attn_dropout,
                     rotary_embed=rotary_embed,
                     pope_embed=pope_embed,
-                    flash=flash_attn
+                    flash=flash_attn,
+                    learned_value_residual_mix=add_value_residual
                 )
 
             self.layers.append(ModuleList([
@@ -397,6 +410,7 @@ class BSRoformer(Module):
             use_torch_checkpoint=False,
             skip_connection=False,
             use_pope: bool = False,
+            residual_value: bool = False
     ):
         super().__init__()
 
@@ -419,7 +433,6 @@ class BSRoformer(Module):
         )
 
         if use_pope:
-            assert _HAS_POPE, "PoPE requested but PoPE_pytorch is not installed"
             time_pope_embed = PoPE(dim=dim_head, heads=heads)
             freq_pope_embed = PoPE(dim=dim_head, heads=heads)
             time_rotary_embed = None
@@ -432,12 +445,13 @@ class BSRoformer(Module):
         for _ in range(depth):
             tran_modules = []
             if linear_transformer_depth > 0:
-                tran_modules.append(Transformer(depth=linear_transformer_depth, linear_attn=True, **transformer_kwargs))
+                tran_modules.append(Transformer(depth=linear_transformer_depth, linear_attn=True, add_value_residual=residual_value, **transformer_kwargs))
             tran_modules.append(
                 Transformer(
                     depth=time_transformer_depth,
                     rotary_embed=time_rotary_embed,
                     pope_embed=time_pope_embed,
+                    add_value_residual=residual_value
                     **transformer_kwargs
                 )
             )
@@ -446,6 +460,7 @@ class BSRoformer(Module):
                     depth=freq_transformer_depth,
                     rotary_embed=freq_rotary_embed,
                     pope_embed=freq_pope_embed,
+                    add_value_residual=residual_value
                     **transformer_kwargs
                 )
             )
