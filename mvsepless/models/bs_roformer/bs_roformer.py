@@ -451,7 +451,7 @@ class BSRoformer(Module):
                     depth=time_transformer_depth,
                     rotary_embed=time_rotary_embed,
                     pope_embed=time_pope_embed,
-                    add_value_residual=residual_value
+                    add_value_residual=residual_value,
                     **transformer_kwargs
                 )
             )
@@ -460,7 +460,7 @@ class BSRoformer(Module):
                     depth=freq_transformer_depth,
                     rotary_embed=freq_rotary_embed,
                     pope_embed=freq_pope_embed,
-                    add_value_residual=residual_value
+                    add_value_residual=residual_value,
                     **transformer_kwargs
                 )
             )
