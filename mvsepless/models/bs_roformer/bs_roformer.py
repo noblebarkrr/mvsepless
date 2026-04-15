@@ -256,13 +256,19 @@ class Transformer(Module):
 
         self.norm = RMSNorm(dim) if norm_output else nn.Identity()
 
-    def forward(self, x):
-
+    def forward(self, x, value_residual=None):
+        first_values = None
+        
         for attn, ff in self.layers:
-            x = attn(x) + x
+            attn_out, next_values = attn(x, value_residual=value_residual)
+            
+            if first_values is None:
+                first_values = next_values
+            
+            x = attn_out + x
             x = ff(x) + x
-
-        return self.norm(x)
+        
+        return self.norm(x), first_values
 
 
 # bandsplit module
@@ -547,7 +553,7 @@ class BSRoformer(Module):
         assert (not self.stereo and channels == 1) or (
                     self.stereo and channels == 2),\
             ('stereo needs to be set to True if passing in audio signal that is stereo (channel dimension of 2).'
-             ' also need to be False if mono (channel dimension of 1)')
+            ' also need to be False if mono (channel dimension of 1)')
 
         # to stft
 
@@ -586,6 +592,11 @@ class BSRoformer(Module):
         # axial / hierarchical attention
 
         store = [None] * len(self.layers)
+        
+        # Initialize value residuals if residual_value is enabled
+        time_v_residual = None
+        freq_v_residual = None
+        
         for i, transformer_block in enumerate(self.layers):
 
             if len(transformer_block) == 3:
@@ -593,10 +604,10 @@ class BSRoformer(Module):
 
                 x, ft_ps = pack([x], 'b * d')
                 if self.use_torch_checkpoint:
-                    x = checkpoint(linear_transformer, x, use_reentrant=False)
+                    linear_out, _ = checkpoint(linear_transformer, x, use_reentrant=False)
                 else:
-                    x = linear_transformer(x)
-                x, = unpack(x, ft_ps, 'b * d')
+                    linear_out, _ = linear_transformer(x)
+                x, = unpack(linear_out, ft_ps, 'b * d')
             else:
                 time_transformer, freq_transformer = transformer_block
 
@@ -605,23 +616,34 @@ class BSRoformer(Module):
                 for j in range(i):
                     x = x + store[j]
 
+            # Time transformer
             x = rearrange(x, 'b t f d -> b f t d')
             x, ps = pack([x], '* t d')
 
             if self.use_torch_checkpoint:
-                x = checkpoint(time_transformer, x, use_reentrant=False)
+                time_out, next_time_v_residual = checkpoint(time_transformer, x, use_reentrant=False)
             else:
-                x = time_transformer(x)
+                time_out, next_time_v_residual = time_transformer(x, value_residual=time_v_residual)
 
+            if time_v_residual is None:
+                time_v_residual = next_time_v_residual
+                
+            x = time_out
             x, = unpack(x, ps, '* t d')
             x = rearrange(x, 'b f t d -> b t f d')
+            
+            # Frequency transformer
             x, ps = pack([x], '* f d')
 
             if self.use_torch_checkpoint:
-                x = checkpoint(freq_transformer, x, use_reentrant=False)
+                freq_out, next_freq_v_residual = checkpoint(freq_transformer, x, use_reentrant=False)
             else:
-                x = freq_transformer(x)
+                freq_out, next_freq_v_residual = freq_transformer(x, value_residual=freq_v_residual)
 
+            if freq_v_residual is None:
+                freq_v_residual = next_freq_v_residual
+                
+            x = freq_out
             x, = unpack(x, ps, '* f d')
 
             if self.skip_connection:
