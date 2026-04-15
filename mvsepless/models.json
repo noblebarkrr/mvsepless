@@ -2055,7 +2055,7 @@
             "vocals"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/BS-Roformers/resolve/main/bs_vocals_v1.ckpt?download=true",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals1_aname.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals_anvuew_config.yaml?download=true"
     },
     "bs_vocals2_aname": {
@@ -2068,8 +2068,8 @@
             "vocals"
         ],
         "target_instrument": "vocals",
-        "checkpoint_url": "https://huggingface.co/Aname-Tommy/BS-Roformers/resolve/main/v2_weights.ckpt?download=true",
-        "config_url": "https://huggingface.co/Aname-Tommy/BS-Roformers/resolve/main/config_v2.yaml?download=true"
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals2_aname.ckpt?download=true",
+        "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/bs_roformer/bs_vocals2_aname_config.yaml?download=true"
     },
     "bs_orch_xlancer": {
         "model_type": "bs_roformer",
