@@ -107,6 +107,9 @@ def get_model_from_config(model_type: str, config_path: str) -> Tuple[Any, Any]:
         elif hasattr(config, "unwa_inst_large_2"):
             from models.bs_roformer import BSRoformer_2
             model = BSRoformer_2(**dict(config.model))
+        elif hasattr(self.config, "siamese"):
+            from models.bs_roformer import BSSiameseRoformer
+            model = BSSiameseRoformer(**dict(config.model))
         else:
             from models.bs_roformer import BSRoformer
             model = BSRoformer(**dict(config.model))
