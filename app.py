@@ -2110,5 +2110,6 @@ if __name__ == "__main__":
     app = App()
     if not args.full:
         app.update_info()
+        app.load_info()
     app_ui = app.UI(theme, not args.full)
     app_ui.launch(allowed_paths=["/"], debug=True, share=args.share, server_port=args.port, show_api=True, server_name="0.0.0.0")
