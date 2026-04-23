@@ -904,55 +904,54 @@ class MSSI: # Music Source Separation Inference
             windowing_array = _getWindowingArray(chunk_size, fade_size)
             use_amp = getattr(self.config.training, "use_amp", True)
 
-            with torch.cuda.amp.autocast(enabled=use_amp):
-                with torch.inference_mode():
-                    req_shape = (num_instruments,) + mix.shape
-                    result = torch.zeros(req_shape, dtype=torch.float32)
-                    counter = torch.zeros(req_shape, dtype=torch.float32)
+            with torch.inference_mode():
+                req_shape = (num_instruments,) + mix.shape
+                result = torch.zeros(req_shape, dtype=torch.float32)
+                counter = torch.zeros(req_shape, dtype=torch.float32)
 
-                    i = 0
-                    batch_data = []
-                    batch_locations = []
-                    denoise_str = " "+_i18n("denoise") if denoise else ""
-                    with tqdm(total=mix.shape[1], desc=_i18n("processing") + denoise_str + str(add_text), unit=_i18n("samples")) as progress_bar:
-                        while i < mix.shape[1]:
-                            part = mix[:, i : i + chunk_size].to(self.device)
-                            chunk_len = part.shape[-1]
-                            pad_mode = "reflect" if chunk_len > chunk_size // 2 else "constant"
-                            part = nn.functional.pad(
-                                part, (0, chunk_size - chunk_len), mode=pad_mode, value=0
-                            )
+                i = 0
+                batch_data = []
+                batch_locations = []
+                denoise_str = " "+_i18n("denoise") if denoise else ""
+                with tqdm(total=mix.shape[1], desc=_i18n("processing") + denoise_str + str(add_text), unit=_i18n("samples")) as progress_bar:
+                    while i < mix.shape[1]:
+                        part = mix[:, i : i + chunk_size].to(self.device)
+                        chunk_len = part.shape[-1]
+                        pad_mode = "reflect" if chunk_len > chunk_size // 2 else "constant"
+                        part = nn.functional.pad(
+                            part, (0, chunk_size - chunk_len), mode=pad_mode, value=0
+                        )
 
-                            batch_data.append(part)
-                            batch_locations.append((i, chunk_len))
-                            i += step
+                        batch_data.append(part)
+                        batch_locations.append((i, chunk_len))
+                        i += step
 
-                            if len(batch_data) >= batch_size or i >= mix.shape[1]:
-                                arr = torch.stack(batch_data, dim=0)
-                                if denoise:
-                                    x1 = self.model(arr)
-                                    x2 = self.model(-arr)
-                                    x = (x1 + -x2) * 0.5
-                                else:
-                                    x = self.model(arr)
-                                window = windowing_array.clone()
-                                if i - step == 0:
-                                    window[:fade_size] = 1
-                                elif i >= mix.shape[1]:
-                                    window[-fade_size:] = 1
+                        if len(batch_data) >= batch_size or i >= mix.shape[1]:
+                            arr = torch.stack(batch_data, dim=0)
+                            if denoise:
+                                x1 = self.model(arr)
+                                x2 = self.model(-arr)
+                                x = (x1 + -x2) * 0.5
+                            else:
+                                x = self.model(arr)
+                            window = windowing_array.clone()
+                            if i - step == 0:
+                                window[:fade_size] = 1
+                            elif i >= mix.shape[1]:
+                                window[-fade_size:] = 1
 
-                                for j, (start, seg_len) in enumerate(batch_locations):
-                                    result[..., start : start + seg_len] += (
-                                        x[j, ..., :seg_len].cpu() * window[..., :seg_len]
-                                    )
-                                    counter[..., start : start + seg_len] += window[..., :seg_len]               
+                            for j, (start, seg_len) in enumerate(batch_locations):
+                                result[..., start : start + seg_len] += (
+                                    x[j, ..., :seg_len].cpu() * window[..., :seg_len]
+                                )
+                                counter[..., start : start + seg_len] += window[..., :seg_len]               
 
-                                batch_data.clear()
-                                batch_locations.clear()
-                            progress_bar.update(step)
-                        estimated_sources = result / counter
-                        estimated_sources = estimated_sources.detach().cpu().numpy()
-                        np.nan_to_num(estimated_sources, copy=False, nan=0.0)
+                            batch_data.clear()
+                            batch_locations.clear()
+                        progress_bar.update(step)
+                    estimated_sources = result / counter
+                    estimated_sources = estimated_sources.detach().cpu().numpy()
+                    np.nan_to_num(estimated_sources, copy=False, nan=0.0)
             
             if num_instruments <= 1:
                 self.output_arrays = estimated_sources
