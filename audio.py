@@ -859,32 +859,33 @@ def mono_to_stereo(
 
 
 def stereo_to_mono(y: np.ndarray, to_flatten: bool = False) -> np.ndarray:
-    """
-    Преобразовать стерео в моно
-    
-    Args:
-        y: Стерео массив
-        to_flatten: Вернуть плоский массив
-    
-    Returns:
-        Моно массив
-    """
     channels, samples, array_index, flatten = get_info_array(y)
     orig_dtype = y.dtype
     y = convert_to_dtype(y, np.float32)
+    
     if channels > 1:
         mono = create_zero_array(samples, np.float64)
         for ch in split_channels(y):
             mono = mono + gain(ch, (1 / channels))
+        
         if not to_flatten:
-            if array_index == 0:
-                return convert_to_dtype(mono.reshape((1, -1)), orig_dtype)
-            else:
-                return convert_to_dtype(mono.reshape((-1, 1)), orig_dtype)
+            # Сохраняем ту же ориентацию, что и входной массив, но с 1 каналом
+            if array_index == 0:  # вход был (samples, channels)
+                return convert_to_dtype(mono.reshape(-1, 1), orig_dtype)
+            else:  # array_index == 1 или flatten, вход был (channels, samples)
+                return convert_to_dtype(mono.reshape(1, -1), orig_dtype)
         else:
             return convert_to_dtype(mono, orig_dtype)
     else:
-        return convert_to_dtype(y, orig_dtype)
+        if to_flatten and not flatten:
+            return convert_to_dtype(y.flatten(), orig_dtype)
+        elif not to_flatten and flatten:
+            if array_index == 0:
+                return convert_to_dtype(y.reshape(-1, 1), orig_dtype)
+            else:
+                return convert_to_dtype(y.reshape(1, -1), orig_dtype)
+        else:
+            return convert_to_dtype(y, orig_dtype)
 
 
 def multi_channel_array_from_arrays(
@@ -1232,16 +1233,18 @@ def ensemble(
     ensemble_type: str = ensemble_types[0],
     weights: List[float] = [],  
     dtype: np.dtype = np.float32,
+    disable_progress: bool = False,
 ) -> Tuple[np.ndarray, int]:
     """
     Создать ансамбль из нескольких предсказаний
     
     Args:
-        pred_tracks: Список предсказаний
+        pred_tracks: Список предсказаний (ожидается форма [channels, samples])
         srs: Список частот дискретизации
-        weights: Веса
-        ensemble_type: Алгоритм объединения
+        ensemble_type: Алгоритм объединения ('avg_fft', 'min_fft', 'max_fft', 'median_fft')
+        weights: Веса для avg_fft
         dtype: Тип данных
+        disable_progress: Отключить отображение прогресса
     
     Returns:
         Кортеж (результат, частота дискретизации)
@@ -1257,10 +1260,8 @@ def ensemble(
                 weights = weights[:len(pred_tracks)]
             elif len(weights) < len(pred_tracks):
                 weights = weights + [1.0] * (len(pred_tracks) - len(weights))
-            else:
-                pass  
         else:
-            weights = [1] * len(pred_tracks)
+            weights = [1.0] * len(pred_tracks)
         total_weight = sum(weights)
     
     # Подгоняем все треки к одной длине и частоте
@@ -1268,47 +1269,80 @@ def ensemble(
     
     sft = get_stft_obj(result_sr, n_fft=2048, hop=1024)
     final_length = pred_tracks[0].shape[-1]
-    ensemble_wav_channels = []
-
-    for ch_idx in range(2):  # Для каждого канала (L и R)
-        accumulator = None
+    
+    # Инициализируем аккумуляторы для левого и правого каналов
+    if ensemble_type == "avg_fft":
+        left_accumulator = None
+        right_accumulator = None
+    elif ensemble_type in ["min_fft", "max_fft", "median_fft"]:
+        left_accumulator = []
+        right_accumulator = []
+    
+    # Обрабатываем все треки, для каждого сразу оба канала
+    with tqdm(
+        total=len(pred_tracks),
+        desc=_i18n("ensemble_processing"),
+        unit=_i18n("track"),
+        disable=disable_progress,
+        leave=False
+    ) as pbar:
         
-        for i, track in tqdm(enumerate(pred_tracks), desc=_i18n("processing")+" | ["+str(ch_idx)+"]", unit=_i18n("arrays")):
-            # Извлекаем канал и считаем STFT
-            spec = sft.stft(track[ch_idx].astype(np.float32))
+        for i, track in enumerate(pred_tracks):
+            # Получаем STFT для левого и правого каналов
+            spec_left = sft.stft(convert_to_dtype(track[0], np.float32))
+            spec_right = sft.stft(convert_to_dtype(track[1], np.float32))
             
             if ensemble_type == "avg_fft":
-                weighted_spec = spec * weights[i]
-                if accumulator is None:
-                    accumulator = weighted_spec
+                weighted_left = spec_left * weights[i]
+                weighted_right = spec_right * weights[i]
+                
+                if left_accumulator is None:
+                    left_accumulator = weighted_left
+                    right_accumulator = weighted_right
                 else:
-                    accumulator += weighted_spec
+                    left_accumulator += weighted_left
+                    right_accumulator += weighted_right
+                    
             elif ensemble_type in ["min_fft", "max_fft", "median_fft"]:
-                # Для медианы и экстремумов собираем стек для одного канала
-                if i == 0:
-                    accumulator = [spec]
-                else:
-                    accumulator.append(spec)
+                left_accumulator.append(spec_left)
+                right_accumulator.append(spec_right)
             
-            del spec
-
-        # Финализация алгоритма
-        if ensemble_type == "avg_fft":
-            res_spec = accumulator / total_weight
-        elif ensemble_type == "median_fft":
-            res_spec = np.median(np.real(accumulator), axis=0) + 1j * np.median(np.imag(accumulator), axis=0)
-        elif ensemble_type == "min_fft":
-            res_spec = lambda_min(np.array(accumulator), axis=0, key=np.abs)
-        elif ensemble_type == "max_fft":
-            res_spec = absmax(np.array(accumulator), axis=0)
-        else:
-            raise ValueError(_i18n("unknown_etype", alg=ensemble_type))
+            del spec_left, spec_right
+            pbar.update(1)
+    
+    # Финализация алгоритма для обоих каналов
+    if ensemble_type == "avg_fft":
+        left_res_spec = left_accumulator / total_weight
+        right_res_spec = right_accumulator / total_weight
         
-        ensemble_wav_channels.append(sft.istft(res_spec, k1=final_length))
-        del accumulator
-
-    result = multi_channel_array_from_arrays(*ensemble_wav_channels, index=1, dtype=dtype)
-    print(_i18n("ensemble_complete"))
+    elif ensemble_type == "median_fft":
+        # Медиана для комплексных чисел через разделение на действительную и мнимую части
+        left_real = np.real(left_accumulator)
+        left_imag = np.imag(left_accumulator)
+        right_real = np.real(right_accumulator)
+        right_imag = np.imag(right_accumulator)
+        
+        left_res_spec = np.median(left_real, axis=0) + 1j * np.median(left_imag, axis=0)
+        right_res_spec = np.median(right_real, axis=0) + 1j * np.median(right_imag, axis=0)
+        
+    elif ensemble_type == "min_fft":
+        left_res_spec = lambda_min(np.array(left_accumulator), axis=0, key=np.abs)
+        right_res_spec = lambda_min(np.array(right_accumulator), axis=0, key=np.abs)
+        
+    elif ensemble_type == "max_fft":
+        left_res_spec = absmax(np.array(left_accumulator), axis=0)
+        right_res_spec = absmax(np.array(right_accumulator), axis=0)
+        
+    else:
+        raise ValueError(_i18n("unknown_etype", alg=ensemble_type))
+    
+    # Восстанавливаем сигналы
+    left_channel = sft.istft(left_res_spec, k1=final_length)
+    right_channel = sft.istft(right_res_spec, k1=final_length)
+    
+    # Собираем многоканальный массив
+    result = multi_channel_array_from_arrays(left_channel, right_channel, index=1, dtype=dtype)
+    
     return result, result_sr
 
 

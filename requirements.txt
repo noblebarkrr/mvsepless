@@ -37,11 +37,7 @@ ml_dtypes
 resampy
 yt_dlp
 pyngrok
-## FNO
-tensorly
-tensorly-torch
-opt-einsum
-###
+rich
 torchcrepe
 praat-parselmouth
 faiss-cpu==1.11

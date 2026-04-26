@@ -42,11 +42,8 @@ ml_dtypes==0.5.4
 resampy==0.4.3
 yt_dlp
 pyngrok
-## FNO
-tensorly
-tensorly-torch
-opt-einsum
-###
+rich
+pyloudnorm
 torchcrepe==0.0.24
 praat-parselmouth==0.4.7
 faiss-cpu==1.7.2

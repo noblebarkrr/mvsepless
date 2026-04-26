@@ -545,6 +545,13 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "template_keys_manual_ensemble": "NAME (имя первого файла), TYPE (тип ансамбля)",
         "template_keys_subtract": "NAME (имя оригинального файла), TYPE (тип инверсии: waveform или spectrogram)",
         "template_keys_vbach": "NAME (имя файла), F0METHOD (метод F0), PITCH (изменение тона)",
+        "stems": "Стемы",
+        "target_instrument": "Целевой инструмент",
+        "yes": "Да",
+        "no": "Нет",
+        "zerogpu=true": "Среда выполнения - ZeroGPU",
+        "ensemble_processing": "Создание ансамбля",
+        "tracks": "треков"
     },
     "en": {
         "bytes": "B",
@@ -1073,7 +1080,14 @@ Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`
         "template_keys_auto_ensemble": "NAME (file name), TYPE (ensemble type), COUNT (number of models)",
         "template_keys_manual_ensemble": "NAME (first file name), TYPE (ensemble type)",
         "template_keys_subtract": "NAME (original file name), TYPE (inversion type: waveform or spectrogram)",
-        "template_keys_vbach": "NAME (file name), F0METHOD (F0 method), PITCH (pitch shift)"
+        "template_keys_vbach": "NAME (file name), F0METHOD (F0 method), PITCH (pitch shift)",
+        "stems": "Stems",
+        "target_instrument": "Target instrument",
+        "yes": "Yes",
+        "no": "No",
+        "zerogpu=true": "Runtime is ZeroGPU",
+        "ensemble_processing": "Creating ensemble",
+        "tracks": "tracks"
     }
 }
 

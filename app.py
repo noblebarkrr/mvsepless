@@ -232,9 +232,9 @@ class AutoEnsembleApp(UserDirectory):
             if path.exists():
                 return path.as_posix()
             else:
-                None
+                return None
         else:
-            None
+            return None
 
     def clear_flows(self):
         for flow in self.ensemble_base.glob("*.json"):
@@ -363,9 +363,9 @@ class VbachModelsDir(UserDirectory):
                 dw_file(pth_url, Namer.iter(self.pth_models_dir / self.get_pth_name_from_link(pth_url)))
                 pth_status = _i18n("vbach_model_pth_downloaded")+"\n"
             status_list = [status_unit for status_unit in [index_status, pth_status] if status_unit]
-            status = "\n".join(status_list)
+            status = "".join(status_list).rsplit("\n", maxsplit=1)[0]
             print(status)
-            gr.Info(title=status, message="")
+            gr.Info(message="<b>"+status.replace("\n", "<br>")+"</b>", title="")
         return status
 
     def upload_pth_model(self, pth_paths: str | Path | list[str | Path]):
@@ -381,7 +381,7 @@ class VbachModelsDir(UserDirectory):
                 added_files.append(dst)
         status = _i18n("vbach_added_pths")+": "+str(len(added_files))
         print(status)
-        gr.Info(title=status, message="")
+        gr.Info(message="<b>"+status.replace("\n", "<br>")+"</b>", title="")
         return status
 
     def upload_index_model(self, index_paths: str | Path):
@@ -398,7 +398,7 @@ class VbachModelsDir(UserDirectory):
                     added_files.append(dst)
         status = _i18n("vbach_added_indexes")+": "+str(len(added_files))
         print(status)
-        gr.Info(title=status, message="")
+        gr.Info(message="<b>"+status.replace("\n", "<br>")+"</b>", title="")
         return status
 
     def get_model_name(self, model_path: str | Path) -> str:
@@ -470,9 +470,9 @@ class CustomSeparationModelsDir(UserDirectory):
             dw_file(checkpoint_url, Namer.iter(self.checkpoints_dir / self.get_checkpoint_name_from_link(checkpoint_url)))
             checkpoint_status = _i18n("custom_model_checkpoint_downloaded")+"\n"
         status_list = [status_unit for status_unit in [config_status, checkpoint_status] if status_unit]
-        status = "\n".join(status_list)
+        status = "".join(status_list).rsplit("\n", maxsplit=1)[0]
         print(status)
-        gr.Info(title=status, message="")
+        gr.Info(message="<b>"+status.replace("\n", "<br>")+"</b>", title="")
         return status
 
     def upload_checkpoint(self, checkpoint_paths: str | Path | list[str | Path]):
@@ -489,7 +489,7 @@ class CustomSeparationModelsDir(UserDirectory):
                 added_files.append(dst)
         status = _i18n("custom_added_checkpoints")+": "+str(len(added_files))
         print(status)
-        gr.Info(title=status, message="")
+        gr.Info(message="<b>"+status.replace("\n", "<br>")+"</b>", title="")
         return status
 
     def upload_config(self, config_paths: str | Path | list[str | Path]):
@@ -507,7 +507,7 @@ class CustomSeparationModelsDir(UserDirectory):
                     added_files.append(dst)
         status = _i18n("custom_added_configs")+": "+str(len(added_files))
         print(status)
-        gr.Info(title=status, message="")
+        gr.Info(message="<b>"+status.replace("\n", "<br>")+"</b>", title="")
         return status
 
     def get_model_pair(self, checkpoint_path: str, config_path: str) -> tuple[str, str]:
@@ -679,9 +679,19 @@ class App(Separator):
                             sep_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
                             with gr.Accordion(label=_i18n("separation_params"), open=False):
                                 add_params_comp_seq = generate_add_params_component()
+
+                                @gr.on(outputs=[*add_params_comp_seq], show_progress="hidden")
+                                def get_actual_add_params():
+                                    updates = []
+                                    if not self.add_params_dict:
+                                        return tuple([gr.skip()] * len(add_params_list))
+                                    for key, value in self.add_params_dict.items():
+                                        updates.append(gr.update(value=value))
+                                    return tuple(updates)
+
                                 for comp in add_params_comp_seq:
                                     comp.change(
-                                        fn=self.update_add_params, 
+                                        fn=self.update_add_params,
                                         inputs=[*add_params_comp_seq], 
                                         show_progress="hidden"
                                     )
@@ -809,8 +819,17 @@ class App(Separator):
                                         nonlocal custom_add_params_dict
                                         custom_add_params_dict = dict(zip(add_params_list, values))
                                     
+                                    @gr.on(outputs=[*custom_add_params_comp_seq], show_progress="hidden")
+                                    def get_actual_add_params():
+                                        if not custom_add_params_dict:
+                                            return tuple([gr.skip()] * len(add_params_list))
+                                        updates = []
+                                        for key, value in custom_add_params_dict.items():
+                                            updates.append(gr.update(value=value))
+                                        return tuple(updates)
+                                    
                                     for comp in custom_add_params_comp_seq:
-                                        comp.change(
+                                        comp.input(
                                             fn=custom_update_add_params, 
                                             inputs=[*custom_add_params_comp_seq], 
                                             show_progress="hidden"

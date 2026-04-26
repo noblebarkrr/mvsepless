@@ -39,7 +39,7 @@ if spaces is not None:
     try:
         if hasattr(spaces, 'GPU'):
             zerogpu_available = True
-            print("zerogpu=true")
+            print(_i18n("zerogpu=true"))
             hf_spaces_gpu = spaces.GPU
     except:
         pass  # Если что-то пошло не так, оставляем заглушку

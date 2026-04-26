@@ -20,10 +20,11 @@ import numpy as np
 from typing import Literal, Optional, List, Tuple, Any, Dict
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
-from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list
+from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono
 from args_parser import parse_separator_args, tobool
 from namer import Namer
 from i18n import _i18n
+import contextlib
 
 class PathNotExist(Exception): pass
 class PathsNotExist(Exception): pass
@@ -38,6 +39,25 @@ class DemixError(Exception): pass
 class ConfigNotLoaded(Exception): pass
 class ModelNotLoaded(Exception): pass
 class ModelStateDictError(Exception): pass
+
+HAS_OLD_AMP = False
+if hasattr(torch, "cuda"):
+    if hasattr(torch.cuda, "amp"):
+        if hasattr(torch.cuda.amp, "autocast"):
+            HAS_OLD_AMP = True
+HAS_NEW_AMP = False
+if hasattr(torch, "amp"):
+    if hasattr(torch.amp, "autocast"):
+        HAS_NEW_AMP = True
+
+def get_autocast_context(device_type="cuda", enabled=True):
+    if HAS_NEW_AMP:
+        return torch.amp.autocast(device_type=device_type, enabled=enabled)
+    elif HAS_OLD_AMP:
+        return torch.cuda.amp.autocast(enabled=enabled)
+    else:
+        # Если AMP не поддерживается вообще
+        return contextlib.nullcontext() # Или пустой контекст
 
 def _getWindowingArray(window_size: int, fade_size: int) -> torch.Tensor:
     """
@@ -289,6 +309,10 @@ class MSSI: # Music Source Separation Inference
             return [self.target_instrument]
         else:
             return self.instruments
+
+    def print_instruments(self):
+        print(_i18n("stems")+": "+",".join(self.instruments))
+        print(_i18n("target_instrument")+": "+(self.target_instrument if self.target_instrument else _i18n("no")))
 
     def load_model_instance(self):
         if self.config is None or self.model_type is None:
@@ -599,7 +623,16 @@ class MSSI: # Music Source Separation Inference
 
     def load_array(self, array: np.ndarray, orig_sr: int):
         self.input_file_name = "temp_array"
+        if self.config is None:
+            raise ConfigNotLoaded(_i18n("config_is_not_loaded"))
+        mono_bool = False
+        if hasattr(self.config, "model"):
+            if hasattr(self.config.model, "stereo"):
+                mono_bool = not self.config.model.stereo
         self.input_mix = easy_resampler(array.copy(), orig_sr, self.sample_rate) if orig_sr != self.sample_rate else array.copy()
+        if mono_bool:
+            self.input_mix = stereo_to_mono(self.input_mix)
+
         print(_i18n("loaded_mix")+": "+_i18n("from_array"))
         print(_i18n("array_shape")+": "+str(self.input_mix.shape))
 
@@ -1116,62 +1149,61 @@ class MSSI: # Music Source Separation Inference
             batch_size: int = self.add_params.get("mdxc_batch_size", 1)
             use_amp = getattr(self.config.training, "use_amp", True)
 
-            with torch.cuda.amp.autocast(enabled=use_amp):
-                with torch.inference_mode():
-                    req_shape = (num_instruments,) + mix.shape
-                    result = torch.zeros(req_shape, dtype=torch.float32)
-                    counter = torch.zeros(req_shape, dtype=torch.float32)
+            with torch.inference_mode(), get_autocast_context(self.device.type, use_amp):
+                req_shape = (num_instruments,) + mix.shape
+                result = torch.zeros(req_shape, dtype=torch.float32)
+                counter = torch.zeros(req_shape, dtype=torch.float32)
 
-                    i = 0
-                    batch_data = []
-                    batch_locations = []
-                    denoise_str = " "+_i18n("denoise") if denoise else ""
-                    with tqdm(total=mix.shape[1], desc=_i18n("processing") + denoise_str + str(add_text), unit=_i18n("samples")) as progress_bar:
+                i = 0
+                batch_data = []
+                batch_locations = []
+                denoise_str = " "+_i18n("denoise") if denoise else ""
+                with tqdm(total=mix.shape[1], desc=_i18n("processing") + denoise_str + str(add_text), unit=_i18n("samples")) as progress_bar:
 
-                        while i < mix.shape[1]:
-                            part = mix[:, i : i + chunk_size].to(self.device)
-                            chunk_len = part.shape[-1]
+                    while i < mix.shape[1]:
+                        part = mix[:, i : i + chunk_size].to(self.device)
+                        chunk_len = part.shape[-1]
 
-                            pad_mode = "reflect" if chunk_len > chunk_size // 2 else "constant"
-                            part = nn.functional.pad(
-                                part, (0, chunk_size - chunk_len), mode=pad_mode, value=0
-                            )
+                        pad_mode = "reflect" if chunk_len > chunk_size // 2 else "constant"
+                        part = nn.functional.pad(
+                            part, (0, chunk_size - chunk_len), mode=pad_mode, value=0
+                        )
 
-                            batch_data.append(part)
-                            batch_locations.append((i, chunk_len))
-                            i += step
+                        batch_data.append(part)
+                        batch_locations.append((i, chunk_len))
+                        i += step
 
-                            if len(batch_data) >= batch_size or i >= mix.shape[1]:
-                                arr = torch.stack(batch_data, dim=0)
-                                if denoise:
-                                    x1 = self.model(arr)
-                                    x2 = self.model(-arr)
-                                    x = (x1 + -x2) * 0.5
-                                else:
-                                    x = self.model(arr)
+                        if len(batch_data) >= batch_size or i >= mix.shape[1]:
+                            arr = torch.stack(batch_data, dim=0)
+                            if denoise:
+                                x1 = self.model(arr)
+                                x2 = self.model(-arr)
+                                x = (x1 + -x2) * 0.5
+                            else:
+                                x = self.model(arr)
 
-                                window = windowing_array.clone()
-                                if i - step == 0:
-                                    window[:fade_size] = 1
-                                elif i >= mix.shape[1]:
-                                    window[-fade_size:] = 1
+                            window = windowing_array.clone()
+                            if i - step == 0:
+                                window[:fade_size] = 1
+                            elif i >= mix.shape[1]:
+                                window[-fade_size:] = 1
 
-                                for j, (start, seg_len) in enumerate(batch_locations):
-                                    result[..., start : start + seg_len] += (
-                                        x[j, ..., :seg_len].cpu() * window[..., :seg_len]
-                                    )
-                                    counter[..., start : start + seg_len] += window[..., :seg_len]                
+                            for j, (start, seg_len) in enumerate(batch_locations):
+                                result[..., start : start + seg_len] += (
+                                    x[j, ..., :seg_len].cpu() * window[..., :seg_len]
+                                )
+                                counter[..., start : start + seg_len] += window[..., :seg_len]                
 
-                                batch_data.clear()
-                                batch_locations.clear()
-                            progress_bar.update(step)
+                            batch_data.clear()
+                            batch_locations.clear()
+                        progress_bar.update(step)
 
-                        estimated_sources = result / counter
-                        estimated_sources = estimated_sources.detach().cpu().numpy()
-                        np.nan_to_num(estimated_sources, copy=False, nan=0.0)
+                    estimated_sources = result / counter
+                    estimated_sources = estimated_sources.detach().cpu().numpy()
+                    np.nan_to_num(estimated_sources, copy=False, nan=0.0)
 
-                        if length_init > 2 * border and border > 0:
-                            estimated_sources = estimated_sources[..., border:-border]
+                    if length_init > 2 * border and border > 0:
+                        estimated_sources = estimated_sources[..., border:-border]
 
             self.output_arrays = {k: v for k, v in zip(instruments, estimated_sources)}
             del mix, result, counter, batch_data, batch_locations
@@ -1279,7 +1311,6 @@ class MSSI: # Music Source Separation Inference
         else:
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
-        
 
     def load_model(self, model_type: str, ckpt: str, conf: str):
         self.clear_model()
@@ -1429,11 +1460,11 @@ class Separator(ModelManager):
     def unload_model(self):
         self.mssi.clear_model()
 
-    @hf_spaces_gpu
+    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def separate_base(self, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental):
-        self.mssi.clear_model()
+        self.mssi.clear_model() 
         self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
-        self.previous_model_name = model_name
+        self.mssi.print_instruments()
         results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental)
         self.mssi.clear_model()
         return results
@@ -1488,10 +1519,36 @@ class Separator(ModelManager):
         self.mssi.clear_model()
         self.mssi.load_model(model_type, checkpoint, config)
         self.previous_model_name = model_name
+        self.mssi.print_instruments()
         results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental)
         self.mssi.clear_model()
         return results
-    
+
+    def print_flow(self, flow):
+        """Print current ensemble flow in a formatted table (like show_info)"""
+        if not flow:
+            return
+        
+        console = rich.console.Console()
+        table = rich.table.Table(title="", show_lines=True)
+        table.add_column("#", style="cyan", no_wrap=True)
+        table.add_column(_i18n("model_name"))
+        table.add_column(_i18n("primary_stem"))
+        table.add_column(_i18n("invert"))
+        table.add_column(_i18n("weights"), justify="right")
+        
+        for idx, (model_name, primary_stem, invert, weight) in enumerate(flow, start=1):
+            invert_str = _i18n("yes") if invert else _i18n("no")
+            table.add_row(
+                str(idx),
+                model_name,
+                primary_stem,
+                invert_str,
+                f"{weight:.2f}" if isinstance(weight, (int, float)) else str(weight)
+            )
+        
+        console.print(table)
+
     def auto_ensemble(
         self, 
         input_file: str | Path,
@@ -1512,6 +1569,9 @@ class Separator(ModelManager):
             raise PathNotExist(_i18n("path_not_exist"))
         if not check(input_file):
             raise FileIsNotAudio(_i18n("file_is_not_audio", path=input_file))
+        self.print_flow(flow)
+        if not flow:
+            return None
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         model_count = len(flow)
@@ -1538,6 +1598,7 @@ class Separator(ModelManager):
                 checkpoint, config = self.generate_local_paths(model_name)
                 self.mssi.clear_model()
                 self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
+                self.mssi.print_instruments()
                 output, model_sr = self.mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert)
                 auto_ensembler.add_array(output, model_sr)
                 weights.append(weight)
