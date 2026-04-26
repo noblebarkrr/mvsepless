@@ -55,6 +55,7 @@ def get_model(config):
     model_capacity = 32, 128
     if config.model.nout and config.model.nout_lstm:
         model_capacity = config.model.nout, config.model.nout_lstm
+        is_vr_51_model = True
     if config.model.nn_arch_size in vr_5_1_models or is_vr_51_model:
         model = nets_new.CascadedNet(
             model_params.param["bins"] * 2,
