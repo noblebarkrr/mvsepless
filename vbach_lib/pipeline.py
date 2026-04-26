@@ -203,7 +203,7 @@ class VC:
             "output_layer": 9 if version == "v1" else 12,
         }
 
-        with torch.no_grad(), torch.cuda.amp.autocast(enabled=self.is_half):
+        with torch.no_grad():
             logits = model.extract_features(**inputs)
             feats = model.final_proj(logits[0]) if version == "v1" else logits[0]
 
