@@ -395,6 +395,7 @@ class MelBandRoformer(Module):
             use_torch_checkpoint=False,
             skip_connection=False,
             use_pope: bool = False,
+            **kwargs
     ):
         super().__init__()
 

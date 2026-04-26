@@ -417,7 +417,8 @@ class BSRoformer(Module):
             use_torch_checkpoint=False,
             skip_connection=False,
             use_pope: bool = False,
-            residual_value: bool = False
+            residual_value: bool = False,
+            **kwargs
     ):
         super().__init__()
 

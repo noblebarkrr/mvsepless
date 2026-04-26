@@ -14,11 +14,6 @@ from torch.utils.checkpoint import checkpoint
 
 from .attend import Attend
 
-try:
-    from .attend_sage import AttendSage
-except ImportError:
-    pass
-
 
 def l2norm(t):
     return F.normalize(t, dim=-1, p=2)
@@ -89,7 +84,6 @@ class Attention(Module):
         shared_out_bias=None,
         rotary_embed: RotaryEmbedding | None = None,
         flash=True,
-        sage_attention=False,
     ):
         super().__init__()
         self.heads = heads
@@ -98,10 +92,7 @@ class Attention(Module):
 
         self.rotary_embed = rotary_embed
 
-        if sage_attention:
-            self.attend = AttendSage(flash=flash, dropout=dropout)  # type: ignore
-        else:
-            self.attend = Attend(flash=flash, dropout=dropout)  # type: ignore
+        self.attend = Attend(flash=flash, dropout=dropout)  # type: ignore
 
         self.norm = CustomNorm(dim)
         self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=(shared_qkv_bias is not None))
@@ -151,7 +142,6 @@ class LinearAttention(Module):
         scale=8,
         flash=True,
         dropout=0.0,
-        sage_attention=False,
     ):
         super().__init__()
         dim_inner = dim_head * heads
@@ -164,10 +154,7 @@ class LinearAttention(Module):
 
         self.temperature = nn.Parameter(torch.ones(heads, 1, 1))
 
-        if sage_attention:
-            self.attend = AttendSage(scale=scale, dropout=dropout, flash=flash)  # type: ignore
-        else:
-            self.attend = Attend(scale=scale, dropout=dropout, flash=flash)
+        self.attend = Attend(scale=scale, dropout=dropout, flash=flash)
 
         self.to_out = nn.Sequential(
             Rearrange("b h d n -> b n (h d)"), nn.Linear(dim_inner, dim, bias=False)
@@ -201,9 +188,9 @@ class Transformer(Module):
         rotary_embed: RotaryEmbedding | None = None,
         flash_attn=True,
         linear_attn=False,
-        sage_attention=False,
         shared_qkv_bias=None,
         shared_out_bias=None,
+        **kwargs
     ):
         super().__init__()
         self.layers = ModuleList([])
@@ -217,7 +204,6 @@ class Transformer(Module):
                     heads=heads,
                     dropout=attn_dropout,
                     flash=flash_attn,
-                    sage_attention=sage_attention,
                 )
             else:
                 attn = Attention(
@@ -229,7 +215,6 @@ class Transformer(Module):
                     shared_out_bias=shared_out_bias,
                     rotary_embed=rotary_embed,
                     flash=flash_attn,
-                    sage_attention=sage_attention,
                 )
 
             self.layers.append(
@@ -372,9 +357,9 @@ class BSRoformer_SW(Module):
         mlp_expansion_factor=4,
         use_torch_checkpoint=False,
         skip_connection=False,
-        sage_attention=False,
         use_shared_bias=False,
         chunk_size: int = 588800,
+        **kwargs
     ):
         super().__init__()
 
@@ -385,9 +370,6 @@ class BSRoformer_SW(Module):
         self.skip_connection = skip_connection
 
         self.layers = ModuleList([])
-
-        if sage_attention:
-            print("Use Sage Attention")
 
         if use_shared_bias:
             dim_inner = heads * dim_head
@@ -402,7 +384,6 @@ class BSRoformer_SW(Module):
             ff_dropout=ff_dropout,
             flash_attn=flash_attn,
             norm_output=False,
-            sage_attention=sage_attention,
             shared_qkv_bias=self.shared_qkv_bias,
             shared_out_bias=self.shared_out_bias,
         )

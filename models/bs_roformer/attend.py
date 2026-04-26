@@ -98,11 +98,34 @@ class Attend(nn.Module):
         is_cuda = q.is_cuda
         config = self.cuda_config if is_cuda else self.cpu_config
 
-        with torch.backends.cuda.sdp_kernel(**config._asdict()):
-            out = F.scaled_dot_product_attention(
-                q, k, v, dropout_p=self.dropout if self.training else 0.0
-            )
-
+        old_sdp_kernel = False
+        if hasattr(torch, "backends"):
+            if hasattr(torch.backends, "cuda"):
+                if hasattr(torch.backends.cuda, "sdp_kernel"):
+                    old_sdp_kernel = True
+        new_sdp_kernel = False
+        if hasattr(torch, "nn"):
+            if hasattr(torch.nn, "attention"):
+                if hasattr(torch.nn.attention, "sdpa_kernel") and hasattr(torch.nn.attention, "SDPBackend"):
+                    new_sdp_kernel = True
+        
+        if old_sdp_kernel and not new_sdp_kernel:
+            with torch.backends.cuda.sdp_kernel(**config._asdict()):
+                out = F.scaled_dot_product_attention(
+                    q, k, v, dropout_p=self.dropout if self.training else 0.0
+                )
+        else:
+            backends = []
+            if config.enable_flash:
+                backends.append(torch.nn.attention.SDPBackend.FLASH_ATTENTION)
+            if config.enable_mem_efficient:
+                backends.append(torch.nn.attention.SDPBackend.EFFICIENT_ATTENTION)
+            if config.enable_math:
+                backends.append(torch.nn.attention.SDPBackend.MATH)
+            with torch.nn.attention.sdpa_kernel(backends):
+                out = F.scaled_dot_product_attention(
+                    q, k, v, dropout_p=self.dropout if self.training else 0.0
+                )
         return out
 
     def forward(self, q, k, v):
