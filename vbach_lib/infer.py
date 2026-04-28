@@ -158,7 +158,7 @@ class VbachConverter:
         self.vc = VC(self.tgt_sr, self.config, use_transformers)
         print(_i18n("checkpoint_loaded")+": "+Path(model_path).name)
 
-    @hf_spaces_gpu
+    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def convert_audio(
         self,
         audio_input: str | Path | list[str | Path],
@@ -211,8 +211,9 @@ class VbachConverter:
         for i, audio_input_path in enumerate(input_valid_files, start=1):
             try:
                 input_file_name = Path(audio_input_path).stem
+
                 mixtures, add_text = load_audio(audio_input_path, 16000, stereo_mode)
-                print(_i18n("loaded_mix")+": "+input_file_name)
+                print(_i18n("loaded_mix")+": "+Path(audio_input_path).name)
                 converted_mixtures = []
 
                 for mix, add_text_progress in zip(mixtures, add_text):
@@ -256,7 +257,7 @@ class VbachConverter:
 
         return processed_audios
 
-    @hf_spaces_gpu
+    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def convert_audio_custom_f0(
         self,
         audio_input: str | Path,
@@ -306,7 +307,7 @@ class VbachConverter:
             if check(audio_input):
                 input_file_name = Path(audio_input).stem
                 mix, sr = read(audio_input, sr=16000, mono=True, flatten=True)
-                print(_i18n("loaded_mix")+": "+input_file_name)
+                print(_i18n("loaded_mix")+": "+Path(audio_input).name)
             else:
                 raise FileIsNotAudio(_i18n("file_is_not_audio", path=audio_input))
 

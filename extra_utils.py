@@ -20,7 +20,7 @@ import ctypes
 import platform
 import numpy as np
 import yt_dlp
-import hashlib
+import subprocess
 
 try:
     import spaces
@@ -47,7 +47,39 @@ if spaces is not None:
 import torch
 tz = timezone(timedelta(hours=3))
 
+def get_gdrive_dir():
+    try:
+        result = subprocess.run(['/bin/mount'], capture_output=True, text=True)
+        for line in result.stdout.strip().split('\n'):
+            if 'type fuse.drive' in line:
+                parts = line.split(' type ')
+                if len(parts) >= 2:
+                    source_mount = parts[0]
+                    source, mount_point = source_mount.split(' on ')
+                    return mount_point
+    except:
+        pass
+    return None
 
+def easy_check_is_colab() -> bool:
+    """
+    Проверить, выполняется ли код в Google Colab
+    
+    Returns:
+        True если в Colab
+    """
+    if platform.machine() == "x86_64" and "Linux" in platform.platform():
+        try:
+            import google.colab
+            module_path: str = google.colab.__file__
+            if module_path.startswith("/usr/local/lib/python") and module_path.endswith("/dist-packages/google/colab/__init__.py"):
+                return True
+            else:
+                return False
+        except ImportError:
+            return False
+    else:
+        return False
 
 class DownloadError(Exception): pass
 
@@ -80,9 +112,6 @@ base_c_params = {
     }
 }
 
-def get_info():
-    pass
-
 def size_readable(size_bytes: int):
     if size_bytes == 0:
         return f"0 {_i18n('bytes')}"
@@ -94,6 +123,23 @@ def size_readable(size_bytes: int):
         size_bytes /= 1024
         i += 1
     return f"{size_bytes:.2f} {units[i]}"
+
+def get_size_folder(folder: str | Path):
+    folder_path = Path(folder)
+    return sum([file.stat().st_size for file in folder_path.rglob('*') if file.is_file()])
+
+def get_disk_usage(path="/content/drive/MyDrive", user_dir="", user_gdrive_dir="", list_subdirs=[]):
+    try:
+        usage = shutil.disk_usage(path)
+        
+        total_gb = size_readable(usage.total)
+        used_gb = size_readable(usage.used)
+        free_gb = size_readable(usage.free)
+        return f"""{_i18n("all_space")}: {total_gb}
+{_i18n("used_space")}: {used_gb}
+{_i18n("free_space")}: {free_gb}"""
+    except Exception as e:
+        return ""
 
 def define_audio_with_size(basename: bool = False, **kwargs):
     path = kwargs.get("value", None)
@@ -511,86 +557,3 @@ def extra_clear_torch_cache():
         try:
             torch._C._jit_pass_onnx_clear_scope_records()
         except Exception: pass
-
-class UserDirectory:
-    def __init__(self):
-        self.user_directory = Path('.')
-
-    def change_dir(self, dir: str):
-        self.user_directory = Path(dir)
-
-    def generate(self, name: str):
-        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
-        generated_directory = self.user_directory / name / timestamp
-        generated_directory.mkdir(parents=True, exist_ok=True)
-        return generated_directory
-    
-    def generate_from_dir(self, dir: str):
-        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
-        generated_directory = Path(dir) / timestamp
-        generated_directory.mkdir(parents=True, exist_ok=True)
-        return generated_directory
-
-class InputFilesDatabase(UserDirectory):
-    def __init__(self):
-        super().__init__()
-        self.input_dir_base = self.user_directory / "input"
-        self.input_dir_base.mkdir(parents=True, exist_ok=True)
-        self.input_base_json = self.input_dir_base / "inputs.json"
-        self.input_base = []
-        self.load()
-
-    def _write_decorator(func):
-        def wrapper(self, *args, **kwargs):
-            results_ = func(self, *args, **kwargs)
-            self.write()
-            return results_
-        return wrapper
-
-    def _load_decorator(func):
-        def wrapper(self, *args, **kwargs):
-            self.load()
-            results_ = func(self, *args, **kwargs)
-            return results_
-        return wrapper
-
-    def write(self):
-        self.input_base_json.write_text(json.dumps(self.input_base, ensure_ascii=False, indent=4), encoding="utf-8")
-
-    def load(self):
-        if self.input_base_json.exists():
-            self.input_base = json.loads(self.input_base_json.read_text("utf-8"))
-            print(_i18n("input_base_loaded"))
-
-    @_write_decorator
-    def upload(self, files, copy=False):
-        input_dir = self.generate_from_dir(self.input_dir_base)
-        uploaded_input_files = []
-        valid_files = get_audio_files_from_list(files, only_files=True)
-        for file in valid_files:
-            new_file = Namer.iter(input_dir / Path(file).name)
-            if copy:
-                shutil.copy2(file, new_file)
-            else:
-                shutil.move(file, new_file)
-            uploaded_input_files.append(new_file)
-        self.input_base.extend(uploaded_input_files)
-        return uploaded_input_files
-
-    @_write_decorator
-    def clear(self):
-        for path in self.input_base:
-            Path(path).unlink(missing_ok=True)
-        self.input_base.clear()
-        print(_i18n("input_base_cleared"))
-
-    def get_input_list(self):
-        return list(reversed(self.input_base))
-    
-class OutputDir(UserDirectory):
-    def __init__(self, dir: str = "output_mvsepless"):
-        super().__init__()
-        self.output_dir_name = dir
-
-    def gen_output_dir(self):
-        return self.generate(self.output_dir_name)

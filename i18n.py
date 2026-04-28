@@ -551,7 +551,22 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "no": "Нет",
         "zerogpu=true": "Среда выполнения - ZeroGPU",
         "ensemble_processing": "Создание ансамбля",
-        "tracks": "треков"
+        "tracks": "треков",
+        "app_user_dir_help": "Путь к директории для хранения пользовательских файлов",
+        "gdrive_mount_found": "Обнаружен привязанный Google Диск",
+        "copy_to_gdrive": "Копирование данных на Google Диск",
+        "dirs": "директорий",
+        "copy_to_gdrive_done": "Копирование завершено",
+        "copied_dirs": "Скопировано директорий",
+        "copy_from_current_user_dir_to_gdrive": "Копировать все пользовательские данные на Google Диск",
+        "google_drive": "Google Диск",
+        "copy_from_gdrive_to_current_user_dir": "Копировать все пользовательские данные с Google Диска в среду выполнения",
+        "copy_to_current_user_dir": "Копирование данных в среду выполнения",
+        "free_space": "Свободно",
+        "used_space": "Использовано",
+        "all_space": "Всего",
+        "used_space_data_local": "Обьем пользовательских данных в среде выполнения",
+        "used_space_data_gdrive": "Обьем пользовательских данных на Google Диске"
     },
     "en": {
         "bytes": "B",
@@ -1087,7 +1102,20 @@ Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`
         "no": "No",
         "zerogpu=true": "Runtime is ZeroGPU",
         "ensemble_processing": "Creating ensemble",
-        "tracks": "tracks"
+        "tracks": "tracks",
+        "app_user_dir_help": "Path to directories for storing user files",
+        "gdrive_mount_found": "Detected mounted Google Drive",
+        "copy_to_gdrive": "Copying data to Google Drive",
+        "dirs": "directories",
+        "copy_to_gdrive_done": "Copy complete",
+        "copied_dirs": "Directories copied",
+        "copy_from_current_user_dir_to_gdrive": "Copy all user data to Google Drive",
+        "google_drive": "Google Drive",
+        "free_space": "Free",
+        "used_space": "Used",
+        "all_space": "All",
+        "used_space_data_local": "User data space in runtime",
+        "used_space_data_gdrive": "User data space on Google Drive"
     }
 }
 

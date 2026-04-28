@@ -273,24 +273,30 @@ class MSSI: # Music Source Separation Inference
     def set_add_params(self, **kwargs):
         self.add_params = kwargs
 
-    def load_config(self, model_type: str, conf: str):
-        conf_ = Path(conf)
+    def load_config(self, model_type: str, conf: str | Path):
+        if not conf:
+            raise PathNotSpecified(_i18n("path_not_specified"))
+        self.conf_path = Path(conf)
+        if not self.conf_path.exists():
+            self.conf_path = None
+            raise PathNotExist(_i18n("path_not_exist"))
         if model_type not in self.model_types:
             raise UnknownModelType(_i18n("unknown_model_type", model_type=model_type))
         self.model_type = model_type
         try:
             if self.model_type == "htdemucs":
-                self.config = OmegaConf.load(conf_)
+                self.config = OmegaConf.load(self.conf_path)
                 self.sample_rate = self.config.training.samplerate
             else:
-                with conf_.open("r", encoding="utf-8") as f:
+                with self.conf_path.open("r", encoding="utf-8") as f:
                     self.config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
                     self.sample_rate = self.config.audio.sample_rate
             self.target_instrument = self.config.training.target_instrument
             self.instruments = self.config.training.instruments
-            print(_i18n("config_loaded")+": "+conf.name)
+            print(_i18n("config_loaded")+": "+self.conf_path.name)
         except FileNotFoundError:
             self.config = None
+            self.conf_path = None
             self.model_type = None
             self.target_instrument = None
             self.instruments = []
@@ -298,6 +304,7 @@ class MSSI: # Music Source Separation Inference
             raise FileNotFoundError(_i18n("config_not_found", path=conf)) from e
         except Exception as e:
             self.config = None
+            self.conf_path = None
             self.model_type = None
             self.target_instrument = None
             self.instruments = []
@@ -508,13 +515,13 @@ class MSSI: # Music Source Separation Inference
     def load_checkpoint(self, ckpt: str | Path):
         if not ckpt:
             raise PathNotSpecified(_i18n("path_not_specified"))
-        ckpt_ = Path(ckpt)
-        if not ckpt_.exists():
+        self.ckpt_path = Path(ckpt)
+        if not self.ckpt_path.exists():
+            self.ckpt_path = None
             raise PathNotExist(_i18n("path_not_exist"))
         if not self.model:
+            self.ckpt_path = None
             raise ModelNotLoaded(_i18n("model_not_loaded"))
-        
-        self.ckpt_path = ckpt_
 
         if self.model_type == "mdxnet":
             try:
@@ -1312,7 +1319,7 @@ class MSSI: # Music Source Separation Inference
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
 
-    def load_model(self, model_type: str, ckpt: str, conf: str):
+    def load_model(self, model_type: str, ckpt: str | Path, conf: str | Path):
         self.clear_model()
         self.load_config(model_type=model_type, conf=conf)
         self.load_model_instance()

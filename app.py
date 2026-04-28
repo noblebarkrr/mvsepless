@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*show_api.*") # Предупреждения скрыты
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*theme.*")
 import gradio as gr
 import sys
 import json
@@ -6,7 +9,7 @@ from urllib.parse import urlparse
 from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
-from extra_utils import tz, define_audio_with_size, update_audio_with_size, base_c_params, UserDirectory, InputFilesDatabase, OutputDir, one_element_list_to_value, dw_file, dw_yt_dlp
+from extra_utils import tz, define_audio_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage
 from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
@@ -18,9 +21,8 @@ from i18n import _i18n
 from args_parser import parse_app_args
 import tempfile
 import shutil
+from tqdm import tqdm
 from copy import deepcopy
-
-
 
 def generate_add_params_component():
     add_params_components = []
@@ -36,10 +38,183 @@ def generate_add_params_component():
                       add_params_components.append(gr.Checkbox(label=_i18n(component_name), value=params["default"], info=_i18n(params.get("info", "")), **base_c_params["base"]))
     return add_params_components
 
+USER_DIR = ""
+GDRIVE_DIR = get_gdrive_dir()
+def generate_user_dir_from_gdrive():
+    global GDRIVE_DIR
+    if GDRIVE_DIR:
+        user_dir = Path(GDRIVE_DIR, "MyDrive", "mvsepless-data")
+        user_dir.mkdir(parents=True, exist_ok=True)
+        return user_dir.as_posix()
+    else:
+        return None
+GDRIVE_USER_DIR = generate_user_dir_from_gdrive()
+
+def get_default_user_dir():
+    if easy_check_is_colab():
+        if GDRIVE_DIR:
+            print(_i18n("gdrive_mount_found"))
+            return GDRIVE_USER_DIR
+        else:
+            return USER_DIR
+    else:
+        return USER_DIR
+
+DEFAULT_USER_DIR = get_default_user_dir()
+
+def rename_user_dir_path(path: str, mode=0):
+    global GDRIVE_USER_DIR, USER_DIR
+    if path:
+        if mode == 0:
+            return (PurePosixPath(GDRIVE_USER_DIR) / PurePosixPath(path).relative_to(USER_DIR)).as_posix()
+        elif mode == 1:
+            return (PurePosixPath(USER_DIR) / PurePosixPath(path).relative_to(GDRIVE_USER_DIR)).as_posix()
+    else:
+        return None
+
+base_names_app_dirs = (
+    "input",
+    "output_mvsepless",
+    "history",
+    "ensemble_flows",
+    "vbach_models",
+    "f0_curves",
+    "custom_separation_models",
+    "vbach_output"
+)
+
+def copy_to_gdrive():
+    global GDRIVE_DIR, GDRIVE_USER_DIR, USER_DIR
+    if GDRIVE_DIR:
+        copied_dirs = []
+        dirs = [[dir, Path(USER_DIR, dir)] for dir in base_names_app_dirs]
+        for (dir_name, dir_path) in tqdm(dirs, desc=_i18n("copy_to_gdrive"), unit=_i18n("dirs")):
+            if dir_path.exists():
+                shutil.copytree(dir_path, Path(GDRIVE_USER_DIR, dir_name), dirs_exist_ok=True)
+                copied_dirs.append("")
+        print(_i18n("copied_dirs")+": "+str(len(copied_dirs)))
+        print(_i18n("copy_to_gdrive_done"))
+        gr.Info(title=_i18n("copy_to_gdrive_done"), message="")
+
+def copy_to_runtime():
+    global GDRIVE_DIR, GDRIVE_USER_DIR, USER_DIR
+    if GDRIVE_DIR:
+        copied_dirs = []
+        dirs = [[dir, Path(GDRIVE_USER_DIR, dir)] for dir in base_names_app_dirs]
+        for (dir_name, dir_path) in tqdm(dirs, desc=_i18n("copy_to_current_user_dir"), unit=_i18n("dirs")):
+            if dir_path.exists():
+                shutil.copytree(dir_path, Path(USER_DIR, dir_name), dirs_exist_ok=True)
+                copied_dirs.append("")
+        print(_i18n("copied_dirs")+": "+str(len(copied_dirs)))
+        print(_i18n("copy_to_gdrive_done"))
+        gr.Info(title=_i18n("copy_to_gdrive_done"), message="")
+
+class UserDirectory:
+    def __init__(self, custom_dir=USER_DIR):
+        self.user_directory = Path(custom_dir if custom_dir else DEFAULT_USER_DIR)
+
+    def change_dir(self, dir: str):
+        self.user_directory = Path(dir)
+
+    def generate(self, name: str):
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        generated_directory = self.user_directory / name / timestamp
+        generated_directory.mkdir(parents=True, exist_ok=True)
+        return generated_directory
+    
+    def generate_from_dir(self, dir: str):
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        generated_directory = Path(dir) / timestamp
+        generated_directory.mkdir(parents=True, exist_ok=True)
+        return generated_directory
+
+class InputFilesDatabase(UserDirectory):
+    def __init__(self):
+        super().__init__()
+        self.input_dir_base = self.user_directory / base_names_app_dirs[0]
+        self.input_dir_base.mkdir(parents=True, exist_ok=True)
+        self.input_base_json = self.input_dir_base / "inputs.json"
+        self.input_base = []
+        self.load()
+
+    def _write_decorator(func):
+        def wrapper(self, *args, **kwargs):
+            results_ = func(self, *args, **kwargs)
+            self.write()
+            return results_
+        return wrapper
+
+    def _load_decorator(func):
+        def wrapper(self, *args, **kwargs):
+            self.load()
+            results_ = func(self, *args, **kwargs)
+            return results_
+        return wrapper
+
+    @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.input_base)
+        new_data = []
+        if self.input_base_json.exists():
+            new_data: list = json.loads(self.input_base_json.read_text("utf-8"))
+
+        new_data2 = []
+        new_data_to_merge = []
+
+        for file_path in new_data:
+            new_data2.append(rename_user_dir_path(file_path, mode=mode))
+
+        for path2 in new_data2:
+            if path2 not in current_data:
+                new_data_to_merge.append(path2)
+
+        self.input_base = list(dict.fromkeys([*current_data, *new_data_to_merge]))
+
+    def write(self):
+        self.input_base_json.write_text(json.dumps(self.input_base, ensure_ascii=False, indent=4), encoding="utf-8")
+
+    def load(self):
+        if self.input_base_json.exists():
+            self.input_base = json.loads(self.input_base_json.read_text("utf-8"))
+            print(_i18n("input_base_loaded"))
+
+    @_write_decorator
+    def upload(self, files, copy=False):
+        input_dir = self.generate_from_dir(self.input_dir_base)
+        uploaded_input_files = []
+        valid_files = get_audio_files_from_list(files, only_files=True)
+        for file in valid_files:
+            new_file = Namer.iter(input_dir / Path(file).name)
+            if copy:
+                shutil.copy2(file, new_file)
+            else:
+                shutil.move(file, new_file)
+            uploaded_input_files.append(new_file)
+        self.input_base.extend(uploaded_input_files)
+        return uploaded_input_files
+
+    @_write_decorator
+    def clear(self):
+        for path in self.input_base:
+            Path(path).unlink(missing_ok=True)
+        self.input_base.clear()
+        print(_i18n("input_base_cleared"))
+
+    def get_input_list(self):
+        return list(reversed(self.input_base))
+    
+class OutputDir(UserDirectory):
+    def __init__(self, dir: str = base_names_app_dirs[1]):
+        super().__init__()
+        self.output_dir_name = dir
+
+    def gen_output_dir(self):
+        return self.generate(self.output_dir_name)
+
 class History(UserDirectory):
     def __init__(self, name: str = "mvsepless"):
         super().__init__()
-        self.history_dir_base = self.user_directory / "history"
+        self.history_dir_base = self.user_directory / base_names_app_dirs[2]
         self.history_dir_base.mkdir(parents=True, exist_ok=True)
         self.history_dict_json = self.history_dir_base / f"{name}.json"
         self.history_dict = {}
@@ -67,6 +242,32 @@ class History(UserDirectory):
             self.history_dict = json.loads(self.history_dict_json.read_text("utf-8"))
             print(_i18n("history_loaded"))
 
+    @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.history_dict)
+        new_data = {}
+        if self.history_dict_json.exists():
+            new_data: dict = json.loads(self.history_dict_json.read_text("utf-8"))
+            
+        new_data_to_merge = {}
+
+        for key, state in new_data.items():
+            new_state = []
+            for basename, stems_list in state:
+                new_stems_list = [basename]
+                new_stems_list.append([[stem_name, rename_user_dir_path(stem_path, mode=mode)] for stem_name, stem_path in stems_list])
+                new_state.extend(deepcopy(new_stems_list))
+            new_data[key] = deepcopy(new_state)
+
+        for key2, state2 in new_data.items():
+            if key2 not in list(current_data.keys()) and state2 != current_data.get(key2):
+                new_data_to_merge[key2] = state2
+
+        self.history_dict: dict = {
+            **current_data,
+            **new_data_to_merge
+        }
+
     def get_list(self, update_from_file=False):
         if update_from_file:
             self.load()
@@ -78,7 +279,7 @@ class History(UserDirectory):
         self.history_dict.update([(f"{timestamp} | {model_name}", deepcopy(state))])
 
     def get_from_history(self, key: str):
-        return deepcopy(self.history_dict.get(key, []))
+        return deepcopy(self.history_dict.get(key, None))
 
 class HistoryAutoEnsemble(History):
     def __init__(self):
@@ -97,6 +298,30 @@ class HistoryAutoEnsemble(History):
             results_ = func(self, *args, **kwargs)
             return results_
         return wrapper
+    
+    @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.history_dict)
+        new_data = {}
+        if self.history_dict_json.exists():
+            new_data: dict = json.loads(self.history_dict_json.read_text("utf-8"))
+        new_data_to_merge = {}
+
+        for key, state in new_data.items():
+            new_state = [
+                rename_user_dir_path(state[0], mode=mode),  # result
+                rename_user_dir_path(state[1], mode=mode),  # invert
+                [rename_user_dir_path(stem_path, mode=mode) for stem_path in state[2]]  # primary_stems_list
+            ]
+            new_data[key] = deepcopy(new_state)
+        for key2, state2 in new_data.items():
+            if key2 not in list(current_data.keys()) and state2 != current_data.get(key2):
+                new_data_to_merge[key2] = state2
+
+        self.history_dict: dict = {
+            **current_data,
+            **new_data_to_merge
+        }
 
     @_write_decorator
     def add_to_history(self, etype: str, output: str, inverted_output: str, primary_stems_list: list = []):
@@ -125,6 +350,29 @@ class HistoryManualEnsemble(History):
         return wrapper
 
     @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.history_dict)
+        new_data = {}
+        if self.history_dict_json.exists():
+            new_data: dict = json.loads(self.history_dict_json.read_text("utf-8"))
+        new_data_to_merge = {}
+
+        for key, state in new_data.items():
+            new_state = None
+            if state:
+                new_state = rename_user_dir_path(state, mode=mode)
+            new_data[key] = deepcopy(new_state)
+
+        for key2, state2 in new_data.items():
+            if key2 not in list(current_data.keys()) and state2 != current_data.get(key2):
+                new_data_to_merge[key2] = state2
+
+        self.history_dict: dict = {
+            **current_data,
+            **new_data_to_merge
+        }
+
+    @_write_decorator
     def add_to_history(self, etype: str, state: str):
         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
         self.history_dict.update([(f"{timestamp} | {etype}", deepcopy(state))])
@@ -151,6 +399,29 @@ class HistorySubtractor(History):
         return wrapper
 
     @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.history_dict)
+        new_data = {}
+        if self.history_dict_json.exists():
+            new_data: dict = json.loads(self.history_dict_json.read_text("utf-8"))
+        new_data_to_merge = {}
+
+        for key, state in new_data.items():
+            new_state = None
+            if state:
+                new_state = rename_user_dir_path(state, mode=mode)
+            new_data[key] = deepcopy(new_state)
+
+        for key2, state2 in new_data.items():
+            if key2 not in list(current_data.keys()) and state2 != current_data.get(key2):
+                new_data_to_merge[key2] = state2
+
+        self.history_dict: dict = {
+            **current_data,
+            **new_data_to_merge
+        }
+
+    @_write_decorator
     def add_to_history(self, itype: str, state: str):
         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
         self.history_dict.update([(f"{timestamp} | {itype}", deepcopy(state))])
@@ -174,6 +445,29 @@ class HistoryVbach(History):
         return wrapper
 
     @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.history_dict)
+        new_data = {}
+        if self.history_dict_json.exists():
+            new_data: dict = json.loads(self.history_dict_json.read_text("utf-8"))
+        new_data_to_merge = {}
+
+        for key, state in new_data.items():
+            new_state = []
+            if state:
+                new_state = [rename_user_dir_path(file_path, mode=mode) for file_path in state]
+            new_data[key] = deepcopy(new_state)
+
+        for key2, state2 in new_data.items():
+            if key2 not in list(current_data.keys()) and state2 != current_data.get(key2):
+                new_data_to_merge[key2] = state2
+
+        self.history_dict: dict = {
+            **current_data,
+            **new_data_to_merge
+        }
+
+    @_write_decorator
     def add_to_history(self, model_name: str, f0_method: str, pitch: int, output_files: list):
         timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
         self.history_dict.update([(f"{timestamp} | {model_name} | {f0_method} | {pitch}", deepcopy(output_files))])
@@ -185,7 +479,7 @@ class AutoEnsembleApp(UserDirectory):
     def __init__(self):
         super().__init__()
         self.state = []
-        self.ensemble_base = self.user_directory / "ensemble_flows"
+        self.ensemble_base = self.user_directory / base_names_app_dirs[3]
         self.ensemble_base.mkdir(parents=True, exist_ok=True)
         
     def write_flow(self, name: str):
@@ -294,7 +588,7 @@ class VbachModelsDir(UserDirectory):
     
     def __init__(self):
         super().__init__()
-        self.vbach_models_base = self.user_directory / "vbach_models"
+        self.vbach_models_base = self.user_directory / base_names_app_dirs[4]
         self.pth_models_dir = self.vbach_models_base / "pth"
         self.index_models_dir = self.vbach_models_base / "index"
         self.pth_models_dir.mkdir(parents=True, exist_ok=True)
@@ -408,7 +702,7 @@ class VbachModelsDir(UserDirectory):
 class F0GenerateOutPath(UserDirectory):
     def __init__(self):
         super().__init__()
-        self.f0_curves_dir = self.user_directory / "f0_curves"
+        self.f0_curves_dir = self.user_directory / base_names_app_dirs[5]
         self.f0_curves_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_output_path(self, name: str, f0_method: str):
@@ -421,7 +715,7 @@ class CustomSeparationModelsDir(UserDirectory):
     
     def __init__(self):
         super().__init__()
-        self.custom_models_base = self.user_directory / "custom_separation_models"
+        self.custom_models_base = self.user_directory / base_names_app_dirs[6]
         self.checkpoints_dir = self.custom_models_base / "checkpoints"
         self.configs_dir = self.custom_models_base / "configs"
         self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
@@ -617,14 +911,8 @@ class App(Separator):
             return gr.skip()
         return gr.update(choices=current_configs, value=value), current_configs
 
-    def get_actual_custom_sep_history_list(self, value, state):
-        """Get updated history list"""
-        current_history = self.custom_sep_history.get_list()
-        if current_history == state:
-            return gr.skip()
-        return gr.update(choices=current_history, value=value), current_history
-
     def UI(self, theme=None, hf_space_mode=False):
+        global GDRIVE_DIR, IS_CUSTOM_DIR
         all_models = self.get_all_models()
         default_model = all_models[0]
         stems_default = self.get_stems(default_model)
@@ -1472,7 +1760,7 @@ class App(Separator):
                             gr.Warning(_i18n("model_not_selected"))
                             return [], gr.skip()
                         
-                        output_dir = self.output_dir.generate("vbach_output")
+                        output_dir = self.output_dir.generate(base_names_app_dirs[7])
                         download_hubert(embedder_model, use_transformers)
                         results = self.vbach_converter.convert_audio(
                             audio_input=input_files,
@@ -1769,7 +2057,7 @@ class App(Separator):
                             gr.Warning(_i18n("no_f0_file_selected"))
                             return update_audio_with_size(label=_i18n("vbach_result"), value=None), gr.skip()
                         
-                        output_dir = self.output_dir.generate("vbach_custom_output")
+                        output_dir = self.output_dir.generate(base_names_app_dirs[7])
                         download_hubert(embedder_model, use_transformers)
                         
                         result = self.vbach_converter.convert_audio_custom_f0(
@@ -2072,6 +2360,21 @@ class App(Separator):
                                         def upload_vbach_index_fn(files: list, progress=gr.Progress(track_tqdm=True)):
                                             self.vbach_model_manager.upload_index_model(files)
                                             return gr.update(value=[])
+                                        
+            if GDRIVE_USER_DIR:
+                with gr.Tab(_i18n("google_drive")):
+                    gdrive_info = gr.Textbox(lines=3, label=_i18n("status"), interactive=False)
+                    gr.Timer().tick(lambda: gr.update(value=get_disk_usage(GDRIVE_DIR)), outputs=gdrive_info)
+                    copy_to_gdrive_btn = gr.Button(_i18n("copy_from_current_user_dir_to_gdrive"), **base_c_params["base"])
+                    @copy_to_gdrive_btn.click()
+                    def copy_to_gdrive_fn():
+                        copy_to_gdrive()
+                        self.input_files.update_data(0)
+                        self.history.update_data(0)
+                        self.auto_ensemble_history_app.update_data(0)
+                        self.manual_ensemble_history_app.update_data(0)
+                        self.subtract_history_app.update_data(0)
+                        self.vbach_history_app.update_data(0)
 
         return mvsepless_app
 
