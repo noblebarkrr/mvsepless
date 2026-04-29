@@ -478,14 +478,13 @@ class HistoryVbach(History):
 class AutoEnsembleApp(UserDirectory):
     def __init__(self):
         super().__init__()
-        self.state = []
         self.ensemble_base = self.user_directory / base_names_app_dirs[3]
         self.ensemble_base.mkdir(parents=True, exist_ok=True)
         
-    def write_flow(self, name: str):
+    def write_flow(self, name: str, state: list[list]):
         if name:
             path = self.ensemble_base / f"{Namer.sanitize(name)}.json"
-            path.write_text(json.dumps(self.state, ensure_ascii=False, indent=4), encoding="utf-8")
+            path.write_text(json.dumps(state, ensure_ascii=False, indent=4), encoding="utf-8")
             print(_i18n("ensemble_flow_saved")+": "+name)
             gr.Info(title=_i18n("ensemble_flow_saved")+": "+name, message="")
         else:
@@ -496,15 +495,19 @@ class AutoEnsembleApp(UserDirectory):
         if name:
             path = self.ensemble_base / f"{Namer.sanitize(name)}.json"
             if path.exists():
-                self.state = json.loads(path.read_text("utf-8"))
+                state = json.loads(path.read_text("utf-8"))
                 print(_i18n("ensemble_flow_loaded")+": "+name)
                 gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
+                return state
+                
             else:
                 print(_i18n("ensemble_flow_not_exist")+": "+name)
                 gr.Warning(title=_i18n("ensemble_flow_not_exist")+": "+name, message="")
+                return []
         else:
             print(_i18n("name_not_specified"))
             gr.Warning(title=_i18n("name_not_specified"), message="")
+            return []
 
     def import_flows(self, flows: list):
         added_flows = []
@@ -512,13 +515,12 @@ class AutoEnsembleApp(UserDirectory):
             for flow in flows:
                 path = Path(flow)
                 if path.exists() and path.suffix == ".json":
-                    new_path = self.ensemble_base / path.name
+                    new_path = Namer.iter(self.ensemble_base / path.name)
                     shutil.move(path, new_path)
                     added_flows.append(new_path)
         status = _i18n("flows_imported")+": "+str(len(added_flows))
         print(status)
         gr.Info(title=status, message="")
-        return []
 
     def export_flow(self, flow: str):
         if flow:
@@ -541,42 +543,47 @@ class AutoEnsembleApp(UserDirectory):
         flows = [flow.stem for flow in self.ensemble_base.glob("*.json")]
         return flows
 
-    def add_model(self, model_name: str, primary_stem: str, invert: bool, weight: float):
-        self.state.append([model_name, primary_stem, invert, weight])
+    def add_model(self, model_name: str, primary_stem: str, invert: bool, weight: float, state: list[list]):
+        state.append([model_name, primary_stem, invert, weight])
         print(_i18n("ae_added_model")+": "+model_name)
         gr.Info(title=_i18n("ae_added_model")+": "+model_name, message="")
+        return state
 
-    def replace_model(self, number: int, model_name: str, primary_stem: str, invert: bool, weight: float):
+    def replace_model(self, number: int, model_name: str, primary_stem: str, invert: bool, weight: float, state: list[list]):
         index = number - 1
-        if index < len(self.state):
-            self.state[index] = [model_name, primary_stem, invert, weight]
+        if index < len(state):
+            state[index] = [model_name, primary_stem, invert, weight]
             print(_i18n("ae_replaced_model")+": "+model_name+"/"+str(index))
             gr.Info(title=_i18n("ae_replaced_model")+": "+model_name+"/"+str(number), message="")
+        return state
 
-    def insert_model(self, number: int, model_name: str, primary_stem: str, invert: bool, weight: float):
+    def insert_model(self, number: int, model_name: str, primary_stem: str, invert: bool, weight: float, state: list[list]):
         index = number - 1
-        if index < len(self.state):
-            self.state.insert(index, [model_name, primary_stem, invert, weight])
+        if index < len(state):
+            state.insert(index, [model_name, primary_stem, invert, weight])
             print(_i18n("ae_inserted_model")+": "+model_name+"/"+str(index))
             gr.Info(title=_i18n("ae_inserted_model")+": "+model_name+"/"+str(number), message="")
+        return state
 
-    def delete_model(self, number: int):
+    def delete_model(self, number: int, state: list[list]):
         index = number - 1
-        if index < len(self.state):
-            deleted_value = self.state.pop(index)
+        if index < len(state):
+            deleted_value = state.pop(index)
             print(_i18n("ae_deleted_model")+": "+deleted_value[0])
             gr.Info(title=_i18n("ae_deleted_model")+": "+deleted_value[0], message="")
+        return state
 
-    def clear_all_model(self):
-        self.state.clear()
+    def clear_all_model(self, state: list[list]):
+        state.clear()
         print(_i18n("ae_all_cleared"))
         gr.Info(title=_i18n("ae_all_cleared"), message="")
+        return state
 
-    def get_models(self):
-        return self.state
+    def get_models(self, state: list[list]):
+        return state
     
-    def get_models_df(self):
-        models = self.state
+    def get_models_df(self, state: list[list]):
+        models = state
         models_df = [[num+1] for num in range(len(models))]
 
         for model, model_df in list(zip(models, models_df)):
@@ -838,7 +845,7 @@ class App(Separator):
         return gr.update(value=first_value, choices=stems)
 
     def update_add_params(self, *add_params_values):
-        self.add_params_dict = dict(zip(add_params_list, add_params_values))
+        return dict(zip(add_params_list, add_params_values))
 
     def get_actual_history_list(self, value, state):
         current_history = self.history.get_list()
@@ -911,7 +918,7 @@ class App(Separator):
             return gr.skip()
         return gr.update(choices=current_configs, value=value), current_configs
 
-    def UI(self, theme=None, hf_space_mode=False):
+    def UI(self, theme=None, hf_space_mode=False) -> gr.Blocks:
         global GDRIVE_DIR, IS_CUSTOM_DIR
         all_models = self.get_all_models()
         default_model = all_models[0]
@@ -967,20 +974,12 @@ class App(Separator):
                             sep_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
                             with gr.Accordion(label=_i18n("separation_params"), open=False):
                                 add_params_comp_seq = generate_add_params_component()
-
-                                @gr.on(outputs=[*add_params_comp_seq], show_progress="hidden")
-                                def get_actual_add_params():
-                                    updates = []
-                                    if not self.add_params_dict:
-                                        return tuple([gr.skip()] * len(add_params_list))
-                                    for key, value in self.add_params_dict.items():
-                                        updates.append(gr.update(value=value))
-                                    return tuple(updates)
+                                add_params_user_state = gr.State({})
 
                                 for comp in add_params_comp_seq:
                                     comp.change(
                                         fn=self.update_add_params,
-                                        inputs=[*add_params_comp_seq], 
+                                        inputs=[*add_params_comp_seq], outputs=add_params_user_state,
                                         show_progress="hidden"
                                     )
                             sep_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_template_info"), value="NAME_(STEM)_MODEL", **base_c_params["base"])
@@ -996,10 +995,10 @@ class App(Separator):
                         def separation_show_history_fn(key: list):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
-                    @separate_btn.click(inputs=[sep_input_files, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
-                    def separator_wrap(input_files: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, progress=gr.Progress(track_tqdm=True)):
+                    @separate_btn.click(inputs=[sep_input_files, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format, add_params_user_state], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
+                    def separator_wrap(input_files: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, add_params: dict, progress=gr.Progress(track_tqdm=True)):
                         results = []
-                        results = self.separate(input_files, self.output_dir.gen_output_dir(), output_format, "NAME_(STEM)_MODEL", model_name, ext_inst, spec_invert, sel_stems, self.add_params_dict)
+                        results = self.separate(input_files, self.output_dir.gen_output_dir(), output_format, "NAME_(STEM)_MODEL", model_name, ext_inst, spec_invert, sel_stems, add_params)
                         self.history.add_to_history(model_name, results)
                         return results, gr.skip()
                     @gr.render(inputs=[sep_state])
@@ -1029,516 +1028,503 @@ class App(Separator):
                                                 return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                         else:
                             gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
-            if not hf_space_mode:
-                with gr.Tab(_i18n("custom_separation_tab")):
-                    custom_sep_state = gr.State()
+            with gr.Tab(_i18n("custom_separation_tab")):
+                custom_sep_state = gr.State()
+                with gr.Row():
+                    with gr.Column():
+                        custom_sep_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
+                        with gr.Group():
+                            custom_sep_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
+                            custom_sep_input_files.focus(
+                                self.get_actual_input_list, 
+                                inputs=[custom_sep_input_files, custom_sep_input_state], 
+                                outputs=[custom_sep_input_files, custom_sep_input_state], 
+                                show_progress="hidden"
+                            )
+                            custom_sep_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                            
+                            @custom_sep_upload_files.upload(inputs=custom_sep_upload_files, outputs=[custom_sep_upload_files, custom_sep_input_files])
+                            def upload_files_fn(files: list):
+                                uploaded_files = self.input_files.upload(files)
+                                return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                            
+                            @gr.render(inputs=[custom_sep_input_files, custom_sep_input_preview_check])
+                            def preview_inputs(input: list, preview: bool):
+                                if preview:
+                                    if input:
+                                        for f_ in input:
+                                            define_audio_with_size(basename=True, label="", value=f_, **base_c_params["output_audio"])
+                    
+                    with gr.Column():
+                        with gr.Group():
+                            custom_sep_model_type = gr.Dropdown(
+                                label=_i18n("model_type"),
+                                choices=self.mssi.custom_model_types,
+                                value=self.mssi.custom_model_types[0],
+                                **base_c_params["base"]
+                            )
+                            
+                            # Новые компоненты для выбора модели как в vbach_tab
+                            custom_sep_checkpoint = gr.Dropdown(
+                                label=_i18n("checkpoint_path"), 
+                                multiselect=True, 
+                                max_choices=1,
+                                **base_c_params["base"]
+                            )
+                            custom_sep_checkpoint.focus(
+                                self.get_actual_custom_sep_checkpoints_list,
+                                inputs=[custom_sep_checkpoint, custom_sep_checkpoints_state],
+                                outputs=[custom_sep_checkpoint, custom_sep_checkpoints_state],
+                                show_progress="hidden"
+                            )
+                            
+                            custom_sep_config = gr.Dropdown(
+                                label=_i18n("config_path"), 
+                                multiselect=True, 
+                                max_choices=1,
+                                **base_c_params["base"]
+                            )
+                            custom_sep_config.focus(
+                                self.get_actual_custom_sep_configs_list,
+                                inputs=[custom_sep_config, custom_sep_configs_state],
+                                outputs=[custom_sep_config, custom_sep_configs_state],
+                                show_progress="hidden"
+                            )
+                            
+                            custom_sep_use_spec_invert = gr.Checkbox(
+                                label=_i18n("use_spec_invert"), 
+                                value=False, 
+                                **base_c_params["base"]
+                            )
+                            
+                            with gr.Accordion(label=_i18n("separation_params"), open=False):
+                                custom_add_params_comp_seq = generate_add_params_component()
+                                custom_add_params_user_state = gr.State({})
+                                
+                                for comp in custom_add_params_comp_seq:
+                                    comp.input(
+                                        fn=self.update_add_params, 
+                                        inputs=[*custom_add_params_comp_seq], outputs=custom_add_params_user_state,
+                                        show_progress="hidden"
+                                    )
+                            
+                            custom_sep_template = gr.Textbox(
+                                label=_i18n("output_template"), 
+                                info=_i18n("output_template_info"), 
+                                value="NAME_(STEM)_MODEL", 
+                                **base_c_params["base"]
+                            )
+                            custom_sep_output_format = gr.Dropdown(
+                                label=_i18n("output_format"), 
+                                choices=output_formats, 
+                                value=output_formats[0], 
+                                filterable=False, 
+                                **base_c_params["base"]
+                            )
+                            custom_separate_btn = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
+                
+                with gr.Group():
+                    with gr.Row(equal_height=True):
+                        with gr.Column(min_width=110):
+                            gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
+                        custom_sep_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
+                        custom_sep_history.focus(
+                            self.get_actual_history_list,
+                            inputs=[custom_sep_history, custom_sep_history_state], 
+                            outputs=[custom_sep_history, custom_sep_history_state], 
+                            show_progress="hidden"
+                        )
+                        
+                        @custom_sep_history.input(inputs=custom_sep_history, outputs=custom_sep_state)
+                        def custom_separation_show_history_fn(key: list):
+                            state = self.history.get_from_history(one_element_list_to_value(key))
+                            return state
+                
+                @custom_separate_btn.click(
+                    inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
+                            custom_sep_use_spec_invert,
+                            custom_sep_template, custom_sep_output_format, custom_add_params_user_state],
+                    outputs=[custom_sep_state, custom_sep_upload_files],
+                    trigger_mode="once", concurrency_id="mvsepless_app_inference"
+                )
+                def custom_separator_wrap(
+                    input_files: list, model_type: str, checkpoint: list, config: list,
+                    spec_invert: bool, 
+                    tmpl: str, output_format: str, add_params: dict, progress=gr.Progress(track_tqdm=True)
+                ):
+                    checkpoint_path = one_element_list_to_value(checkpoint)
+                    config_path = one_element_list_to_value(config)
+                    
+                    if not checkpoint_path or not config_path:
+                        gr.Warning(_i18n("paths_not_specified"))
+                        return [], gr.skip()
+                    
+                    results = self.custom_separate(
+                        input_files, 
+                        self.output_dir.gen_output_dir(), 
+                        output_format, 
+                        tmpl,
+                        model_type,
+                        checkpoint_path,
+                        config_path,
+                        False,
+                        spec_invert,
+                        [],
+                        add_params
+                    )
+                    
+                    model_name = Path(checkpoint_path).stem
+                    self.history.add_to_history(model_name, results)
+                    return results, gr.skip()
+                
+                @gr.render(inputs=[custom_sep_state])
+                def show_custom_players(state):
+                    if state:
+                        for basename, stems_list in state:
+                            with gr.Group():
+                                gr.Markdown(f"<h4><center>{basename}</center></h4>")
+                                for stem_name, stem_path in stems_list:
+                                    with gr.Row(equal_height=True):
+                                        output_audio = define_audio_with_size(
+                                            value=stem_path,
+                                            label=stem_name,
+                                            **base_c_params["output_audio"],
+                                            scale=15,
+                                        )
+                                        reuse_btn = gr.Button(
+                                            _i18n("reuse_btn"), 
+                                            variant="secondary", **base_c_params["base"]
+                                        )
+                                        @reuse_btn.click(
+                                            inputs=[output_audio],
+                                            outputs=custom_sep_input_files,
+                                        )
+                                        def reuse_fn(stem_audio: str) -> gr.update:
+                                            uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                            return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                    else:
+                        gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
+
+            with gr.Tab(_i18n("ensemble_tab")):
+                with gr.Tab(_i18n("auto_ensemble_tab")):
+                    auto_ensemble_user_flow_state = gr.BrowserState([])
                     with gr.Row():
                         with gr.Column():
-                            custom_sep_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
+                            auto_ensemble_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                             with gr.Group():
-                                custom_sep_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
-                                custom_sep_input_files.focus(
-                                    self.get_actual_input_list, 
-                                    inputs=[custom_sep_input_files, custom_sep_input_state], 
-                                    outputs=[custom_sep_input_files, custom_sep_input_state], 
-                                    show_progress="hidden"
+                                auto_ensemble_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                                auto_ensemble_input_file.focus(self.get_actual_input_list, inputs=[auto_ensemble_input_file, auto_ensemble_input_state], outputs=[auto_ensemble_input_file, auto_ensemble_input_state], show_progress="hidden")
+                                auto_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                                @auto_ensemble_upload_file.upload(inputs=auto_ensemble_upload_file, outputs=[auto_ensemble_upload_file, auto_ensemble_input_file])
+                                def upload_file_fn(file: str):
+                                    uploaded_files = self.input_files.upload([file])
+                                    all_uploaded_files = self.input_files.get_input_list()
+                                    if uploaded_files:
+                                        first_value = [uploaded_files[0]]
+                                    else:
+                                        first_value = []
+                                    return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
+                                @gr.render(inputs=[auto_ensemble_input_file, auto_ensemble_input_preview_check])
+                                def preview_input(input: list, preview: bool):
+                                    if preview:
+                                        if input:
+                                            define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
+                        with gr.Column():
+                            with gr.Group():
+                                auto_ensemble_save_primary_stems = gr.Checkbox(label=_i18n("enable_save_primary_stems"), value=False, **base_c_params["base"])
+                                auto_ensemble_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
+                                auto_ensemble_type = gr.Dropdown(label=_i18n("ensemble_type"), info=_i18n("ensemble_type_info"), choices=ensemble_types, value=ensemble_types[0], filterable=False, **base_c_params["base"])
+                                auto_ensemble_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_etemplate_info"), value="NAME_(COUNT)_TYPE", **base_c_params["base"])
+                                auto_ensemble_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
+                                auto_ensemble_run_btn = gr.Button(_i18n("run_ensemble"), variant="primary", **base_c_params["base"])
+                    with gr.Column():
+                        auto_ensemble_show_timer = gr.Timer()
+                        with gr.Accordion(label=_i18n("ensemble_settings"), open=False):
+                            with gr.Row():
+                                with gr.Column(scale=3):
+                                    with gr.Group():
+                                        auto_ensemble_model_name = gr.Dropdown(label=_i18n("model_name"), choices=all_models, value=default_model, **base_c_params["base"])
+                                        auto_ensemble_primary_stem = gr.Dropdown(label=_i18n("primary_stem"), choices=stems_default, filterable=False, value=stems_default[0], **base_c_params["base"])
+                                        auto_ensemble_model_name.change(self.update_model_name_ensemble, inputs=auto_ensemble_model_name, outputs=[auto_ensemble_primary_stem])
+                                        auto_ensemble_invert = gr.Dropdown(label=_i18n("invert"), choices=[True, False], value=False, filterable=False, **base_c_params["base"])
+                                        auto_ensemble_weight = gr.Number(label=_i18n("weights"), minimum=0, value=1, **base_c_params["base"])
+                                        auto_ensemble_add_btn = gr.Button(_i18n("add_model"), variant="primary", **base_c_params["base"])
+                                        auto_ensemble_add_btn.click(self.auto_ensemble_app.add_model, inputs=[auto_ensemble_model_name, auto_ensemble_primary_stem, auto_ensemble_invert, auto_ensemble_weight, auto_ensemble_user_flow_state], outputs=auto_ensemble_user_flow_state)
+                                with gr.Column(scale=11):
+                                    with gr.Group():
+                                        auto_ensemble_model_index = gr.Number(label=_i18n("model_index"), value=1, **base_c_params["base"])
+                                        with gr.Row(equal_height=True):
+                                            auto_ensemble_replace_btn = gr.Button(_i18n("replace"), variant="huggingface", **base_c_params["base"])
+                                            auto_ensemble_insert_btn = gr.Button(_i18n("insert"), variant="secondary", **base_c_params["base"])
+                                        with gr.Row(equal_height=True):
+                                            auto_ensemble_delete_btn = gr.Button(_i18n("delete"), variant="stop", **base_c_params["base"])
+                                            auto_ensemble_clear_all_btn = gr.Button(_i18n("clear"), variant="stop", **base_c_params["base"])
+                                        auto_ensemble_replace_btn.click(self.auto_ensemble_app.replace_model, inputs=[auto_ensemble_model_index, auto_ensemble_model_name, auto_ensemble_primary_stem, auto_ensemble_invert, auto_ensemble_weight, auto_ensemble_user_flow_state], outputs=auto_ensemble_user_flow_state)
+                                        auto_ensemble_insert_btn.click(self.auto_ensemble_app.insert_model, inputs=[auto_ensemble_model_index, auto_ensemble_model_name, auto_ensemble_primary_stem, auto_ensemble_invert, auto_ensemble_weight, auto_ensemble_user_flow_state], outputs=auto_ensemble_user_flow_state)
+                                        auto_ensemble_delete_btn.click(self.auto_ensemble_app.delete_model, inputs=[auto_ensemble_model_index, auto_ensemble_user_flow_state], outputs=auto_ensemble_user_flow_state)
+                                        auto_ensemble_clear_all_btn.click(self.auto_ensemble_app.clear_all_model, inputs=auto_ensemble_user_flow_state, outputs=auto_ensemble_user_flow_state)
+                                        auto_ensemble_show_flow = gr.DataFrame(value=self.auto_ensemble_app.get_models_df([]), type="array", headers=["#", _i18n("model_name"), _i18n("primary_stem"), _i18n("invert"), _i18n("weights")], interactive=False, datatype=["number", "str", "str", "bool", "number"])
+                                        auto_ensemble_show_timer.tick(self.auto_ensemble_app.get_models_df, inputs=auto_ensemble_user_flow_state, outputs=[auto_ensemble_show_flow])
+
+                        with gr.Accordion(label=_i18n("ensemble_preset_settings"), open=False):
+                            auto_ensemble_list_flows_state = gr.State([])
+                            auto_ensemble_list_flows = gr.Dropdown(label=_i18n("auto_ensemble_name_preset"), allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
+                            auto_ensemble_list_flows.focus(self.get_actual_auto_ensemble_flows_list, inputs=[auto_ensemble_list_flows, auto_ensemble_list_flows_state], outputs=[auto_ensemble_list_flows, auto_ensemble_list_flows_state], show_progress="hidden")
+                            with gr.Group():
+                                with gr.Row(equal_height=True):
+                                    auto_ensemble_flow_load_btn = gr.Button(_i18n("load"), variant="primary", min_width=30, **base_c_params["base"])
+                                    auto_ensemble_flow_save_btn = gr.Button(_i18n("save"), variant="secondary", min_width=30, **base_c_params["base"])
+                                    @auto_ensemble_flow_save_btn.click(inputs=[auto_ensemble_list_flows, auto_ensemble_user_flow_state], outputs=[auto_ensemble_list_flows])
+                                    def auto_ensemble_save_flow_fn(name: list, state: list):
+                                        self.auto_ensemble_app.write_flow(one_element_list_to_value(name), state)
+                                        return gr.update(choices=self.auto_ensemble_app.get_flows(), value=name)
+                                    @auto_ensemble_flow_load_btn.click(inputs=[auto_ensemble_list_flows], outputs=auto_ensemble_user_flow_state)
+                                    def auto_ensemble_load_flow_fn(name: list):
+                                        return self.auto_ensemble_app.load_flow(one_element_list_to_value(name))
+                                with gr.Row(equal_height=True):
+                                    auto_ensemble_flow_import_btn = gr.UploadButton(label=_i18n("import"), variant="secondary", min_width=30, file_count="multiple", type="filepath", file_types=[".json"], **base_c_params["base"])
+                                    auto_ensemble_flow_export_btn = gr.DownloadButton(label=_i18n("export"), variant="huggingface", min_width=30, **base_c_params["base"])
+                                    auto_ensemble_flow_import_btn.upload(self.auto_ensemble_app.import_flows, inputs=auto_ensemble_flow_import_btn, outputs=auto_ensemble_flow_import_btn)
+                                    @auto_ensemble_list_flows.change(inputs=auto_ensemble_list_flows, outputs=auto_ensemble_flow_export_btn)
+                                    def export_flow_fn(input_key: list):
+                                        return self.auto_ensemble_app.export_flow(one_element_list_to_value(input_key))
+                                with gr.Row(equal_height=True):
+                                    auto_ensemble_flow_clear_btn = gr.Button(_i18n("clear"), variant="stop", visible=not hf_space_mode, **base_c_params["base"])
+                                    @auto_ensemble_flow_clear_btn.click()
+                                    def clear_all_flows_fn():
+                                        self.auto_ensemble_app.clear_flows()
+                        with gr.Group():
+                            with gr.Row(equal_height=True):
+                                with gr.Column(min_width=110):
+                                    gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
+                                auto_ensemble_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
+                        with gr.Row():
+                            with gr.Column():
+                                auto_ensemble_output_audio = gr.Audio(label=_i18n("ensemble_result"), value=None, **base_c_params["output_audio"])
+                                auto_ensemble_ioutput_audio = gr.Audio(label=_i18n("inverted_result"), value=None, **base_c_params["output_audio"])
+                                with gr.Row(equal_height=True):
+                                    auto_ensemble_output_audio_reuse_btn = gr.Button(
+                                        _i18n("reuse_output_btn"), 
+                                        variant="secondary", visible=False, **base_c_params["base"]
+                                    )
+                                    auto_ensemble_ioutput_reuse_btn = gr.Button(
+                                        _i18n("reuse_invert_btn"), 
+                                        variant="huggingface", visible=False, **base_c_params["base"]
+                                    )
+                                @auto_ensemble_output_audio_reuse_btn.click(
+                                    inputs=[auto_ensemble_output_audio],
+                                    outputs=auto_ensemble_input_file,
                                 )
-                                custom_sep_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                
-                                @custom_sep_upload_files.upload(inputs=custom_sep_upload_files, outputs=[custom_sep_upload_files, custom_sep_input_files])
+                                def reuse_fn(stem_audio: str) -> gr.update:
+                                    uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                    all_uploaded_files = self.input_files.get_input_list()
+                                    if all_uploaded_files:
+                                        first_value = [all_uploaded_files[0]]
+                                    else:
+                                        first_value = []
+                                    return gr.update(choices=all_uploaded_files, value=first_value)
+                                @auto_ensemble_ioutput_reuse_btn.click(
+                                    inputs=[auto_ensemble_ioutput_audio],
+                                    outputs=auto_ensemble_input_file,
+                                )
+                                def reuse_fn(stem_audio: str) -> gr.update:
+                                    uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                    all_uploaded_files = self.input_files.get_input_list()
+                                    if uploaded_files:
+                                        first_value = [uploaded_files[0]]
+                                    else:
+                                        first_value = []
+                                    return gr.update(choices=all_uploaded_files, value=first_value)
+                            with gr.Column():
+                                with gr.Group():
+                                    gr.Markdown("<h3><center>"+_i18n("saved_primary_stems")+"</center></h3>", container=True)
+                                    auto_ensemble_primary_stems_state = gr.State([])
+                                    @gr.render(inputs=auto_ensemble_primary_stems_state)
+                                    def preview_pr_stems(input: list):
+                                        if input:
+                                            for f_ in input:
+                                                eoutput_audio = define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
+                                                ereuse_btn = gr.Button(
+                                                    _i18n("reuse_btn"), 
+                                                    variant="secondary", **base_c_params["base"]
+                                                )
+                                                @ereuse_btn.click(
+                                                    inputs=[eoutput_audio],
+                                                    outputs=auto_ensemble_input_file,
+                                                )
+                                                def reuse_fn(stem_audio: str) -> gr.update:
+                                                    uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                                    all_uploaded_files = self.input_files.get_input_list()
+                                                    if all_uploaded_files:
+                                                        first_value = [all_uploaded_files[0]]
+                                                    else:
+                                                        first_value = []
+                                                    return gr.update(choices=all_uploaded_files, value=first_value)
+                                        else:
+                                            gr.Markdown("<h3><center>"+_i18n("not_ensembled_with_primary_stems")+"</center></h3>", container=True)
+
+                    @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems, auto_ensemble_user_flow_state], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn], concurrency_id="mvsepless_app_inference_ensemble")
+                    def auto_ensemble_wrapper_fn(input_file: list, template: str, etype: str, spec_invert: bool, out_format: str, save_pr_stems: bool, flow: list[list], progress=gr.Progress(track_tqdm=True)):
+                        out, iout, pr_stems = self.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=flow, template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems)
+                        self.auto_ensemble_history_app.add_to_history(etype, out, iout, pr_stems)
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.skip(), gr.update(visible=True), gr.update(visible=True) 
+
+                    auto_ensemble_history.focus(self.get_actual_auto_ensemble_history_list, inputs=[auto_ensemble_history, auto_ensemble_history_state], outputs=[auto_ensemble_history, auto_ensemble_history_state], show_progress="hidden")
+                    @auto_ensemble_history.input(inputs=auto_ensemble_history, outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn])
+                    def auto_ensemble_show_history_fn(key: list):
+                        out, iout, pr_stems = self.auto_ensemble_history_app.get_from_history(one_element_list_to_value(key))
+                        visible = all([out, iout])
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.update(visible=visible), gr.update(visible=visible)
+
+                with gr.Tab(_i18n("man_ensemble_tab")):
+                    with gr.Row():
+                        with gr.Column():
+                            manual_ensemble_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
+                            with gr.Group():
+                                manual_ensemble_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
+                                manual_ensemble_input_files.focus(self.get_actual_input_list, inputs=[manual_ensemble_input_files, manual_ensemble_input_state], outputs=[manual_ensemble_input_files, manual_ensemble_input_state], show_progress="hidden")
+                                manual_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                                @manual_ensemble_upload_files.upload(inputs=manual_ensemble_upload_files, outputs=[manual_ensemble_upload_files, manual_ensemble_input_files])
                                 def upload_files_fn(files: list):
                                     uploaded_files = self.input_files.upload(files)
                                     return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
-                                
-                                @gr.render(inputs=[custom_sep_input_files, custom_sep_input_preview_check])
+                                @gr.render(inputs=[manual_ensemble_input_files, manual_ensemble_input_preview_check])
                                 def preview_inputs(input: list, preview: bool):
                                     if preview:
                                         if input:
                                             for f_ in input:
                                                 define_audio_with_size(basename=True, label="", value=f_, **base_c_params["output_audio"])
-                        
+
                         with gr.Column():
                             with gr.Group():
-                                custom_sep_model_type = gr.Dropdown(
-                                    label=_i18n("model_type"),
-                                    choices=self.mssi.custom_model_types,
-                                    value=self.mssi.custom_model_types[0],
-                                    **base_c_params["base"]
-                                )
-                                
-                                # Новые компоненты для выбора модели как в vbach_tab
-                                custom_sep_checkpoint = gr.Dropdown(
-                                    label=_i18n("checkpoint_path"), 
-                                    multiselect=True, 
-                                    max_choices=1,
-                                    **base_c_params["base"]
-                                )
-                                custom_sep_checkpoint.focus(
-                                    self.get_actual_custom_sep_checkpoints_list,
-                                    inputs=[custom_sep_checkpoint, custom_sep_checkpoints_state],
-                                    outputs=[custom_sep_checkpoint, custom_sep_checkpoints_state],
-                                    show_progress="hidden"
-                                )
-                                
-                                custom_sep_config = gr.Dropdown(
-                                    label=_i18n("config_path"), 
-                                    multiselect=True, 
-                                    max_choices=1,
-                                    **base_c_params["base"]
-                                )
-                                custom_sep_config.focus(
-                                    self.get_actual_custom_sep_configs_list,
-                                    inputs=[custom_sep_config, custom_sep_configs_state],
-                                    outputs=[custom_sep_config, custom_sep_configs_state],
-                                    show_progress="hidden"
-                                )
-                                
-                                custom_sep_use_spec_invert = gr.Checkbox(
-                                    label=_i18n("use_spec_invert"), 
-                                    value=False, 
-                                    **base_c_params["base"]
-                                )
-                                
-                                with gr.Accordion(label=_i18n("separation_params"), open=False):
-                                    custom_add_params_comp_seq = generate_add_params_component()
-                                    custom_add_params_dict = {}
-                                    
-                                    def custom_update_add_params(*values):
-                                        nonlocal custom_add_params_dict
-                                        custom_add_params_dict = dict(zip(add_params_list, values))
-                                    
-                                    @gr.on(outputs=[*custom_add_params_comp_seq], show_progress="hidden")
-                                    def get_actual_add_params():
-                                        if not custom_add_params_dict:
-                                            return tuple([gr.skip()] * len(add_params_list))
-                                        updates = []
-                                        for key, value in custom_add_params_dict.items():
-                                            updates.append(gr.update(value=value))
-                                        return tuple(updates)
-                                    
-                                    for comp in custom_add_params_comp_seq:
-                                        comp.input(
-                                            fn=custom_update_add_params, 
-                                            inputs=[*custom_add_params_comp_seq], 
-                                            show_progress="hidden"
-                                        )
-                                
-                                custom_sep_template = gr.Textbox(
-                                    label=_i18n("output_template"), 
-                                    info=_i18n("output_template_info"), 
-                                    value="NAME_(STEM)_MODEL", 
-                                    **base_c_params["base"]
-                                )
-                                custom_sep_output_format = gr.Dropdown(
-                                    label=_i18n("output_format"), 
-                                    choices=output_formats, 
-                                    value=output_formats[0], 
-                                    filterable=False, 
-                                    **base_c_params["base"]
-                                )
-                                custom_separate_btn = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
-                    
-                    with gr.Group():
-                        with gr.Row(equal_height=True):
-                            with gr.Column(min_width=110):
-                                gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
-                            custom_sep_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
-                            custom_sep_history.focus(
-                                self.get_actual_history_list,
-                                inputs=[custom_sep_history, custom_sep_history_state], 
-                                outputs=[custom_sep_history, custom_sep_history_state], 
-                                show_progress="hidden"
-                            )
-                            
-                            @custom_sep_history.input(inputs=custom_sep_history, outputs=custom_sep_state)
-                            def custom_separation_show_history_fn(key: list):
-                                state = self.history.get_from_history(one_element_list_to_value(key))
-                                return state
-                    
-                    @custom_separate_btn.click(
-                        inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
-                                custom_sep_use_spec_invert,
-                                custom_sep_template, custom_sep_output_format],
-                        outputs=[custom_sep_state, custom_sep_upload_files],
-                        trigger_mode="once", concurrency_id="mvsepless_app_inference"
-                    )
-                    def custom_separator_wrap(
-                        input_files: list, model_type: str, checkpoint: list, config: list,
-                        spec_invert: bool, 
-                        tmpl: str, output_format: str, progress=gr.Progress(track_tqdm=True)
-                    ):
-                        checkpoint_path = one_element_list_to_value(checkpoint)
-                        config_path = one_element_list_to_value(config)
-                        
-                        if not checkpoint_path or not config_path:
-                            gr.Warning(_i18n("paths_not_specified"))
-                            return [], gr.skip()
-                        
-                        results = self.custom_separate(
-                            input_files, 
-                            self.output_dir.gen_output_dir(), 
-                            output_format, 
-                            tmpl,
-                            model_type,
-                            checkpoint_path,
-                            config_path,
-                            False,
-                            spec_invert,
-                            [],
-                            custom_add_params_dict if 'custom_add_params_dict' in dir() else {}
-                        )
-                        
-                        model_name = Path(checkpoint_path).stem
-                        self.history.add_to_history(model_name, results)
-                        return results, gr.skip()
-                    
-                    @gr.render(inputs=[custom_sep_state])
-                    def show_custom_players(state):
-                        if state:
-                            for basename, stems_list in state:
-                                with gr.Group():
-                                    gr.Markdown(f"<h4><center>{basename}</center></h4>")
-                                    for stem_name, stem_path in stems_list:
-                                        with gr.Row(equal_height=True):
-                                            output_audio = define_audio_with_size(
-                                                value=stem_path,
-                                                label=stem_name,
-                                                **base_c_params["output_audio"],
-                                                scale=15,
-                                            )
-                                            reuse_btn = gr.Button(
-                                                _i18n("reuse_btn"), 
-                                                variant="secondary", **base_c_params["base"]
-                                            )
-                                            @reuse_btn.click(
-                                                inputs=[output_audio],
-                                                outputs=custom_sep_input_files,
-                                            )
-                                            def reuse_fn(stem_audio: str) -> gr.update:
-                                                uploaded_files = self.input_files.upload([stem_audio], copy=True)
-                                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
-                        else:
-                            gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
-
-                with gr.Tab(_i18n("ensemble_tab")):
-                    with gr.Tab(_i18n("auto_ensemble_tab")):
-                        with gr.Row():
-                            with gr.Column():
-                                auto_ensemble_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
-                                with gr.Group():
-                                    auto_ensemble_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
-                                    auto_ensemble_input_file.focus(self.get_actual_input_list, inputs=[auto_ensemble_input_file, auto_ensemble_input_state], outputs=[auto_ensemble_input_file, auto_ensemble_input_state], show_progress="hidden")
-                                    auto_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                    @auto_ensemble_upload_file.upload(inputs=auto_ensemble_upload_file, outputs=[auto_ensemble_upload_file, auto_ensemble_input_file])
-                                    def upload_file_fn(file: str):
-                                        uploaded_files = self.input_files.upload([file])
-                                        all_uploaded_files = self.input_files.get_input_list()
-                                        if uploaded_files:
-                                            first_value = [uploaded_files[0]]
-                                        else:
-                                            first_value = []
-                                        return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
-                                    @gr.render(inputs=[auto_ensemble_input_file, auto_ensemble_input_preview_check])
-                                    def preview_input(input: list, preview: bool):
-                                        if preview:
-                                            if input:
-                                                define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
-                            with gr.Column():
-                                with gr.Group():
-                                    auto_ensemble_save_primary_stems = gr.Checkbox(label=_i18n("enable_save_primary_stems"), value=False, **base_c_params["base"])
-                                    auto_ensemble_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
-                                    auto_ensemble_type = gr.Dropdown(label=_i18n("ensemble_type"), info=_i18n("ensemble_type_info"), choices=ensemble_types, value=ensemble_types[0], filterable=False, **base_c_params["base"])
-                                    auto_ensemble_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_etemplate_info"), value="NAME_(COUNT)_TYPE", **base_c_params["base"])
-                                    auto_ensemble_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
-                                    auto_ensemble_run_btn = gr.Button(_i18n("run_ensemble"), variant="primary", **base_c_params["base"])
-                        with gr.Column():
-                            auto_ensemble_show_timer = gr.Timer()
-                            with gr.Accordion(label=_i18n("ensemble_settings"), open=False):
-                                with gr.Row():
-                                    with gr.Column(scale=3):
-                                        with gr.Group():
-                                            auto_ensemble_model_name = gr.Dropdown(label=_i18n("model_name"), choices=all_models, value=default_model, **base_c_params["base"])
-                                            auto_ensemble_primary_stem = gr.Dropdown(label=_i18n("primary_stem"), choices=stems_default, filterable=False, value=stems_default[0], **base_c_params["base"])
-                                            auto_ensemble_model_name.change(self.update_model_name_ensemble, inputs=auto_ensemble_model_name, outputs=[auto_ensemble_primary_stem])
-                                            auto_ensemble_invert = gr.Dropdown(label=_i18n("invert"), choices=[True, False], value=False, filterable=False, **base_c_params["base"])
-                                            auto_ensemble_weight = gr.Number(label=_i18n("weights"), minimum=0, value=1, **base_c_params["base"])
-                                            auto_ensemble_add_btn = gr.Button(_i18n("add_model"), variant="primary", **base_c_params["base"])
-                                            auto_ensemble_add_btn.click(self.auto_ensemble_app.add_model, inputs=[auto_ensemble_model_name, auto_ensemble_primary_stem, auto_ensemble_invert, auto_ensemble_weight])
-                                    with gr.Column(scale=11):
-                                        with gr.Group():
-                                            auto_ensemble_model_index = gr.Number(label=_i18n("model_index"), value=1, **base_c_params["base"])
-                                            with gr.Row(equal_height=True):
-                                                auto_ensemble_replace_btn = gr.Button(_i18n("replace"), variant="huggingface", **base_c_params["base"])
-                                                auto_ensemble_insert_btn = gr.Button(_i18n("insert"), variant="secondary", **base_c_params["base"])
-                                            with gr.Row(equal_height=True):
-                                                auto_ensemble_delete_btn = gr.Button(_i18n("delete"), variant="stop", **base_c_params["base"])
-                                                auto_ensemble_clear_all_btn = gr.Button(_i18n("clear"), variant="stop", **base_c_params["base"])
-                                            auto_ensemble_replace_btn.click(self.auto_ensemble_app.replace_model, inputs=[auto_ensemble_model_index, auto_ensemble_model_name, auto_ensemble_primary_stem, auto_ensemble_invert, auto_ensemble_weight])
-                                            auto_ensemble_insert_btn.click(self.auto_ensemble_app.insert_model, inputs=[auto_ensemble_model_index, auto_ensemble_model_name, auto_ensemble_primary_stem, auto_ensemble_invert, auto_ensemble_weight])
-                                            auto_ensemble_delete_btn.click(self.auto_ensemble_app.delete_model, inputs=[auto_ensemble_model_index])
-                                            auto_ensemble_clear_all_btn.click(self.auto_ensemble_app.clear_all_model)
-                                            auto_ensemble_show_flow = gr.DataFrame(value=self.auto_ensemble_app.get_models_df(), type="array", headers=["#", _i18n("model_name"), _i18n("primary_stem"), _i18n("invert"), _i18n("weights")], interactive=False, datatype=["number", "str", "str", "bool", "number"])
-                                            auto_ensemble_show_timer.tick(self.auto_ensemble_app.get_models_df, outputs=[auto_ensemble_show_flow])
-
-                            with gr.Accordion(label=_i18n("ensemble_preset_settings"), open=False):
-                                auto_ensemble_list_flows_state = gr.State([])
-                                auto_ensemble_list_flows = gr.Dropdown(label=_i18n("auto_ensemble_name_preset"), allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
-                                auto_ensemble_list_flows.focus(self.get_actual_auto_ensemble_flows_list, inputs=[auto_ensemble_list_flows, auto_ensemble_list_flows_state], outputs=[auto_ensemble_list_flows, auto_ensemble_list_flows_state], show_progress="hidden")
-                                with gr.Group():
-                                    with gr.Row(equal_height=True):
-                                        auto_ensemble_flow_load_btn = gr.Button(_i18n("load"), variant="primary", min_width=30, **base_c_params["base"])
-                                        auto_ensemble_flow_save_btn = gr.Button(_i18n("save"), variant="secondary", min_width=30, **base_c_params["base"])
-                                        @auto_ensemble_flow_save_btn.click(inputs=[auto_ensemble_list_flows], outputs=[auto_ensemble_list_flows])
-                                        def auto_ensemble_save_flow_fn(name: list):
-                                            self.auto_ensemble_app.write_flow(one_element_list_to_value(name))
-                                            return gr.update(choices=self.auto_ensemble_app.get_flows(), value=name)
-                                        @auto_ensemble_flow_load_btn.click(inputs=[auto_ensemble_list_flows])
-                                        def auto_ensemble_load_flow_fn(name: list):
-                                            self.auto_ensemble_app.load_flow(one_element_list_to_value(name))
-                                    with gr.Row(equal_height=True):
-                                        auto_ensemble_flow_import_btn = gr.UploadButton(label=_i18n("import"), variant="secondary", min_width=30, file_count="multiple", type="filepath", file_types=[".json"], **base_c_params["base"])
-                                        auto_ensemble_flow_export_btn = gr.DownloadButton(label=_i18n("export"), variant="huggingface", min_width=30, **base_c_params["base"])
-                                        auto_ensemble_flow_import_btn.upload(self.auto_ensemble_app.import_flows, inputs=auto_ensemble_flow_import_btn, outputs=auto_ensemble_flow_import_btn)
-                                        @auto_ensemble_list_flows.change(inputs=auto_ensemble_list_flows, outputs=auto_ensemble_flow_export_btn)
-                                        def export_flow_fn(input_key: list):
-                                            return self.auto_ensemble_app.export_flow(one_element_list_to_value(input_key))
-                                    with gr.Row(equal_height=True):
-                                        auto_ensemble_flow_clear_btn = gr.Button(_i18n("clear"), variant="stop", **base_c_params["base"])
-                                        @auto_ensemble_flow_clear_btn.click()
-                                        def clear_all_flows_fn():
-                                            self.auto_ensemble_app.clear_flows()
-                            with gr.Group():
-                                with gr.Row(equal_height=True):
-                                    with gr.Column(min_width=110):
-                                        gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
-                                    auto_ensemble_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
-                            with gr.Row():
-                                with gr.Column():
-                                    auto_ensemble_output_audio = gr.Audio(label=_i18n("ensemble_result"), value=None, **base_c_params["output_audio"])
-                                    auto_ensemble_ioutput_audio = gr.Audio(label=_i18n("inverted_result"), value=None, **base_c_params["output_audio"])
-                                    with gr.Row(equal_height=True):
-                                        auto_ensemble_output_audio_reuse_btn = gr.Button(
-                                            _i18n("reuse_output_btn"), 
-                                            variant="secondary", visible=False, **base_c_params["base"]
-                                        )
-                                        auto_ensemble_ioutput_reuse_btn = gr.Button(
-                                            _i18n("reuse_invert_btn"), 
-                                            variant="huggingface", visible=False, **base_c_params["base"]
-                                        )
-                                    @auto_ensemble_output_audio_reuse_btn.click(
-                                        inputs=[auto_ensemble_output_audio],
-                                        outputs=auto_ensemble_input_file,
-                                    )
-                                    def reuse_fn(stem_audio: str) -> gr.update:
-                                        uploaded_files = self.input_files.upload([stem_audio], copy=True)
-                                        all_uploaded_files = self.input_files.get_input_list()
-                                        if all_uploaded_files:
-                                            first_value = [all_uploaded_files[0]]
-                                        else:
-                                            first_value = []
-                                        return gr.update(choices=all_uploaded_files, value=first_value)
-                                    @auto_ensemble_ioutput_reuse_btn.click(
-                                        inputs=[auto_ensemble_ioutput_audio],
-                                        outputs=auto_ensemble_input_file,
-                                    )
-                                    def reuse_fn(stem_audio: str) -> gr.update:
-                                        uploaded_files = self.input_files.upload([stem_audio], copy=True)
-                                        all_uploaded_files = self.input_files.get_input_list()
-                                        if uploaded_files:
-                                            first_value = [uploaded_files[0]]
-                                        else:
-                                            first_value = []
-                                        return gr.update(choices=all_uploaded_files, value=first_value)
-                                with gr.Column():
-                                    with gr.Group():
-                                        gr.Markdown("<h3><center>"+_i18n("saved_primary_stems")+"</center></h3>", container=True)
-                                        auto_ensemble_primary_stems_state = gr.State([])
-                                        @gr.render(inputs=auto_ensemble_primary_stems_state)
-                                        def preview_pr_stems(input: list):
-                                            if input:
-                                                for f_ in input:
-                                                    eoutput_audio = define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
-                                                    ereuse_btn = gr.Button(
-                                                        _i18n("reuse_btn"), 
-                                                        variant="secondary", **base_c_params["base"]
-                                                    )
-                                                    @ereuse_btn.click(
-                                                        inputs=[eoutput_audio],
-                                                        outputs=auto_ensemble_input_file,
-                                                    )
-                                                    def reuse_fn(stem_audio: str) -> gr.update:
-                                                        uploaded_files = self.input_files.upload([stem_audio], copy=True)
-                                                        all_uploaded_files = self.input_files.get_input_list()
-                                                        if all_uploaded_files:
-                                                            first_value = [all_uploaded_files[0]]
-                                                        else:
-                                                            first_value = []
-                                                        return gr.update(choices=all_uploaded_files, value=first_value)
-                                            else:
-                                                gr.Markdown("<h3><center>"+_i18n("not_ensembled_with_primary_stems")+"</center></h3>", container=True)
-
-                        @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn], concurrency_id="mvsepless_app_inference")
-                        def auto_ensemble_wrapper_fn(input_file: list, template: str, etype: str, spec_invert: bool, out_format: str, save_pr_stems: bool, progress=gr.Progress(track_tqdm=True)):
-                            out, iout, pr_stems = self.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=self.auto_ensemble_app.get_models(), template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems)
-                            self.auto_ensemble_history_app.add_to_history(etype, out, iout, pr_stems)
-                            return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.skip(), gr.update(visible=True), gr.update(visible=True) 
-
-                        auto_ensemble_history.focus(self.get_actual_auto_ensemble_history_list, inputs=[auto_ensemble_history, auto_ensemble_history_state], outputs=[auto_ensemble_history, auto_ensemble_history_state], show_progress="hidden")
-                        @auto_ensemble_history.input(inputs=auto_ensemble_history, outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn])
-                        def auto_ensemble_show_history_fn(key: list):
-                            out, iout, pr_stems = self.auto_ensemble_history_app.get_from_history(one_element_list_to_value(key))
-                            visible = all([out, iout])
-                            return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.update(visible=visible), gr.update(visible=visible)
-
-                    with gr.Tab(_i18n("man_ensemble_tab")):
-                        with gr.Row():
-                            with gr.Column():
-                                manual_ensemble_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
-                                with gr.Group():
-                                    manual_ensemble_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
-                                    manual_ensemble_input_files.focus(self.get_actual_input_list, inputs=[manual_ensemble_input_files, manual_ensemble_input_state], outputs=[manual_ensemble_input_files, manual_ensemble_input_state], show_progress="hidden")
-                                    manual_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                    @manual_ensemble_upload_files.upload(inputs=manual_ensemble_upload_files, outputs=[manual_ensemble_upload_files, manual_ensemble_input_files])
-                                    def upload_files_fn(files: list):
-                                        uploaded_files = self.input_files.upload(files)
-                                        return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
-                                    @gr.render(inputs=[manual_ensemble_input_files, manual_ensemble_input_preview_check])
-                                    def preview_inputs(input: list, preview: bool):
-                                        if preview:
-                                            if input:
-                                                for f_ in input:
-                                                    define_audio_with_size(basename=True, label="", value=f_, **base_c_params["output_audio"])
-
-                            with gr.Column():
-                                with gr.Group():
-                                    manual_ensemble_weights = gr.Textbox(label=_i18n("weights_only_for_avg_fft"), info=_i18n("weights_split"), value="", **base_c_params["base"])
-                                    manual_ensemble_type = gr.Dropdown(label=_i18n("ensemble_type"), info=_i18n("ensemble_type_info"), choices=ensemble_types, value=ensemble_types[0], filterable=False, **base_c_params["base"])
-                                    manual_ensemble_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_metemplate_info"), value="ensemble_(COUNT)_TYPE", **base_c_params["base"])
-                                    manual_ensemble_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
-                                    manual_ensemble_run_btn = gr.Button(_i18n("run_ensemble"), variant="primary", **base_c_params["base"])
-
-                        with gr.Group():
-                            with gr.Row(equal_height=True):
-                                with gr.Column(min_width=110):
-                                    gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
-                                manual_ensemble_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
-
-                        with gr.Row(equal_height=True):
-                            manual_ensemble_output_audio = gr.Audio(label=_i18n("ensemble_result"), value=None, scale=15, **base_c_params["output_audio"])
-                            manual_ensemble_reuse_btn = gr.Button(
-                                _i18n("reuse_btn"), 
-                                variant="secondary", visible=False, **base_c_params["base"]
-                            )
-                            @manual_ensemble_reuse_btn.click(
-                                inputs=[manual_ensemble_output_audio],
-                                outputs=manual_ensemble_input_files,
-                            )
-                            def reuse_fn(stem_audio: str) -> gr.update:
-                                uploaded_files = self.input_files.upload([stem_audio], copy=True)
-                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
-
-
-                        @manual_ensemble_run_btn.click(inputs=[manual_ensemble_input_files, manual_ensemble_type, manual_ensemble_template, manual_ensemble_format, manual_ensemble_weights], outputs=[manual_ensemble_output_audio, manual_ensemble_reuse_btn])
-                        def manual_ensemble_wrapper_fn(input_files: list, etype: str, template: str, out_format: str, weights_str: str, progress=gr.Progress(track_tqdm=True)):
-                            weights_str = weights_str.strip(" ")
-                            if weights_str != "":
-                                weights = [float(weight) for weight in weights_str.split(",")]
-                            else:
-                                weights = []
-                            result = self.manual_ensemble(input_files, self.output_dir.gen_output_dir(), weights, template, etype, out_format)
-                            self.manual_ensemble_history_app.add_to_history(etype, result)
-                            return update_audio_with_size(label=_i18n("ensemble_result"), value=result), gr.update(visible=True)
-
-                        manual_ensemble_history.focus(self.get_actual_manual_ensemble_history_list, inputs=[manual_ensemble_history, manual_ensemble_history_state], outputs=[manual_ensemble_history, manual_ensemble_history_state], show_progress="hidden")
-                        @manual_ensemble_history.input(inputs=manual_ensemble_history, outputs=[manual_ensemble_output_audio, manual_ensemble_reuse_btn])
-                        def manual_ensemble_show_fn(key: list):
-                            output = self.manual_ensemble_history_app.get_from_history(one_element_list_to_value(key))
-                            return update_audio_with_size(label=_i18n("ensemble_result"), value=output), gr.update(visible=output is not None)
-
-                with gr.Tab(_i18n("subtract_tab")):
-                    with gr.Row():
-                        with gr.Column():
-                            with gr.Group():
-                                gr.Markdown("<h3><center>"+_i18n("original")+"</center></h3>", container=True)
-                                subtract_1_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
-                            with gr.Group():
-                                subtract_1_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
-                                subtract_1_input_file.focus(self.get_actual_input_list, inputs=[subtract_1_input_file, subtract_1_input_state], outputs=[subtract_1_input_file, subtract_1_input_state], show_progress="hidden")
-                                subtract_1_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                @subtract_1_upload_file.upload(inputs=subtract_1_upload_file, outputs=[subtract_1_upload_file, subtract_1_input_file])
-                                def upload_file_fn(file: str):
-                                    uploaded_files = self.input_files.upload([file])
-                                    all_uploaded_files = self.input_files.get_input_list()
-                                    if uploaded_files:
-                                        first_value = [uploaded_files[0]]
-                                    else:
-                                        first_value = []
-                                    return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
-                                @gr.render(inputs=[subtract_1_input_file, subtract_1_input_preview_check])
-                                def preview_input(input: list, preview: bool):
-                                    if preview:
-                                        if input:
-                                            define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
-                        with gr.Column():
-                            with gr.Group():
-                                gr.Markdown("<h3><center>"+_i18n("stem")+"</center></h3>", container=True)
-                                subtract_2_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
-                            with gr.Group():
-                                subtract_2_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
-                                subtract_2_input_file.focus(self.get_actual_input_list, inputs=[subtract_2_input_file, subtract_2_input_state], outputs=[subtract_2_input_file, subtract_2_input_state], show_progress="hidden")
-                                subtract_2_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                @subtract_2_upload_file.upload(inputs=subtract_2_upload_file, outputs=[subtract_2_upload_file, subtract_2_input_file])
-                                def upload_file_fn(file: str):
-                                    uploaded_files = self.input_files.upload([file])
-                                    all_uploaded_files = self.input_files.get_input_list()
-                                    if uploaded_files:
-                                        first_value = [uploaded_files[0]]
-                                    else:
-                                        first_value = []
-                                    return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
-                                @gr.render(inputs=[subtract_2_input_file, subtract_2_input_preview_check])
-                                def preview_input(input: list, preview: bool):
-                                    if preview:
-                                        if input:
-                                            define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
-
-                    with gr.Group():
-                        subtract_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
-                        subtract_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_itemplate_info"), value="NAME_(TYPE)_inverted", **base_c_params["base"])
-                        subtract_output_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
-                        subtract_run_btn = gr.Button(_i18n("subtract"), variant="primary", **base_c_params["base"])
+                                manual_ensemble_weights = gr.Textbox(label=_i18n("weights_only_for_avg_fft"), info=_i18n("weights_split"), value="", **base_c_params["base"])
+                                manual_ensemble_type = gr.Dropdown(label=_i18n("ensemble_type"), info=_i18n("ensemble_type_info"), choices=ensemble_types, value=ensemble_types[0], filterable=False, **base_c_params["base"])
+                                manual_ensemble_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_metemplate_info"), value="ensemble_(COUNT)_TYPE", **base_c_params["base"])
+                                manual_ensemble_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
+                                manual_ensemble_run_btn = gr.Button(_i18n("run_ensemble"), variant="primary", **base_c_params["base"])
 
                     with gr.Group():
                         with gr.Row(equal_height=True):
                             with gr.Column(min_width=110):
                                 gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
-                            subtract_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
+                            manual_ensemble_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
 
                     with gr.Row(equal_height=True):
-                        subtract_output_audio = gr.Audio(label=_i18n("inverted_result"), value=None, scale=15, **base_c_params["output_audio"])
-                        subtract_output_audio_reuse_btn = gr.Button(
+                        manual_ensemble_output_audio = gr.Audio(label=_i18n("ensemble_result"), value=None, scale=15, **base_c_params["output_audio"])
+                        manual_ensemble_reuse_btn = gr.Button(
                             _i18n("reuse_btn"), 
                             variant="secondary", visible=False, **base_c_params["base"]
                         )
-                        @subtract_output_audio_reuse_btn.click(
-                            inputs=[subtract_output_audio],
-                            outputs=subtract_1_input_file,
+                        @manual_ensemble_reuse_btn.click(
+                            inputs=[manual_ensemble_output_audio],
+                            outputs=manual_ensemble_input_files,
                         )
                         def reuse_fn(stem_audio: str) -> gr.update:
                             uploaded_files = self.input_files.upload([stem_audio], copy=True)
                             return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
 
-                        @subtract_run_btn.click(inputs=[subtract_1_input_file, subtract_2_input_file, subtract_output_format, subtract_use_spec_invert, subtract_template], outputs=[subtract_output_audio, subtract_output_audio_reuse_btn])
-                        def subtract_run_fn(input_1: list, input_2: list, out_format: str, spec_invert: bool, template: str, progress=gr.Progress(track_tqdm=True)):
-                            result = self.subtract(one_element_list_to_value(input_1), one_element_list_to_value(input_2), self.output_dir.gen_output_dir(), out_format, spec_invert, template)
-                            self.subtract_history_app.add_to_history(("spectrogram" if spec_invert else "waveform"), result)
-                            return update_audio_with_size(label=_i18n("inverted_result"), value=result), gr.update(visible=True)
 
-                        subtract_history.focus(self.get_actual_subtract_history_list, inputs=[subtract_history, subtract_history_state], outputs=[subtract_history, subtract_history_state], show_progress="hidden")
-                        @subtract_history.input(inputs=subtract_history, outputs=[subtract_output_audio, subtract_output_audio_reuse_btn])
-                        def subtract_show_fn(key: list):
-                            output = self.subtract_history_app.get_from_history(one_element_list_to_value(key))
-                            return update_audio_with_size(label=_i18n("inverted_result"), value=output), gr.update(visible=output is not None)
+                    @manual_ensemble_run_btn.click(inputs=[manual_ensemble_input_files, manual_ensemble_type, manual_ensemble_template, manual_ensemble_format, manual_ensemble_weights], outputs=[manual_ensemble_output_audio, manual_ensemble_reuse_btn])
+                    def manual_ensemble_wrapper_fn(input_files: list, etype: str, template: str, out_format: str, weights_str: str, progress=gr.Progress(track_tqdm=True)):
+                        weights_str = weights_str.strip(" ")
+                        if weights_str != "":
+                            weights = [float(weight) for weight in weights_str.split(",")]
+                        else:
+                            weights = []
+                        result = self.manual_ensemble(input_files, self.output_dir.gen_output_dir(), weights, template, etype, out_format)
+                        self.manual_ensemble_history_app.add_to_history(etype, result)
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=result), gr.update(visible=True)
+
+                    manual_ensemble_history.focus(self.get_actual_manual_ensemble_history_list, inputs=[manual_ensemble_history, manual_ensemble_history_state], outputs=[manual_ensemble_history, manual_ensemble_history_state], show_progress="hidden")
+                    @manual_ensemble_history.input(inputs=manual_ensemble_history, outputs=[manual_ensemble_output_audio, manual_ensemble_reuse_btn])
+                    def manual_ensemble_show_fn(key: list):
+                        output = self.manual_ensemble_history_app.get_from_history(one_element_list_to_value(key))
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=output), gr.update(visible=output is not None)
+
+            with gr.Tab(_i18n("subtract_tab")):
+                with gr.Row():
+                    with gr.Column():
+                        with gr.Group():
+                            gr.Markdown("<h3><center>"+_i18n("original")+"</center></h3>", container=True)
+                            subtract_1_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
+                        with gr.Group():
+                            subtract_1_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                            subtract_1_input_file.focus(self.get_actual_input_list, inputs=[subtract_1_input_file, subtract_1_input_state], outputs=[subtract_1_input_file, subtract_1_input_state], show_progress="hidden")
+                            subtract_1_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                            @subtract_1_upload_file.upload(inputs=subtract_1_upload_file, outputs=[subtract_1_upload_file, subtract_1_input_file])
+                            def upload_file_fn(file: str):
+                                uploaded_files = self.input_files.upload([file])
+                                all_uploaded_files = self.input_files.get_input_list()
+                                if uploaded_files:
+                                    first_value = [uploaded_files[0]]
+                                else:
+                                    first_value = []
+                                return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
+                            @gr.render(inputs=[subtract_1_input_file, subtract_1_input_preview_check])
+                            def preview_input(input: list, preview: bool):
+                                if preview:
+                                    if input:
+                                        define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
+                    with gr.Column():
+                        with gr.Group():
+                            gr.Markdown("<h3><center>"+_i18n("stem")+"</center></h3>", container=True)
+                            subtract_2_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
+                        with gr.Group():
+                            subtract_2_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                            subtract_2_input_file.focus(self.get_actual_input_list, inputs=[subtract_2_input_file, subtract_2_input_state], outputs=[subtract_2_input_file, subtract_2_input_state], show_progress="hidden")
+                            subtract_2_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                            @subtract_2_upload_file.upload(inputs=subtract_2_upload_file, outputs=[subtract_2_upload_file, subtract_2_input_file])
+                            def upload_file_fn(file: str):
+                                uploaded_files = self.input_files.upload([file])
+                                all_uploaded_files = self.input_files.get_input_list()
+                                if uploaded_files:
+                                    first_value = [uploaded_files[0]]
+                                else:
+                                    first_value = []
+                                return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
+                            @gr.render(inputs=[subtract_2_input_file, subtract_2_input_preview_check])
+                            def preview_input(input: list, preview: bool):
+                                if preview:
+                                    if input:
+                                        define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
+
+                with gr.Group():
+                    subtract_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
+                    subtract_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_itemplate_info"), value="NAME_(TYPE)_inverted", **base_c_params["base"])
+                    subtract_output_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
+                    subtract_run_btn = gr.Button(_i18n("subtract"), variant="primary", **base_c_params["base"])
+
+                with gr.Group():
+                    with gr.Row(equal_height=True):
+                        with gr.Column(min_width=110):
+                            gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
+                        subtract_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
+
+                with gr.Row(equal_height=True):
+                    subtract_output_audio = gr.Audio(label=_i18n("inverted_result"), value=None, scale=15, **base_c_params["output_audio"])
+                    subtract_output_audio_reuse_btn = gr.Button(
+                        _i18n("reuse_btn"), 
+                        variant="secondary", visible=False, **base_c_params["base"]
+                    )
+                    @subtract_output_audio_reuse_btn.click(
+                        inputs=[subtract_output_audio],
+                        outputs=subtract_1_input_file,
+                    )
+                    def reuse_fn(stem_audio: str) -> gr.update:
+                        uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                        return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+
+                    @subtract_run_btn.click(inputs=[subtract_1_input_file, subtract_2_input_file, subtract_output_format, subtract_use_spec_invert, subtract_template], outputs=[subtract_output_audio, subtract_output_audio_reuse_btn])
+                    def subtract_run_fn(input_1: list, input_2: list, out_format: str, spec_invert: bool, template: str, progress=gr.Progress(track_tqdm=True)):
+                        result = self.subtract(one_element_list_to_value(input_1), one_element_list_to_value(input_2), self.output_dir.gen_output_dir(), out_format, spec_invert, template)
+                        self.subtract_history_app.add_to_history(("spectrogram" if spec_invert else "waveform"), result)
+                        return update_audio_with_size(label=_i18n("inverted_result"), value=result), gr.update(visible=True)
+
+                    subtract_history.focus(self.get_actual_subtract_history_list, inputs=[subtract_history, subtract_history_state], outputs=[subtract_history, subtract_history_state], show_progress="hidden")
+                    @subtract_history.input(inputs=subtract_history, outputs=[subtract_output_audio, subtract_output_audio_reuse_btn])
+                    def subtract_show_fn(key: list):
+                        output = self.subtract_history_app.get_from_history(one_element_list_to_value(key))
+                        return update_audio_with_size(label=_i18n("inverted_result"), value=output), gr.update(visible=output is not None)
 
             with gr.Tab(_i18n("vbach_tab")):
                 with gr.Tab(_i18n("inference")):
@@ -1747,7 +1733,7 @@ class App(Separator):
                                 vbach_chunk_duration, vbach_stereo_mode, vbach_embedder, vbach_use_transformers,
                                 vbach_template, vbach_output_format, vbach_f0_min, vbach_f0_max],
                         outputs=[vbach_state, vbach_upload_files],
-                        trigger_mode="once", concurrency_id="mvsepless_app_inference"
+                        trigger_mode="once", concurrency_id="mvsepless_app_inference_vbach"
                     )
                     def convert_wrapper(
                         input_files: list, model_path: str, index_path: str, pitch: float, f0_method: str,
@@ -2041,7 +2027,7 @@ class App(Separator):
                                 vbach_custom_use_transformers, vbach_custom_template, vbach_custom_output_format, 
                                 vbach_custom_f0_min, vbach_custom_f0_max, vbach_custom_chunk_duration],
                         outputs=[vbach_custom_output_audio, vbach_custom_upload_file],
-                        trigger_mode="once", concurrency_id="mvsepless_app_inference"
+                        trigger_mode="once", concurrency_id="mvsepless_app_inference_vbach"
                     )
                     def convert_custom_f0_wrapper(
                         input_files: list, model_path: str, index_path: str, pitch: float, f0_file_path: str, 
@@ -2277,40 +2263,39 @@ class App(Separator):
                             status = self.download(name)
                             gr.Info(title=status, message="")
                             return status
-                if not hf_space_mode:
-                    with gr.Tab(_i18n("custom_separation_models_tab")):
-                        with gr.Tab(_i18n("download_from_internet")):
-                            gr.Markdown("<h3><center>"+_i18n("supported_only_direct_links")+"</center></h3>")
-                            with gr.Accordion(label=_i18n("download_model_files"), open=False):
-                                with gr.Group():
-                                    custom_sep_url_checkpoint = gr.Textbox(label=_i18n("custom_checkpoint_link"), **base_c_params["base"])
-                                    custom_sep_url_config = gr.Textbox(label=_i18n("custom_config_link"), **base_c_params["base"])
-                                    custom_sep_url_model_btn = gr.Button(_i18n("download_and_move_to_models_dir"), variant="primary", **base_c_params["base"])
-                                    custom_sep_url_model_status = gr.Textbox(label=_i18n("status"), value="", interactive=False, lines=3, max_lines=3)
-                                    @custom_sep_url_model_btn.click(inputs=[custom_sep_url_checkpoint, custom_sep_url_config], outputs=custom_sep_url_model_status)
-                                    def download_custom_sep_files_fn(url_checkpoint: str, url_config: str, progress=gr.Progress(track_tqdm=True)):
-                                        status = self.custom_sep_model_manager.download_model(checkpoint_url=url_checkpoint, config_url=url_config)
-                                        return status
-                        with gr.Tab(_i18n("download_from_local_device")):
-                            with gr.Accordion(label=_i18n("download_model_files"), open=False):
-                                with gr.Row():
-                                    with gr.Column():
-                                        with gr.Group():
-                                            gr.Markdown("<h3><center>"+_i18n("custom_checkpoint_placeholder")+"</center></h3>")
-                                            custom_sep_local_checkpoint = gr.File(show_label=False, type="filepath", file_count="multiple", file_types=[".pth", ".ckpt", ".pt", ".chpt"], **base_c_params["base"])
-                                            @custom_sep_local_checkpoint.upload(inputs=custom_sep_local_checkpoint, outputs=custom_sep_local_checkpoint)
-                                            def upload_custom_sep_checkpoint_fn(files: list, progress=gr.Progress(track_tqdm=True)):
-                                                self.custom_sep_model_manager.upload_checkpoint(files)
-                                                return gr.update(value=[])
-                                    
-                                    with gr.Column():
-                                        with gr.Group():
-                                            gr.Markdown("<h3><center>"+_i18n("custom_config_placeholder")+"</center></h3>")
-                                            custom_sep_local_config = gr.File(show_label=False, type="filepath", file_count="multiple", file_types=[".yaml", ".yml"], **base_c_params["base"])
-                                            @custom_sep_local_config.upload(inputs=custom_sep_local_config, outputs=custom_sep_local_config)
-                                            def upload_custom_sep_config_fn(files: list, progress=gr.Progress(track_tqdm=True)):
-                                                self.custom_sep_model_manager.upload_config(files)
-                                                return gr.update(value=[])
+                with gr.Tab(_i18n("custom_separation_models_tab")):
+                    with gr.Tab(_i18n("download_from_internet")):
+                        gr.Markdown("<h3><center>"+_i18n("supported_only_direct_links")+"</center></h3>")
+                        with gr.Accordion(label=_i18n("download_model_files"), open=False):
+                            with gr.Group():
+                                custom_sep_url_checkpoint = gr.Textbox(label=_i18n("custom_checkpoint_link"), **base_c_params["base"])
+                                custom_sep_url_config = gr.Textbox(label=_i18n("custom_config_link"), **base_c_params["base"])
+                                custom_sep_url_model_btn = gr.Button(_i18n("download_and_move_to_models_dir"), variant="primary", **base_c_params["base"])
+                                custom_sep_url_model_status = gr.Textbox(label=_i18n("status"), value="", interactive=False, lines=3, max_lines=3)
+                                @custom_sep_url_model_btn.click(inputs=[custom_sep_url_checkpoint, custom_sep_url_config], outputs=custom_sep_url_model_status)
+                                def download_custom_sep_files_fn(url_checkpoint: str, url_config: str, progress=gr.Progress(track_tqdm=True)):
+                                    status = self.custom_sep_model_manager.download_model(checkpoint_url=url_checkpoint, config_url=url_config)
+                                    return status
+                    with gr.Tab(_i18n("download_from_local_device")):
+                        with gr.Accordion(label=_i18n("download_model_files"), open=False):
+                            with gr.Row():
+                                with gr.Column():
+                                    with gr.Group():
+                                        gr.Markdown("<h3><center>"+_i18n("custom_checkpoint_placeholder")+"</center></h3>")
+                                        custom_sep_local_checkpoint = gr.File(show_label=False, type="filepath", file_count="multiple", file_types=[".pth", ".ckpt", ".pt", ".chpt"], **base_c_params["base"])
+                                        @custom_sep_local_checkpoint.upload(inputs=custom_sep_local_checkpoint, outputs=custom_sep_local_checkpoint)
+                                        def upload_custom_sep_checkpoint_fn(files: list, progress=gr.Progress(track_tqdm=True)):
+                                            self.custom_sep_model_manager.upload_checkpoint(files)
+                                            return gr.update(value=[])
+                                
+                                with gr.Column():
+                                    with gr.Group():
+                                        gr.Markdown("<h3><center>"+_i18n("custom_config_placeholder")+"</center></h3>")
+                                        custom_sep_local_config = gr.File(show_label=False, type="filepath", file_count="multiple", file_types=[".yaml", ".yml"], **base_c_params["base"])
+                                        @custom_sep_local_config.upload(inputs=custom_sep_local_config, outputs=custom_sep_local_config)
+                                        def upload_custom_sep_config_fn(files: list, progress=gr.Progress(track_tqdm=True)):
+                                            self.custom_sep_model_manager.upload_config(files)
+                                            return gr.update(value=[])
                 with gr.Tab(_i18n("vbach_models_tab")):
                     with gr.Tab(_i18n("download_from_internet")):
                         gr.Markdown("<h3><center>"+_i18n("supported_only_direct_links")+"</center></h3>")
@@ -2434,4 +2419,5 @@ if __name__ == "__main__":
         app.update_info()
         app.load_info()
     app_ui = app.UI(theme, not args.full)
+    app_ui.queue(default_concurrency_limit=1)
     app_ui.launch(allowed_paths=["/"], debug=True, share=args.share, server_port=args.port, show_api=True, server_name="0.0.0.0")

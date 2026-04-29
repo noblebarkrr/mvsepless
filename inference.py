@@ -20,6 +20,7 @@ import numpy as np
 from typing import Literal, Optional, List, Tuple, Any, Dict
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
+import gradio as gr
 from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono
 from args_parser import parse_separator_args, tobool
 from namer import Namer
@@ -1468,7 +1469,16 @@ class Separator(ModelManager):
         self.mssi.clear_model()
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
-    def separate_base(self, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental):
+    def separate_base(
+        self, 
+        input_valid_files: list[str | Path], 
+        model_name: str, 
+        template: str, 
+        checkpoint: str | Path, 
+        config: str | Path, 
+        selected_stems: list, 
+        extract_instrumental: bool
+    ):
         self.mssi.clear_model() 
         self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
         self.mssi.print_instruments()
@@ -1500,6 +1510,7 @@ class Separator(ModelManager):
         results = self.separate_base(input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental)
         return results
 
+    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def custom_separate(
         self,
         input_files: list,
@@ -1556,6 +1567,26 @@ class Separator(ModelManager):
         
         console.print(table)
 
+    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
+    def auto_ensemble_base(
+            self, 
+            model_name: str, 
+            checkpoint: str | Path, 
+            config: str | Path,
+            i: int,
+            model_count: int,
+            mix: np.ndarray,
+            orig_sr: int,
+            primary_stem: str,
+            invert: bool
+        ):
+        self.mssi.clear_model()
+        self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
+        self.mssi.print_instruments()
+        output, model_sr = self.mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert)
+        self.mssi.clear_model()
+        return output, model_sr
+
     def auto_ensemble(
         self, 
         input_file: str | Path,
@@ -1603,10 +1634,7 @@ class Separator(ModelManager):
             try:
                 self.download(model_name)
                 checkpoint, config = self.generate_local_paths(model_name)
-                self.mssi.clear_model()
-                self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
-                self.mssi.print_instruments()
-                output, model_sr = self.mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert)
+                output, model_sr = self.auto_ensemble_base(model_name, checkpoint, config, i, model_count, mix, orig_sr, primary_stem, invert)
                 auto_ensembler.add_array(output, model_sr)
                 weights.append(weight)
                 if save_primary_stems:
@@ -1614,8 +1642,8 @@ class Separator(ModelManager):
                     saved_primary_stems.append(write(Namer.iter(output_dir / model_name / f"{primary_stem_file_name}.flac"), output, model_sr))
             except Exception as e:
                 print(_i18n("error_occured_separation")+": "+str(e))
+                gr.Warning(message="<b>"+f'{_i18n("error_occured_separation")}'.replace("\n", "<br>")+": "+str(e)+"</b>", title="")
                 continue
-        self.mssi.clear_model()
         extracted_primary_stems = auto_ensembler.get_arrays()
         srs = auto_ensembler.get_srs()
         output_array, sr_ = ensemble(extracted_primary_stems, srs, etype, weights)
