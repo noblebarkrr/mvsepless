@@ -3,7 +3,7 @@
 # MVSepless
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/dzeta/MVSepLess_Dzeta_Colab.ipynb)
-[![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_zero_gpu)
+[![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_zero_gpu) (Приостановлено)
 
 </div>
 
@@ -92,7 +92,7 @@ https://github.com/noblebarkrr/mvsepless/archive/refs/heads/dzeta.zip
 apt update -y
 apt upgrade -y
 apt install -y wget curl git gcc libx11-dev ffmpeg build-essential cmake nano python3-full python3-dev
-git clone hhtps://github.com/noblebarkrr/mvsepless -b dzeta
+git clone https://github.com/noblebarkrr/mvsepless -b dzeta
 cd mvsepless
 
 # Если пакеты не устанваливаются без виртуального окружения
