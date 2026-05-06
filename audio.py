@@ -1646,7 +1646,7 @@ def get_audio_files_from_list(input_paths: Union[str | Path, List[str | Path]], 
             if not only_files:
                 for file in p.rglob('*'):
                     if file.is_file() and check(file):
-                        input_list.append(p.as_posix())
+                        input_list.append(file.as_posix())
         elif p.is_file():
             if check(p):
                 input_list.append(p.as_posix())
