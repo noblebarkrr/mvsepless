@@ -256,7 +256,7 @@ class History(UserDirectory):
             for basename, stems_list in state:
                 new_stems_list = [basename]
                 new_stems_list.append([[stem_name, rename_user_dir_path(stem_path, mode=mode)] for stem_name, stem_path in stems_list])
-                new_state.extend(deepcopy(new_stems_list))
+                new_state.append(deepcopy(new_stems_list))
             new_data[key] = deepcopy(new_state)
 
         for key2, state2 in new_data.items():
