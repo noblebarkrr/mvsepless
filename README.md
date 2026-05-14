@@ -128,7 +128,7 @@ pip install -r requirements_old_torch_py310.txt
 
 ## Специфичные атрибуты конфигов Roformer моделей <span id="specific_keys"></span>
 
-### Все атрибуты находятся [здесь](ROFORMER_SPECIFIC_KEYS.md)
+### Все атрибуты находятся [здесь](models/ROFORMER_SPECIFIC_KEYS.md)
 
 ## Шаблоны имен файлов <span id="шаблоны-имен"></span>
 
