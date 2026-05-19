@@ -1495,7 +1495,7 @@ class App(Separator):
                             all_files.extend(e_state)
 
                         if zip_is_generated:
-                            return gr.skip()
+                            return gr.skip(), gr.skip()
                         else:
                             zip_file = generate_zip_archive(all_files, get_zip_output_path("ensembless"))
                             zip_is_generated = True
