@@ -75,6 +75,31 @@ class Namer:
             counter += 1
 
     @staticmethod
+    def iter_in_list(filepath: str | Path, list_paths: list[str | Path] | tuple[str | Path, ...]) -> str:
+        """
+        Создать уникальное имя файла, добавляя (n) если файл существует
+        
+        Args:
+            filepath: Исходный путь
+            list_paths: Список путей
+        
+        Returns:
+            Уникальный путь
+        """
+        filepath_ = Path(filepath)
+        list_paths_str = [path.as_posix() for path in [Path(p) for p in list_paths]]
+        if filepath_.as_posix() not in list_paths_str:
+            return filepath_.as_posix()
+
+        counter = 1
+        while True:
+            new_filename = filepath_.stem + f" ({counter})"
+            new_filepath = filepath_.with_stem(new_filename)
+            if new_filepath.as_posix() not in list_paths_str:
+                return new_filepath.as_posix()
+            counter += 1
+
+    @staticmethod
     def template(template: str, **kwargs: Any) -> str:
         """
         Применить шаблон с подстановкой ключей

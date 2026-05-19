@@ -1639,7 +1639,7 @@ class Separator(ModelManager):
                 weights.append(weight)
                 if save_primary_stems:
                     primary_stem_file_name = primary_stem + (invert_key if invert else "")
-                    saved_primary_stems.append(write(Namer.iter(output_dir / model_name / f"{primary_stem_file_name}.flac"), output, model_sr))
+                    saved_primary_stems.append(write(Namer.iter(output_dir / model_name / f"{model_name}_{primary_stem_file_name}.flac"), output, model_sr))
             except Exception as e:
                 print(_i18n("error_occured_separation")+": "+str(e))
                 gr.Warning(message="<b>"+f'{_i18n("error_occured_separation")}'.replace("\n", "<br>")+": "+str(e)+"</b>", title="")

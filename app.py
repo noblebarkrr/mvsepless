@@ -109,6 +109,38 @@ def copy_to_runtime():
         print(_i18n("copy_to_gdrive_done"))
         gr.Info(title=_i18n("copy_to_gdrive_done"), message="")
 
+def generate_zip_archive(files: str | Path | list[str | Path] | tuple[str | Path, ...], output_path: str | Path):
+
+    if isinstance(files, (str, Path)):
+        input_files = [files]
+    else:
+        input_files = files
+
+    added_files = []
+
+    output_path_ = Path(output_path)
+    output_path_.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(output_path_, mode="w") as zip_file:
+        for path in input_files:
+            p = Path(path)
+            if p.exists():
+                name = p.name
+                name_list = zip_file.namelist()
+                if name not in name_list:
+                    zip_file.write(p, name)
+                else:
+                    zip_file.write(p, Namer.iter_in_list(Namer.short(name), name_list))
+                added_files.append(name)
+
+    print(_i18n("added_files")+": "+str(len(added_files)))
+    return output_path_.as_posix()
+
+def get_zip_output_path(name):
+    temp_dir = Path(tempfile.gettempdir())
+    timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+    return Namer.iter(temp_dir / f"{name}_{timestamp}.zip")
+
+
 class UserDirectory:
     def __init__(self, custom_dir=USER_DIR):
         self.user_directory = Path(custom_dir if custom_dir else DEFAULT_USER_DIR)
@@ -1004,10 +1036,18 @@ class App(Separator):
                     @gr.render(inputs=[sep_state])
                     def show_players(state):
                         if state:
+                            zip_is_generated = False
+                            all_stems_dict = {}
+                            all_stems = set(stem_name_ for stem_list in (stems_list_ for basename_, stems_list_ in state) for stem_name_, stem_path_ in stem_list)
+                            all_files = []
+                            for stem in all_stems:
+                                all_stems_dict[stem] = []
                             for basename, stems_list in state:
                                 with gr.Group():
                                     gr.Markdown(f"<h4><center>{basename}</center></h4>")
                                     for stem_name, stem_path in stems_list:
+                                        all_files.append(stem_path)
+                                        all_stems_dict[stem_name].append(stem_path) 
                                         with gr.Row(equal_height=True):
                                             output_audio = define_audio_with_size(
                                                 value=stem_path,
@@ -1020,12 +1060,39 @@ class App(Separator):
                                                 variant="secondary", **base_c_params["base"]
                                             )
                                             @reuse_btn.click(
-                                                inputs=[output_audio],
                                                 outputs=sep_input_files,
                                             )
-                                            def reuse_fn(stem_audio: str) -> gr.update:
-                                                uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                            def reuse_fn(stem=deepcopy(stem_path)) -> gr.update:
+                                                uploaded_files = self.input_files.upload([stem], copy=True)
                                                 return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                            
+                            with gr.Column(variant="panel"):
+                                with gr.Column(variant="panel"):
+                                    for stem_a in all_stems:
+                                        if len(all_stems_dict[stem_a]) > 1:
+                                            reuse_all_stem_btn = gr.Button(_i18n("reuse_all_stem", stem=stem_a), variant="huggingface", **base_c_params["base"])
+                                            @reuse_all_stem_btn.click(outputs=sep_input_files)
+                                            def reuse_all_stem_fn(stem=deepcopy(stem_a)):
+                                                uploaded_files = self.input_files.upload(all_stems_dict[stem], copy=True)
+                                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                    
+                                reuse_all_stems_btn = gr.Button(_i18n("reuse_all_stems"), variant="primary", **base_c_params["base"])
+                                @reuse_all_stems_btn.click(outputs=sep_input_files)
+                                def reuse_all_stems_fn():
+                                    uploaded_files = self.input_files.upload(all_files, copy=True)
+                                    return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                
+                                generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
+                                @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
+                                def generate_zip_fn():
+                                    nonlocal zip_is_generated
+                                    if zip_is_generated:
+                                        return gr.skip()
+                                    else:
+                                        zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsepless"))
+                                        zip_is_generated = True
+                                        return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
+
                         else:
                             gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
             with gr.Tab(_i18n("custom_separation_tab")):
@@ -1180,10 +1247,18 @@ class App(Separator):
                 @gr.render(inputs=[custom_sep_state])
                 def show_custom_players(state):
                     if state:
+                        zip_is_generated = False
+                        all_stems_dict = {}
+                        all_stems = set(stem_name_ for stem_list in (stems_list_ for basename_, stems_list_ in state) for stem_name_, stem_path_ in stem_list)
+                        all_files = []
+                        for stem in all_stems:
+                            all_stems_dict[stem] = []
                         for basename, stems_list in state:
                             with gr.Group():
                                 gr.Markdown(f"<h4><center>{basename}</center></h4>")
                                 for stem_name, stem_path in stems_list:
+                                    all_files.append(stem_path)
+                                    all_stems_dict[stem_name].append(stem_path) 
                                     with gr.Row(equal_height=True):
                                         output_audio = define_audio_with_size(
                                             value=stem_path,
@@ -1196,12 +1271,38 @@ class App(Separator):
                                             variant="secondary", **base_c_params["base"]
                                         )
                                         @reuse_btn.click(
-                                            inputs=[output_audio],
                                             outputs=custom_sep_input_files,
                                         )
-                                        def reuse_fn(stem_audio: str) -> gr.update:
-                                            uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                        def reuse_fn(stem=deepcopy(stem_path)) -> gr.update:
+                                            uploaded_files = self.input_files.upload([stem], copy=True)
                                             return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                        
+                        with gr.Column(variant="panel"):
+                            with gr.Column(variant="panel"):
+                                for stem_a in all_stems:
+                                    if len(all_stems_dict[stem_a]) > 1:
+                                        reuse_all_stem_btn = gr.Button(_i18n("reuse_all_stem", stem=stem_a), variant="huggingface", **base_c_params["base"])
+                                        @reuse_all_stem_btn.click(outputs=custom_sep_input_files)
+                                        def reuse_all_stem_fn(stem=deepcopy(stem_a)):
+                                            uploaded_files = self.input_files.upload(all_stems_dict[stem], copy=True)
+                                            return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                
+                            reuse_all_stems_btn = gr.Button(_i18n("reuse_all_stems"), variant="primary", **base_c_params["base"])
+                            @reuse_all_stems_btn.click(outputs=custom_sep_input_files)
+                            def reuse_all_stems_fn():
+                                uploaded_files = self.input_files.upload(all_files, copy=True)
+                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                            
+                            generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
+                            @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
+                            def generate_zip_fn():
+                                nonlocal zip_is_generated
+                                if zip_is_generated:
+                                    return gr.skip()
+                                else:
+                                    zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsepless"))
+                                    zip_is_generated = True
+                                    return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
                     else:
                         gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
 
@@ -1335,6 +1436,10 @@ class App(Separator):
                                     else:
                                         first_value = []
                                     return gr.update(choices=all_uploaded_files, value=first_value)
+                                
+                                auto_ensemble_zip_is_generated = gr.State(False)
+                                auto_ensemble_generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=False, **base_c_params["base"])
+    
                             with gr.Column():
                                 with gr.Group():
                                     gr.Markdown("<h3><center>"+_i18n("saved_primary_stems")+"</center></h3>", container=True)
@@ -1363,18 +1468,39 @@ class App(Separator):
                                         else:
                                             gr.Markdown("<h3><center>"+_i18n("not_ensembled_with_primary_stems")+"</center></h3>", container=True)
 
-                    @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems, auto_ensemble_user_flow_state], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn], concurrency_id="mvsepless_app_inference_ensemble")
+                    @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems, auto_ensemble_user_flow_state], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn, auto_ensemble_generate_zip_btn, auto_ensemble_zip_is_generated], concurrency_id="mvsepless_app_inference_ensemble")
                     def auto_ensemble_wrapper_fn(input_file: list, template: str, etype: str, spec_invert: bool, out_format: str, save_pr_stems: bool, flow: list[list], progress=gr.Progress(track_tqdm=True)):
                         out, iout, pr_stems = self.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=flow, template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems)
                         self.auto_ensemble_history_app.add_to_history(etype, out, iout, pr_stems)
-                        return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.skip(), gr.update(visible=True), gr.update(visible=True) 
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.skip(), gr.update(visible=True), gr.update(visible=True), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=True, **base_c_params["base"]), gr.update(value=False)
 
                     auto_ensemble_history.focus(self.get_actual_auto_ensemble_history_list, inputs=[auto_ensemble_history, auto_ensemble_history_state], outputs=[auto_ensemble_history, auto_ensemble_history_state], show_progress="hidden")
-                    @auto_ensemble_history.input(inputs=auto_ensemble_history, outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn])
+                    @auto_ensemble_history.input(inputs=auto_ensemble_history, outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn, auto_ensemble_generate_zip_btn, auto_ensemble_zip_is_generated])
                     def auto_ensemble_show_history_fn(key: list):
                         out, iout, pr_stems = self.auto_ensemble_history_app.get_from_history(one_element_list_to_value(key))
                         visible = all([out, iout])
-                        return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.update(visible=visible), gr.update(visible=visible)
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.update(visible=visible), gr.update(visible=visible), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=visible, **base_c_params["base"]), gr.update(value=False)
+
+                    @auto_ensemble_generate_zip_btn.click(inputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_zip_is_generated], outputs=[auto_ensemble_generate_zip_btn, auto_ensemble_zip_is_generated], trigger_mode="once")
+                    def generate_zip_fn(out, iout, e_state, zip_is_generated):
+                        all_files = []
+
+                        if out:
+                            all_files.append(out)
+
+                        if iout:
+                            all_files.append(iout)
+
+                        if e_state:
+                            all_files.extend(e_state)
+
+                        if zip_is_generated:
+                            return gr.skip()
+                        else:
+                            zip_file = generate_zip_archive(all_files, get_zip_output_path("ensembless"))
+                            zip_is_generated = True
+                            return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"]), zip_is_generated
+
 
                 with gr.Tab(_i18n("man_ensemble_tab")):
                     with gr.Row():
@@ -1716,6 +1842,7 @@ class App(Separator):
                         @gr.render(inputs=[vbach_state])
                         def show_results(state):
                             if state:
+                                zip_is_generated = False
                                 for result_path in state:
                                     with gr.Group():
                                         define_audio_with_size(
@@ -1723,6 +1850,17 @@ class App(Separator):
                                             label=Path(result_path).stem,
                                             **base_c_params["output_audio"]
                                         )
+
+                                generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
+                                @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
+                                def generate_zip_fn():
+                                    nonlocal zip_is_generated
+                                    if zip_is_generated:
+                                        return gr.skip()
+                                    else:
+                                        zip_file = generate_zip_archive(state, get_zip_output_path("vbach"))
+                                        zip_is_generated = True
+                                        return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
                             else:
                                 gr.Markdown(f"<h3><center>{_i18n('no_conversion_results')}</center></h3>", container=True)
 

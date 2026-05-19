@@ -566,7 +566,12 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "used_space": "Использовано",
         "all_space": "Всего",
         "used_space_data_local": "Обьем пользовательских данных в среде выполнения",
-        "used_space_data_gdrive": "Обьем пользовательских данных на Google Диске"
+        "used_space_data_gdrive": "Обьем пользовательских данных на Google Диске",
+        "added_files": "Добавлено файлов",
+        "reuse_all_stem": "Использовать снова все {stem}",
+        "reuse_all_stems": "Использовать снова все стемы",
+        "generate_zip_archive": "Сгенерировать ZIP-архив",
+        "download_zip_archive": "Скачать ZIP-архив"
     },
     "en": {
         "bytes": "B",
@@ -1115,7 +1120,12 @@ Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`
         "used_space": "Used",
         "all_space": "All",
         "used_space_data_local": "User data space in runtime",
-        "used_space_data_gdrive": "User data space on Google Drive"
+        "used_space_data_gdrive": "User data space on Google Drive",
+        "added_files": "Added Files",
+        "reuse_all_stem": "Reuse all {stem}",
+        "reuse_all_stems": "Reuse all stems",
+        "generate_zip_archive": "Generate ZIP",
+        "download_zip_archive": "Download ZIP",
     }
 }
 
