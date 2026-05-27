@@ -571,7 +571,10 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "reuse_all_stem": "Использовать снова все {stem}",
         "reuse_all_stems": "Использовать снова все стемы",
         "generate_zip_archive": "Сгенерировать ZIP-архив",
-        "download_zip_archive": "Скачать ZIP-архив"
+        "download_zip_archive": "Скачать ZIP-архив",
+        "invert_plus": "При создании инструментала складывать все невыбранные стемы",
+        "invert_plus_info": "Уменьшает остаток от выбранных стемов при извлечении инструментала (актуально для Roformer моделей)",
+        "invert_plus_applied": "Применена инверсия \"плюс\""
     },
     "en": {
         "bytes": "B",
@@ -1126,6 +1129,9 @@ Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`
         "reuse_all_stems": "Reuse all stems",
         "generate_zip_archive": "Generate ZIP",
         "download_zip_archive": "Download ZIP",
+        "invert_plus": "When extracting instrumental, add all unselected stems",
+        "invert_plus_info": "Reduces the remainder of selected stems when extracting a instrumental (relevant for Roformer models)",
+        "invert_plus_applied": "Invert plus applied"
     }
 }
 

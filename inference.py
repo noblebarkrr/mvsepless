@@ -215,6 +215,26 @@ def get_add_params(args):
         return vars(args.add_params)
     return {}
 
+def get_stems_from_config_simple(conf: str | Path, model_type: str):
+    instruments = []
+    if not conf:
+        return instruments
+    conf = Path(conf)
+    if not conf.exists():
+        raise PathNotExist(_i18n("path_not_exist"))
+    try:
+        if model_type == "htdemucs":
+            config = OmegaConf.load(conf)
+        else:
+            with conf.open("r", encoding="utf-8") as f:
+                config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
+        instruments = config.training.instruments
+    except FileNotFoundError:
+        print(FileNotFoundError(_i18n("config_not_found", path=conf)))
+    except Exception as e:
+        print(ValueError(_i18n("config_load_error", error=str(e))))
+    return instruments
+
 class MSSI: # Music Source Separation Inference
     def __init__(self, 
         output_dir=".", 
@@ -1243,13 +1263,19 @@ class MSSI: # Music Source Separation Inference
         else:
             return
 
-    def extract_instrumental(self, extract_instrumental: bool, return_: bool = False):
+    def extract_instrumental(self, extract_instrumental: bool, selected_stems: list = [], return_: bool = False, invert_plus: bool = False):
+        self.output_arrays["invert"] = self.input_mix.copy()
         if extract_instrumental:
             if self.output_arrays:
-                output_keys = [key_ for key_ in self.output_arrays]
-                self.output_arrays["invert"] = self.input_mix.copy()
-                for stem in output_keys:
-                    self.output_arrays["invert"] = subtractor(self.output_arrays["invert"], self.output_arrays[stem], self.sample_rate, self.sample_rate, spectrogram=self.use_spec_invert)[0]
+                unselected_keys = [key_1 for key_1 in self.output_arrays if key_1 not in [*selected_stems, "invert"]]
+                if invert_plus and unselected_keys:
+                    print(_i18n("invert_plus_applied"))
+                    self.output_arrays["invert"] = ensemble([self.output_arrays[stem] for stem in unselected_keys], [self.sample_rate] * len(unselected_keys), "max_fft")[0]
+                    self.delete_unselected_stems([*selected_stems, "invert"])
+                else:
+                    self.delete_unselected_stems([*selected_stems, "invert"])
+                    for stem in selected_stems:
+                        self.output_arrays["invert"] = subtractor(self.output_arrays["invert"], self.output_arrays[stem], self.sample_rate, self.sample_rate, spectrogram=self.use_spec_invert)[0]
         if return_:
             return self.output_arrays["invert"]
 
@@ -1289,7 +1315,7 @@ class MSSI: # Music Source Separation Inference
     def get_outputs(self):
         return self.output_files_list
     
-    def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True):
+    def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True, invert_plus: bool = False):
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "MODEL", "STEM"])
         template = Namer.short(template, length=40)
@@ -1300,8 +1326,7 @@ class MSSI: # Music Source Separation Inference
         except Exception as e:
             self.clear_mix()
             raise DemixError(_i18n("demix_error", error=e)) from e
-        self.delete_unselected_stems(selected_stems)
-        self.extract_instrumental(extract_instrumental)
+        self.extract_instrumental(extract_instrumental, selected_stems=selected_stems, invert_plus=invert_plus)
         self.write(template, "name_stems_list_append_self")
         self.clear_mix()
 
@@ -1326,7 +1351,7 @@ class MSSI: # Music Source Separation Inference
         self.load_model_instance()
         self.load_checkpoint(ckpt=ckpt)
 
-    def inference(self, input: str | list, /, *inputs, template: str = "NAME_MDOEL_STEM", selected_stems: list = [], extract_instrumental: bool = False):
+    def inference(self, input: str | list, /, *inputs, template: str = "NAME_MDOEL_STEM", selected_stems: list = [], extract_instrumental: bool = False, invert_plus: bool = False):
         self.clear_outputs()
         all_inputs = []
         if isinstance(input, list):
@@ -1338,7 +1363,7 @@ class MSSI: # Music Source Separation Inference
         total = len(all_inputs)
         for i, input_file in enumerate(all_inputs, start=1):
             try:
-                self._process(i, total, input_file, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental)
+                self._process(i, total, input_file, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
             except Exception as e:
                 traceback.print_exc()
         return self.get_outputs()
@@ -1477,12 +1502,13 @@ class Separator(ModelManager):
         checkpoint: str | Path, 
         config: str | Path, 
         selected_stems: list, 
-        extract_instrumental: bool
+        extract_instrumental: bool,
+        invert_plus: bool
     ):
         self.mssi.clear_model() 
         self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
         self.mssi.print_instruments()
-        results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental)
+        results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
         self.mssi.clear_model()
         return results
 
@@ -1495,6 +1521,7 @@ class Separator(ModelManager):
         model_name: str = "bs_6stem",
         extract_instrumental: bool = False,
         use_spec_invert: bool = False,
+        invert_plus: bool = False,
         selected_stems: list = [],
         add_params: dict = {}
     ):
@@ -1507,7 +1534,7 @@ class Separator(ModelManager):
         self.mssi.set_add_params(**add_params)
         self.download(model_name)
         checkpoint, config = self.generate_local_paths(model_name)
-        results = self.separate_base(input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental)
+        results = self.separate_base(input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus)
         return results
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
@@ -1522,6 +1549,7 @@ class Separator(ModelManager):
         conf: str = "conf.ckpt",
         extract_instrumental: bool = False,
         use_spec_invert: bool = False,
+        invert_plus: bool = False,
         selected_stems: list = [],
         add_params: dict = {}
     ):
@@ -1538,7 +1566,7 @@ class Separator(ModelManager):
         self.mssi.load_model(model_type, checkpoint, config)
         self.previous_model_name = model_name
         self.mssi.print_instruments()
-        results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental)
+        results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
         self.mssi.clear_model()
         return results
 
@@ -1721,6 +1749,7 @@ if __name__ == "__main__":
             model_name=args.model_name,
             extract_instrumental=args.extract_instrumental,
             use_spec_invert=args.use_spec_invert,
+            invert_plus=args.invert_plus,
             selected_stems=args.selected_stems,
             add_params=get_add_params(args)
         )
@@ -1735,6 +1764,7 @@ if __name__ == "__main__":
             conf=args.config_path,
             extract_instrumental=args.extract_instrumental,
             use_spec_invert=args.use_spec_invert,
+            invert_plus=args.invert_plus,
             selected_stems=args.selected_stems,
             add_params=get_add_params(args)
         )

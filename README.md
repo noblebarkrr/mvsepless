@@ -445,6 +445,7 @@ result = separator.manual_ensemble(
 | `model_name` | `str` | Имя модели |
 | `extract_instrumental` | `bool` | Создание инверсии выбранных стемов (стем `invert`) |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
+| `invert_plus` | `bool` | Использует сложение невыбранных стемов при ссоздании инструментала |
 | `selected_stems` | `list` | Список стемов для сохранения (если не указан — все) |
 | `add_params` | `dict` | Дополнительные параметры разделения |
 
@@ -469,6 +470,7 @@ result = separator.manual_ensemble(
 | `conf` | `str \| Path` | Путь к YAML конфигу (`*.yaml`) |
 | `extract_instrumental` | `bool` | Создание инверсии выбранных стемов |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
+| `invert_plus` | `bool` | Использует сложение невыбранных стемов при ссоздании инструментала |
 | `selected_stems` | `list` | Список стемов для сохранения |
 | `add_params` | `dict` | Дополнительные параметры разделения |
 

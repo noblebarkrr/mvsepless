@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 from extra_utils import tz, define_audio_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage
-from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR
+from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
 from vbach_lib.hubert_manager import download_hubert, huberts_fairseq, huberts_transformers
@@ -1004,6 +1004,7 @@ class App(Separator):
                             sep_extract_instrumental = gr.Checkbox(label=_i18n("extract_instrumental"), visible=ext_inst_visible_default, value=False, **base_c_params["base"])
                             sep_model_name.change(self.update_model_name, inputs=sep_model_name, outputs=[sep_extract_instrumental, sep_selected_stems])
                             sep_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
+                            sep_sum_stems = gr.Checkbox(label=_i18n("invert_plus"), info=_i18n("invert_plus_info"), value=False, **base_c_params["base"])
                             with gr.Accordion(label=_i18n("separation_params"), open=False):
                                 add_params_comp_seq = generate_add_params_component()
                                 add_params_user_state = gr.State({})
@@ -1027,10 +1028,10 @@ class App(Separator):
                         def separation_show_history_fn(key: list):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
-                    @separate_btn.click(inputs=[sep_input_files, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format, add_params_user_state], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
-                    def separator_wrap(input_files: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, add_params: dict, progress=gr.Progress(track_tqdm=True)):
+                    @separate_btn.click(inputs=[sep_input_files, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format, sep_sum_stems, add_params_user_state], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
+                    def separator_wrap(input_files: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, sum_stems: bool, add_params: dict, progress=gr.Progress(track_tqdm=True)):
                         results = []
-                        results = self.separate(input_files, self.output_dir.gen_output_dir(), output_format, "NAME_(STEM)_MODEL", model_name, ext_inst, spec_invert, sel_stems, add_params)
+                        results = self.separate(input_files, self.output_dir.gen_output_dir(), output_format, tmpl, model_name, ext_inst, spec_invert, sum_stems, sel_stems, add_params)
                         self.history.add_to_history(model_name, results)
                         return results, gr.skip()
                     @gr.render(inputs=[sep_state])
@@ -1158,12 +1159,20 @@ class App(Separator):
                                 show_progress="hidden"
                             )
                             
+                            custom_sep_selected_stems = gr.CheckboxGroup(label=_i18n("select_stems"), info=_i18n("select_stems_info"), choices=[], value=[], **base_c_params["base"])
+                            custom_sep_extract_instrumental = gr.Checkbox(label=_i18n("extract_instrumental"), visible=ext_inst_visible_default, value=False, **base_c_params["base"])
+                            @custom_sep_config.input(inputs=[custom_sep_config, custom_sep_model_type], outputs=[custom_sep_extract_instrumental, custom_sep_selected_stems])
+                            def get_stems_from_config_fn(path: str, model_type: str):
+                                stems = get_stems_from_config_simple(one_element_list_to_value(path), model_type)
+                                return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems)
+
                             custom_sep_use_spec_invert = gr.Checkbox(
                                 label=_i18n("use_spec_invert"), 
                                 value=False, 
                                 **base_c_params["base"]
                             )
-                            
+                            custom_sep_sum_stems = gr.Checkbox(label=_i18n("invert_plus"), info=_i18n("invert_plus_info"), value=False, **base_c_params["base"])
+
                             with gr.Accordion(label=_i18n("separation_params"), open=False):
                                 custom_add_params_comp_seq = generate_add_params_component()
                                 custom_add_params_user_state = gr.State({})
@@ -1209,15 +1218,15 @@ class App(Separator):
                 
                 @custom_separate_btn.click(
                     inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
-                            custom_sep_use_spec_invert,
-                            custom_sep_template, custom_sep_output_format, custom_add_params_user_state],
+                            custom_sep_selected_stems, custom_sep_extract_instrumental, custom_sep_use_spec_invert,
+                            custom_sep_template, custom_sep_output_format, custom_sep_sum_stems, custom_add_params_user_state],
                     outputs=[custom_sep_state, custom_sep_upload_files],
                     trigger_mode="once", concurrency_id="mvsepless_app_inference"
                 )
                 def custom_separator_wrap(
                     input_files: list, model_type: str, checkpoint: list, config: list,
-                    spec_invert: bool, 
-                    tmpl: str, output_format: str, add_params: dict, progress=gr.Progress(track_tqdm=True)
+                    sel_stems: list, ext_inst: bool, spec_invert: bool, 
+                    tmpl: str, output_format: str, sum_stems: bool, add_params: dict, progress=gr.Progress(track_tqdm=True)
                 ):
                     checkpoint_path = one_element_list_to_value(checkpoint)
                     config_path = one_element_list_to_value(config)
@@ -1234,9 +1243,10 @@ class App(Separator):
                         model_type,
                         checkpoint_path,
                         config_path,
-                        False,
+                        ext_inst,
                         spec_invert,
-                        [],
+                        sum_stems,
+                        sel_stems,
                         add_params
                     )
                     

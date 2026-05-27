@@ -134,6 +134,11 @@ def parse_separator_args(add_params_args: dict = {}):
         help=_i18n("arg_use_spec_invert_help")
     )
     separate_parser.add_argument(
+        "-iplus", "-invert_plus", "-invert-plus", "--invert_plus", "--invert-plus",  
+        action="store_true", dest="invert_plus",
+        help=_i18n("invert_plus")
+    )
+    separate_parser.add_argument(
         "-st", "--st", "-stems", "--stems", "--selected_stems", "--selected-stems", 
         nargs="*", metavar="STEM", dest="selected_stems",
         help=_i18n("arg_selected_stems_help")
@@ -194,6 +199,11 @@ def parse_separator_args(add_params_args: dict = {}):
         "-ispec", "-spec_invert", "-spec-invert", "--use_spec_invert", "--use-spec-invert",  
         action="store_true", dest="use_spec_invert",
         help=_i18n("arg_use_spec_invert_help")
+    )
+    custom_separate_parser.add_argument(
+        "-iplus", "-invert_plus", "-invert-plus", "--invert_plus", "--invert-plus",  
+        action="store_true", dest="invert_plus",
+        help=_i18n("invert_plus")
     )
     custom_separate_parser.add_argument(
         "-st", "--st", "-stems", "--stems", "--selected_stems", "--selected-stems", 
