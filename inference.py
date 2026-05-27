@@ -1338,9 +1338,8 @@ class MSSI: # Music Source Separation Inference
         except Exception as e:
             self.clear_mix()
             raise DemixError(_i18n("demix_error", error=e)) from e
-        self.delete_unselected_stems([primary_stem])
         if invert:
-            result = self.extract_instrumental(True, return_=True)
+            result = self.extract_instrumental(True, selected_stems=[primary_stem], return_=True)
         else:
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
