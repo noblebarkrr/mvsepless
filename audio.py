@@ -14,6 +14,10 @@ ffprobe_path = "ffprobe"
 n_fft = 2048
 hop = 1024
 
+def print_saved(path: str | Path):
+    if path:
+        print(_i18n("saved_file")+": "+Path(path).as_posix())
+
 def average(*ints: Union[int, float]) -> float:
     """
     Вычислить среднее арифметическое
@@ -1071,7 +1075,8 @@ def subtractor(
     z: np.ndarray, 
     sr1: int, 
     sr2: int, 
-    spectrogram: bool = False
+    spectrogram: bool = False,
+    max_sr: bool = False
 ) -> Tuple[np.ndarray, int]:
     """
     Вычесть одно аудио из другого
@@ -1082,6 +1087,7 @@ def subtractor(
         sr1: Частота первого
         sr2: Частота второго
         spectrogram: Использовать спектрограмму
+        max_sr: Использовать максимальную частоту вместо минимальной
     
     Returns:
         Кортеж (результат, частота дискретизации)
@@ -1092,7 +1098,7 @@ def subtractor(
     y = convert_to_dtype(y, np.float32)
     z = convert_to_dtype(z, np.float32)
     max_channels = max(channels1, channels2)
-    min_sr = min(sr1, sr2)
+    min_sr = max(sr1, sr2) if max_sr else min(sr1, sr2)
     yz = fit_arrays([y, z], [sr1, sr2], max_channels=max_channels, min_sr=min_sr)
     y, z = yz[0], yz[1]
     
@@ -1567,6 +1573,8 @@ def write(
             error_msg = stderr_data.decode('utf-8', errors='ignore')
             print(_i18n("ffmpeg_error", error=error_msg))
             raise Exception(_i18n("ffmpeg_exit_code", code=process.returncode))
+        
+        print_saved(output_path_str)
             
     except Exception as e:
         print(_i18n("write_critical_error", error=str(e)))

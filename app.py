@@ -80,7 +80,8 @@ base_names_app_dirs = (
     "vbach_models",
     "f0_curves",
     "custom_separation_models",
-    "vbach_output"
+    "vbach_output",
+    "iterative_ensemble_flows"
 )
 
 def copy_to_gdrive():
@@ -507,6 +508,63 @@ class HistoryVbach(History):
     def get_from_history(self, key: str):
         return deepcopy(self.history_dict.get(key, []))
 
+# Добавьте после класса HistoryVbach:
+
+class HistoryIterativeEnsemble(History):
+    def __init__(self):
+        super().__init__("iterative_ensembless")
+    
+    def _write_decorator(func):
+        def wrapper(self, *args, **kwargs):
+            results_ = func(self, *args, **kwargs)
+            self.write()
+            return results_
+        return wrapper
+
+    def _load_decorator(func):
+        def wrapper(self, *args, **kwargs):
+            self.load()
+            results_ = func(self, *args, **kwargs)
+            return results_
+        return wrapper
+    
+    @_write_decorator
+    def update_data(self, mode: int):
+        current_data = deepcopy(self.history_dict)
+        new_data = {}
+        if self.history_dict_json.exists():
+            new_data: dict = json.loads(self.history_dict_json.read_text("utf-8"))
+        new_data_to_merge = {}
+
+        for key, state in new_data.items():
+            new_state = None
+            if state:
+                new_state = [
+                    rename_user_dir_path(state[0], mode=mode),  # result
+                    [rename_user_dir_path(path, mode=mode) for path in state[1]]  # intermediate files
+                ]
+            new_data[key] = deepcopy(new_state)
+
+        for key2, state2 in new_data.items():
+            if key2 not in list(current_data.keys()) and state2 != current_data.get(key2):
+                new_data_to_merge[key2] = state2
+
+        self.history_dict: dict = {
+            **current_data,
+            **new_data_to_merge
+        }
+
+    @_write_decorator
+    def add_to_history(self, result_path: str, intermediate_files: list, count_iters: int):
+        timestamp = datetime.now(tz).strftime("%Y-%m-%d_%H-%M-%S")
+        self.history_dict.update([(f"{timestamp} | {count_iters} iterations", (result_path, intermediate_files))])
+
+    def get_from_history(self, key: str):
+        state = self.history_dict.get(key, (None, []))
+        if state:
+            return state[0], state[1]
+        return None, []
+
 class AutoEnsembleApp(UserDirectory):
     def __init__(self):
         super().__init__()
@@ -618,6 +676,119 @@ class AutoEnsembleApp(UserDirectory):
         models = state
         models_df = [[num+1] for num in range(len(models))]
 
+        for model, model_df in list(zip(models, models_df)):
+            model_df.extend(model)
+        return models_df
+
+class IterativeEnsembleApp(UserDirectory):
+    def __init__(self):
+        super().__init__()
+        self.ensemble_base = self.user_directory / base_names_app_dirs[8]  # iterative_ensemble_flows
+        self.ensemble_base.mkdir(parents=True, exist_ok=True)
+        
+    def write_flow(self, name: str, state: list[list]):
+        if name:
+            path = self.ensemble_base / f"{Namer.sanitize(name)}.json"
+            path.write_text(json.dumps(state, ensure_ascii=False, indent=4), encoding="utf-8")
+            print(_i18n("ensemble_flow_saved")+": "+name)
+            gr.Info(title=_i18n("ensemble_flow_saved")+": "+name, message="")
+        else:
+            print(_i18n("name_not_specified"))
+            gr.Warning(title=_i18n("name_not_specified"), message="")
+
+    def load_flow(self, name: str):
+        if name:
+            path = self.ensemble_base / f"{Namer.sanitize(name)}.json"
+            if path.exists():
+                state = json.loads(path.read_text("utf-8"))
+                print(_i18n("ensemble_flow_loaded")+": "+name)
+                gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
+                return state
+            else:
+                print(_i18n("ensemble_flow_not_exist")+": "+name)
+                gr.Warning(title=_i18n("ensemble_flow_not_exist")+": "+name, message="")
+                return []
+        else:
+            print(_i18n("name_not_specified"))
+            gr.Warning(title=_i18n("name_not_specified"), message="")
+            return []
+
+    def import_flows(self, flows: list):
+        added_flows = []
+        if flows:
+            for flow in flows:
+                path = Path(flow)
+                if path.exists() and path.suffix == ".json":
+                    new_path = Namer.iter(self.ensemble_base / path.name)
+                    shutil.move(path, new_path)
+                    added_flows.append(new_path)
+        status = _i18n("flows_imported")+": "+str(len(added_flows))
+        print(status)
+        gr.Info(title=status, message="")
+
+    def export_flow(self, flow: str):
+        if flow:
+            path = self.ensemble_base / f"{flow}.json"
+            if path.exists():
+                return path.as_posix()
+            else:
+                return None
+        else:
+            return None
+
+    def clear_flows(self):
+        for flow in self.ensemble_base.glob("*.json"):
+            flow.unlink(missing_ok=True)
+        status = _i18n("all_ensemble_flow_cleared")
+        print(status)
+        gr.Info(title=status, message="")
+
+    def get_flows(self):
+        flows = [flow.stem for flow in self.ensemble_base.glob("*.json")]
+        return flows
+
+    def add_model(self, model_name: str, primary_stem: str, invert: bool, state: list[list]):
+        state.append([model_name, primary_stem, invert])
+        print(_i18n("ae_added_model")+": "+model_name)
+        gr.Info(title=_i18n("ae_added_model")+": "+model_name, message="")
+        return state
+
+    def replace_model(self, number: int, model_name: str, primary_stem: str, invert: bool, state: list[list]):
+        index = number - 1
+        if index < len(state):
+            state[index] = [model_name, primary_stem, invert]
+            print(_i18n("ae_replaced_model")+": "+model_name+"/"+str(index))
+            gr.Info(title=_i18n("ae_replaced_model")+": "+model_name+"/"+str(number), message="")
+        return state
+
+    def insert_model(self, number: int, model_name: str, primary_stem: str, invert: bool, state: list[list]):
+        index = number - 1
+        if index < len(state):
+            state.insert(index, [model_name, primary_stem, invert])
+            print(_i18n("ae_inserted_model")+": "+model_name+"/"+str(index))
+            gr.Info(title=_i18n("ae_inserted_model")+": "+model_name+"/"+str(number), message="")
+        return state
+
+    def delete_model(self, number: int, state: list[list]):
+        index = number - 1
+        if index < len(state):
+            deleted_value = state.pop(index)
+            print(_i18n("ae_deleted_model")+": "+deleted_value[0])
+            gr.Info(title=_i18n("ae_deleted_model")+": "+deleted_value[0], message="")
+        return state
+
+    def clear_all_model(self, state: list[list]):
+        state.clear()
+        print(_i18n("ae_all_cleared"))
+        gr.Info(title=_i18n("ae_all_cleared"), message="")
+        return state
+
+    def get_models(self, state: list[list]):
+        return state
+    
+    def get_models_df(self, state: list[list]):
+        models = state
+        models_df = [[num+1] for num in range(len(models))]
         for model, model_df in list(zip(models, models_df)):
             model_df.extend(model)
         return models_df
@@ -862,6 +1033,8 @@ class App(Separator):
         self.vbach_history_app = HistoryVbach()
         self.f0_gen_output_path = F0GenerateOutPath()
         self.custom_sep_model_manager = CustomSeparationModelsDir()
+        self.iterative_ensemble_app = IterativeEnsembleApp()
+        self.iterative_ensemble_history_app = HistoryIterativeEnsemble()
         self.add_params_dict = {}
 
     def update_model_name(self, model_name):
@@ -950,6 +1123,18 @@ class App(Separator):
             return gr.skip()
         return gr.update(choices=current_configs, value=value), current_configs
 
+    def get_actual_iterative_ensemble_history_list(self, value, state):
+        current_history = self.iterative_ensemble_history_app.get_list()
+        if current_history == state:
+            return gr.skip()
+        return gr.update(choices=current_history, value=value), current_history
+
+    def get_actual_iterative_ensemble_flows_list(self, value, state):
+        current_flows = self.iterative_ensemble_app.get_flows()
+        if current_flows == state:
+            return gr.skip()
+        return gr.update(choices=current_flows, value=value), current_flows
+
     def UI(self, theme=None, hf_space_mode=False) -> gr.Blocks:
         global GDRIVE_DIR, IS_CUSTOM_DIR
         all_models = self.get_all_models()
@@ -978,6 +1163,10 @@ class App(Separator):
             custom_sep_history_state = gr.State([])
             custom_sep_checkpoints_state = gr.State([])
             custom_sep_configs_state = gr.State([])
+            iterative_ensemble_user_flow_state = gr.State([])
+            iterative_ensemble_input_state = gr.State([])
+            iterative_ensemble_history_state = gr.State([])
+            iterative_ensemble_flows_state = gr.State([])
             with gr.Tab(_i18n("separation_tab")):
                 sep_state = gr.State()
                 with gr.Row():
@@ -1511,7 +1700,381 @@ class App(Separator):
                             zip_is_generated = True
                             return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"]), zip_is_generated
 
+                with gr.Tab(_i18n("iterative_ensemble_tab")):
+                    
+                    with gr.Row():
+                        with gr.Column():
+                            iterative_ensemble_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
+                            with gr.Group():
+                                iterative_ensemble_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                                iterative_ensemble_input_file.focus(
+                                    self.get_actual_input_list, 
+                                    inputs=[iterative_ensemble_input_file, iterative_ensemble_input_state], 
+                                    outputs=[iterative_ensemble_input_file, iterative_ensemble_input_state], 
+                                    show_progress="hidden"
+                                )
+                                iterative_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                                
+                                @iterative_ensemble_upload_file.upload(inputs=iterative_ensemble_upload_file, outputs=[iterative_ensemble_upload_file, iterative_ensemble_input_file])
+                                def upload_file_fn(file: str):
+                                    uploaded_files = self.input_files.upload([file])
+                                    all_uploaded_files = self.input_files.get_input_list()
+                                    if uploaded_files:
+                                        first_value = [uploaded_files[0]]
+                                    else:
+                                        first_value = []
+                                    return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
+                                
+                                @gr.render(inputs=[iterative_ensemble_input_file, iterative_ensemble_input_preview_check])
+                                def preview_input(input: list, preview: bool):
+                                    if preview:
+                                        if input:
+                                            define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
+                        
+                        with gr.Column():
+                            with gr.Group():
+                                iterative_ensemble_num_iters = gr.Number(
+                                    label=_i18n("num_iters"), 
+                                    minimum=1, 
+                                    maximum=20, 
+                                    value=4, 
+                                    step=1, 
+                                    **base_c_params["base"]
+                                )
+                                iterative_ensemble_save_intermediate = gr.Checkbox(
+                                    label=_i18n("save_intermediate"), 
+                                    value=False, 
+                                    **base_c_params["base"]
+                                )
+                                iterative_ensemble_template = gr.Textbox(
+                                    label=_i18n("output_template"), 
+                                    info=_i18n("output_iterative_template_info"),
+                                    value="NAME_ITER", 
+                                    **base_c_params["base"]
+                                )
+                                iterative_ensemble_format = gr.Dropdown(
+                                    label=_i18n("output_format"), 
+                                    choices=output_formats, 
+                                    value=output_formats[0], 
+                                    filterable=False, 
+                                    **base_c_params["base"]
+                                )
+                                iterative_ensemble_run_btn = gr.Button(
+                                    _i18n("run_iterative_ensemble"), 
+                                    variant="primary", 
+                                    **base_c_params["base"]
+                                )
+                    
+                    with gr.Column():
+                        iterative_ensemble_show_timer = gr.Timer()
+                        with gr.Accordion(label=_i18n("ensemble_settings"), open=False):
+                            with gr.Row():
+                                with gr.Column(scale=3):
+                                    with gr.Group():
+                                        iterative_ensemble_model_name = gr.Dropdown(
+                                            label=_i18n("model_name"), 
+                                            choices=all_models, 
+                                            value=default_model, 
+                                            **base_c_params["base"]
+                                        )
+                                        iterative_ensemble_primary_stem = gr.Dropdown(
+                                            label=_i18n("primary_stem"), 
+                                            choices=stems_default, 
+                                            filterable=False, 
+                                            value=stems_default[0], 
+                                            **base_c_params["base"]
+                                        )
+                                        iterative_ensemble_model_name.change(
+                                            self.update_model_name_ensemble, 
+                                            inputs=iterative_ensemble_model_name, 
+                                            outputs=[iterative_ensemble_primary_stem]
+                                        )
+                                        iterative_ensemble_invert = gr.Dropdown(
+                                            label=_i18n("invert"), 
+                                            choices=[True, False], 
+                                            value=False, 
+                                            filterable=False, 
+                                            **base_c_params["base"]
+                                        )
+                                        iterative_ensemble_add_btn = gr.Button(
+                                            _i18n("add_model"), 
+                                            variant="primary", 
+                                            **base_c_params["base"]
+                                        )
+                                        iterative_ensemble_add_btn.click(
+                                            self.iterative_ensemble_app.add_model, 
+                                            inputs=[iterative_ensemble_model_name, iterative_ensemble_primary_stem, iterative_ensemble_invert, iterative_ensemble_user_flow_state], 
+                                            outputs=iterative_ensemble_user_flow_state
+                                        )
+                                
+                                with gr.Column(scale=11):
+                                    with gr.Group():
+                                        iterative_ensemble_model_index = gr.Number(
+                                            label=_i18n("model_index"), 
+                                            value=1, 
+                                            **base_c_params["base"]
+                                        )
+                                        with gr.Row(equal_height=True):
+                                            iterative_ensemble_replace_btn = gr.Button(
+                                                _i18n("replace"), 
+                                                variant="huggingface", 
+                                                **base_c_params["base"]
+                                            )
+                                            iterative_ensemble_insert_btn = gr.Button(
+                                                _i18n("insert"), 
+                                                variant="secondary", 
+                                                **base_c_params["base"]
+                                            )
+                                        with gr.Row(equal_height=True):
+                                            iterative_ensemble_delete_btn = gr.Button(
+                                                _i18n("delete"), 
+                                                variant="stop", 
+                                                **base_c_params["base"]
+                                            )
+                                            iterative_ensemble_clear_all_btn = gr.Button(
+                                                _i18n("clear"), 
+                                                variant="stop", 
+                                                **base_c_params["base"]
+                                            )
+                                        
+                                        iterative_ensemble_replace_btn.click(
+                                            self.iterative_ensemble_app.replace_model, 
+                                            inputs=[iterative_ensemble_model_index, iterative_ensemble_model_name, iterative_ensemble_primary_stem, iterative_ensemble_invert, iterative_ensemble_user_flow_state], 
+                                            outputs=iterative_ensemble_user_flow_state
+                                        )
+                                        iterative_ensemble_insert_btn.click(
+                                            self.iterative_ensemble_app.insert_model, 
+                                            inputs=[iterative_ensemble_model_index, iterative_ensemble_model_name, iterative_ensemble_primary_stem, iterative_ensemble_invert, iterative_ensemble_user_flow_state], 
+                                            outputs=iterative_ensemble_user_flow_state
+                                        )
+                                        iterative_ensemble_delete_btn.click(
+                                            self.iterative_ensemble_app.delete_model, 
+                                            inputs=[iterative_ensemble_model_index, iterative_ensemble_user_flow_state], 
+                                            outputs=iterative_ensemble_user_flow_state
+                                        )
+                                        iterative_ensemble_clear_all_btn.click(
+                                            self.iterative_ensemble_app.clear_all_model, 
+                                            inputs=iterative_ensemble_user_flow_state, 
+                                            outputs=iterative_ensemble_user_flow_state
+                                        )
+                                        
+                                        iterative_ensemble_show_flow = gr.DataFrame(
+                                            value=self.iterative_ensemble_app.get_models_df([]), 
+                                            type="array", 
+                                            headers=["#", _i18n("model_name"), _i18n("primary_stem"), _i18n("invert")], 
+                                            interactive=False, 
+                                            datatype=["number", "str", "str", "bool"]
+                                        )
+                                        iterative_ensemble_show_timer.tick(
+                                            self.iterative_ensemble_app.get_models_df, 
+                                            inputs=iterative_ensemble_user_flow_state, 
+                                            outputs=[iterative_ensemble_show_flow]
+                                        )
 
+                        with gr.Accordion(label=_i18n("ensemble_preset_settings"), open=False):
+                            iterative_ensemble_list_flows = gr.Dropdown(
+                                label=_i18n("iterative_ensemble_name_preset"), 
+                                allow_custom_value=True, 
+                                multiselect=True, 
+                                max_choices=1, 
+                                **base_c_params["base"]
+                            )
+                            iterative_ensemble_list_flows.focus(
+                                self.get_actual_iterative_ensemble_flows_list, 
+                                inputs=[iterative_ensemble_list_flows, iterative_ensemble_flows_state], 
+                                outputs=[iterative_ensemble_list_flows, iterative_ensemble_flows_state], 
+                                show_progress="hidden"
+                            )
+                            with gr.Group():
+                                with gr.Row(equal_height=True):
+                                    iterative_ensemble_flow_load_btn = gr.Button(
+                                        _i18n("load"), 
+                                        variant="primary", 
+                                        min_width=30, 
+                                        **base_c_params["base"]
+                                    )
+                                    iterative_ensemble_flow_save_btn = gr.Button(
+                                        _i18n("save"), 
+                                        variant="secondary", 
+                                        min_width=30, 
+                                        **base_c_params["base"]
+                                    )
+                                    @iterative_ensemble_flow_save_btn.click(
+                                        inputs=[iterative_ensemble_list_flows, iterative_ensemble_user_flow_state], 
+                                        outputs=[iterative_ensemble_list_flows]
+                                    )
+                                    def iterative_ensemble_save_flow_fn(name: list, state: list):
+                                        self.iterative_ensemble_app.write_flow(one_element_list_to_value(name), state)
+                                        return gr.update(choices=self.iterative_ensemble_app.get_flows(), value=name)
+                                    
+                                    @iterative_ensemble_flow_load_btn.click(
+                                        inputs=[iterative_ensemble_list_flows], 
+                                        outputs=iterative_ensemble_user_flow_state
+                                    )
+                                    def iterative_ensemble_load_flow_fn(name: list):
+                                        return self.iterative_ensemble_app.load_flow(one_element_list_to_value(name))
+                                
+                                with gr.Row(equal_height=True):
+                                    iterative_ensemble_flow_import_btn = gr.UploadButton(
+                                        label=_i18n("import"), 
+                                        variant="secondary", 
+                                        min_width=30, 
+                                        file_count="multiple", 
+                                        type="filepath", 
+                                        file_types=[".json"], 
+                                        **base_c_params["base"]
+                                    )
+                                    iterative_ensemble_flow_export_btn = gr.DownloadButton(
+                                        label=_i18n("export"), 
+                                        variant="huggingface", 
+                                        min_width=30, 
+                                        **base_c_params["base"]
+                                    )
+                                    iterative_ensemble_flow_import_btn.upload(
+                                        self.iterative_ensemble_app.import_flows, 
+                                        inputs=iterative_ensemble_flow_import_btn, 
+                                        outputs=iterative_ensemble_flow_import_btn
+                                    )
+                                    @iterative_ensemble_list_flows.change(
+                                        inputs=iterative_ensemble_list_flows, 
+                                        outputs=iterative_ensemble_flow_export_btn
+                                    )
+                                    def export_flow_fn(input_key: list):
+                                        return self.iterative_ensemble_app.export_flow(one_element_list_to_value(input_key))
+                                
+                                with gr.Row(equal_height=True):
+                                    iterative_ensemble_flow_clear_btn = gr.Button(
+                                        _i18n("clear"), 
+                                        variant="stop", 
+                                        visible=not hf_space_mode, 
+                                        **base_c_params["base"]
+                                    )
+                                    @iterative_ensemble_flow_clear_btn.click()
+                                    def clear_all_flows_fn():
+                                        self.iterative_ensemble_app.clear_flows()
+                    
+                    with gr.Group():
+                        with gr.Row(equal_height=True):
+                            with gr.Column(min_width=110):
+                                gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
+                            iterative_ensemble_history = gr.Dropdown(
+                                container=False, 
+                                scale=13, 
+                                multiselect=True, 
+                                max_choices=1, 
+                                **base_c_params["base"]
+                            )
+                            iterative_ensemble_history.focus(
+                                self.get_actual_iterative_ensemble_history_list,
+                                inputs=[iterative_ensemble_history, iterative_ensemble_history_state],
+                                outputs=[iterative_ensemble_history, iterative_ensemble_history_state],
+                                show_progress="hidden"
+                            )
+                    
+                    with gr.Row():
+                        with gr.Column():
+                            iterative_ensemble_output_audio = gr.Audio(
+                                label=_i18n("ensemble_result"), 
+                                value=None, 
+                                **base_c_params["output_audio"]
+                            )
+                            iterative_ensemble_intermediate_state = gr.State([])
+                            with gr.Row(equal_height=True):
+                                iterative_ensemble_output_reuse_btn = gr.Button(
+                                    _i18n("reuse_output_btn"), 
+                                    variant="secondary", 
+                                    visible=False, 
+                                    **base_c_params["base"]
+                                )
+                            @iterative_ensemble_output_reuse_btn.click(
+                                inputs=[iterative_ensemble_output_audio],
+                                outputs=iterative_ensemble_input_file,
+                            )
+                            def reuse_fn(stem_audio: str) -> gr.update:
+                                uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                                all_uploaded_files = self.input_files.get_input_list()
+                                if all_uploaded_files:
+                                    first_value = [all_uploaded_files[0]]
+                                else:
+                                    first_value = []
+                                return gr.update(choices=all_uploaded_files, value=first_value)
+                            
+                            iterative_ensemble_zip_is_generated = gr.State(False)
+                            iterative_ensemble_generate_zip_btn = gr.DownloadButton(
+                                label=_i18n("generate_zip_archive"), 
+                                variant="huggingface", 
+                                visible=False, 
+                                **base_c_params["base"]
+                            )
+
+                        with gr.Column():
+                            with gr.Group():
+                                gr.Markdown("<h3><center>"+_i18n("intermediate_results")+"</center></h3>", container=True)
+                                @gr.render(inputs=iterative_ensemble_intermediate_state)
+                                def preview_intermediate_results(input: list):
+                                    if input:
+                                        for f_ in input:
+                                            define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
+                                    else:
+                                        gr.Markdown("<h3><center>"+_i18n("no_intermediate_results")+"</center></h3>", container=True)
+                    
+                    @iterative_ensemble_run_btn.click(
+                        inputs=[iterative_ensemble_input_file, iterative_ensemble_num_iters, iterative_ensemble_save_intermediate, 
+                                iterative_ensemble_template, iterative_ensemble_format, iterative_ensemble_user_flow_state], 
+                        outputs=[iterative_ensemble_output_audio, iterative_ensemble_intermediate_state, iterative_ensemble_upload_file, 
+                                iterative_ensemble_output_reuse_btn, iterative_ensemble_generate_zip_btn, iterative_ensemble_zip_is_generated], 
+                        trigger_mode="once", 
+                        concurrency_id="mvsepless_app_inference_ensemble"
+                    )
+                    def iterative_ensemble_wrapper_fn(input_file: list, num_iters: int, save_intermediate: bool, template: str, out_format: str, flow: list[list], progress=gr.Progress(track_tqdm=True)):
+                        if not flow:
+                            gr.Warning(_i18n("flow_empty"))
+                            return update_audio_with_size(label=_i18n("ensemble_result"), value=None), [], gr.skip(), gr.update(visible=False), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=False, **base_c_params["base"]), gr.update(value=False)
+                        
+                        result_path, intermediate_files = self.iterative_ensemble(
+                            input_file=one_element_list_to_value(input_file),
+                            output_dir=self.output_dir.gen_output_dir(),
+                            flow=flow,
+                            num_iters=num_iters,
+                            output_format=out_format,
+                            template=template,
+                            save_intermediate=save_intermediate
+                        )
+                        
+                        self.iterative_ensemble_history_app.add_to_history(result_path, intermediate_files, num_iters)
+                        
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=result_path), intermediate_files, gr.skip(), gr.update(visible=True), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=True, **base_c_params["base"]), gr.update(value=False)
+                    
+                    @iterative_ensemble_history.input(
+                        inputs=iterative_ensemble_history, 
+                        outputs=[iterative_ensemble_output_audio, iterative_ensemble_intermediate_state, iterative_ensemble_output_reuse_btn, 
+                                iterative_ensemble_generate_zip_btn, iterative_ensemble_zip_is_generated]
+                    )
+                    def iterative_ensemble_show_history_fn(key: list):
+                        result, intermediate = self.iterative_ensemble_history_app.get_from_history(one_element_list_to_value(key))
+                        return update_audio_with_size(label=_i18n("ensemble_result"), value=result), intermediate, gr.update(visible=result is not None), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=result is not None, **base_c_params["base"]), gr.update(value=False)
+                    
+                    @iterative_ensemble_generate_zip_btn.click(
+                        inputs=[iterative_ensemble_output_audio, iterative_ensemble_intermediate_state, iterative_ensemble_zip_is_generated], 
+                        outputs=[iterative_ensemble_generate_zip_btn, iterative_ensemble_zip_is_generated], 
+                        trigger_mode="once"
+                    )
+                    def generate_zip_fn(out, intermediate_state, zip_is_generated):
+                        all_files = []
+                        
+                        if out:
+                            all_files.append(out)
+                        
+                        if intermediate_state:
+                            all_files.extend(intermediate_state)
+                        
+                        if zip_is_generated:
+                            return gr.skip(), gr.skip()
+                        else:
+                            zip_file = generate_zip_archive(all_files, get_zip_output_path("iterative_ensembless"))
+                            zip_is_generated = True
+                            return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"]), zip_is_generated
+            
                 with gr.Tab(_i18n("man_ensemble_tab")):
                     with gr.Row():
                         with gr.Column():

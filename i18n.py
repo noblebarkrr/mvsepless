@@ -574,7 +574,34 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "download_zip_archive": "Скачать ZIP-архив",
         "invert_plus": "При создании инструментала складывать все невыбранные стемы",
         "invert_plus_info": "Уменьшает остаток от выбранных стемов при извлечении инструментала (актуально для Roformer моделей)",
-        "invert_plus_applied": "Применена инверсия \"плюс\""
+        "invert_plus_applied": "Применена инверсия \"плюс\"",
+        "flow_empty": "Добавьте хотя бы одну модель в пресет",
+        "iteration": "Итерация",
+        "num_iters": "Количество итераций",
+        "no_models_succeeded": "Ни одна модель не была использована",
+        "saved_file": "Сохранен файл",
+        "arg_iterative_ensemble_help": "Итеративный ансамбль для последовательного улучшения разделения",
+        "arg_iterative_ensemble_description": "Последовательное применение набора моделей для постепенного улучшения качества разделения (извлечение остатков с каждой итерацией).",
+        "arg_iterative_ensemble_epilog": "Пример: python inference.py iterative_ensemble -i audio.mp3 -o output -flow bs_6stem:vocals:True mbr_inst1e_unwa:other:False -n 4 -save_intermediate",
+        "arg_iterative_flow_help": "Пресет в виде строк: МОДЕЛЬ:ОСНОВНОЙ_СТЕМ:ИНВЕРСИЯ. Пример: bs_6stem:vocals:True mbr_inst1e_unwa:other:False",
+        "arg_num_iters_help": "Количество итераций (по умолчанию: 4). На каждой итерации применяется весь набор моделей к остатку от предыдущей итерации",
+        "arg_save_intermediate_help": "Сохранять промежуточные результаты каждой итерации",
+        "template_keys_iterative_ensemble": "NAME (имя файла), ITER (номер итерации)",
+        "saved_intermediate_files": "Сохранены промежуточные файлы",
+        "iterative_ensemble_name_preset": "Имя пресета итеративного ансамбля",
+        "run_iterative_ensemble": "Запустить итеративный ансамбль",
+        "save_intermediate": "Сохранять промежуточные результаты",
+        "intermediate_results": "Промежуточные результаты",
+        "no_intermediate_results": "Нет промежуточных результатов",
+        "output_iterative_template_info": """<details><summary><b>Доступные ключи</b></summary>
+
+- `NAME` — имя входного файла (без расширения)
+- `ITER` — номер итерации
+
+Пример: `NAME_ITER` → `Song_3`
+
+</details>""",
+        "iterative_ensemble_tab": "Итеративный"
     },
     "en": {
         "bytes": "B",
@@ -1131,7 +1158,34 @@ Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`
         "download_zip_archive": "Download ZIP",
         "invert_plus": "When extracting instrumental, add all unselected stems",
         "invert_plus_info": "Reduces the remainder of selected stems when extracting a instrumental (relevant for Roformer models)",
-        "invert_plus_applied": "Invert plus applied"
+        "invert_plus_applied": "Invert plus applied",
+        "flow_empty": "Add at least one model to the preset",
+        "iteration": "Iteration",
+        "num_iters": "Number of iterations",
+        "no_models_succeeded": "No models were used",
+        "saved_file": "Saved file",
+        "arg_iterative_ensemble_help": "Iterative ensemble for progressive separation improvement",
+        "arg_iterative_ensemble_description": "Sequential application of a set of models to gradually improve separation quality (extracting residuals with each iteration).",
+        "arg_iterative_ensemble_epilog": "Example: python inference.py iterative_ensemble -i audio.mp3 -o output -flow bs_6stem:vocals:True mbr_inst1e_unwa:other:False -n 4 -save_intermediate",
+        "arg_iterative_flow_help": "Preset as a string: MODEL:PRIMARY_STEM:INVERSION. Example: bs_6stem:vocals:True mbr_inst1e_unwa:other:False",
+        "arg_num_iters_help": "Number of iterations (default: 4). Each iteration applies the entire set of models to the residual from the previous iteration",
+        "arg_save_intermediate_help": "Save intermediate results of each iteration",
+        "template_keys_iterative_ensemble": "NAME (file name), ITER (iteration number)",
+        "saved_intermediate_files": "Saved intermediate files",
+        "iterative_ensemble_name_preset": "Iterative ensemble preset name",
+        "run_iterative_ensemble": "Run iterative ensemble",
+        "save_intermediate": "Save intermediate results",
+        "intermediate_results": "Intermediate results",
+        "no_intermediate_results": "No intermediate results",
+        "output_iterative_template_info": """<details><summary><b>Available keys</b></summary>
+
+- `NAME` — input file name (without extension)
+- `ITER` — iteration number
+
+Example: `NAME_ITER` → `Song_3`
+
+</details>""",
+        "iterative_ensemble_tab": "Iterative"
     }
 }
 

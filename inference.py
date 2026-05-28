@@ -21,7 +21,7 @@ from typing import Literal, Optional, List, Tuple, Any, Dict
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
 import gradio as gr
-from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono
+from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono, gain
 from args_parser import parse_separator_args, tobool
 from namer import Namer
 from i18n import _i18n
@@ -1344,6 +1344,20 @@ class MSSI: # Music Source Separation Inference
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
 
+    def _process_array_iter_ensemble(self, i: int, total: int, iter_index: int, iter_total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
+        self.clear_mix()
+        self.load_array(array, sr)
+        try:
+            self.demix(f" | {i}/{total} {_i18n('models')} | {self.ckpt_path.stem} | {_i18n('iteration')} {iter_index}/{iter_total}")
+        except Exception as e:
+            self.clear_mix()
+            raise DemixError(_i18n("demix_error", error=e)) from e
+        if invert:
+            result = self.extract_instrumental(True, selected_stems=[primary_stem], return_=True)
+        else:
+            result = self.output_arrays[primary_stem]
+        return result, self.sample_rate
+
     def load_model(self, model_type: str, ckpt: str | Path, conf: str | Path):
         self.clear_model()
         self.load_config(model_type=model_type, conf=conf)
@@ -1594,6 +1608,29 @@ class Separator(ModelManager):
         
         console.print(table)
 
+    def print_flow_iter(self, flow):
+        """Print current ensemble flow in a formatted table (like show_info)"""
+        if not flow:
+            return
+        
+        console = rich.console.Console()
+        table = rich.table.Table(title="", show_lines=True)
+        table.add_column("#", style="cyan", no_wrap=True)
+        table.add_column(_i18n("model_name"))
+        table.add_column(_i18n("primary_stem"))
+        table.add_column(_i18n("invert"))
+        
+        for idx, (model_name, primary_stem, invert) in enumerate(flow, start=1):
+            invert_str = _i18n("yes") if invert else _i18n("no")
+            table.add_row(
+                str(idx),
+                model_name,
+                primary_stem,
+                invert_str
+            )
+        
+        console.print(table)
+
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def auto_ensemble_base(
             self, 
@@ -1634,15 +1671,20 @@ class Separator(ModelManager):
             raise PathNotExist(_i18n("path_not_exist"))
         if not check(input_file):
             raise FileIsNotAudio(_i18n("file_is_not_audio", path=input_file))
-        self.print_flow(flow)
+
         if not flow:
-            return None
+            print(_i18n("flow_empty"))
+            gr.Info(title=_i18n("flow_empty"), message="")
+            return None, None, []
+        
+        self.print_flow(flow)
+
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         model_count = len(flow)
         print(_i18n("ensemble_type")+": "+etype)
         print(_i18n("ensemble_models_count")+": "+str(model_count))
-        mix, orig_sr = read(input_file, sr=44100)
+        input_mix, orig_sr = read(input_file, sr=44100)
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "TYPE", "COUNT"])
         template = Namer.short(template, length=40)
@@ -1661,12 +1703,13 @@ class Separator(ModelManager):
             try:
                 self.download(model_name)
                 checkpoint, config = self.generate_local_paths(model_name)
-                output, model_sr = self.auto_ensemble_base(model_name, checkpoint, config, i, model_count, mix, orig_sr, primary_stem, invert)
+                output, model_sr = self.auto_ensemble_base(model_name, checkpoint, config, i, model_count, input_mix, orig_sr, primary_stem, invert)
                 auto_ensembler.add_array(output, model_sr)
                 weights.append(weight)
                 if save_primary_stems:
                     primary_stem_file_name = primary_stem + (invert_key if invert else "")
-                    saved_primary_stems.append(write(Namer.iter(output_dir / model_name / f"{model_name}_{primary_stem_file_name}.flac"), output, model_sr))
+                    primary_stem_path = write(Namer.iter(output_dir / model_name / f"{model_name}_{primary_stem_file_name}.flac"), output, model_sr)
+                    saved_primary_stems.append(primary_stem_path)
             except Exception as e:
                 print(_i18n("error_occured_separation")+": "+str(e))
                 gr.Warning(message="<b>"+f'{_i18n("error_occured_separation")}'.replace("\n", "<br>")+": "+str(e)+"</b>", title="")
@@ -1678,9 +1721,133 @@ class Separator(ModelManager):
         auto_ensembler.clear()
         auto_ensembler, output = None, None
         del auto_ensembler, output
-        inverted_array, i_sr = subtractor(mix, output_array, orig_sr, sr_, spectrogram=use_spec_invert)
+        inverted_array, i_sr = subtractor(input_mix, output_array, orig_sr, sr_, spectrogram=use_spec_invert)
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr), saved_primary_stems
-  
+
+    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
+    def iterative_ensemble_base(self, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
+        self.mssi.clear_model()
+        self.mssi.load_model(
+            self.get_model_type(model_name), 
+            checkpoint, 
+            config
+        )
+        self.mssi.print_instruments()
+        
+        output, model_sr = self.mssi._process_array_iter_ensemble(
+            i, model_count, iter_index, iter_total, current_mix, orig_sr, 
+            primary_stem, invert
+        )
+        self.mssi.clear_model()
+        return output, model_sr
+
+    def iterative_ensemble(
+        self,
+        input_file: str | Path,
+        output_dir: str | Path = Path("."),
+        flow: list[list[str | bool]] = [],
+        num_iters: int = 4,
+        output_format: str = output_formats[0],
+        template: str = "NAME_ITER",
+        save_intermediate: bool = False
+    ) -> tuple[str, list[str]]:
+        if not output_dir:
+            output_dir = Path(".")
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        if not input_file:
+            raise PathNotSpecified(_i18n("path_not_specified"))
+        input_file = Path(input_file)
+        if not input_file.exists():
+            raise PathNotExist(_i18n("path_not_exist"))
+        if not check(input_file):
+            raise FileIsNotAudio(_i18n("file_is_not_audio", path=input_file))
+        
+        if flow is None:
+            print(_i18n("flow_empty"))
+            gr.Info(title=_i18n("flow_empty"), message="")
+            return None, []
+
+        self.print_flow_iter(flow)
+
+        input_mix, orig_sr = read(input_file, sr=44100)
+        current_mix = input_mix.copy()
+        print(_i18n("num_iters") + f": {num_iters}")
+        
+        intermediate_files = []
+        model_count = len(flow)
+        
+        template = Namer.sanitize(template)
+        template = Namer.dedup_template(template, keys=["NAME", "ITER"])
+        template = Namer.short(template, length=40)
+        
+        for iteration in range(1, num_iters + 1):
+            
+            auto_ensembler = Ensembler()
+            
+            for i, (model_name, primary_stem, invert) in enumerate(flow, start=1):
+                
+                try:
+                    self.download(model_name)
+                    checkpoint, config = self.generate_local_paths(model_name)
+                    output, model_sr = self.iterative_ensemble_base(model_name, checkpoint, config, i, model_count, iteration, num_iters, current_mix, orig_sr, primary_stem, invert)
+                    auto_ensembler.add_array(output, model_sr)
+                    
+                except Exception as e:
+                    print(_i18n("error_occured_separation") + ": " + str(e))
+                    continue
+            
+            extracted_stems = auto_ensembler.get_arrays()
+            srs = auto_ensembler.get_srs()
+            
+            if not extracted_stems:
+                raise Exception(_i18n("no_models_succeeded"))
+            
+            ensemble_result, ensemble_sr = ensemble(
+                extracted_stems, srs, "max_fft"
+            )
+            
+            auto_ensembler.clear()
+            
+            invert_ensemble_result, _ = subtractor(
+                current_mix, ensemble_result, orig_sr, ensemble_sr,
+                spectrogram=False
+            )
+            
+            new_mix, _ = subtractor(
+                current_mix, gain(invert_ensemble_result, 0.5), orig_sr, ensemble_sr,
+                spectrogram=False, max_sr=True
+            )
+            
+            if save_intermediate or iteration == num_iters:
+                iter_name = Namer.template(
+                    template,
+                    ITER=f"iter_{iteration}",
+                    NAME=Namer.short_input_name_template(template, ITER=f"iter_{iteration}", NAME=input_file.stem)
+                )
+                
+                if iteration == num_iters:
+                    final_name = iter_name + "_final"
+                    final_path = Namer.iter(output_dir / f"{final_name}.{output_format}")
+                    result_path = write(final_path, ensemble_result, ensemble_sr)
+                else:
+                    dry_name = "dry_" + iter_name
+                    iter_path = Namer.iter(output_dir / f"{iter_name}.flac")
+                    dry_iter_path = Namer.iter(output_dir / f"{dry_name}.flac")
+                    iter_path = write(iter_path, new_mix, orig_sr)
+                    dry_iter_path = write(dry_iter_path, ensemble_result, ensemble_sr)
+                    intermediate_files.append(iter_path)
+                    intermediate_files.append(dry_iter_path)
+            
+            current_mix = new_mix
+            
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        
+        return result_path, intermediate_files
+
     def manual_ensemble(
         self,
         input_files: list[str | Path],
@@ -1788,6 +1955,29 @@ if __name__ == "__main__":
             use_spec_invert=args.use_spec_invert, 
             save_primary_stems=args.save_primary_stems
         )
+    elif args.mode == "iterative_ensemble":
+        if args.preset:
+            flow = json.loads(Path(args.preset).read_text("utf-8"))
+        elif args.flow:
+            flow = []
+            for params in args.flow:
+                list_values_param = params.split(":")
+                if len(list_values_param) == 3:
+                    flow.append([str(list_values_param[0]), str(list_values_param[1]), tobool(list_values_param[2])])
+                else:
+                    raise ValueError(_i18n("arg_iterative_flow_help"))
+        result_path, intermediate_files = separator.iterative_ensemble(
+            input_file=args.input,
+            output_dir=args.output_dir,
+            flow=flow,
+            num_iters=args.num_iters,
+            output_format=args.output_format,
+            template=args.template,
+            save_intermediate=args.save_intermediate
+        )
+        print(_i18n("ensemble_complete") + f": {result_path}")
+        if intermediate_files:
+            print(_i18n("saved_intermediate_files") + f": {', '.join(intermediate_files)}")
     elif args.mode == "manual_ensemble":
         separator.manual_ensemble(
             input_files=args.input,

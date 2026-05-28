@@ -222,6 +222,54 @@ def parse_separator_args(add_params_args: dict = {}):
             help=_i18n("arg_add_param_help")
         )
 
+    iterative_ensemble_parser = subparsers.add_parser(
+        "iterative_ensemble",
+        help=_i18n("arg_iterative_ensemble_help"),
+        description=_i18n("arg_iterative_ensemble_description"),
+        epilog=_i18n("arg_iterative_ensemble_epilog")
+    )
+    
+    iterative_ensemble_parser.add_argument(
+        "-i", "--i", "-input", "--input", "--input_file", "--input-file", 
+        type=str, required=True, dest="input",
+        help=_i18n("arg_input_single_help")
+    )
+    iterative_ensemble_parser.add_argument(
+        "-o", "-out", "-output", "--output", "--output_dir", "--output-dir", 
+        type=str, default=".", dest="output_dir",
+        help=_i18n("arg_output_dir_help")
+    )
+    iterative_ensemble_parser.add_argument(
+        "-of", "-output_fmt", "--output_format", "--output-format", 
+        type=str, choices=output_formats, default=output_formats[0], dest="output_format",
+        help=_i18n("arg_output_format_help", formats=", ".join(output_formats), default=output_formats[0])
+    )
+    iterative_ensemble_parser.add_argument(
+        "-tm", "-tmplt", "--template", type=str, default="NAME_ITER", dest="template",
+        help=_i18n("arg_template_help", keys=_i18n("template_keys_iterative_ensemble"), example="NAME_ITER_ITER")
+    )
+    iterative_ensemble_parser.add_argument(
+        "-n", "-iters", "--num_iters", "--num-iters", 
+        type=int, default=4, dest="num_iters",
+        help=_i18n("arg_num_iters_help")
+    )
+    iterative_ensemble_parser.add_argument(
+        "-save_intermediate", "-save-intermediate", "--save_intermediate", "--save-intermediate", 
+        action="store_true", dest="save_intermediate",
+        help=_i18n("arg_save_intermediate_help")
+    )
+    iterative_ensemble_flow_group = iterative_ensemble_parser.add_mutually_exclusive_group(required=True)
+    iterative_ensemble_flow_group.add_argument(
+        "-flow", "--flow", nargs="+", metavar="MODEL:PRIMARY_STEM:INVERT", 
+        dest="flow",
+        help=_i18n("arg_iterative_flow_help")
+    )
+    iterative_ensemble_flow_group.add_argument(
+        "-json", "-preset", "-preset_json", "-preset-json", "--preset_json", "--preset-json", 
+        type=str, dest="preset",
+        help=_i18n("arg_preset_json_help")
+    )
+
     # auto_ensemble
     auto_ensemble_parser.add_argument(
         "-i", "--i", "-input", "--input", "--input_file", "--input-file", 
