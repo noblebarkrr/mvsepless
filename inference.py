@@ -1782,6 +1782,7 @@ class Separator(ModelManager):
         template = Namer.dedup_template(template, keys=["NAME", "ITER"])
         template = Namer.short(template, length=40)
         
+        self.mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
         for iteration in range(1, num_iters + 1):
             
             auto_ensembler = Ensembler()
