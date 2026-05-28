@@ -3071,6 +3071,7 @@ class App(Separator):
                         self.manual_ensemble_history_app.update_data(0)
                         self.subtract_history_app.update_data(0)
                         self.vbach_history_app.update_data(0)
+                        self.iterative_ensemble_history_app.update_data(0)
 
         return mvsepless_app
 
