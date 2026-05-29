@@ -596,12 +596,13 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "output_iterative_template_info": """<details><summary><b>Доступные ключи</b></summary>
 
 - `NAME` — имя входного файла (без расширения)
-- `ITER` — номер итерации
+- `ITER` — номер итерации (iter_N)
 
-Пример: `NAME_ITER` → `Song_3`
+Пример: `NAME_ITER` → `Song_iter_3`
 
 </details>""",
-        "iterative_ensemble_tab": "Итеративный"
+        "iterative_ensemble_tab": "Итеративный",
+        "model": "Модель",
     },
     "en": {
         "bytes": "B",
@@ -1180,12 +1181,13 @@ Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`
         "output_iterative_template_info": """<details><summary><b>Available keys</b></summary>
 
 - `NAME` — input file name (without extension)
-- `ITER` — iteration number
+- `ITER` — iteration number (iter_N)
 
-Example: `NAME_ITER` → `Song_3`
+Example: `NAME_ITER` → `Song_iter_3`
 
 </details>""",
-        "iterative_ensemble_tab": "Iterative"
+        "iterative_ensemble_tab": "Iterative",
+        "model": "Model",
     }
 }
 

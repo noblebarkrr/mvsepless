@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 from extra_utils import tz, define_audio_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage
-from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple
+from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple, custom_model_types
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
 from vbach_lib.hubert_manager import download_hubert, huberts_fairseq, huberts_transformers
@@ -1316,8 +1316,8 @@ class App(Separator):
                         with gr.Group():
                             custom_sep_model_type = gr.Dropdown(
                                 label=_i18n("model_type"),
-                                choices=self.mssi.custom_model_types,
-                                value=self.mssi.custom_model_types[0],
+                                choices=custom_model_types,
+                                value=custom_model_types[0],
                                 **base_c_params["base"]
                             )
                             
@@ -1585,7 +1585,7 @@ class App(Separator):
                                     auto_ensemble_flow_import_btn = gr.UploadButton(label=_i18n("import"), variant="secondary", min_width=30, file_count="multiple", type="filepath", file_types=[".json"], **base_c_params["base"])
                                     auto_ensemble_flow_export_btn = gr.DownloadButton(label=_i18n("export"), variant="huggingface", min_width=30, **base_c_params["base"])
                                     auto_ensemble_flow_import_btn.upload(self.auto_ensemble_app.import_flows, inputs=auto_ensemble_flow_import_btn, outputs=auto_ensemble_flow_import_btn)
-                                    @auto_ensemble_list_flows.change(inputs=auto_ensemble_list_flows, outputs=auto_ensemble_flow_export_btn)
+                                    @gr.on(inputs=auto_ensemble_list_flows, outputs=auto_ensemble_flow_export_btn, triggers=[auto_ensemble_list_flows.change, auto_ensemble_list_flows.focus, auto_ensemble_list_flows.blur, auto_ensemble_flow_save_btn.click, auto_ensemble_flow_load_btn.click])
                                     def export_flow_fn(input_key: list):
                                         return self.auto_ensemble_app.export_flow(one_element_list_to_value(input_key))
                                 with gr.Row(equal_height=True):
@@ -1935,9 +1935,10 @@ class App(Separator):
                                         inputs=iterative_ensemble_flow_import_btn, 
                                         outputs=iterative_ensemble_flow_import_btn
                                     )
-                                    @iterative_ensemble_list_flows.change(
+                                    @gr.on(
                                         inputs=iterative_ensemble_list_flows, 
-                                        outputs=iterative_ensemble_flow_export_btn
+                                        outputs=iterative_ensemble_flow_export_btn,
+                                        triggers=[iterative_ensemble_list_flows.change, iterative_ensemble_list_flows.focus, iterative_ensemble_list_flows.blur, iterative_ensemble_flow_load_btn.click, iterative_ensemble_flow_save_btn.click]
                                     )
                                     def export_flow_fn(input_key: list):
                                         return self.iterative_ensemble_app.export_flow(one_element_list_to_value(input_key))
@@ -2458,7 +2459,6 @@ class App(Separator):
                             return [], gr.skip()
                         
                         output_dir = self.output_dir.generate(base_names_app_dirs[7])
-                        download_hubert(embedder_model, use_transformers)
                         results = self.vbach_converter.convert_audio(
                             audio_input=input_files,
                             output_dir=output_dir,
@@ -2755,7 +2755,6 @@ class App(Separator):
                             return update_audio_with_size(label=_i18n("vbach_result"), value=None), gr.skip()
                         
                         output_dir = self.output_dir.generate(base_names_app_dirs[7])
-                        download_hubert(embedder_model, use_transformers)
                         
                         result = self.vbach_converter.convert_audio_custom_f0(
                             audio_input=one_element_list_to_value(input_files),

@@ -47,24 +47,17 @@ crepe_like_f0_methods = (f0_methods[3], f0_methods[4], f0_methods[7])
 class UnknownF0Method(Exception): pass
 class F0CurveNotFound(Exception): pass
 
-requirements: list[list[str | Path]] = [
-    [
-        "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/rmvpe.pt?download=true",
-        RMVPE_PATH,
-    ],
-    [
-        "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/hpa_rmvpe.pt?download=true",
-        HPA_RMVPE_PATH,
-    ],
-    [
-        "https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/fcpe.pt?download=true",
-        FCPE_PATH,
-    ]
-]
+requirements = {
+    "rmvpe+": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/rmvpe.pt?download=true", RMVPE_PATH],
+    "hpa_rmvpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/hpa_rmvpe.pt?download=true", HPA_RMVPE_PATH],
+    "fcpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/fcpe.pt?download=true", FCPE_PATH]
+}
 
-for url, path in requirements:
-    if not path.exists():
-        dw_file(url, path)
+def download_requirements(f0_method: str):
+    url, path = requirements.get(f0_method, (None, None))
+    if all([url, path]):
+        if not path.exists():
+            dw_file(url, path)
 
 input_audio_path2wav = {}
 
@@ -114,6 +107,8 @@ def f0_extract(
     f0_max=1100,
 ):
     global input_audio_path2wav
+
+    download_requirements(f0_method)
 
     if f0_method in ["mangio-crepe", "mangio-crepe-tiny"]:
         x = x.astype(np.float32)

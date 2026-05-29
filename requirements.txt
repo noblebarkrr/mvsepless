@@ -1,4 +1,4 @@
-torch>=2.5.0
+torch>=2.6.0
 torchvision
 torchaudio
 numpy==2.0.2

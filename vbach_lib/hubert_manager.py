@@ -103,9 +103,11 @@ def get_hubert(name: str, use_transformers: bool = False):
         info = huberts_transformers_dict.get(name, {})
         if not info:
             HubertModelNotExist(_i18n("vbach_embedder_not"))
+        download_hubert(name, True)
         return info.get("base_dir")
     else:
         info = huberts_fairseq_dict.get(name, {})
         if not info:
             HubertModelNotExist(_i18n("vbach_embedder_not"))
+        download_hubert(name, False)
         return info.get("local_path")

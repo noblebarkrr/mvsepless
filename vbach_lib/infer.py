@@ -77,6 +77,7 @@ class VbachConverter:
         self.config = Config()
         self.hubert_model = None 
         self.cpt = self.version = self.net_g = self.tgt_sr = self.vc = self.use_f0 = self.vocoder = self.emb_weight_shape = self.required_keys = self.missing_keys = self.text_enc_hidden_dim = None
+
     def load_hubert(self, name: str, use_transformers: bool):
         if use_transformers:
             model_path = get_hubert(name, True)
@@ -348,12 +349,11 @@ class VbachConverter:
         self.unload_hubert()
 
         return output_path
-    
+
 if __name__ == "__main__":
     vbach = VbachConverter()
     args = parse_vbach_args()
     if args.mode == "infer":
-        download_hubert(args.embedder, args.use_transformers)
         vbach.convert_audio(
             audio_input=args.input,
             output_dir=args.output_dir,
@@ -375,7 +375,6 @@ if __name__ == "__main__":
             template=args.template
         )
     elif args.mode == "infer_custom_f0":
-        download_hubert(args.embedder, args.use_transformers)
         vbach.convert_audio_custom_f0(
             audio_input=args.input,
             output_dir=args.output_dir,

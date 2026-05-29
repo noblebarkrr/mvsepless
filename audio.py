@@ -1288,7 +1288,7 @@ def ensemble(
     with tqdm(
         total=len(pred_tracks),
         desc=_i18n("ensemble_processing"),
-        unit=_i18n("track"),
+        unit=_i18n("tracks"),
         disable=disable_progress,
         leave=False
     ) as pbar:

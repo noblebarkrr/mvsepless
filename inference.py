@@ -10,7 +10,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 
-from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear
+from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear, tz
+from datetime import datetime
 import torch
 import rich
 nn = torch.nn
@@ -26,6 +27,11 @@ from args_parser import parse_separator_args, tobool
 from namer import Namer
 from i18n import _i18n
 import contextlib
+import base64
+import secrets
+
+def generate_random_string():
+    return base64.b64encode(secrets.token_bytes(18)).decode('utf-8')
 
 class PathNotExist(Exception): pass
 class PathsNotExist(Exception): pass
@@ -40,6 +46,22 @@ class DemixError(Exception): pass
 class ConfigNotLoaded(Exception): pass
 class ModelNotLoaded(Exception): pass
 class ModelStateDictError(Exception): pass
+
+model_types = (
+    "mel_band_roformer",
+    "bs_roformer",
+    "mdx23c",
+    "scnet",
+    "scnet_masked",
+    "scnet_tran",
+    "htdemucs",
+    "bandit",
+    "bandit_v2",
+    "mdxnet",
+    "vr",
+    "medley_vox"
+)
+custom_model_types = model_types[:9]
 
 HAS_OLD_AMP = False
 if hasattr(torch, "cuda"):
@@ -244,21 +266,8 @@ class MSSI: # Music Source Separation Inference
     ):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.model_types = (
-            "mel_band_roformer",
-            "bs_roformer",
-            "mdx23c",
-            "scnet",
-            "scnet_masked",
-            "scnet_tran",
-            "htdemucs",
-            "bandit",
-            "bandit_v2",
-            "mdxnet",
-            "vr",
-            "medley_vox"
-        )
-        self.custom_model_types = self.model_types[:9]
+        self.model_types = model_types
+        self.custom_model_types = custom_model_types
 
         self.output_format = output_format
         self.device = torch.device(device)
@@ -1264,8 +1273,8 @@ class MSSI: # Music Source Separation Inference
             return
 
     def extract_instrumental(self, extract_instrumental: bool, selected_stems: list = [], return_: bool = False, invert_plus: bool = False):
-        self.output_arrays["invert"] = self.input_mix.copy()
         if extract_instrumental:
+            self.output_arrays["invert"] = self.input_mix.copy()
             if self.output_arrays:
                 unselected_keys = [key_1 for key_1 in self.output_arrays if key_1 not in [*selected_stems, "invert"]]
                 if invert_plus and unselected_keys:
@@ -1343,6 +1352,16 @@ class MSSI: # Music Source Separation Inference
         else:
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
+
+    def _process_array(self, i: int, total: int, array: np.ndarray, sr: int):
+        self.clear_mix()
+        self.load_array(array, sr)
+        try:
+            self.demix(f" | {i}/{total} {_i18n('arrays')} | {self.ckpt_path.stem}")
+        except Exception as e:
+            self.clear_mix()
+            raise DemixError(_i18n("demix_error", error=e)) from e
+        return self.output_arrays, self.sample_rate
 
     def _process_array_iter_ensemble(self, i: int, total: int, iter_index: int, iter_total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
         self.clear_mix()
@@ -1501,14 +1520,10 @@ class Ensembler:
 class Separator(ModelManager):
     def __init__(self):
         super().__init__()
-        self.mssi = MSSI()
-
-    def unload_model(self):
-        self.mssi.clear_model()
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def separate_base(
-        self, 
+        self, mssi: MSSI, 
         input_valid_files: list[str | Path], 
         model_name: str, 
         template: str, 
@@ -1518,11 +1533,11 @@ class Separator(ModelManager):
         extract_instrumental: bool,
         invert_plus: bool
     ):
-        self.mssi.clear_model() 
-        self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
-        self.mssi.print_instruments()
-        results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
-        self.mssi.clear_model()
+        mssi.clear_model() 
+        mssi.load_model(self.get_model_type(model_name), checkpoint, config)
+        mssi.print_instruments()
+        results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
+        mssi.clear_model()
         return results
 
     def separate(
@@ -1543,11 +1558,12 @@ class Separator(ModelManager):
         input_valid_files = get_audio_files_from_list(input_files, only_files=False)
         if not input_valid_files:
             raise PathsNotSpecified(_i18n("paths_not_specified"))
-        self.mssi.settings(output_dir=output_dir, output_format=output_format, use_spec_invert=use_spec_invert)
-        self.mssi.set_add_params(**add_params)
+        mssi = MSSI()
+        mssi.settings(output_dir=output_dir, output_format=output_format, use_spec_invert=use_spec_invert)
+        mssi.set_add_params(**add_params)
         self.download(model_name)
         checkpoint, config = self.generate_local_paths(model_name)
-        results = self.separate_base(input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus)
+        results = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus)
         return results
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
@@ -1573,14 +1589,16 @@ class Separator(ModelManager):
             raise PathsNotSpecified(_i18n("paths_not_specified"))
         checkpoint, config = Path(ckpt), Path(conf)
         model_name = checkpoint.stem
-        self.mssi.settings(output_dir=output_dir, output_format=output_format, use_spec_invert=use_spec_invert)
-        self.mssi.set_add_params(**add_params)
-        self.mssi.clear_model()
-        self.mssi.load_model(model_type, checkpoint, config)
+        mssi = MSSI()
+        mssi.settings(output_dir=output_dir, output_format=output_format, use_spec_invert=use_spec_invert)
+        mssi.set_add_params(**add_params)
+        mssi.clear_model()
+        mssi.load_model(model_type, checkpoint, config)
         self.previous_model_name = model_name
-        self.mssi.print_instruments()
-        results = self.mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
-        self.mssi.clear_model()
+        mssi.print_instruments()
+        results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
+        mssi.clear_model()
+        del mssi
         return results
 
     def print_flow(self, flow):
@@ -1633,7 +1651,7 @@ class Separator(ModelManager):
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def auto_ensemble_base(
-            self, 
+            self, mssi: MSSI,
             model_name: str, 
             checkpoint: str | Path, 
             config: str | Path,
@@ -1644,11 +1662,11 @@ class Separator(ModelManager):
             primary_stem: str,
             invert: bool
         ):
-        self.mssi.clear_model()
-        self.mssi.load_model(self.get_model_type(model_name), checkpoint, config)
-        self.mssi.print_instruments()
-        output, model_sr = self.mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert)
-        self.mssi.clear_model()
+        mssi.clear_model()
+        mssi.load_model(self.get_model_type(model_name), checkpoint, config)
+        mssi.print_instruments()
+        output, model_sr = mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert)
+        mssi.clear_model()
         return output, model_sr
 
     def auto_ensemble(
@@ -1698,12 +1716,14 @@ class Separator(ModelManager):
         auto_ensembler = Ensembler()
         weights = []
         saved_primary_stems = []
-        self.mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
+        mssi = MSSI()
+        mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
         for i, (model_name, primary_stem, invert, weight) in enumerate(flow, start=1):
+            print(f"{_i18n('model')} {i}/{model_count}")
             try:
                 self.download(model_name)
                 checkpoint, config = self.generate_local_paths(model_name)
-                output, model_sr = self.auto_ensemble_base(model_name, checkpoint, config, i, model_count, input_mix, orig_sr, primary_stem, invert)
+                output, model_sr = self.auto_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, input_mix, orig_sr, primary_stem, invert)
                 auto_ensembler.add_array(output, model_sr)
                 weights.append(weight)
                 if save_primary_stems:
@@ -1720,25 +1740,25 @@ class Separator(ModelManager):
         extracted_primary_stems = None
         auto_ensembler.clear()
         auto_ensembler, output = None, None
-        del auto_ensembler, output
+        del auto_ensembler, output, mssi
         inverted_array, i_sr = subtractor(input_mix, output_array, orig_sr, sr_, spectrogram=use_spec_invert)
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr), saved_primary_stems
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
-    def iterative_ensemble_base(self, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
-        self.mssi.clear_model()
-        self.mssi.load_model(
+    def iterative_ensemble_base(self, mssi: MSSI, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
+        mssi.clear_model()
+        mssi.load_model(
             self.get_model_type(model_name), 
             checkpoint, 
             config
         )
-        self.mssi.print_instruments()
+        mssi.print_instruments()
         
-        output, model_sr = self.mssi._process_array_iter_ensemble(
+        output, model_sr = mssi._process_array_iter_ensemble(
             i, model_count, iter_index, iter_total, current_mix, orig_sr, 
             primary_stem, invert
         )
-        self.mssi.clear_model()
+        mssi.clear_model()
         return output, model_sr
 
     def iterative_ensemble(
@@ -1781,18 +1801,20 @@ class Separator(ModelManager):
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "ITER"])
         template = Namer.short(template, length=40)
-        
-        self.mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
+
+        mssi = MSSI()
+        mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
         for iteration in range(1, num_iters + 1):
             
+            print(f"{_i18n('iteration')} {iteration}/{num_iters}")
             auto_ensembler = Ensembler()
             
             for i, (model_name, primary_stem, invert) in enumerate(flow, start=1):
-                
+                print(f"{_i18n('model')} {i}/{model_count}")
                 try:
                     self.download(model_name)
                     checkpoint, config = self.generate_local_paths(model_name)
-                    output, model_sr = self.iterative_ensemble_base(model_name, checkpoint, config, i, model_count, iteration, num_iters, current_mix, orig_sr, primary_stem, invert)
+                    output, model_sr = self.iterative_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, iteration, num_iters, current_mix, orig_sr, primary_stem, invert)
                     auto_ensembler.add_array(output, model_sr)
                     
                 except Exception as e:
@@ -1846,7 +1868,7 @@ class Separator(ModelManager):
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-        
+        del mssi
         return result_path, intermediate_files
 
     def manual_ensemble(
