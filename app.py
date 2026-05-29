@@ -1163,7 +1163,6 @@ class App(Separator):
             custom_sep_history_state = gr.State([])
             custom_sep_checkpoints_state = gr.State([])
             custom_sep_configs_state = gr.State([])
-            iterative_ensemble_user_flow_state = gr.State([])
             iterative_ensemble_input_state = gr.State([])
             iterative_ensemble_history_state = gr.State([])
             iterative_ensemble_flows_state = gr.State([])
@@ -1701,7 +1700,7 @@ class App(Separator):
                             return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"]), zip_is_generated
 
                 with gr.Tab(_i18n("iterative_ensemble_tab")):
-                    
+                    iterative_ensemble_user_flow_state = gr.BrowserState([])
                     with gr.Row():
                         with gr.Column():
                             iterative_ensemble_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
