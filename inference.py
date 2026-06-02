@@ -1480,8 +1480,8 @@ class ModelManager:
 
         console.print(table)
 
-    def update_info(self):
-        dw_file(self.info_url, self.info_path)
+    def update_info(self, alt1):
+        dw_file("https://modelscope.cn/models/noblebarkrr/mvsepless_resources/resolve/master/models_alt1.json" if alt1 else self.info_url, self.info_path)
         print(_i18n("model_info_updated"))
 
     def download(self, model_name: str):
@@ -2021,7 +2021,7 @@ if __name__ == "__main__":
         )
     elif args.mode == "info":
         if args.update:
-            separator.update_info()
+            separator.update_info(args.model_scope)
         elif args.download:
             separator.download(args.model_name)
         elif args.clear_cache:
