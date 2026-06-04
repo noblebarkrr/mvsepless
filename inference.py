@@ -348,8 +348,27 @@ class MSSI: # Music Source Separation Inference
             return self.instruments
 
     def print_instruments(self):
-        print(_i18n("stems")+": "+",".join(self.instruments))
+        print(_i18n("stems")+": "+", ".join(self.instruments))
         print(_i18n("target_instrument")+": "+(self.target_instrument if self.target_instrument else _i18n("no")))
+
+    def validate_selected_instruments(self, selected_stems: list = []):
+        correct_stems_list = []
+        uncorrect_stems_list = []
+        if selected_stems:
+            print(_i18n("selected_stems")+": "+", ".join(selected_stems))
+            for stem in selected_stems:
+                stem_is_correct = False
+                for stem_orig in self.instruments:
+                    if stem_orig == stem:
+                        correct_stems_list.append(stem_orig)
+                        stem_is_correct = True
+                        break
+                if not stem_is_correct:
+                    uncorrect_stems_list.append(stem)
+            print(_i18n("corrected_selected_stems")+": "+", ".join(correct_stems_list))
+            if uncorrect_stems_list:
+                print(_i18n("uncorrected_selected_stems")+": "+", ".join(uncorrect_stems_list))
+        return correct_stems_list
 
     def load_model_instance(self):
         if self.config is None or self.model_type is None:
@@ -1536,6 +1555,7 @@ class Separator(ModelManager):
         mssi.clear_model() 
         mssi.load_model(self.get_model_type(model_name), checkpoint, config)
         mssi.print_instruments()
+        selected_stems = mssi.validate_selected_instruments(selected_stems)
         results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
         mssi.clear_model()
         return results
@@ -1596,6 +1616,7 @@ class Separator(ModelManager):
         mssi.load_model(model_type, checkpoint, config)
         self.previous_model_name = model_name
         mssi.print_instruments()
+        selected_stems = mssi.validate_selected_instruments(selected_stems)
         results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
         mssi.clear_model()
         del mssi

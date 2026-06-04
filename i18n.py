@@ -603,6 +603,9 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
 </details>""",
         "iterative_ensemble_tab": "Итеративный",
         "model": "Модель",
+        "selected_stems": "Выбранные стемы",
+        "corrected_selected_stems": "Существующие выбранные стемы",
+        "uncorrected_selected_stems": "Внимание! Не существующие стемы"
     },
     "en": {
         "bytes": "B",
@@ -1188,6 +1191,9 @@ Example: `NAME_ITER` → `Song_iter_3`
 </details>""",
         "iterative_ensemble_tab": "Iterative",
         "model": "Model",
+        "selected_stems": "Selected stems",
+        "corrected_selected_stems": "Existing selected stems",
+        "uncorrected_selected_stems": "Warning! Non-exist stems"
     }
 }
 
