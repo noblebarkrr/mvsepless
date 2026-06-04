@@ -152,6 +152,8 @@ class VC:
         f0_mel_max: float = 1127 * np.log(1 + f0_max / 700)
 
         f0_imported = f0_import(f0_file)
+        if f0_imported.size < p_len:
+            f0_imported = np.pad(f0_imported, (0, p_len - f0_imported.size), mode='constant', constant_values=0)
         f0_imported = f0_imported[:p_len]
         offset_p_len = offset // self.window
         f0 = np.pad(f0_imported, (offset_p_len, offset_p_len), mode="reflect")

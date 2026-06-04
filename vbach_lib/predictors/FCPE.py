@@ -863,31 +863,42 @@ class FCPEF0Predictor(F0Predictor):
         return results[0, 0] if ndim == 1 else results[0] if ndim == 2 else results
 
     def post_process(self, x, sample_rate, f0, pad_to):
-        f0 = (
-            torch.from_numpy(f0).float().to(x.device)
-            if isinstance(f0, np.ndarray)
-            else f0
-        )
-        f0 = self.repeat_expand(f0, pad_to) if pad_to is not None else f0
+        # 1. Приводим исходный f0 к numpy
+        if isinstance(f0, torch.Tensor):
+            f0 = f0.cpu().numpy()
+            
+        # 2. Определяем исходную длину, которую отдал FCPE
+        org_len = len(f0)
+        
+        # 3. Находим ненулевые индексы в ИСХОДНОМ масштабе времени
+        nzindex = np.nonzero(f0)[0]
+        
+        # Если звука вообще не было
+        if nzindex.shape[0] <= 0:
+            return np.zeros(pad_to), np.zeros(pad_to)
+            
+        f0_voiced = f0[nzindex]
+        
+        # Сетка времени для исходного f0 и для целевого (pad_to)
+        time_org = self.hop_length / sample_rate * nzindex
+        time_frame = np.arange(pad_to) * (self.hop_length / sample_rate) * (org_len / pad_to) if pad_to else np.arange(org_len) * self.hop_length / sample_rate
+        if pad_to is None:
+            pad_to = org_len
 
-        vuv_vector = torch.zeros_like(f0)
+        # 4. Интерполируем только "чистый" f0 для непрерывности (без пауз)
+        f0_interp = np.interp(time_frame, time_org, f0_voiced, left=f0_voiced[0], right=f0_voiced[-1])
+        
+        # 5. Правильно переносим маску VUV на новый размер (nearest делает четкие 0 и 1)
+        vuv_vector = np.zeros(org_len)
         vuv_vector[f0 > 0.0] = 1.0
-        vuv_vector[f0 <= 0.0] = 0.0
-
-        nzindex = torch.nonzero(f0).squeeze()
-        f0 = torch.index_select(f0, dim=0, index=nzindex).cpu().numpy()
-        time_org = self.hop_length / sample_rate * nzindex.cpu().numpy()
-        time_frame = np.arange(pad_to) * self.hop_length / sample_rate
-
-        vuv_vector = F.interpolate(vuv_vector[None, None, :], size=pad_to)[0][0]
-
-        if f0.shape[0] <= 0:
-            return np.zeros(pad_to), vuv_vector.cpu().numpy()
-        if f0.shape[0] == 1:
-            return np.ones(pad_to) * f0[0], vuv_vector.cpu().numpy()
-
-        f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
-        return f0, vuv_vector.cpu().numpy()
+        
+        vuv_tensor = torch.from_numpy(vuv_vector)[None, None, :]
+        vuv_vector_resized = torch.nn.functional.interpolate(vuv_tensor, size=pad_to, mode="nearest")[0, 0].numpy()
+        
+        # 6. Накладываем маску обратно: там где тишина — зануляем интерполяцию!
+        f0_final = f0_interp * vuv_vector_resized
+        
+        return f0_final, vuv_vector_resized
 
     def compute_f0(self, wav, p_len=None):
         x = torch.FloatTensor(wav).to(self.dtype).to(self.device)
@@ -897,14 +908,5 @@ class FCPEF0Predictor(F0Predictor):
             return f0.cpu().numpy() if p_len is None else np.zeros(p_len), (
                 f0.cpu().numpy() if p_len is None else np.zeros(p_len)
             )
-        return self.post_process(x, self.sample_rate, f0, p_len)[0]
-
-    def compute_f0_uv(self, wav, p_len=None):
-        x = torch.FloatTensor(wav).to(self.dtype).to(self.device)
-        p_len = x.shape[0] // self.hop_length if p_len is None else p_len
-        f0 = self.fcpe(x, sr=self.sample_rate, threshold=self.threshold)[0, :, 0]
-        if torch.all(f0 == 0):
-            return f0.cpu().numpy() if p_len is None else np.zeros(p_len), (
-                f0.cpu().numpy() if p_len is None else np.zeros(p_len)
-            )
-        return self.post_process(x, self.sample_rate, f0, p_len)
+        f0_v, f0_uv = self.post_process(x, self.sample_rate, f0, p_len)
+        return f0_v

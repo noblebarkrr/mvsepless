@@ -33,28 +33,36 @@ HPA_RMVPE_PATH = BASE_DIR / "hpa_rmvpe.pt"
 FCPE_PATH = BASE_DIR / "fcpe.pt"
 
 f0_methods = (
-    "rmvpe+",
+    "rmvpe",
     "hpa-rmvpe",
     "fcpe",
+    "fcpe+unvoiced_rmvpe",
     "mangio-crepe",
     "mangio-crepe-tiny",
+    "mangio-crepe+unvoiced_rmvpe", 
+    "mangio-crepe-tiny+unvoiced_rmvpe",
     "harvest",
     "pm",
     "pyin",
 )
-crepe_like_f0_methods = (f0_methods[3], f0_methods[4], f0_methods[7])
+crepe_like_f0_methods = (f0_methods[4], f0_methods[5], f0_methods[6], f0_methods[7], f0_methods[10])
 
 class UnknownF0Method(Exception): pass
 class F0CurveNotFound(Exception): pass
 
 requirements = {
-    "rmvpe+": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/rmvpe.pt?download=true", RMVPE_PATH],
+    "rmvpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/rmvpe.pt?download=true", RMVPE_PATH],
     "hpa_rmvpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/hpa_rmvpe.pt?download=true", HPA_RMVPE_PATH],
     "fcpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/fcpe.pt?download=true", FCPE_PATH]
 }
 
 def download_requirements(f0_method: str):
-    url, path = requirements.get(f0_method, (None, None))
+    if "+unvoiced_rmvpe" in f0_method:
+        url1, path1 = requirements.get("rmvpe", (None, None))
+        if all([url1, path1]):
+            if not path1.exists():
+                dw_file(url1, path1)
+    url, path = requirements.get(f0_method.replace("+unvoiced_rmvpe", ""), (None, None))
     if all([url, path]):
         if not path.exists():
             dw_file(url, path)
@@ -139,6 +147,48 @@ def f0_extract(
         )
         f0 = np.nan_to_num(target)
 
+    if f0_method in ["mangio-crepe+unvoiced_rmvpe", "mangio-crepe-tiny+unvoiced_rmvpe"]:
+        x = x.astype(np.float32)
+        x /= np.quantile(np.abs(x), 0.999)
+        audio = torch.from_numpy(x).to(device, copy=True).unsqueeze(0)
+        if audio.ndim == 2 and audio.shape[0] > 1:
+            audio = torch.mean(audio, dim=0, keepdim=True)
+
+        pitch_ = torchcrepe.predict(
+            audio,
+            sample_rate,
+            crepe_hop_length,
+            f0_min,
+            f0_max,
+            "tiny" if f0_method == "mangio-crepe-tiny+unvoiced_rmvpe" else "full",
+            batch_size=crepe_hop_length * 2,
+            device=device,
+            pad=True,
+        )
+
+        p_len = p_len or x.shape[0] // crepe_hop_length
+        source = np.array(pitch_.squeeze(0).cpu().float().numpy())
+        source[source < 0.001] = np.nan
+        target = np.interp(
+            np.arange(0, len(source) * p_len, len(source)) / p_len,
+            np.arange(0, len(source)),
+            source,
+        )
+        f0_1 = np.nan_to_num(target)
+        model_2 = RMVPE0Predictor(
+            RMVPE_PATH, is_half=is_half, device=device
+        )
+        f0_2: np.ndarray = model_2.infer_from_audio_with_pitch(
+            x, thred=0.03, f0_min=f0_min, f0_max=f0_max
+        )
+        f0_1_len = f0_1.size
+        f0_2_len = f0_2.size
+        max_len = max(f0_1_len, f0_2_len)
+        f0_1 = np.pad(f0_1, pad_width=(0, max_len - f0_1_len), mode='constant', constant_values=0)
+        f0_2 = np.pad(f0_2, pad_width=(0, max_len - f0_2_len), mode='constant', constant_values=0)
+        condition = (f0_2 == 0) & (f0_1 != 0)
+        f0 = np.where(condition, 0, f0_1)
+
     elif f0_method == "pyin":
         f0, *_ = librosa.pyin(
             x.astype(np.float32),
@@ -170,6 +220,32 @@ def f0_extract(
         f0 = model.compute_f0(x, p_len=p_len or len(x) // window)
         del model
 
+    elif f0_method == "fcpe+unvoiced_rmvpe":
+        model_1 = FCPEF0Predictor(
+            FCPE_PATH,
+            f0_min=int(f0_min),
+            f0_max=int(f0_max),
+            dtype=torch.float32,
+            device=device,
+            sample_rate=sample_rate,
+            threshold=0.03,
+        )
+        f0_1: np.ndarray = model_1.compute_f0(x, p_len=p_len or len(x) // window)
+        model_2 = RMVPE0Predictor(
+            RMVPE_PATH, is_half=is_half, device=device
+        )
+        f0_2: np.ndarray = model_2.infer_from_audio_with_pitch(
+            x, thred=0.03, f0_min=f0_min, f0_max=f0_max
+        )
+        f0_1_len = f0_1.size
+        f0_2_len = f0_2.size
+        max_len = max(f0_1_len, f0_2_len)
+        f0_1 = np.pad(f0_1, pad_width=(0, max_len - f0_1_len), mode='constant', constant_values=0)
+        f0_2 = np.pad(f0_2, pad_width=(0, max_len - f0_2_len), mode='constant', constant_values=0)
+        condition = (f0_2 == 0) & (f0_1 != 0)
+        f0 = np.where(condition, 0, f0_1)
+        del model_1, model_2
+
     elif f0_method == "harvest":
         input_audio_path2wav = {}
         input_audio_path2wav["test.mp3"] = x.astype(np.double)
@@ -193,7 +269,7 @@ def f0_extract(
                 f0, [[pad_size, p_len - len(f0) - pad_size]], mode="constant"
             )
 
-    elif f0_method == "rmvpe+":
+    elif f0_method == "rmvpe":
         model = RMVPE0Predictor(
             RMVPE_PATH, is_half=is_half, device=device
         )
