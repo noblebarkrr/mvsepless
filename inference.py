@@ -1304,6 +1304,8 @@ class MSSI: # Music Source Separation Inference
                     self.delete_unselected_stems([*selected_stems, "invert"])
                     for stem in selected_stems:
                         self.output_arrays["invert"] = subtractor(self.output_arrays["invert"], self.output_arrays[stem], self.sample_rate, self.sample_rate, spectrogram=self.use_spec_invert)[0]
+        else:
+            self.delete_unselected_stems(selected_stems)
         if return_:
             return self.output_arrays["invert"]
 
