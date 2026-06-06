@@ -322,6 +322,43 @@ separator.show_info(
 )
 ```
 
+#### Пример вывода:
+
+</head>
+<body>
+    <pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><code style="font-family:inherit"><span style="font-style: italic">                              Информация о моделях                              </span>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Имя модели                               </span>┃<span style="font-weight: bold"> Выходные стемы                    </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ <span style="color: #008000; text-decoration-color: #008000">установлено</span>                              │ <span style="color: #008000; text-decoration-color: #008000">целевой инструмент</span>                │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_inst_fno_unwa                         │ <span style="color: #008000; text-decoration-color: #008000">other</span>, vocals                     │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_inst_large2_unwa                      │ <span style="color: #008000; text-decoration-color: #008000">instrument</span>, vocals                │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_inst_hyperace_unwa                    │ <span style="color: #008000; text-decoration-color: #008000">instrument</span>, vocals                │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_inst_hyperace2_unwa                   │ <span style="color: #008000; text-decoration-color: #008000">instrument</span>, vocals                │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_voc_hyperace2_unwa                    │ instrument, <span style="color: #008000; text-decoration-color: #008000">vocals</span>                │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_karaoke_becruily                      │ Instrumental, <span style="color: #008000; text-decoration-color: #008000">Vocals</span>              │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_voctest_gabox                         │ Instrumental, <span style="color: #008000; text-decoration-color: #008000">Vocals</span>              │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_karaoke_gabox                         │ other, <span style="color: #008000; text-decoration-color: #008000">vocals</span>                     │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ bs_karaoke_inv_gabox                     │ <span style="color: #008000; text-decoration-color: #008000">other</span>, vocals                     │
+├──────────────────────────────────────────┼───────────────────────────────────┤
+│ <span style="color: #008000; text-decoration-color: #008000">bs_6stem</span>                                 │ bass, drums, guitar, other,       │
+│                                          │ piano, vocals                     │
+└──────────────────────────────────────────┴───────────────────────────────────┘
+</code></pre>
+</body>
+</html>
+
+
+
 ---
 
 ### Разделение <span id="разделение-использование"></span>
