@@ -55,11 +55,14 @@
 
 | Метод | Описание |
 |-------|----------|
-| `rmvpe+` | Высокая точность, рекомендуется по умолчанию |
+| `rmvpe` | Высокая точность, рекомендуется по умолчанию |
 | `hpa-rmvpe` | Улучшенная версия RMVPE |
 | `fcpe` | Fast Context-aware Pitch Extraction |
+| `fcpe+unvoiced_rmvpe` | То же самое, что и `fcpe`, но если `rmvpe` считает участок глухим (unvoiced), частота `fcpe` принудительно зануляется |
 | `mangio-crepe` | CREPE с высокой точностью |
 | `mangio-crepe-tiny` | CREPE (облегченная версия) |
+| `mangio-crepe+unvoiced_rmvpe` | То же самое, что и `mangio-crepe`, но если `rmvpe` считает участок глухим (unvoiced), частота `mangio-crepe` принудительно зануляется |
+| `mangio-crepe-tiny+unvoiced_rmvpe` | То же самое, что и `mangio-crepe-tiny`, но если `rmvpe` считает участок глухим (unvoiced), частота `mangio-crepe-tiny` принудительно зануляется |
 | `harvest` | Алгоритм из WORLD вокодера |
 | `pm` | Parcelmouth (акустический анализ) |
 | `pyin` | Probabilistic YIN (в Librosa)|

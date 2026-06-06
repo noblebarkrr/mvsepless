@@ -541,7 +541,8 @@ result = separator.manual_ensemble(
 | `model_name` | `str` | Имя модели |
 | `extract_instrumental` | `bool` | Создание инверсии выбранных стемов (стем `invert`) |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
-| `invert_plus` | `bool` | Использует сложение невыбранных стемов при ссоздании инструментала |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода |
+| `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `selected_stems` | `list` | Список стемов для сохранения (если не указан — все) |
 | `add_params` | `dict` | Дополнительные параметры разделения |
 
@@ -567,6 +568,7 @@ result = separator.manual_ensemble(
 | `extract_instrumental` | `bool` | Создание инверсии выбранных стемов |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
 | `invert_plus` | `bool` | Использует сложение невыбранных стемов при ссоздании инструментала |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода |
 | `selected_stems` | `list` | Список стемов для сохранения |
 | `add_params` | `dict` | Дополнительные параметры разделения |
 
@@ -583,6 +585,7 @@ result = separator.manual_ensemble(
 | `output_format` | `str` | Формат аудио (`mp3`, `wav`, `flac` и др.) |
 | `template` | `str` | Шаблон имени (ключи: `NAME`, `ITER`) ([Подробнее](#шаблон-итеративный-ансамбль)) |
 | `save_intermediate` | `bool` | Сохранять промежуточные результаты каждой итерации |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода |
 
 **Возвращает**: `(путь_к_финальному_ансамблю, список_промежуточных_файлов)`
 
@@ -598,6 +601,7 @@ result = separator.manual_ensemble(
 | `output_format` | `str` | Формат аудио |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
 | `save_primary_stems` | `bool` | Сохранять основные стемы в output_dir |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода |
 
 **Возвращает**: `(путь_к_ансамблю, путь_к_инверсии, список_основных_стемов)`
 
@@ -611,6 +615,7 @@ result = separator.manual_ensemble(
 | `template` | `str` | Шаблон имени (ключи: `NAME`, `TYPE`) ([Подробнее](#шаблон-ручной-ансамбль)) |
 | `etype` | `str` | Тип ансамбля (`avg_fft`, `median_fft`, `min_fft`, `max_fft`) ([Подробнее](#типы-ансамбля-инфо)) |
 | `output_format` | `str` | Формат аудио |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода |
 
 **Возвращает**: `str` — путь к результату ансамбля
 
@@ -624,6 +629,7 @@ result = separator.manual_ensemble(
 | `output_format` | `str` | Формат аудио |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
 | `template` | `str` | Шаблон имени (ключи: `NAME`, `TYPE`) ([Подробнее](#шаблон-вычитание)) |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода |
 
 
 **Возвращает**: `str` — путь к результату вычитания
@@ -658,6 +664,7 @@ result = separator.manual_ensemble(
 | `-inst`, `-ext_inst`, `-ext-inst`, `--extract_instrumental`, `--extract-instrumental` | `extract_instrumental` | `bool` | Создать инверсию выбранных стемов (инструментал) - стем с именем 'invert' |
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
 | `-st`, `--st`, `-stems`, `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
 
 ### Разделение с кастомной моделью <span id="разделение-с-кастомной-моделью-cli"></span>
@@ -676,6 +683,7 @@ result = separator.manual_ensemble(
 | `-inst`, `-ext_inst`, `-ext-inst`, `--extract_instrumental`, `--extract-instrumental` | `extract_instrumental` | `bool` | Создать инверсию выбранных стемов (инструментал) - стем с именем 'invert' |
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
 | `-st`, `--st`, `-stems`, `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
 
 ### Итеративный ансамбль <span id="итеративный-ансамбль-cli"></span>
@@ -690,6 +698,7 @@ result = separator.manual_ensemble(
 | `-tm`, `-tmplt`, `--template` | `template` | `str` | Шаблон имени выходного файла. Доступные ключи: NAME, ITER. Пример: NAME_ITER ([Подробнее](#шаблон-итеративный-ансамбль)) |
 | `-n`, `-iters`, `--num_iters`, `--num-iters` | `num_iters` | `int` | Количество итераций (по умолчанию: 4). На каждой итерации применяется весь набор моделей к остатку от предыдущей итерации |
 | `-save_intermediate`, `-save-intermediate`, `--save_intermediate`, `--save-intermediate` | `save_intermediate` | `bool` | Сохранять промежуточные результаты каждой итерации |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода |
 | `-flow`, `--flow` | `flow` | `list` | Пресет в виде строк: `МОДЕЛЬ`:`ОСНОВНОЙ_СТЕМ`:`ИНВЕРСИЯ`. ([Пример](#пример-итеративного-ансамбля-cli)) |
 | `-json`, `-preset`, `-preset_json`, `-preset-json`, `--preset_json`, `--preset-json` | `preset` | `str` | Путь к JSON-файлу с пресетом ансамбля ([Пример](#пример-итеративного-ансамбля-json)) |
 
@@ -706,6 +715,7 @@ result = separator.manual_ensemble(
 | `-t`, `-type`, `-etype`, `--ensemble_type`, `--ensemble-type` | `ensemble_type` | `str` | Тип ансамбля: avg_fft, median_fft, min_fft, max_fft (по умолчанию: avg_fft; [Подробнее](#типы-ансамбля-инфо)) |
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
 | `-save_stems`, `-save-stems`, `-save_primary_stems`, `--save-primary-stems` | `save_primary_stems` | `bool` | Сохранять основные стемы в выходную директорию |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода |
 | `-flow`, `--flow` | `flow` | `list` | Пресет в виде строк: `МОДЕЛЬ`:`ОСНОВНОЙ_СТЕМ`:`ИНВЕРСИЯ`:`ВЕС`. ([Пример](#пример-авто-ансамбль-cli)) |
 | `-json`, `-preset`, `-preset_json`, `-preset-json`, `--preset_json`, `--preset-json` | `preset` | `str` | Путь к JSON-файлу с пресетом ансамбля ([Пример](#пример-авто-ансамбль-json)) |
 
@@ -721,6 +731,7 @@ result = separator.manual_ensemble(
 | `-tm`, `-tmplt`, `--template` | `template` | `str` | Шаблон имени выходного файла. Доступные ключи: NAME, TYPE. Пример: NAME_TYPE ([Подробнее](#шаблон-ручной-ансамбль)) |
 | `-t`, `-type`, `-etype`, `--ensemble_type`, `--ensemble-type` | `ensemble_type` | `str` | Тип ансамбля: avg_fft, median_fft, min_fft, max_fft (по умолчанию: avg_fft; [Подробнее](#типы-ансамбля-инфо)) |
 | `-w`, `-weights`, `--weights` | `weights` | `list` | Веса для каждого аудиофайла (обязательно для типа avg_fft). Пример: -w 1.0 0.5 0.2 |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода |
 
 ### Вычитание <span id="вычитание-cli"></span>
 
@@ -734,6 +745,7 @@ result = separator.manual_ensemble(
 | `-of`, `-output_fmt`, `--output_format`, `--output-format` | `output_format` | `str` | Формат выходного аудио. Доступны: mp3, wav, flac и др. (по умолчанию: mp3) |
 | `-tm`, `-tmplt`, `--template` | `template` | `str` | Шаблон имени выходного файла. Доступные ключи: NAME, TYPE. Пример: NAME_TYPE ([Подробнее](#шаблон-вычитание)) |
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода |
 
 ##№ Web-UI <span id="web-ui-cli"></span>
 

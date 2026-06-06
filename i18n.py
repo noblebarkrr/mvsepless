@@ -605,7 +605,8 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "model": "Модель",
         "selected_stems": "Выбранные стемы",
         "corrected_selected_stems": "Существующие выбранные стемы",
-        "uncorrected_selected_stems": "Внимание! Не существующие стемы"
+        "uncorrected_selected_stems": "Внимание! Не существующие стемы",
+        "prefer_float": "Предочитать высокую точность вывода",
     },
     "en": {
         "bytes": "B",
@@ -1193,7 +1194,8 @@ Example: `NAME_ITER` → `Song_iter_3`
         "model": "Model",
         "selected_stems": "Selected stems",
         "corrected_selected_stems": "Existing selected stems",
-        "uncorrected_selected_stems": "Warning! Non-exist stems"
+        "uncorrected_selected_stems": "Warning! Non-exist stems",
+        "prefer_float": "Prefer high precision output",
     }
 }
 

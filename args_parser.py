@@ -143,6 +143,11 @@ def parse_separator_args(add_params_args: dict = {}):
         nargs="*", metavar="STEM", dest="selected_stems",
         help=_i18n("arg_selected_stems_help")
     )
+    separate_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
     for param_name, param_value in add_params_args.items():
         param_type = param_value.get("type")
         default = param_value.get("default")
@@ -210,6 +215,11 @@ def parse_separator_args(add_params_args: dict = {}):
         nargs="*", metavar="STEM", dest="selected_stems",
         help=_i18n("arg_selected_stems_help")
     )
+    custom_separate_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
     for param_name, param_value in add_params_args.items():
         param_type = param_value.get("type")
         default = param_value.get("default")
@@ -258,6 +268,11 @@ def parse_separator_args(add_params_args: dict = {}):
         action="store_true", dest="save_intermediate",
         help=_i18n("arg_save_intermediate_help")
     )
+    iterative_ensemble_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
     iterative_ensemble_flow_group = iterative_ensemble_parser.add_mutually_exclusive_group(required=True)
     iterative_ensemble_flow_group.add_argument(
         "-flow", "--flow", nargs="+", metavar="MODEL:PRIMARY_STEM:INVERT", 
@@ -305,6 +320,11 @@ def parse_separator_args(add_params_args: dict = {}):
         action="store_true", dest="save_primary_stems",
         help=_i18n("arg_save_primary_stems_help")
     )
+    auto_ensemble_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
     auto_ensemble_flow_group = auto_ensemble_parser.add_mutually_exclusive_group(required=True)
     auto_ensemble_flow_group.add_argument(
         "-flow", "--flow", nargs="+", metavar="MODEL:PRIMARY_STEM:INVERT:WEIGHTS", 
@@ -346,6 +366,11 @@ def parse_separator_args(add_params_args: dict = {}):
         "-w", "-weights", "--weights", type=float, nargs="*", dest="weights",
         help=_i18n("arg_weights_help")
     )
+    manual_ensemble_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
 
     # subtract
     subtract_parser.add_argument(
@@ -376,6 +401,11 @@ def parse_separator_args(add_params_args: dict = {}):
         "-ispec", "-spec_invert", "-spec-invert", "--use_spec_invert", "--use-spec-invert",  
         action="store_true", dest="use_spec_invert",
         help=_i18n("arg_use_spec_invert_help")
+    )
+    subtract_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
     )
 
     # info

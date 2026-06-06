@@ -1309,7 +1309,7 @@ class MSSI: # Music Source Separation Inference
         if return_:
             return self.output_arrays["invert"]
 
-    def write(self, template: str, format_return: str = "name_stems_list"):
+    def write(self, template: str, format_return: str = "name_stems_list", prefer_float: bool = False):
         results = []
         writed_stems = []
         model_name = self.ckpt_path.stem
@@ -1321,7 +1321,7 @@ class MSSI: # Music Source Separation Inference
                 MODEL=model_name,
                 NAME=Namer.short_input_name_template(template, STEM=stem, MODEL=model_name, NAME=self.input_file_name)
             )
-            writed_stems.append([stem, write(Namer.iter(self.output_dir / f"{custom_name}.{self.output_format}"), array, self.sample_rate)])
+            writed_stems.append([stem, write(Namer.iter(self.output_dir / f"{custom_name}.{self.output_format}"), array, self.sample_rate, 320, prefer_float)])
         if writed_stems:
             match format_return:
                 case "name_stems_list":
@@ -1345,7 +1345,7 @@ class MSSI: # Music Source Separation Inference
     def get_outputs(self):
         return self.output_files_list
     
-    def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True, invert_plus: bool = False):
+    def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True, invert_plus: bool = False, prefer_float: bool = False):
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "MODEL", "STEM"])
         template = Namer.short(template, length=40)
@@ -1357,7 +1357,7 @@ class MSSI: # Music Source Separation Inference
             self.clear_mix()
             raise DemixError(_i18n("demix_error", error=e)) from e
         self.extract_instrumental(extract_instrumental, selected_stems=selected_stems, invert_plus=invert_plus)
-        self.write(template, "name_stems_list_append_self")
+        self.write(template, "name_stems_list_append_self", prefer_float)
         self.clear_mix()
 
     def _process_array_ensemble(self, i: int, total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
@@ -1404,7 +1404,7 @@ class MSSI: # Music Source Separation Inference
         self.load_model_instance()
         self.load_checkpoint(ckpt=ckpt)
 
-    def inference(self, input: str | list, /, *inputs, template: str = "NAME_MDOEL_STEM", selected_stems: list = [], extract_instrumental: bool = False, invert_plus: bool = False):
+    def inference(self, input: str | list, /, *inputs, template: str = "NAME_MDOEL_STEM", selected_stems: list = [], extract_instrumental: bool = False, invert_plus: bool = False, prefer_float: bool = False):
         self.clear_outputs()
         all_inputs = []
         if isinstance(input, list):
@@ -1416,7 +1416,7 @@ class MSSI: # Music Source Separation Inference
         total = len(all_inputs)
         for i, input_file in enumerate(all_inputs, start=1):
             try:
-                self._process(i, total, input_file, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
+                self._process(i, total, input_file, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float)
             except Exception as e:
                 traceback.print_exc()
         return self.get_outputs()
@@ -1552,13 +1552,14 @@ class Separator(ModelManager):
         config: str | Path, 
         selected_stems: list, 
         extract_instrumental: bool,
-        invert_plus: bool
+        invert_plus: bool,
+        prefer_float: bool
     ):
         mssi.clear_model() 
         mssi.load_model(self.get_model_type(model_name), checkpoint, config)
         mssi.print_instruments()
         selected_stems = mssi.validate_selected_instruments(selected_stems)
-        results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
+        results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float)
         mssi.clear_model()
         return results
 
@@ -1572,6 +1573,7 @@ class Separator(ModelManager):
         extract_instrumental: bool = False,
         use_spec_invert: bool = False,
         invert_plus: bool = False,
+        prefer_float: bool = False,
         selected_stems: list = [],
         add_params: dict = {}
     ):
@@ -1585,7 +1587,7 @@ class Separator(ModelManager):
         mssi.set_add_params(**add_params)
         self.download(model_name)
         checkpoint, config = self.generate_local_paths(model_name)
-        results = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus)
+        results = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus, prefer_float)
         return results
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
@@ -1601,6 +1603,7 @@ class Separator(ModelManager):
         extract_instrumental: bool = False,
         use_spec_invert: bool = False,
         invert_plus: bool = False,
+        prefer_float: bool = False,
         selected_stems: list = [],
         add_params: dict = {}
     ):
@@ -1619,7 +1622,7 @@ class Separator(ModelManager):
         self.previous_model_name = model_name
         mssi.print_instruments()
         selected_stems = mssi.validate_selected_instruments(selected_stems)
-        results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus)
+        results = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float)
         mssi.clear_model()
         del mssi
         return results
@@ -1701,7 +1704,8 @@ class Separator(ModelManager):
         etype: str = ensemble_types[0],
         output_format: str = output_formats[0],
         use_spec_invert: bool = False,
-        save_primary_stems: bool = False
+        save_primary_stems: bool = False,
+        prefer_float: bool = False,
     ) -> tuple[str, str, list[str]]:
         if not output_dir:
             output_dir = ""
@@ -1751,7 +1755,7 @@ class Separator(ModelManager):
                 weights.append(weight)
                 if save_primary_stems:
                     primary_stem_file_name = primary_stem + (invert_key if invert else "")
-                    primary_stem_path = write(Namer.iter(output_dir / model_name / f"{model_name}_{primary_stem_file_name}.flac"), output, model_sr)
+                    primary_stem_path = write(Namer.iter(output_dir / model_name / f"{model_name}_{primary_stem_file_name}.flac"), output, model_sr, 320, prefer_float)
                     saved_primary_stems.append(primary_stem_path)
             except Exception as e:
                 print(_i18n("error_occured_separation")+": "+str(e))
@@ -1765,7 +1769,7 @@ class Separator(ModelManager):
         auto_ensembler, output = None, None
         del auto_ensembler, output, mssi
         inverted_array, i_sr = subtractor(input_mix, output_array, orig_sr, sr_, spectrogram=use_spec_invert)
-        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr), saved_primary_stems
+        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_, 320, prefer_float), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr, 320, prefer_float), saved_primary_stems
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def iterative_ensemble_base(self, mssi: MSSI, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
@@ -1792,7 +1796,8 @@ class Separator(ModelManager):
         num_iters: int = 4,
         output_format: str = output_formats[0],
         template: str = "NAME_ITER",
-        save_intermediate: bool = False
+        save_intermediate: bool = False,
+        prefer_float: bool = False
     ) -> tuple[str, list[str]]:
         if not output_dir:
             output_dir = Path(".")
@@ -1876,13 +1881,13 @@ class Separator(ModelManager):
                 if iteration == num_iters:
                     final_name = iter_name + "_final"
                     final_path = Namer.iter(output_dir / f"{final_name}.{output_format}")
-                    result_path = write(final_path, ensemble_result, ensemble_sr)
+                    result_path = write(final_path, ensemble_result, ensemble_sr, 320, prefer_float)
                 else:
                     dry_name = "dry_" + iter_name
                     iter_path = Namer.iter(output_dir / f"{iter_name}.flac")
                     dry_iter_path = Namer.iter(output_dir / f"{dry_name}.flac")
                     iter_path = write(iter_path, new_mix, orig_sr)
-                    dry_iter_path = write(dry_iter_path, ensemble_result, ensemble_sr)
+                    dry_iter_path = write(dry_iter_path, ensemble_result, ensemble_sr, 320, prefer_float)
                     intermediate_files.append(iter_path)
                     intermediate_files.append(dry_iter_path)
             
@@ -1902,6 +1907,7 @@ class Separator(ModelManager):
         template: str = "ensembled_TYPE_COUNT",
         etype: str = ensemble_types[0],
         output_format: str = output_formats[0],
+        prefer_float: bool = False
     ) -> str:
         if not output_dir:
             output_dir = ""
@@ -1921,9 +1927,9 @@ class Separator(ModelManager):
             TYPE=etype,
             COUNT=model_count
         )
-        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), results, max_sr)
+        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), results, max_sr, 320, prefer_float)
     
-    def subtract(self, audio1: str | Path, audio2: str | Path, output_dir: str | Path = Path("."), output_format: str = output_formats[0], use_spec_invert: bool = False, template: str = "invert_TYPE_NAME"):
+    def subtract(self, audio1: str | Path, audio2: str | Path, output_dir: str | Path = Path("."), output_format: str = output_formats[0], use_spec_invert: bool = False, template: str = "invert_TYPE_NAME", prefer_float: bool = False):
         if not output_dir:
             output_dir = ""
         output_dir = Path(output_dir)
@@ -1947,7 +1953,7 @@ class Separator(ModelManager):
         y1, sr1 = read(audio1)
         y2, sr2 = read(audio2)
         inverted, min_sr = subtractor(y1, y2, sr1, sr2, spectrogram=use_spec_invert)
-        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), inverted, min_sr)
+        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), inverted, min_sr, 320, prefer_float)
     
 if __name__ == "__main__":
     separator = Separator()
@@ -1963,7 +1969,8 @@ if __name__ == "__main__":
             use_spec_invert=args.use_spec_invert,
             invert_plus=args.invert_plus,
             selected_stems=args.selected_stems,
-            add_params=get_add_params(args)
+            add_params=get_add_params(args),
+            prefer_float=args.prefer_float
         )
     elif args.mode == "custom_separate":
         separator.custom_separate(
@@ -1978,7 +1985,8 @@ if __name__ == "__main__":
             use_spec_invert=args.use_spec_invert,
             invert_plus=args.invert_plus,
             selected_stems=args.selected_stems,
-            add_params=get_add_params(args)
+            add_params=get_add_params(args),
+            prefer_float=args.prefer_float
         )
     elif args.mode == "auto_ensemble":
         if args.preset:
@@ -1999,7 +2007,8 @@ if __name__ == "__main__":
             etype=args.ensemble_type,
             output_format=args.output_format,
             use_spec_invert=args.use_spec_invert, 
-            save_primary_stems=args.save_primary_stems
+            save_primary_stems=args.save_primary_stems,
+            prefer_float=args.prefer_float
         )
     elif args.mode == "iterative_ensemble":
         if args.preset:
@@ -2019,7 +2028,8 @@ if __name__ == "__main__":
             num_iters=args.num_iters,
             output_format=args.output_format,
             template=args.template,
-            save_intermediate=args.save_intermediate
+            save_intermediate=args.save_intermediate,
+            prefer_float=args.prefer_float
         )
         print(_i18n("ensemble_complete") + f": {result_path}")
         if intermediate_files:
@@ -2031,7 +2041,8 @@ if __name__ == "__main__":
             weights=args.weights,
             template=args.template,
             etype=args.ensemble_type,
-            output_format=args.output_format
+            output_format=args.output_format,
+            prefer_float=args.prefer_float
         )
     elif args.mode == "subtract":
         separator.subtract(
@@ -2040,7 +2051,8 @@ if __name__ == "__main__":
             output_dir=args.output_dir,
             output_format=args.output_format,
             use_spec_invert=args.spec_invert,
-            template=args.template
+            template=args.template,
+            prefer_float=args.prefer_float
         )
     elif args.mode == "info":
         if args.update:
