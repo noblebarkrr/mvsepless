@@ -98,7 +98,7 @@ https://github.com/noblebarkrr/mvsepless/archive/refs/heads/dzeta.zip
 ```sh
 apt update -y
 apt upgrade -y
-apt install -y wget curl git gcc libx11-dev ffmpeg build-essential cmake nano python3-full python3-dev
+apt install -y wget curl git gcc libx11-dev ffmpeg build-essential cmake nano python3-full python3-pip python3-dev
 git clone https://github.com/noblebarkrr/mvsepless -b dzeta
 cd mvsepless
 
