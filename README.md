@@ -567,7 +567,7 @@ result = separator.manual_ensemble(
 | `conf` | `str \| Path` | Путь к YAML конфигу (`*.yaml`) |
 | `extract_instrumental` | `bool` | Создание инверсии выбранных стемов |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
-| `invert_plus` | `bool` | Использует сложение невыбранных стемов при ссоздании инструментала |
+| `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 | `selected_stems` | `list` | Список стемов для сохранения |
 | `add_params` | `dict` | Дополнительные параметры разделения |
@@ -663,6 +663,7 @@ result = separator.manual_ensemble(
 | `-mn`, `-model`, `--model_name`, `--model-name` | `model_name` | `str` | Имя модели для разделения (по умолчанию: bs_6stem) |
 | `-inst`, `-ext_inst`, `-ext-inst`, `--extract_instrumental`, `--extract-instrumental` | `extract_instrumental` | `bool` | Создать инверсию выбранных стемов (инструментал) - стем с именем 'invert' |
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
+| `-iplus`, `-invert_plus`, `-invert-plus`, `--invert_plus`, `--invert-plus` | `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `-st`, `--st`, `-stems`, `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
@@ -682,6 +683,7 @@ result = separator.manual_ensemble(
 | `-conf`, `--conf`, `-config`, `--config`, `--config_path`, `--config-path` | `config_path` | `str \| Path` | Путь к конфигурационному файлу модели (*.yaml) |
 | `-inst`, `-ext_inst`, `-ext-inst`, `--extract_instrumental`, `--extract-instrumental` | `extract_instrumental` | `bool` | Создать инверсию выбранных стемов (инструментал) - стем с именем 'invert' |
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
+| `-iplus`, `-invert_plus`, `-invert-plus`, `--invert_plus`, `--invert-plus` | `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `-st`, `--st`, `-stems`, `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
