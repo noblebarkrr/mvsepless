@@ -1886,7 +1886,7 @@ class Separator(ModelManager):
                     dry_name = "dry_" + iter_name
                     iter_path = Namer.iter(output_dir / f"{iter_name}.flac")
                     dry_iter_path = Namer.iter(output_dir / f"{dry_name}.flac")
-                    iter_path = write(iter_path, new_mix, orig_sr)
+                    iter_path = write(iter_path, new_mix, orig_sr, 320, prefer_float)
                     dry_iter_path = write(dry_iter_path, ensemble_result, ensemble_sr, 320, prefer_float)
                     intermediate_files.append(iter_path)
                     intermediate_files.append(dry_iter_path)
