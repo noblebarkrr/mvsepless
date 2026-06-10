@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(SCRIPT_DIR.parent))
-from extra_utils import hf_spaces_gpu, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear
+from extra_utils import hf_spaces_gpu, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear, print_current_device
 if __package__:
     from .hubert_manager import get_hubert, download_hubert, huberts_fairseq
     from .pipeline import VC
@@ -182,6 +182,7 @@ class VbachConverter:
         template: str = "NAME_F0METHOD_PITCH",
         **kwargs,
     ):
+        print_current_device(self.config.device)
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "F0METHOD", "PITCH"])
         template = Namer.short(template, length=40)
@@ -279,6 +280,7 @@ class VbachConverter:
         template: str = "NAME_F0METHOD_PITCH",
         **kwargs,
     ):
+        print_current_device(self.config.device)
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "F0METHOD", "PITCH"])
         template = Namer.short(template, length=40)

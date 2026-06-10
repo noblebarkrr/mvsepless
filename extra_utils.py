@@ -47,6 +47,13 @@ if spaces is not None:
 import torch
 tz = timezone(timedelta(hours=3))
 
+def print_current_device(device: str | torch.device):
+    if isinstance(device, str):
+        device_str = device
+    else:
+        device_str = str(device)
+    print(_i18n("current_device", device=device_str))
+
 def get_gdrive_dir():
     try:
         result = subprocess.run(['/bin/mount'], capture_output=True, text=True)

@@ -10,7 +10,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 
-from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear, tz
+from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear, tz, print_current_device
 from datetime import datetime
 import torch
 import rich
@@ -271,6 +271,7 @@ class MSSI: # Music Source Separation Inference
 
         self.output_format = output_format
         self.device = torch.device(device)
+        print_current_device(self.device)
         self.use_spec_invert = use_spec_invert
         self.model = None
         self.model_module = None
