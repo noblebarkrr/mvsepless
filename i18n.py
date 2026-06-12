@@ -293,6 +293,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
 
 - `NAME` - имя входного файла (без расширения)
 - `F0METHOD` - метод извлечения F0 (например: rmvpe+, fcpe)
+- `MODEL` — имя модели (например: rvc_test)
 - `PITCH` - изменение высоты тона (например: 0, 12)
 
 Пример: `NAME_F0METHOD_PITCH` → `Song_rmvpe+_0`
@@ -366,6 +367,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
 
 - `NAME` - имя входного файла (без расширения)
 - `F0METHOD` - метод извлечения F0 (всегда custom)
+- `MODEL` — имя модели (например: rvc_test)
 - `PITCH` - изменение высоты тона (например: 0, 12)
 
 Пример: `NAME_F0METHOD_PITCH` → `Song_rmvpe+_0`
@@ -885,6 +887,7 @@ Example: `NAME_TYPE` → `Song_waveform`
 
 - `NAME` - input file name (without extension)
 - `F0METHOD` - F0 extraction method (e.g., rmvpe+, fcpe)
+- `MODEL` — model name (e.g., rvc_test)
 - `PITCH` - pitch shift (e.g., 0, 12)
 
 Example: `NAME_F0METHOD_PITCH` → `Song_rmvpe+_0`
@@ -958,6 +961,7 @@ Example: `NAME_F0METHOD_PITCH` → `Song_rmvpe+_0`
 
 - `NAME` - input file name (without extension)
 - `F0METHOD` - F0 extraction method (always custom)
+- `MODEL` — model name (e.g., rvc_test)
 - `PITCH` - pitch shift (e.g., 0, 12)
 
 Example: `NAME_F0METHOD_PITCH` → `Song_custom_0`

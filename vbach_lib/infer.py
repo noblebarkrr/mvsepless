@@ -18,7 +18,7 @@ else:
 from transformers import HubertModel
 from pathlib import Path
 import traceback
-from audio import read, write, split_channels, split_mid_side, multi_channel_array_from_arrays, output_formats, stereo_to_mono, reshape, mix_arrays, get_audio_files_from_list, check
+from audio import read, write, split_channels, split_mid_side, multi_channel_array_from_arrays, output_formats, stereo_to_mono, reshape, mix_arrays, get_audio_files_from_list, check, get_metadata
 from inference import PathsNotSpecified, PathNotExist, PathNotSpecified, FileIsNotAudio
 from i18n import _i18n
 from namer import Namer
@@ -27,6 +27,7 @@ import numpy as np
 import torch
 from torch import nn
 import gc
+from copy import deepcopy
 
 class VbachModelNotFound(Exception): pass
 
@@ -179,18 +180,19 @@ class VbachConverter:
         f0_min: int = 50,
         f0_max: int = 1100,
         chunk_duration: int = 7,
-        template: str = "NAME_F0METHOD_PITCH",
+        template: str = "MODEL_NAME_F0METHOD_PITCH",
         **kwargs,
     ):
         print_current_device(self.config.device)
         template = Namer.sanitize(template)
-        template = Namer.dedup_template(template, keys=["NAME", "F0METHOD", "PITCH"])
+        template = Namer.dedup_template(template, keys=["NAME", "F0METHOD", "MODEL", "PITCH"])
         template = Namer.short(template, length=40)
 
         if not model_path:
             raise VbachModelNotFound()
     
         self.get_vc(model_path, use_transformers)
+        model_name = Path(model_path).stem
     
         if not self.hubert_model:
             self.load_hubert(embedder_model, use_transformers)
@@ -213,8 +215,8 @@ class VbachConverter:
         for i, audio_input_path in enumerate(input_valid_files, start=1):
             try:
                 input_file_name = Path(audio_input_path).stem
-
                 mixtures, add_text = load_audio(audio_input_path, 16000, stereo_mode)
+                metadata = get_metadata(audio_input_path)
                 print(_i18n("loaded_mix")+": "+Path(audio_input_path).name)
                 converted_mixtures = []
 
@@ -248,9 +250,29 @@ class VbachConverter:
                     template,
                     PITCH=pitch,
                     F0METHOD=f0_method,
-                    NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD=f0_method, NAME=input_file_name)
+                    MODEL=model_name,
+                    NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD=f0_method, MODEL=model_name, NAME=input_file_name)
                 )
-                processed_audios.append(write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), post_process_audio(converted_mixtures, self.tgt_sr, stereo_mode), self.tgt_sr))
+                new_metadata = {}
+                if metadata:
+                    new_metadata = deepcopy(metadata)
+                    if "title" in metadata:
+                        new_metadata["title"] = f"[{f0_method} / {pitch} / {stereo_mode}] {metadata['title']}"
+                    elif "TITLE" in metadata:
+                        new_metadata["TITLE"] = f"[{f0_method} / {pitch} / {stereo_mode}] {metadata['TITLE']}"
+                    else:
+                        new_metadata["title"] = f"[{f0_method} / {pitch} / {stereo_mode}] {input_file_name}"
+
+                    if "artist" in metadata:
+                        new_metadata["artist"] = f"{metadata['artist']} (ft. {model_name})"
+                    elif "ARTIST" in metadata:
+                        new_metadata["ARTIST"] = f"{metadata['ARTIST']} (ft. {model_name})"
+                    else:
+                        new_metadata["artist"] = f"{model_name}"
+                else:
+                    new_metadata["title"] = f"[{f0_method} / {pitch} / {stereo_mode}] {input_file_name}"
+
+                processed_audios.append(write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), post_process_audio(converted_mixtures, self.tgt_sr, stereo_mode), self.tgt_sr, 320, False, new_metadata))
             except Exception as e:
                 traceback.print_exc()
 
@@ -277,17 +299,18 @@ class VbachConverter:
         f0_min: int = 50,
         f0_max: int = 1100,
         chunk_duration: int = 7,
-        template: str = "NAME_F0METHOD_PITCH",
+        template: str = "MODEL_NAME_F0METHOD_PITCH",
         **kwargs,
     ):
         print_current_device(self.config.device)
         template = Namer.sanitize(template)
-        template = Namer.dedup_template(template, keys=["NAME", "F0METHOD", "PITCH"])
+        template = Namer.dedup_template(template, keys=["NAME", "F0METHOD", "MODEL", "PITCH"])
         template = Namer.short(template, length=40)
 
         if not model_path:
             raise VbachModelNotFound()
-    
+
+        model_name = Path(model_path).stem
         self.get_vc(model_path, use_transformers)
     
         if not self.hubert_model:
@@ -310,6 +333,7 @@ class VbachConverter:
             if check(audio_input):
                 input_file_name = Path(audio_input).stem
                 mix, sr = read(audio_input, sr=16000, mono=True, flatten=True)
+                metadata = get_metadata(audio_input)
                 print(_i18n("loaded_mix")+": "+Path(audio_input).name)
             else:
                 raise FileIsNotAudio(_i18n("file_is_not_audio", path=audio_input))
@@ -341,9 +365,29 @@ class VbachConverter:
                 template,
                 PITCH=pitch,
                 F0METHOD="custom",
-                NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD="custom", NAME=input_file_name)
+                MODEL=model_name,
+                NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD="custom", MODEL=model_name, NAME=input_file_name)
             )
-            output_path = write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), audio_opt, self.tgt_sr)
+            new_metadata = {}
+            if metadata:
+                new_metadata = deepcopy(metadata)
+                if "title" in metadata:
+                    new_metadata["title"] = f"[custom / {pitch} / mono] {metadata['title']}"
+                elif "TITLE" in metadata:
+                    new_metadata["TITLE"] = f"[custom / {pitch} / mono] {metadata['TITLE']}"
+                else:
+                    new_metadata["title"] = f"[custom / {pitch} / mono] {input_file_name}"
+
+                if "artist" in metadata:
+                    new_metadata["artist"] = f"{metadata['artist']} (ft. {model_name})"
+                elif "ARTIST" in metadata:
+                    new_metadata["ARTIST"] = f"{metadata['ARTIST']} (ft. {model_name})"
+                else:
+                    new_metadata["artist"] = f"{model_name}"
+
+            else:
+                new_metadata["title"] = f"[custom / {pitch} / mono] {input_file_name}"
+            output_path = write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), audio_opt, self.tgt_sr, 320, False, new_metadata)
         except Exception as e:
             traceback.print_exc()
 

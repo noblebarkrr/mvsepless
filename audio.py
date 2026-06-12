@@ -6,6 +6,7 @@ import librosa
 from scipy.signal import ShortTimeFFT, resample
 from scipy.signal.windows import dpss, hann
 from numpy.typing import DTypeLike
+import json
 from typing import List, Tuple, Optional, Union, Dict, Any, Callable
 from i18n import _i18n
 
@@ -243,6 +244,45 @@ def get_channels(path: str | Path, stream: int = 0) -> int:
         print(_i18n("channels_read_error", path=path))
         return 0
 
+def get_metadata(path: str | Path) -> dict:
+    """
+    Получить количество каналов аудиофайла
+    
+    Args:
+        path: Путь к файлу
+    
+    Returns:
+        Словарь с метаданными
+    """
+    path = Path(path)
+    cmd = [ffprobe_path, "-i", path.as_posix(), "-v", "quiet", "-hide_banner", 
+           "-show_entries", "format_tags", 
+           "-of", "json"]
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = process.communicate()
+    metadata_str = stdout.decode('utf-8')
+    try:
+        metadata_json = json.loads(metadata_str)
+        if metadata_json:
+            return metadata_json["format"]["tags"]
+    except:
+        pass
+    return {} 
+
+def metadata_to_flags(metadata: dict):
+    metadata_temp = {}
+    if "tags" in metadata:
+        metadata_temp = metadata["tags"]
+    elif "format" in metadata:
+        metadata_temp = metadata["format"]["tags"]
+    else:
+        metadata_temp = metadata
+    flags = []
+    for key, value in metadata_temp.items():
+        flags.extend(["-metadata", f"{key}={value}"])
+    return flags
 
 def check(path: str | Path) -> bool:
     """
@@ -257,7 +297,6 @@ def check(path: str | Path) -> bool:
     channels = get_channels(path)
     sr = get_sr(path)
     return channels != 0 and sr != 0
-
 
 def read(
     path: str | Path, 
@@ -1507,7 +1546,8 @@ def write(
     y: np.ndarray, 
     sr: int, 
     bitrate: Union[int, str] = 320, 
-    prefer_float: bool = False
+    prefer_float: bool = False,
+    metadata: dict = {}
 ) -> str:
     """
     Записать аудио в файл
@@ -1556,7 +1596,7 @@ def write(
     output_path_str = output_path.as_posix()
 
     cmd = [ffmpeg_path, "-y", "-f", sample_format, "-ar", str(sr), "-ac", str(channels), 
-           "-i", "-", *get_codec_args(output_path.suffix, prefer_float), "-ab", f"{bitrate_fixed}k", output_path_str]
+           "-i", "-", *metadata_to_flags(metadata), *get_codec_args(output_path.suffix, prefer_float), "-ab", f"{bitrate_fixed}k", output_path_str]
 
     process = subprocess.Popen(
         cmd,
@@ -1589,7 +1629,7 @@ def multiwrite(
     srs: Union[Tuple[int, ...], List[int]], 
     paths: Union[Tuple[str | Path, ...], List[str | Path]], 
     bitrate: Union[int, str] = 320, 
-    prefer_float: bool = False, 
+    prefer_float: bool = False,
     callable_func: Optional[Callable] = None, 
     strict: bool = False
 ) -> Tuple[str, ...]:
@@ -1610,7 +1650,6 @@ def multiwrite(
     """
     saved_paths = []
     exceptions = []
-    
     if len(arrays) == len(srs) == len(paths):
         save_arrays = list(zip(arrays, srs, paths))
         for array, sr, path in tqdm(save_arrays, desc=_i18n("multi_writing"), unit=_i18n("arrays")):

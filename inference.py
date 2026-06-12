@@ -22,16 +22,31 @@ from typing import Literal, Optional, List, Tuple, Any, Dict
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
 import gradio as gr
-from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono, gain
+from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono, gain, get_metadata
 from args_parser import parse_separator_args, tobool
 from namer import Namer
 from i18n import _i18n
 import contextlib
 import base64
 import secrets
+from copy import deepcopy
 
 def generate_random_string():
     return base64.b64encode(secrets.token_bytes(18)).decode('utf-8')
+
+def generate_metadata_from_stem(input_file_name: str, metadata: dict, stem: str, model_name: str):
+    new_metadata = {}
+    if metadata:
+        new_metadata = deepcopy(metadata)
+        if "title" in metadata:
+            new_metadata["title"] = f"[{model_name} / {stem}] {metadata['title']}"
+        elif "TITLE" in metadata:
+            new_metadata["TITLE"] = f"[{model_name} / {stem}] {metadata['TITLE']}"
+        else:
+            new_metadata["title"] = f"[{model_name} / {stem}] {input_file_name}"
+    else:
+        new_metadata["title"] = f"[{model_name} / {stem}] {input_file_name}"
+    return new_metadata
 
 class PathNotExist(Exception): pass
 class PathsNotExist(Exception): pass
@@ -285,6 +300,7 @@ class MSSI: # Music Source Separation Inference
         self.instruments = []
         self.input_mix = None
         self.input_file_name = None
+        self.input_file_metadata = {}
         self.sample_rate = None
         self.selected_instruments = []
         self.output_files_list = []
@@ -673,6 +689,7 @@ class MSSI: # Music Source Separation Inference
             self.input_file_name = input_file.stem
             self.input_mix, _ = read(path=input_file, sr=self.sample_rate, mono=mono_bool)
             self.input_mix = self.input_mix.copy()
+            self.input_file_metadata = get_metadata(input_file)
             print(_i18n("loaded_mix")+": "+input_file.name)
             print(_i18n("array_shape")+": "+str(self.input_mix.shape))
         else:
@@ -1322,7 +1339,7 @@ class MSSI: # Music Source Separation Inference
                 MODEL=model_name,
                 NAME=Namer.short_input_name_template(template, STEM=stem, MODEL=model_name, NAME=self.input_file_name)
             )
-            writed_stems.append([stem, write(Namer.iter(self.output_dir / f"{custom_name}.{self.output_format}"), array, self.sample_rate, 320, prefer_float)])
+            writed_stems.append([stem, write(Namer.iter(self.output_dir / f"{custom_name}.{self.output_format}"), array, self.sample_rate, 320, prefer_float, generate_metadata_from_stem(self.input_file_name, self.input_file_metadata, stem, model_name))])
         if writed_stems:
             match format_return:
                 case "name_stems_list":
@@ -1338,6 +1355,7 @@ class MSSI: # Music Source Separation Inference
     def clear_mix(self):
         self.input_file_name = None
         self.input_mix = None
+        self.input_file_metadata = {}
         self.output_arrays.clear()
 
     def clear_outputs(self):
@@ -1731,6 +1749,7 @@ class Separator(ModelManager):
         print(_i18n("ensemble_type")+": "+etype)
         print(_i18n("ensemble_models_count")+": "+str(model_count))
         input_mix, orig_sr = read(input_file, sr=44100)
+        metadata = get_metadata(input_file)
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "TYPE", "COUNT"])
         template = Namer.short(template, length=40)
@@ -1770,7 +1789,24 @@ class Separator(ModelManager):
         auto_ensembler, output = None, None
         del auto_ensembler, output, mssi
         inverted_array, i_sr = subtractor(input_mix, output_array, orig_sr, sr_, spectrogram=use_spec_invert)
-        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_, 320, prefer_float), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr, 320, prefer_float), saved_primary_stems
+        new_metadata = {}
+        new_metadata_invert = {}
+        if metadata:
+            new_metadata = deepcopy(metadata)
+            if "title" in metadata:
+                new_metadata["title"] = f"[{etype} / {model_count}] {metadata['title']}"
+                new_metadata_invert["title"] = f"[{etype} / {model_count} (Invert)] {metadata['title']}"
+            elif "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[{etype} / {model_count}] {metadata['TITLE']}"
+                new_metadata_invert["TITLE"] = f"[{etype} / {model_count} (Invert)] {metadata['TITLE']}"
+            else:
+                new_metadata["title"] = f"[{etype} / {model_count}] {input_file.stem}"
+                new_metadata_invert["title"] = f"[{etype} / {model_count} (Invert)] {input_file.stem}"
+        else:
+            new_metadata["title"] = f"[{etype} / {model_count}] {input_file.stem}"
+            new_metadata_invert["title"] = f"[{etype} / {model_count} (Invert)] {input_file.stem}"
+
+        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_, 320, prefer_float, new_metadata), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr, 320, prefer_float, new_metadata_invert), saved_primary_stems
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def iterative_ensemble_base(self, mssi: MSSI, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
@@ -1821,6 +1857,7 @@ class Separator(ModelManager):
         self.print_flow_iter(flow)
 
         input_mix, orig_sr = read(input_file, sr=44100)
+        metadata = get_metadata(input_file)
         current_mix = input_mix.copy()
         print(_i18n("num_iters") + f": {num_iters}")
         
@@ -1830,6 +1867,18 @@ class Separator(ModelManager):
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "ITER"])
         template = Namer.short(template, length=40)
+
+        new_metadata = {}
+        if metadata:
+            new_metadata = deepcopy(metadata)
+            if "title" in metadata:
+                new_metadata["title"] = f"[{num_iters} iterations / {model_count}] {metadata['title']}"
+            elif "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[{num_iters} iterations / {model_count}] {metadata['TITLE']}"
+            else:
+                new_metadata["title"] = f"[{num_iters} iterations / {model_count}] {input_file.stem}"
+        else:
+            new_metadata["title"] = f"[{num_iters} iterations / {model_count}] {input_file.stem}"
 
         mssi = MSSI()
         mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
@@ -1882,7 +1931,7 @@ class Separator(ModelManager):
                 if iteration == num_iters:
                     final_name = iter_name + "_final"
                     final_path = Namer.iter(output_dir / f"{final_name}.{output_format}")
-                    result_path = write(final_path, ensemble_result, ensemble_sr, 320, prefer_float)
+                    result_path = write(final_path, ensemble_result, ensemble_sr, 320, prefer_float, new_metadata)
                 else:
                     dry_name = "dry_" + iter_name
                     iter_path = Namer.iter(output_dir / f"{iter_name}.flac")
@@ -1952,9 +2001,22 @@ class Separator(ModelManager):
             NAME=Namer.short_input_name_template(template, TYPE=invert_type_key, NAME=audio1.stem)
         )
         y1, sr1 = read(audio1)
+        metadata = get_metadata(audio1)
         y2, sr2 = read(audio2)
         inverted, min_sr = subtractor(y1, y2, sr1, sr2, spectrogram=use_spec_invert)
-        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), inverted, min_sr, 320, prefer_float)
+        new_metadata = {}
+        if metadata:
+            new_metadata = deepcopy(metadata)
+            if "title" in metadata:
+                new_metadata["title"] = f"[Invert] {metadata['title']}"
+            elif "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[Invert] {metadata['TITLE']}"
+            else:
+                new_metadata["title"] = f"[Invert] {audio1.stem}"
+        else:
+            new_metadata["title"] = f"[Invert] {audio1.stem}"
+
+        return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), inverted, min_sr, 320, prefer_float, new_metadata)
     
 if __name__ == "__main__":
     separator = Separator()

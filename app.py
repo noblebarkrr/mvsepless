@@ -2399,7 +2399,7 @@ class App(Separator):
                                 vbach_template = gr.Textbox(
                                     label=_i18n("output_template"), 
                                     info=_i18n("output_vbach_template_info"),
-                                    value="NAME_F0METHOD_PITCH", 
+                                    value="MODEL_NAME_F0METHOD_PITCH", 
                                     **base_c_params["base"]
                                 )
                                 vbach_output_format = gr.Dropdown(
@@ -2723,7 +2723,7 @@ class App(Separator):
                                 vbach_custom_template = gr.Textbox(
                                     label=_i18n("output_template"), 
                                     info=_i18n("output_vbach_custom_template_info"),
-                                    value="NAME_F0METHOD_PITCH", 
+                                    value="MODEL_NAME_F0METHOD_PITCH", 
                                     **base_c_params["base"]
                                 )
                                 vbach_custom_output_format = gr.Dropdown(
