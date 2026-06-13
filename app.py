@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 from extra_utils import tz, define_audio_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage
-from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple, custom_model_types
+from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple, custom_model_types, default_add_params
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
 from vbach_lib.hubert_manager import download_hubert, huberts_fairseq, huberts_transformers
@@ -1195,7 +1195,7 @@ class App(Separator):
                             sep_sum_stems = gr.Checkbox(label=_i18n("invert_plus"), info=_i18n("invert_plus_info"), value=False, **base_c_params["base"])
                             with gr.Accordion(label=_i18n("separation_params"), open=False):
                                 add_params_comp_seq = generate_add_params_component()
-                                add_params_user_state = gr.State({})
+                                add_params_user_state = gr.State(default_add_params)
 
                                 for comp in add_params_comp_seq:
                                     comp.change(
@@ -1368,7 +1368,7 @@ class App(Separator):
 
                             with gr.Accordion(label=_i18n("separation_params"), open=False):
                                 custom_add_params_comp_seq = generate_add_params_component()
-                                custom_add_params_user_state = gr.State({})
+                                custom_add_params_user_state = gr.State(default_add_params)
                                 
                                 for comp in custom_add_params_comp_seq:
                                     comp.input(
