@@ -1359,7 +1359,7 @@ class MSSI: # Music Source Separation Inference
             comment += f"{_i18n('separation_params')}:\n\n"
             for param, param_value in self.add_params.items():
                 if param in list_add_params_current_model_type:
-                    comment += f"{_i18n('param')} / {(_i18n('yes') if param_value == True else _i18n('no')) if isinstance(param_value, bool) else param_value}\n"
+                    comment += f"{_i18n(param)} / {(_i18n('yes') if param_value == True else _i18n('no')) if isinstance(param_value, bool) else param_value}\n"
 
         results = []
         writed_stems = []
