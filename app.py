@@ -14,7 +14,7 @@ from inference import Separator, add_params, add_params_list, ensemble_types, BA
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
 from vbach_lib.hubert_manager import download_hubert, huberts_fairseq, huberts_transformers
-from audio import output_formats, get_audio_files_from_list, check
+from audio import output_formats, get_audio_files_from_list, check, check_taglib_not_installed
 from datetime import datetime
 from namer import Namer
 from i18n import _i18n
@@ -3135,6 +3135,7 @@ theme = gr.themes.Base(
 )
 
 if __name__ == "__main__":
+    check_taglib_not_installed()
     args = parse_app_args()
     app = App()
     if not args.full:

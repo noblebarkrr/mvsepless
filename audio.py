@@ -9,6 +9,11 @@ from numpy.typing import DTypeLike
 import json
 from typing import List, Tuple, Optional, Union, Dict, Any, Callable
 from i18n import _i18n
+try:
+    import taglib
+    HAS_TAGLIB = True
+except:
+    HAS_TAGLIB = False
 
 ffmpeg_path = "ffmpeg"
 ffprobe_path = "ffprobe"
@@ -51,6 +56,9 @@ def check_installed() -> None:
     except:
         print(_i18n("ffprobe_not_found"))
 
+def check_taglib_not_installed():
+    if not HAS_TAGLIB:
+        print(_i18n("no_has_taglib"))
 
 def get_ogg_bitrate(sample_rate: int, channels: int = 2) -> int:
     """
@@ -255,34 +263,26 @@ def get_metadata(path: str | Path) -> dict:
         Словарь с метаданными
     """
     path = Path(path)
-    cmd = [ffprobe_path, "-i", path.as_posix(), "-v", "quiet", "-hide_banner", 
-           "-show_entries", "format_tags", 
-           "-of", "json"]
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    stdout, stderr = process.communicate()
-    metadata_str = stdout.decode('utf-8')
-    try:
-        metadata_json = json.loads(metadata_str)
-        if metadata_json:
-            return metadata_json["format"]["tags"]
-    except:
-        pass
-    return {} 
+    metadata = {}
+    imported_metadata = {}
+    if HAS_TAGLIB:
+        try:
+            with taglib.File(path) as audio_metadata:
+                imported_metadata = audio_metadata.tags
+        except Exception as e:
+            print(e)
+            pass
 
-def metadata_to_flags(metadata: dict):
-    metadata_temp = {}
-    if "tags" in metadata:
-        metadata_temp = metadata["tags"]
-    elif "format" in metadata:
-        metadata_temp = metadata["format"]["tags"]
-    else:
-        metadata_temp = metadata
-    flags = []
-    for key, value in metadata_temp.items():
-        flags.extend(["-metadata", f"{key}={value}"])
-    return flags
+    if imported_metadata:
+        for k, v in imported_metadata.items():
+            if isinstance(v, str):
+                metadata[k] = v
+            elif isinstance(v, (list, tuple)):
+                metadata[k] = ", ".join(v)
+            else:
+                pass
+            
+    return metadata
 
 def check(path: str | Path) -> bool:
     """
@@ -1596,7 +1596,7 @@ def write(
     output_path_str = output_path.as_posix()
 
     cmd = [ffmpeg_path, "-y", "-f", sample_format, "-ar", str(sr), "-ac", str(channels), 
-           "-i", "-", *metadata_to_flags(metadata), *get_codec_args(output_path.suffix, prefer_float), "-ab", f"{bitrate_fixed}k", output_path_str]
+           "-i", "-", *get_codec_args(output_path.suffix, prefer_float), "-ab", f"{bitrate_fixed}k", output_path_str]
 
     process = subprocess.Popen(
         cmd,
@@ -1615,7 +1615,15 @@ def write(
             raise Exception(_i18n("ffmpeg_exit_code", code=process.returncode))
         
         print_saved(output_path_str)
-            
+
+        if metadata:
+            if isinstance(metadata, dict):
+                try:
+                    with taglib.File(output_path_str, save_on_exit=True) as audio_metadata:
+                        audio_metadata.tags = {k: [v] if isinstance(v, str) else v if isinstance(v, list) else [*v] if isinstance(v, tuple) else "" for k, v in metadata.items()}
+                except Exception as e1:
+                    print(e1)
+
     except Exception as e:
         print(_i18n("write_critical_error", error=str(e)))
         process.kill()

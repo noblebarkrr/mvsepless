@@ -340,7 +340,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "model_downloaded": "Модель скачана",
         "model_already_downloaded": "Модель уже скачана",
         "download": "Скачать",
-        "f0_curve_not_found": "В указаннои файле нет кривой F0",
+        "f0_curve_not_found": "В указанном файле нет кривой F0",
         "importing_f0": "Импортирование F0",
         "importing_f0_success": "Импортирование F0 завершено",
         "custom_f0": "Кастомный F0",
@@ -610,6 +610,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "uncorrected_selected_stems": "Внимание! Не существующие стемы",
         "prefer_float": "Предочитать высокую точность вывода",
         "current_device": "Текущее устройство: {device}",
+        "no_has_taglib": "Зависимость \'pytaglib\' не установлена\nВыходные аудио-файлы будут записаны без метаданных"
     },
     "en": {
         "bytes": "B",
@@ -1202,6 +1203,7 @@ Example: `NAME_ITER` → `Song_iter_3`
         "uncorrected_selected_stems": "Warning! Non-exist stems",
         "prefer_float": "Prefer high precision output",
         "current_device": "Current device: {device}",
+        "no_has_taglib": "Dependency 'pytaglib' is not installed\nOutput audio files will be written without metadata"
     }
 }
 

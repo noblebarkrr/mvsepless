@@ -18,7 +18,7 @@
 - Дополнительные параметры разделения, как в UVR
 - История обработок (Только в Web-UI)
 - Пакетная обработка по умолчанию (кроме авто-ансамбля и вычитания)
-- Поддержка метаданных
+- Поддержка метаданных (при установленном пакете `pytaglib`)
 - Язык интерфейса изменяется через переменную окружения `MVSEPLESS_LANGUAGE`
 
 ---
@@ -88,18 +88,41 @@
 1. Установите Python с включенными опциями `Add Python 3.x to PATH` и `Disable path length limit`: https://www.python.org/ftp/python/3.11.6/python-3.11.6-amd64.exe
 2. Скачайте архив с FFMPEG, распакуйте его и добавьте распакованную папку в переменную PATH: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
 3. Установите Microsoft Visual C++ 2015-2022 (x64): https://aka.ms/vs/17/release/vc_redist.x64.exe
-4. Установите Microsoft C++ Build Tools: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+4. Установите Microsoft C++ Build Tools и после установки перезапустите компьютер: https://visualstudio.microsoft.com/visual-cpp-build-tools/
 <br>Выберите `Desktop development with C++`
+
 5. Установите PyTorch: https://pytorch.org/get-started/locally/
 6. Скачайте и распакуйте архив:
 https://github.com/noblebarkrr/mvsepless/archive/refs/heads/dzeta.zip
 7. Откройте командную строку в распакованной папке
 
+##### <big>Установка `pytaglib` (*опционально*)</big>:  
+
+```sh
+pip install pytaglib
+```
+
+###### <big>Для случаев, когда бинарный файл для Python-пакета `pytaglib` недоступен для вашей среды выполнения:</big><br><br>
+Скачайте и распакуйте архив: https://github.com/supermihi/pytaglib/archive/refs/heads/main.zip <br>
+<br>
+Затем:
+<br>
+<br> - Откройте командную строку встроенных инструментов Visual Studio (Native Tools Command Prompt)
+<br> - Установите setuptools версией ниже, чем 61.0.0 `pip install "setuptools<61.0.0"` 
+<br> - Перейдите в репозиторий `pytaglib` (распакованную папку)
+<br> - Выполните `python build_native_taglib.py`, который загрузит и соберет последний официальный релиз TagLib (только на x64)
+<br> - Выполните `python setup.py install` <br>
+<br>
+
 #### **Linux (Ubuntu/Debian):** <span id="установка-linux"></span>
 ```sh
+# Установка базовых зависимостей
 apt update -y
 apt upgrade -y
-apt install -y wget curl git gcc libx11-dev ffmpeg build-essential cmake nano python3-full python3-pip python3-dev
+apt install -y wget curl git gcc libx11-dev ffmpeg build-essential cmake nano python3-full python3-pip python3-dev libutfcpp-dev
+
+# Клонирование репозитория
+
 git clone https://github.com/noblebarkrr/mvsepless -b dzeta
 cd mvsepless
 
@@ -108,6 +131,22 @@ python3 -m venv env
 source env/bin/activate
 
 python3 -m pip install ninja cmake
+```
+
+##### <big>Установка `pytaglib` (*опционально*)</big>: 
+
+```sh
+# Сборка библиотеки taglib (если нет подходящего бинарного файла для pytaglib)
+git clone https://github.com/taglib/taglib
+cd taglib
+mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=ON ..
+make
+make install
+# Выходим из папки taglib/build
+cd ../..
+
+pip install pytaglib
 ```
 
 ### Установка зависимостей <span id="установка-зависимостей-для-работы"></span>

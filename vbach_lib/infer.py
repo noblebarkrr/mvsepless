@@ -18,7 +18,7 @@ else:
 from transformers import HubertModel
 from pathlib import Path
 import traceback
-from audio import read, write, split_channels, split_mid_side, multi_channel_array_from_arrays, output_formats, stereo_to_mono, reshape, mix_arrays, get_audio_files_from_list, check, get_metadata
+from audio import read, write, split_channels, split_mid_side, multi_channel_array_from_arrays, output_formats, stereo_to_mono, reshape, mix_arrays, get_audio_files_from_list, check, get_metadata, check_taglib_not_installed
 from inference import PathsNotSpecified, PathNotExist, PathNotSpecified, FileIsNotAudio
 from i18n import _i18n
 from namer import Namer
@@ -256,21 +256,18 @@ class VbachConverter:
                 new_metadata = {}
                 if metadata:
                     new_metadata = deepcopy(metadata)
-                    if "title" in metadata:
-                        new_metadata["title"] = f"[{f0_method} / {pitch} / {stereo_mode}] {metadata['title']}"
-                    elif "TITLE" in metadata:
+                    if "TITLE" in metadata:
                         new_metadata["TITLE"] = f"[{f0_method} / {pitch} / {stereo_mode}] {metadata['TITLE']}"
                     else:
-                        new_metadata["title"] = f"[{f0_method} / {pitch} / {stereo_mode}] {input_file_name}"
+                        new_metadata["TITLE"] = f"[{f0_method} / {pitch} / {stereo_mode}] {input_file_name}"
 
-                    if "artist" in metadata:
-                        new_metadata["artist"] = f"{metadata['artist']} (ft. {model_name})"
-                    elif "ARTIST" in metadata:
-                        new_metadata["ARTIST"] = f"{metadata['ARTIST']} (ft. {model_name})"
+                    if "ARTIST" in metadata:
+                        new_metadata["ARTIST"] = f"{metadata['ARTIST']} [{model_name}]"
                     else:
-                        new_metadata["artist"] = f"{model_name}"
+                        new_metadata["ARTIST"] = f"{model_name}"
                 else:
-                    new_metadata["title"] = f"[{f0_method} / {pitch} / {stereo_mode}] {input_file_name}"
+                    new_metadata["TITLE"] = f"[{f0_method} / {pitch} / {stereo_mode}] {input_file_name}"
+                    new_metadata["ARTIST"] = f"{model_name}"
 
                 processed_audios.append(write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), post_process_audio(converted_mixtures, self.tgt_sr, stereo_mode), self.tgt_sr, 320, False, new_metadata))
             except Exception as e:
@@ -371,22 +368,20 @@ class VbachConverter:
             new_metadata = {}
             if metadata:
                 new_metadata = deepcopy(metadata)
-                if "title" in metadata:
-                    new_metadata["title"] = f"[custom / {pitch} / mono] {metadata['title']}"
-                elif "TITLE" in metadata:
+                if "TITLE" in metadata:
                     new_metadata["TITLE"] = f"[custom / {pitch} / mono] {metadata['TITLE']}"
                 else:
-                    new_metadata["title"] = f"[custom / {pitch} / mono] {input_file_name}"
+                    new_metadata["TITLE"] = f"[custom / {pitch} / mono] {input_file_name}"
 
-                if "artist" in metadata:
-                    new_metadata["artist"] = f"{metadata['artist']} (ft. {model_name})"
-                elif "ARTIST" in metadata:
-                    new_metadata["ARTIST"] = f"{metadata['ARTIST']} (ft. {model_name})"
+                if "ARTIST" in metadata:
+                    new_metadata["ARTIST"] = f"{metadata['ARTIST']} [{model_name}]"
                 else:
-                    new_metadata["artist"] = f"{model_name}"
+                    new_metadata["ARTIST"] = f"{model_name}"
 
             else:
-                new_metadata["title"] = f"[custom / {pitch} / mono] {input_file_name}"
+                new_metadata["TITLE"] = f"[custom / {pitch} / mono] {input_file_name}"
+                new_metadata["ARTIST"] = f"{model_name}"
+
             output_path = write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), audio_opt, self.tgt_sr, 320, False, new_metadata)
         except Exception as e:
             traceback.print_exc()
@@ -397,6 +392,7 @@ class VbachConverter:
         return output_path
 
 if __name__ == "__main__":
+    check_taglib_not_installed()
     vbach = VbachConverter()
     args = parse_vbach_args()
     if args.mode == "infer":

@@ -22,7 +22,7 @@ from typing import Literal, Optional, List, Tuple, Any, Dict
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
 import gradio as gr
-from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono, gain, get_metadata
+from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono, gain, get_metadata, check_taglib_not_installed
 from args_parser import parse_separator_args, tobool
 from namer import Namer
 from i18n import _i18n
@@ -34,18 +34,24 @@ from copy import deepcopy
 def generate_random_string():
     return base64.b64encode(secrets.token_bytes(18)).decode('utf-8')
 
-def generate_metadata_from_stem(input_file_name: str, metadata: dict, stem: str, model_name: str):
+def generate_metadata_from_stem(input_file_name: str, metadata: dict, stem: str, model_name: str, comment: str):
     new_metadata = {}
     if metadata:
         new_metadata = deepcopy(metadata)
-        if "title" in metadata:
-            new_metadata["title"] = f"[{model_name} / {stem}] {metadata['title']}"
-        elif "TITLE" in metadata:
+        if "TITLE" in metadata:
             new_metadata["TITLE"] = f"[{model_name} / {stem}] {metadata['TITLE']}"
         else:
-            new_metadata["title"] = f"[{model_name} / {stem}] {input_file_name}"
+            new_metadata["TITLE"] = f"[{model_name} / {stem}] {input_file_name}"
+
+        if "COMMENT" in metadata:
+            new_metadata["COMMENT"] = comment
+        else:
+            new_metadata["COMMENT"] = comment
+
     else:
-        new_metadata["title"] = f"[{model_name} / {stem}] {input_file_name}"
+        new_metadata["TITLE"] = f"[{model_name} / {stem}] {input_file_name}"
+        new_metadata["COMMENT"] = comment
+
     return new_metadata
 
 class PathNotExist(Exception): pass
@@ -251,6 +257,18 @@ def get_add_params(args):
     if hasattr(args, 'add_params') and args.add_params is not None:
         return vars(args.add_params)
     return {}
+
+def parse_model_type_add_params(model_type: str):
+    if model_type == "htdemucs":
+        return list(add_params["demucs"].keys())
+    elif model_type == "mdxnet":
+        return list(add_params["mdx"].keys())
+    elif model_type == "medley_vox":
+        return list(add_params["mvox"].keys())
+    elif model_type == "vr":
+        return list(add_params["vr"].keys())
+    else:
+        return list(add_params["mdxc"].keys())
 
 def get_stems_from_config_simple(conf: str | Path, model_type: str):
     instruments = []
@@ -1328,6 +1346,21 @@ class MSSI: # Music Source Separation Inference
             return self.output_arrays["invert"]
 
     def write(self, template: str, format_return: str = "name_stems_list", prefer_float: bool = False):
+        if "COMMENT" in self.input_file_metadata:
+            orig_comment = self.input_file_metadata["COMMENT"]
+        else:
+            orig_comment = ""
+
+        comment = ""
+        if self.add_params:
+            list_add_params_current_model_type = parse_model_type_add_params(self.model_type)
+            if orig_comment:
+                comment += orig_comment + "\n\n"
+            comment += f"{_i18n('separation_params')}:\n\n"
+            for param, param_value in self.add_params.items():
+                if param in list_add_params_current_model_type:
+                    comment += f"{_i18n('param')} / {(_i18n('yes') if param_value == True else _i18n('no')) if isinstance(param_value, bool) else param_value}\n"
+
         results = []
         writed_stems = []
         model_name = self.ckpt_path.stem
@@ -1339,7 +1372,7 @@ class MSSI: # Music Source Separation Inference
                 MODEL=model_name,
                 NAME=Namer.short_input_name_template(template, STEM=stem, MODEL=model_name, NAME=self.input_file_name)
             )
-            writed_stems.append([stem, write(Namer.iter(self.output_dir / f"{custom_name}.{self.output_format}"), array, self.sample_rate, 320, prefer_float, generate_metadata_from_stem(self.input_file_name, self.input_file_metadata, stem, model_name))])
+            writed_stems.append([stem, write(Namer.iter(self.output_dir / f"{custom_name}.{self.output_format}"), array, self.sample_rate, 320, prefer_float, generate_metadata_from_stem(self.input_file_name, self.input_file_metadata, stem, model_name, comment))])
         if writed_stems:
             match format_return:
                 case "name_stems_list":
@@ -1750,6 +1783,20 @@ class Separator(ModelManager):
         print(_i18n("ensemble_models_count")+": "+str(model_count))
         input_mix, orig_sr = read(input_file, sr=44100)
         metadata = get_metadata(input_file)
+        if "comment" in metadata:
+            orig_comment = metadata["comment"]
+        elif "COMMENT" in metadata:
+            orig_comment = metadata["COMMENT"]
+        else:
+            orig_comment = ""
+
+        comment = ""
+        if flow:
+            if orig_comment:
+                comment += orig_comment + "\n\n"
+            comment += f"{_i18n('ensemble_settings')}:\n\n"
+            for (mn, pr_stem, invert, weight) in flow:
+                comment += f"{mn} / {pr_stem} / {invert} / {weight}\n"
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "TYPE", "COUNT"])
         template = Namer.short(template, length=40)
@@ -1793,18 +1840,22 @@ class Separator(ModelManager):
         new_metadata_invert = {}
         if metadata:
             new_metadata = deepcopy(metadata)
-            if "title" in metadata:
-                new_metadata["title"] = f"[{etype} / {model_count}] {metadata['title']}"
-                new_metadata_invert["title"] = f"[{etype} / {model_count} (Invert)] {metadata['title']}"
-            elif "TITLE" in metadata:
+            if  "TITLE" in metadata:
                 new_metadata["TITLE"] = f"[{etype} / {model_count}] {metadata['TITLE']}"
-                new_metadata_invert["TITLE"] = f"[{etype} / {model_count} (Invert)] {metadata['TITLE']}"
+                new_metadata_invert["TITLE"] = f"[{etype} / {model_count} ({_i18n('invert')})] {metadata['TITLE']}"
             else:
-                new_metadata["title"] = f"[{etype} / {model_count}] {input_file.stem}"
-                new_metadata_invert["title"] = f"[{etype} / {model_count} (Invert)] {input_file.stem}"
+                new_metadata["TITLE"] = f"[{etype} / {model_count}] {input_file.stem}"
+                new_metadata_invert["TITLE"] = f"[{etype} / {model_count} ({_i18n('invert')})] {input_file.stem}"
+
+            if "COMMENT" in metadata:
+                new_metadata["COMMENT"] = comment
+            else:
+                new_metadata["COMMENT"] = comment
+
         else:
-            new_metadata["title"] = f"[{etype} / {model_count}] {input_file.stem}"
-            new_metadata_invert["title"] = f"[{etype} / {model_count} (Invert)] {input_file.stem}"
+            new_metadata["TITLE"] = f"[{etype} / {model_count}] {input_file.stem}"
+            new_metadata_invert["TITLE"] = f"[{etype} / {model_count} ({_i18n('invert')})] {input_file.stem}"
+            new_metadata["COMMENT"] = comment
 
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_, 320, prefer_float, new_metadata), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr, 320, prefer_float, new_metadata_invert), saved_primary_stems
 
@@ -1858,6 +1909,19 @@ class Separator(ModelManager):
 
         input_mix, orig_sr = read(input_file, sr=44100)
         metadata = get_metadata(input_file)
+        if "COMMENT" in metadata:
+            orig_comment = metadata["COMMENT"]
+        else:
+            orig_comment = ""
+
+        comment = ""
+        if flow:
+            if orig_comment:
+                comment += orig_comment + "\n\n"
+            comment += f"{_i18n('num_iters')}: {num_iters}\n\n"
+            comment += f"{_i18n('ensemble_settings')}:\n\n"
+            for (mn, pr_stem, invert, weight) in flow:
+                comment += f"{mn} / {pr_stem} / {invert} / {weight}\n"
         current_mix = input_mix.copy()
         print(_i18n("num_iters") + f": {num_iters}")
         
@@ -1871,14 +1935,19 @@ class Separator(ModelManager):
         new_metadata = {}
         if metadata:
             new_metadata = deepcopy(metadata)
-            if "title" in metadata:
-                new_metadata["title"] = f"[{num_iters} iterations / {model_count}] {metadata['title']}"
-            elif "TITLE" in metadata:
-                new_metadata["TITLE"] = f"[{num_iters} iterations / {model_count}] {metadata['TITLE']}"
+            if "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[{_i18n('num_iters')}: {num_iters} / {model_count}] {metadata['TITLE']}"
             else:
-                new_metadata["title"] = f"[{num_iters} iterations / {model_count}] {input_file.stem}"
+                new_metadata["TITLE"] = f"[{_i18n('num_iters')}: {num_iters} / {model_count}] {input_file.stem}"
+
+            if "COMMENT" in metadata:
+                new_metadata["COMMENT"] = comment
+            else:
+                new_metadata["COMMENT"] = comment
+
         else:
-            new_metadata["title"] = f"[{num_iters} iterations / {model_count}] {input_file.stem}"
+            new_metadata["TITLE"] = f"[{_i18n('num_iters')}: {num_iters} / {model_count}] {input_file.stem}"
+            new_metadata["COMMENT"] = comment
 
         mssi = MSSI()
         mssi.set_add_params(**{"demucs_denoise": True, "mdx_denoise": True})
@@ -2007,18 +2076,17 @@ class Separator(ModelManager):
         new_metadata = {}
         if metadata:
             new_metadata = deepcopy(metadata)
-            if "title" in metadata:
-                new_metadata["title"] = f"[Invert] {metadata['title']}"
-            elif "TITLE" in metadata:
-                new_metadata["TITLE"] = f"[Invert] {metadata['TITLE']}"
+            if "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[{_i18n('invert')}] {metadata['TITLE']}"
             else:
-                new_metadata["title"] = f"[Invert] {audio1.stem}"
+                new_metadata["TITLE"] = f"[{_i18n('invert')}] {audio1.stem}"
         else:
-            new_metadata["title"] = f"[Invert] {audio1.stem}"
+            new_metadata["TITLE"] = f"[{_i18n('invert')}] {audio1.stem}"
 
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), inverted, min_sr, 320, prefer_float, new_metadata)
     
 if __name__ == "__main__":
+    check_taglib_not_installed()
     separator = Separator()
     args = parse_separator_args(add_params_args)
     if args.mode == "separate":
