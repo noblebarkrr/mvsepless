@@ -1348,6 +1348,7 @@ class MSSI: # Music Source Separation Inference
             return self.output_arrays["invert"]
 
     def write(self, template: str, format_return: str = "name_stems_list", prefer_float: bool = False):
+        model_name = self.ckpt_path.stem
         if "COMMENT" in self.input_file_metadata:
             orig_comment = self.input_file_metadata["COMMENT"]
         else:
@@ -1358,14 +1359,14 @@ class MSSI: # Music Source Separation Inference
             list_add_params_current_model_type = parse_model_type_add_params(self.model_type)
             if orig_comment:
                 comment += orig_comment + "\n\n"
-            comment += f"{_i18n('separation_params')}:\n\n"
+            comment += f"{_i18n('separation_params')} [{model_name}]:\n\n"
             for param, param_value in self.add_params.items():
                 if param in list_add_params_current_model_type:
                     comment += f"{_i18n(param)} / {(_i18n('yes') if param_value == True else _i18n('no')) if isinstance(param_value, bool) else param_value}\n"
 
         results = []
         writed_stems = []
-        model_name = self.ckpt_path.stem
+        
         print(_i18n("format_return") + ": " + _i18n(format_return))
         for stem, array in tqdm(self.output_arrays.items(), desc=_i18n("writing"), unit=_i18n('files')):        
             custom_name = Namer.template(
