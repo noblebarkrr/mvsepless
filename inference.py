@@ -246,11 +246,13 @@ add_params = {
 add_params_list = []
 add_params_group = []
 add_params_args = {}
+default_add_params = {}
 for t_tab, t_components in add_params.items():
     add_params_group.append(t_tab)
     for t_component, t_settings in t_components.items():
         add_params_list.append(t_component)
         add_params_args[t_component] = {"default": t_settings["default"], "type": t_settings["type"]}
+        default_add_params[t_component] = t_settings["default"]
 
 def get_add_params(args):
     """Безопасно получает add_params из args"""
