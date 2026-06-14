@@ -1786,9 +1786,7 @@ class Separator(ModelManager):
         print(_i18n("ensemble_models_count")+": "+str(model_count))
         input_mix, orig_sr = read(input_file, sr=44100)
         metadata = get_metadata(input_file)
-        if "comment" in metadata:
-            orig_comment = metadata["comment"]
-        elif "COMMENT" in metadata:
+        if "COMMENT" in metadata:
             orig_comment = metadata["COMMENT"]
         else:
             orig_comment = ""
