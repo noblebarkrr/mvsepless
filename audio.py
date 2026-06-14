@@ -1616,13 +1616,14 @@ def write(
         
         print_saved(output_path_str)
 
-        if metadata:
-            if isinstance(metadata, dict):
-                try:
-                    with taglib.File(output_path_str, save_on_exit=True) as audio_metadata:
-                        audio_metadata.tags = {k: [v] if isinstance(v, str) else v if isinstance(v, list) else [*v] if isinstance(v, tuple) else "" for k, v in metadata.items()}
-                except Exception as e1:
-                    print(e1)
+        if HAS_TAGLIB:
+            if metadata:
+                if isinstance(metadata, dict):
+                    try:
+                        with taglib.File(output_path_str, save_on_exit=True) as audio_metadata:
+                            audio_metadata.tags = {k: [v] if isinstance(v, str) else v if isinstance(v, list) else [*v] if isinstance(v, tuple) else "" for k, v in metadata.items()}
+                    except Exception as e1:
+                        print(e1)
 
     except Exception as e:
         print(_i18n("write_critical_error", error=str(e)))
