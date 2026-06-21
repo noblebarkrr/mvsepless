@@ -279,7 +279,7 @@ def f0_extract(
         del model
     elif f0_method == "hpa-rmvpe":
         model = HPA_RMVPE(
-            HPA_RMVPE_PATH, is_half=is_half, device=device
+            HPA_RMVPE_PATH, hpa=True, device=device
         )
         f0 = model.infer_from_audio_with_pitch(
             x, thred=0.03, f0_min=f0_min, f0_max=f0_max
