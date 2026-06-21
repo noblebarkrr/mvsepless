@@ -52,7 +52,7 @@ class F0CurveNotFound(Exception): pass
 
 requirements = {
     "rmvpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/rmvpe.pt?download=true", RMVPE_PATH],
-    "hpa_rmvpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/hpa_rmvpe.pt?download=true", HPA_RMVPE_PATH],
+    "hpa-rmvpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/hpa_rmvpe.pt?download=true", HPA_RMVPE_PATH],
     "fcpe": ["https://huggingface.co/noblebarkrr/vbach_resources/resolve/main/predictors/fcpe.pt?download=true", FCPE_PATH]
 }
 
