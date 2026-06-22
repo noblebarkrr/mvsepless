@@ -15,9 +15,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(SCRIPT_DIR.parent))
 from i18n import _i18n
 if __package__:
-    from .f0_extractor import f0_extract, f0_import
+    from .f0_extractor import f0_extract, f0_import, f0_methods
 else:
-    from vbach_lib.f0_extractor import f0_extract, f0_import
+    from vbach_lib.f0_extractor import f0_extract, f0_import, f0_methods
 
 FILTER_ORDER: int = 5
 CUTOFF_FREQUENCY: int = 48
@@ -364,7 +364,8 @@ class VC:
         sid: int,
         audio: np.ndarray,
         pitch: float,
-        f0_method: str,
+        f0_method: str | None,
+        f0_file: str | None,
         file_index: Optional[str],
         index_rate: float,
         pitch_guidance: bool,
@@ -414,6 +415,7 @@ class VC:
             audio_len
         )
         offset = int(self.sample_rate // 12.5)
+        extra_offset = int(tgt_sr // 0.8)
         
         audio_pad = np.pad(audio, (offset, offset), mode="reflect")
 
@@ -421,25 +423,42 @@ class VC:
         pitchf_tensor: Optional[torch.Tensor] = None
         
         if pitch_guidance:
-            print(_i18n("extracting_f0"))
             p_len = len(audio_pad) // self.window
-            pitch_coarse, pitchf = self.get_f0(
-                audio_pad,
-                p_len,
-                pitch,
-                f0_method,
-                hop_length,
-                f0_min,
-                f0_max,
-            )
-            pitch_coarse = pitch_coarse[:p_len]
-            pitchf = pitchf[:p_len]
-            if device.type == "mps":
-                pitchf = pitchf.astype(np.float32)
-            pitch_tensor = torch.tensor(pitch_coarse, device=device).unsqueeze(0).long()
-            pitchf_tensor = torch.tensor(pitchf, device=device).unsqueeze(0).float()
-
-            print(_i18n("extracting_f0_success"))
+            if f0_method and f0_method in f0_methods:
+                print(_i18n("extracting_f0"))
+                pitch_coarse, pitchf = self.get_f0(
+                    audio_pad,
+                    p_len,
+                    pitch,
+                    f0_method,
+                    hop_length,
+                    f0_min,
+                    f0_max,
+                )
+                pitch_coarse = pitch_coarse[:p_len]
+                pitchf = pitchf[:p_len]
+                print(_i18n("extracting_f0_success"))
+                if device.type == "mps":
+                    pitchf = pitchf.astype(np.float32)
+                pitch_tensor = torch.tensor(pitch_coarse, device=device).unsqueeze(0).long()
+                pitchf_tensor = torch.tensor(pitchf, device=device).unsqueeze(0).float()
+            elif not f0_method or f0_file:
+                print(_i18n("importing_f0"))
+                pitch_coarse, pitchf = self.get_f0_from_file(
+                    f0_file,
+                    offset,
+                    len(audio) // self.window,
+                    pitch,
+                    f0_min,
+                    f0_max,
+                )
+                pitch_coarse = pitch_coarse[:p_len]
+                pitchf = pitchf[:p_len]
+                print(_i18n("importing_f0_success"))
+                if device.type == "mps":
+                    pitchf = pitchf.astype(np.float32)
+                pitch_tensor = torch.tensor(pitch_coarse, device=device).unsqueeze(0).long()
+                pitchf_tensor = torch.tensor(pitchf, device=device).unsqueeze(0).float()
 
         processed_chunks: List[Tuple[int, int, np.ndarray, int, int]] = []
         start = 0
@@ -457,12 +476,19 @@ class VC:
                 chunk_start_in_pad = start - pad_left
                 chunk_end_in_pad = end + pad_right
 
-                chunk_audio = audio_pad[
-                    chunk_start_in_pad + offset : chunk_end_in_pad + offset
-                ]
+                inf_start = chunk_start_in_pad + offset - extra_offset
+                inf_end = chunk_end_in_pad + offset + extra_offset
+                
+                actual_inf_start = max(0, inf_start)
+                actual_inf_end = min(len(audio_pad), inf_end)
+                
+                actual_extra_left = (chunk_start_in_pad + offset) - actual_inf_start
+                actual_extra_right = actual_inf_end - (chunk_end_in_pad + offset)
 
-                f0_start = (chunk_start_in_pad + offset) // self.window
-                f0_end = (chunk_end_in_pad + offset) // self.window
+                chunk_audio = audio_pad[actual_inf_start : actual_inf_end]
+
+                f0_start = actual_inf_start // self.window
+                f0_end = actual_inf_end // self.window
 
                 if pitch_guidance and pitch_tensor is not None and pitchf_tensor is not None:
                     out = self.voice_conversion(
@@ -493,206 +519,15 @@ class VC:
                         protect,
                     )
 
-                output_start = int(round((chunk_start_in_pad) / self.sample_rate * tgt_sr))
-                output_end = output_start + len(out)
-
-                processed_chunks.append(
-                    (output_start, output_end, out, pad_left, pad_right)
-                )
-                progress_bar.update(end - start)
-
-                start = end
-
-
-        if not processed_chunks:
-            raise RuntimeError(_i18n("no_chunks_error"))
-
-        max_output_end = max(end for _c, end, _c, _c, _c in processed_chunks)
-        output = np.zeros(max_output_end, dtype=np.float32)
-        weight = np.zeros(max_output_end, dtype=np.float32)
-
-        for start_idx, end_idx, chunk, pad_left, pad_right in processed_chunks:
-            chunk_len = len(chunk)
-            if chunk_len != (end_idx - start_idx):
-                end_idx = start_idx + chunk_len
-
-            w = np.ones(chunk_len, dtype=np.float32)
-            fade_len = int(round(offset / self.sample_rate * tgt_sr))
-
-            if pad_left > 0 and fade_len > 0:
-                actual_fade = min(fade_len, chunk_len)
-                w[:actual_fade] = np.linspace(0, 1, actual_fade)
-            if pad_right > 0 and fade_len > 0:
-                actual_fade = min(fade_len, chunk_len)
-                w[-actual_fade:] = np.linspace(1, 0, actual_fade)
-
-            output_end = min(end_idx, len(output))
-            chunk = chunk[: output_end - start_idx]
-            w = w[: output_end - start_idx]
-
-            output[start_idx:output_end] += chunk * w
-            weight[start_idx:output_end] += w
-
-        mask = weight > 1e-8
-        output[mask] /= weight[mask]
-
-        expected_final_len = int(round(audio_len / self.sample_rate * tgt_sr))
-        audio_opt = output[:expected_final_len]
-
-        if volume_envelope != 1:
-            audio_opt = AudioProcessor.change_rms(
-                audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope
-            )
-        if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
-            audio_opt = librosa.resample(
-                audio_opt, orig_sr=tgt_sr, target_sr=resample_sr
-            )
-
-        audio_max = np.abs(audio_opt).max() / 0.99
-        max_int16 = 32768
-        if audio_max > 1:
-            max_int16 /= audio_max
-        audio_opt = (audio_opt * max_int16).astype(np.int16)
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            
-        return audio_opt
-
-    def pipeline_custom_f0(
-        self,
-        model: nn.Module,
-        net_g: nn.Module,
-        sid: int,
-        audio: np.ndarray,
-        pitch: float,
-        f0_file: str | Path,
-        file_index: Optional[str],
-        index_rate: float,
-        pitch_guidance: bool,
-        tgt_sr: int,
-        volume_envelope: float,
-        version: str,
-        protect: float,
-        f0_min: int = 50,
-        f0_max: int = 1100,
-        chunk_duration: int = 3,
-        add_text_channel: str = None,
-        add_text_custom: str = None,
-        resample_sr: int = 0,
-    ) -> np.ndarray:
-        
-        add_text_channel_str = ""
-        if add_text_channel and add_text_channel != "":
-            add_text_channel_str = f" {add_text_channel}"
-
-        add_text_custom_str = ""
-        if add_text_custom and add_text_custom != "":
-            add_text_custom_str = f" | {add_text_custom}"
-        device = self.device
-        audio = signal.filtfilt(bh, ah, audio)
-        audio_len = len(audio)
-
-        if (
-            file_index
-            and file_index != ""
-            and os.path.exists(file_index)
-            and index_rate != 0
-        ):
-            try:
-                index = faiss.read_index(file_index)
-                big_npy = index.reconstruct_n(0, index.ntotal)
-            except Exception as e:
-                print(f"{_i18n('faiss_error')}: {e}")
-                index = big_npy = None
-        else:
-            index = big_npy = None
-
-        sid_tensor = torch.tensor(sid, device=device).unsqueeze(0).long()
-
-        real_chunk_size = min(
-            self.sample_rate * int(chunk_duration), 
-            audio_len
-        )
-        offset = int(self.sample_rate // 12.5)
-        
-        audio_pad = np.pad(audio, (offset, offset), mode="reflect")
-
-        pitch_tensor: Optional[torch.Tensor] = None
-        pitchf_tensor: Optional[torch.Tensor] = None
-        
-        if pitch_guidance:
-            print(_i18n("importing_f0"))
-            p_len = len(audio_pad) // self.window
-            p_len_no_pad = len(audio) // self.window
-            pitch_coarse, pitchf = self.get_f0_from_file(
-                f0_file,
-                offset,
-                p_len_no_pad,
-                pitch,
-                f0_min,
-                f0_max,
-            )
-            pitch_coarse = pitch_coarse[:p_len]
-            pitchf = pitchf[:p_len]
-            if device.type == "mps":
-                pitchf = pitchf.astype(np.float32)
-            pitch_tensor = torch.tensor(pitch_coarse, device=device).unsqueeze(0).long()
-            pitchf_tensor = torch.tensor(pitchf, device=device).unsqueeze(0).float()
-
-            print(_i18n("importing_f0_success"))
-
-        processed_chunks: List[Tuple[int, int, np.ndarray, int, int]] = []
-        start = 0
-
-        with tqdm(total=audio_len, desc=_i18n("processing") + str(add_text_channel_str) + str(add_text_custom_str), unit=_i18n("samples"), leave=False) as progress_bar:
-
-            while start < audio_len:
-                end = min(start + real_chunk_size, audio_len)
-
-                need_left = start > 0
-                need_right = end < audio_len
-                pad_left = offset if need_left else 0
-                pad_right = offset if need_right else 0
-
-                chunk_start_in_pad = start - pad_left
-                chunk_end_in_pad = end + pad_right
-
-                chunk_audio = audio_pad[
-                    chunk_start_in_pad + offset : chunk_end_in_pad + offset
-                ]
-
-                f0_start = (chunk_start_in_pad + offset) // self.window
-                f0_end = (chunk_end_in_pad + offset) // self.window
-
-                if pitch_guidance and pitch_tensor is not None and pitchf_tensor is not None:
-                    out = self.voice_conversion(
-                        model,
-                        net_g,
-                        sid_tensor,
-                        chunk_audio,
-                        pitch_tensor[:, f0_start:f0_end],
-                        pitchf_tensor[:, f0_start:f0_end],
-                        index,
-                        big_npy,
-                        index_rate,
-                        version,
-                        protect,
-                    )
+                scale_factor = tgt_sr / self.sample_rate
+                
+                cut_left = int(round(actual_extra_left * scale_factor))
+                cut_right = int(round(actual_extra_right * scale_factor))
+                
+                if cut_right > 0:
+                    out = out[cut_left : -cut_right]
                 else:
-                    out = self.voice_conversion(
-                        model,
-                        net_g,
-                        sid_tensor,
-                        chunk_audio,
-                        None,
-                        None,
-                        index,
-                        big_npy,
-                        index_rate,
-                        version,
-                        protect,
-                    )
+                    out = out[cut_left:]
 
                 output_start = int(round((chunk_start_in_pad) / self.sample_rate * tgt_sr))
                 output_end = output_start + len(out)
@@ -719,10 +554,11 @@ class VC:
             w = np.ones(chunk_len, dtype=np.float32)
             fade_len = int(round(offset / self.sample_rate * tgt_sr))
 
-            if pad_left > 0 and fade_len > 0:
+            if pad_left > 0 and fade_len > 0 and start_idx > 0:
                 actual_fade = min(fade_len, chunk_len)
                 w[:actual_fade] = np.linspace(0, 1, actual_fade)
-            if pad_right > 0 and fade_len > 0:
+                
+            if pad_right > 0 and fade_len > 0 and end_idx < max_output_end:
                 actual_fade = min(fade_len, chunk_len)
                 w[-actual_fade:] = np.linspace(1, 0, actual_fade)
 

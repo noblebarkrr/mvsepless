@@ -231,6 +231,7 @@ class VbachConverter:
                         audio=mix,
                         pitch=pitch,
                         f0_method=f0_method,
+                        f0_file=None,
                         hop_length=hop_length,
                         file_index=index_path,
                         index_rate=index_rate,
@@ -338,13 +339,15 @@ class VbachConverter:
             audio_max = np.abs(mix).max() / 0.95
             if audio_max > 1:
                 mix /= audio_max
-            audio_opt = self.vc.pipeline_custom_f0(
+            audio_opt = self.vc.pipeline(
                 model=self.hubert_model,
                 net_g=self.net_g,
                 sid=0,
                 audio=mix,
                 pitch=pitch,
+                f0_method=None,
                 f0_file=f0_file,
+                hop_length=0,
                 file_index=index_path,
                 index_rate=index_rate,
                 pitch_guidance=self.use_f0,
