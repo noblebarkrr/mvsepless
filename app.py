@@ -1172,7 +1172,7 @@ class App(Separator):
                     with gr.Column():
                         sep_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
                         with gr.Group():
-                            sep_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
+                            sep_input_files = gr.Dropdown(container=False, allow_custom_value=True, **base_c_params["dropdown_multi"])
                             sep_input_files.focus(self.get_actual_input_list, inputs=[sep_input_files, sep_input_state], outputs=[sep_input_files, sep_input_state], show_progress="hidden")
                             sep_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                             @sep_upload_files.upload(inputs=sep_upload_files, outputs=[sep_upload_files, sep_input_files])
@@ -1295,7 +1295,7 @@ class App(Separator):
                     with gr.Column():
                         custom_sep_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
                         with gr.Group():
-                            custom_sep_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
+                            custom_sep_input_files = gr.Dropdown(container=False, allow_custom_value=True, **base_c_params["dropdown_multi"])
                             custom_sep_input_files.focus(
                                 self.get_actual_input_list, 
                                 inputs=[custom_sep_input_files, custom_sep_input_state], 
@@ -1328,7 +1328,7 @@ class App(Separator):
                             # Новые компоненты для выбора модели как в vbach_tab
                             custom_sep_checkpoint = gr.Dropdown(
                                 label=_i18n("checkpoint_path"), 
-                                multiselect=True, 
+                                multiselect=True, allow_custom_value=True,
                                 max_choices=1,
                                 **base_c_params["base"]
                             )
@@ -1341,7 +1341,7 @@ class App(Separator):
                             
                             custom_sep_config = gr.Dropdown(
                                 label=_i18n("config_path"), 
-                                multiselect=True, 
+                                multiselect=True,  allow_custom_value=True,
                                 max_choices=1,
                                 **base_c_params["base"]
                             )
@@ -1518,7 +1518,7 @@ class App(Separator):
                         with gr.Column():
                             auto_ensemble_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                             with gr.Group():
-                                auto_ensemble_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                                auto_ensemble_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                                 auto_ensemble_input_file.focus(self.get_actual_input_list, inputs=[auto_ensemble_input_file, auto_ensemble_input_state], outputs=[auto_ensemble_input_file, auto_ensemble_input_state], show_progress="hidden")
                                 auto_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                                 @auto_ensemble_upload_file.upload(inputs=auto_ensemble_upload_file, outputs=[auto_ensemble_upload_file, auto_ensemble_input_file])
@@ -1713,7 +1713,7 @@ class App(Separator):
                         with gr.Column():
                             iterative_ensemble_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                             with gr.Group():
-                                iterative_ensemble_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                                iterative_ensemble_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                                 iterative_ensemble_input_file.focus(
                                     self.get_actual_input_list, 
                                     inputs=[iterative_ensemble_input_file, iterative_ensemble_input_state], 
@@ -2090,7 +2090,7 @@ class App(Separator):
                         with gr.Column():
                             manual_ensemble_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
                             with gr.Group():
-                                manual_ensemble_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
+                                manual_ensemble_input_files = gr.Dropdown(container=False, allow_custom_value=True, **base_c_params["dropdown_multi"])
                                 manual_ensemble_input_files.focus(self.get_actual_input_list, inputs=[manual_ensemble_input_files, manual_ensemble_input_state], outputs=[manual_ensemble_input_files, manual_ensemble_input_state], show_progress="hidden")
                                 manual_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                                 @manual_ensemble_upload_files.upload(inputs=manual_ensemble_upload_files, outputs=[manual_ensemble_upload_files, manual_ensemble_input_files])
@@ -2158,7 +2158,7 @@ class App(Separator):
                             gr.Markdown("<h3><center>"+_i18n("original")+"</center></h3>", container=True)
                             subtract_1_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                         with gr.Group():
-                            subtract_1_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                            subtract_1_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                             subtract_1_input_file.focus(self.get_actual_input_list, inputs=[subtract_1_input_file, subtract_1_input_state], outputs=[subtract_1_input_file, subtract_1_input_state], show_progress="hidden")
                             subtract_1_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                             @subtract_1_upload_file.upload(inputs=subtract_1_upload_file, outputs=[subtract_1_upload_file, subtract_1_input_file])
@@ -2180,7 +2180,7 @@ class App(Separator):
                             gr.Markdown("<h3><center>"+_i18n("stem")+"</center></h3>", container=True)
                             subtract_2_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                         with gr.Group():
-                            subtract_2_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                            subtract_2_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                             subtract_2_input_file.focus(self.get_actual_input_list, inputs=[subtract_2_input_file, subtract_2_input_state], outputs=[subtract_2_input_file, subtract_2_input_state], show_progress="hidden")
                             subtract_2_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                             @subtract_2_upload_file.upload(inputs=subtract_2_upload_file, outputs=[subtract_2_upload_file, subtract_2_input_file])
@@ -2243,7 +2243,7 @@ class App(Separator):
                         with gr.Column():
                             vbach_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
                             with gr.Group():
-                                vbach_input_files = gr.Dropdown(container=False, **base_c_params["dropdown_multi"])
+                                vbach_input_files = gr.Dropdown(container=False, allow_custom_value=True, **base_c_params["dropdown_multi"])
                                 vbach_input_files.focus(
                                     self.get_actual_input_list, 
                                     inputs=[vbach_input_files, vbach_input_state], 
@@ -2266,7 +2266,7 @@ class App(Separator):
                         with gr.Column():
                             with gr.Group():
                                 vbach_model_path = gr.Dropdown(
-                                    label=_i18n("model_path"), multiselect=True, max_choices=1, **base_c_params["base"])
+                                    label=_i18n("model_path"), multiselect=True, allow_custom_value=True, max_choices=1, **base_c_params["base"])
                                 vbach_model_path.focus(
                                     self.get_actual_vbach_models_list,
                                     inputs=[vbach_model_path, vbach_models_state],
@@ -2274,7 +2274,7 @@ class App(Separator):
                                     show_progress="hidden"
                                 )
                                 
-                                vbach_index_path = gr.Dropdown(label=_i18n("index_path"), multiselect=True, max_choices=1, **base_c_params["base"])
+                                vbach_index_path = gr.Dropdown(label=_i18n("index_path"), allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                                 vbach_index_path.focus(
                                     self.get_actual_vbach_index_list,
                                     inputs=[vbach_index_path, vbach_index_state],
@@ -2504,7 +2504,7 @@ class App(Separator):
                         with gr.Column():
                             f0_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                             with gr.Group():
-                                f0_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                                f0_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                                 f0_input_file.focus(self.get_actual_input_list, inputs=[f0_input_file, f0_input_state], outputs=[f0_input_file, f0_input_state], show_progress="hidden")
                                 f0_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                                 
@@ -2586,7 +2586,7 @@ class App(Separator):
                         with gr.Column():
                             vbach_custom_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
                             with gr.Group():
-                                vbach_custom_input_file = gr.Dropdown(container=False, multiselect=True, max_choices=1, **base_c_params["base"])
+                                vbach_custom_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
                                 vbach_custom_input_file.focus(self.get_actual_input_list, inputs=[vbach_custom_input_file, vbach_custom_input_state], outputs=[vbach_custom_input_file, vbach_custom_input_state], show_progress="hidden")
                                 vbach_custom_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                                 
@@ -2608,7 +2608,7 @@ class App(Separator):
                         with gr.Column():
                             with gr.Group():
                                 vbach_custom_model_path = gr.Dropdown(
-                                    label=_i18n("model_path"), multiselect=True, max_choices=1, **base_c_params["base"])
+                                    label=_i18n("model_path"), multiselect=True, allow_custom_value=True, max_choices=1, **base_c_params["base"])
                                 vbach_custom_model_path.focus(
                                     self.get_actual_vbach_models_list,
                                     inputs=[vbach_custom_model_path, vbach_custom_models_state],
@@ -2617,7 +2617,7 @@ class App(Separator):
                                 )
                                 
                                 vbach_custom_index_path = gr.Dropdown(
-                                    label=_i18n("index_path"), multiselect=True, max_choices=1, **base_c_params["base"])
+                                    label=_i18n("index_path"), multiselect=True, allow_custom_value=True, max_choices=1, **base_c_params["base"])
                                 vbach_custom_index_path.focus(
                                     self.get_actual_vbach_index_list,
                                     inputs=[vbach_custom_index_path, vbach_custom_index_state],
@@ -2862,8 +2862,8 @@ class App(Separator):
                             with gr.Column(scale=1):
                                 upload_url_format = gr.Dropdown(
                                     label=_i18n("output_format"),
-                                    choices=["mp3", "wav", "flac", "m4a", "ogg"],
-                                    value="mp3",
+                                    choices=output_formats,
+                                    value=output_formats[0],
                                     **base_c_params["dropdown"]
                                 )
                             with gr.Column(scale=1):
