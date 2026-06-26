@@ -163,7 +163,7 @@ codec_args: Dict[str, Dict[bool, List[str]]] = {
     }
 }
 
-ensemble_types = ("avg_fft", "min_fft", "max_fft", "median_fft")
+ensemble_types = ("avg_fft", "min_fft", "max_fft", "median_fft", "min_mag", "max_mag")
 
 def get_codec_args(extension: str, prefer_float: bool) -> List[str]:
     """
@@ -1286,7 +1286,7 @@ def ensemble(
     Args:
         pred_tracks: Список предсказаний (ожидается форма [channels, samples])
         srs: Список частот дискретизации
-        ensemble_type: Алгоритм объединения ('avg_fft', 'min_fft', 'max_fft', 'median_fft')
+        ensemble_type: Алгоритм объединения ('avg_fft', 'min_fft', 'max_fft', 'median_fft', 'min_mag', 'max_mag')
         weights: Веса для avg_fft
         dtype: Тип данных
         disable_progress: Отключить отображение прогресса
@@ -1309,21 +1309,18 @@ def ensemble(
             weights = [1.0] * len(pred_tracks)
         total_weight = sum(weights)
     
-    # Подгоняем все треки к одной длине и частоте
     pred_tracks = list(fit_arrays(pred_tracks, srs, max_channels=2, min_sr=result_sr))
     
     sft = get_stft_obj(result_sr, n_fft=2048, hop=1024)
     final_length = pred_tracks[0].shape[-1]
     
-    # Инициализируем аккумуляторы для левого и правого каналов
     if ensemble_type == "avg_fft":
         left_accumulator = None
         right_accumulator = None
-    elif ensemble_type in ["min_fft", "max_fft", "median_fft"]:
+    elif ensemble_type in ["min_fft", "max_fft", "median_fft", "min_mag", "max_mag"]:
         left_accumulator = []
         right_accumulator = []
     
-    # Обрабатываем все треки, для каждого сразу оба канала
     with tqdm(
         total=len(pred_tracks),
         desc=_i18n("ensemble_processing"),
@@ -1333,7 +1330,6 @@ def ensemble(
     ) as pbar:
         
         for i, track in enumerate(pred_tracks):
-            # Получаем STFT для левого и правого каналов
             spec_left = sft.stft(convert_to_dtype(track[0], np.float32))
             spec_right = sft.stft(convert_to_dtype(track[1], np.float32))
             
@@ -1348,20 +1344,19 @@ def ensemble(
                     left_accumulator += weighted_left
                     right_accumulator += weighted_right
                     
-            elif ensemble_type in ["min_fft", "max_fft", "median_fft"]:
+            elif ensemble_type in ["min_fft", "max_fft", "median_fft", "min_mag", "max_mag"]:
                 left_accumulator.append(spec_left)
                 right_accumulator.append(spec_right)
             
             del spec_left, spec_right
             pbar.update(1)
     
-    # Финализация алгоритма для обоих каналов
     if ensemble_type == "avg_fft":
         left_res_spec = left_accumulator / total_weight
         right_res_spec = right_accumulator / total_weight
         
     elif ensemble_type == "median_fft":
-        # Медиана для комплексных чисел через разделение на действительную и мнимую части
+
         left_real = np.real(left_accumulator)
         left_imag = np.imag(left_accumulator)
         right_real = np.real(right_accumulator)
@@ -1377,11 +1372,47 @@ def ensemble(
     elif ensemble_type == "max_fft":
         left_res_spec = absmax(np.array(left_accumulator), axis=0)
         right_res_spec = absmax(np.array(right_accumulator), axis=0)
+    
+    elif ensemble_type == "min_mag":
+
+        left_mag = np.abs(left_accumulator)
+        right_mag = np.abs(right_accumulator)
+
+        left_idx = np.argmin(left_mag, axis=0)
+        right_idx = np.argmin(right_mag, axis=0)
+        
+        left_res_spec = np.take_along_axis(
+            np.array(left_accumulator), 
+            left_idx[np.newaxis, ...], 
+            axis=0
+        )[0]
+        right_res_spec = np.take_along_axis(
+            np.array(right_accumulator), 
+            right_idx[np.newaxis, ...], 
+            axis=0
+        )[0]
+        
+    elif ensemble_type == "max_mag":
+        left_mag = np.abs(left_accumulator)
+        right_mag = np.abs(right_accumulator)
+
+        left_idx = np.argmax(left_mag, axis=0)
+        right_idx = np.argmax(right_mag, axis=0)
+        
+        left_res_spec = np.take_along_axis(
+            np.array(left_accumulator), 
+            left_idx[np.newaxis, ...], 
+            axis=0
+        )[0]
+        right_res_spec = np.take_along_axis(
+            np.array(right_accumulator), 
+            right_idx[np.newaxis, ...], 
+            axis=0
+        )[0]
         
     else:
         raise ValueError(_i18n("unknown_etype", alg=ensemble_type))
     
-    # Восстанавливаем сигналы
     left_channel = sft.istft(left_res_spec, k1=final_length)
     right_channel = sft.istft(right_res_spec, k1=final_length)
     
