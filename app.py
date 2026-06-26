@@ -1174,10 +1174,13 @@ class App(Separator):
                         with gr.Group():
                             sep_input_files = gr.Dropdown(container=False, allow_custom_value=True, **base_c_params["dropdown_multi"])
                             sep_input_files.focus(self.get_actual_input_list, inputs=[sep_input_files, sep_input_state], outputs=[sep_input_files, sep_input_state], show_progress="hidden")
+                            sep_add_uploaded_files = gr.Checkbox(label=_i18n("add_uploaded_files_to_current_list"), value=False, **base_c_params["base"])
                             sep_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                            @sep_upload_files.upload(inputs=sep_upload_files, outputs=[sep_upload_files, sep_input_files])
-                            def upload_files_fn(files: list):
+                            @sep_upload_files.upload(inputs=[sep_upload_files, sep_input_files, sep_add_uploaded_files], outputs=[sep_upload_files, sep_input_files])
+                            def upload_files_fn(files: list, input_files: list, sep_add_uploaded_files: bool):
                                 uploaded_files = self.input_files.upload(files)
+                                if sep_add_uploaded_files:
+                                    return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                                 return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                             @gr.render(inputs=[sep_input_files, sep_input_preview_check])
                             def preview_inputs(input: list, preview: bool):
@@ -1248,7 +1251,7 @@ class App(Separator):
                                                 output_audio = define_download_button_with_size(
                                                     value=stem_path,
                                                     label=stem_name,
-                                                    **base_c_params["base"],
+                                                    **base_c_params["base"], variant="huggingface",
                                                     scale=15,
                                                 )
                                             else:
@@ -1311,11 +1314,14 @@ class App(Separator):
                                 outputs=[custom_sep_input_files, custom_sep_input_state], 
                                 show_progress="hidden"
                             )
+                            custom_sep_add_uploaded_files = gr.Checkbox(label=_i18n("add_uploaded_files_to_current_list"), value=False, **base_c_params["base"])
                             custom_sep_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                             
-                            @custom_sep_upload_files.upload(inputs=custom_sep_upload_files, outputs=[custom_sep_upload_files, custom_sep_input_files])
-                            def upload_files_fn(files: list):
+                            @custom_sep_upload_files.upload(inputs=[custom_sep_upload_files, custom_sep_input_files, custom_sep_add_uploaded_files], outputs=[custom_sep_upload_files, custom_sep_input_files])
+                            def upload_files_fn(files: list, input_files: list, add_uploaded_files: bool):
                                 uploaded_files = self.input_files.upload(files)
+                                if add_uploaded_files:
+                                    return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                                 return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                             
                             @gr.render(inputs=[custom_sep_input_files, custom_sep_input_preview_check])
@@ -1479,7 +1485,7 @@ class App(Separator):
                                                 output_audio = define_download_button_with_size(
                                                     value=stem_path,
                                                     label=stem_name,
-                                                    **base_c_params["base"],
+                                                    **base_c_params["base"], variant="huggingface",
                                                     scale=15,
                                                 )
                                             else:
@@ -2110,10 +2116,13 @@ class App(Separator):
                             with gr.Group():
                                 manual_ensemble_input_files = gr.Dropdown(container=False, allow_custom_value=True, **base_c_params["dropdown_multi"])
                                 manual_ensemble_input_files.focus(self.get_actual_input_list, inputs=[manual_ensemble_input_files, manual_ensemble_input_state], outputs=[manual_ensemble_input_files, manual_ensemble_input_state], show_progress="hidden")
+                                manual_ensemble_add_uploaded_files = gr.Checkbox(label=_i18n("add_uploaded_files_to_current_list"), value=False, **base_c_params["base"])
                                 manual_ensemble_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                @manual_ensemble_upload_files.upload(inputs=manual_ensemble_upload_files, outputs=[manual_ensemble_upload_files, manual_ensemble_input_files])
-                                def upload_files_fn(files: list):
+                                @manual_ensemble_upload_files.upload(inputs=[manual_ensemble_upload_files, manual_ensemble_input_files, manual_ensemble_add_uploaded_files], outputs=[manual_ensemble_upload_files, manual_ensemble_input_files])
+                                def upload_files_fn(files: list, input_files: list, add_uploaded_files: bool):
                                     uploaded_files = self.input_files.upload(files)
+                                    if add_uploaded_files:
+                                        return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                                     return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                                 @gr.render(inputs=[manual_ensemble_input_files, manual_ensemble_input_preview_check])
                                 def preview_inputs(input: list, preview: bool):
@@ -2268,11 +2277,14 @@ class App(Separator):
                                     outputs=[vbach_input_files, vbach_input_state], 
                                     show_progress="hidden"
                                 )
+                                vbach_input_add_uploaded_files = gr.Checkbox(label=_i18n("add_uploaded_files_to_current_list"), value=False, **base_c_params["base"])
                                 vbach_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
                                 
-                                @vbach_upload_files.upload(inputs=vbach_upload_files, outputs=[vbach_upload_files, vbach_input_files])
-                                def upload_files_fn(files: list):
+                                @vbach_upload_files.upload(inputs=[vbach_upload_files, vbach_input_files, vbach_input_add_uploaded_files], outputs=[vbach_upload_files, vbach_input_files])
+                                def upload_files_fn(files: list, input_files: list, add_uploaded_files: bool):
                                     uploaded_files = self.input_files.upload(files)
+                                    if add_uploaded_files:
+                                        return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                                     return gr.update(value=None), gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                                 
                                 @gr.render(inputs=[vbach_input_files, vbach_input_preview_check])
@@ -2450,9 +2462,10 @@ class App(Separator):
                                     with gr.Group():
                                         if off_players_output:
                                             define_download_button_with_size(
-                                                value=stem_path,
-                                                label=stem_name,
+                                                value=result_path,
+                                                label=Path(result_path).stem,
                                                 **base_c_params["base"],
+                                                variant="huggingface",
                                                 scale=15,
                                             )
                                         else:
