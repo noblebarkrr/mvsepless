@@ -1286,7 +1286,7 @@ def ensemble(
     Args:
         pred_tracks: Список предсказаний (ожидается форма [channels, samples])
         srs: Список частот дискретизации
-        ensemble_type: Алгоритм объединения ('avg_fft', 'min_fft', 'max_fft', 'median_fft', 'min_mag', 'max_mag')
+        ensemble_type: Алгоритм объединения ('avg_fft', 'min_fft', 'max_fft', 'median_fft')
         weights: Веса для avg_fft
         dtype: Тип данных
         disable_progress: Отключить отображение прогресса
