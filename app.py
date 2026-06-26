@@ -1220,7 +1220,7 @@ class App(Separator):
                         def separation_show_history_fn(key: list):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
-                    sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), value=False, **base_c_params["base"])
+                    sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
                     @separate_btn.click(inputs=[sep_input_files, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format, sep_sum_stems, add_params_user_state, sep_prefer_float], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
                     def separator_wrap(input_files: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, sum_stems: bool, add_params: dict, pref_f: bool, progress=gr.Progress(track_tqdm=True)):
                         results = []
@@ -1425,7 +1425,7 @@ class App(Separator):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
                 
-                    custom_sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), value=True, **base_c_params["base"])
+                    custom_sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=True, **base_c_params["base"])
                     @custom_separate_btn.click(
                         inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
                                 custom_sep_selected_stems, custom_sep_extract_instrumental, custom_sep_use_spec_invert,
@@ -1673,12 +1673,16 @@ class App(Separator):
                             with gr.Column():
                                 with gr.Group():
                                     gr.Markdown("<h3><center>"+_i18n("saved_primary_stems")+"</center></h3>", container=True)
+                                    auto_ensebmle_primary_stems_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
                                     auto_ensemble_primary_stems_state = gr.State([])
-                                    @gr.render(inputs=auto_ensemble_primary_stems_state)
-                                    def preview_pr_stems(input: list):
+                                    @gr.render(inputs=[auto_ensemble_primary_stems_state, auto_ensebmle_primary_stems_off_players_output])
+                                    def preview_pr_stems(input: list, off_players_output: bool):
                                         if input:
                                             for f_ in input:
-                                                eoutput_audio = define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
+                                                if off_players_output:
+                                                    eoutput_audio = define_download_button_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["base"], variant="huggingface")
+                                                else:
+                                                    eoutput_audio = define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
                                                 ereuse_btn = gr.Button(
                                                     _i18n("reuse_btn"), 
                                                     variant="secondary", **base_c_params["base"]
@@ -2043,11 +2047,15 @@ class App(Separator):
                         with gr.Column():
                             with gr.Group():
                                 gr.Markdown("<h3><center>"+_i18n("intermediate_results")+"</center></h3>", container=True)
-                                @gr.render(inputs=iterative_ensemble_intermediate_state)
-                                def preview_intermediate_results(input: list):
+                                iterative_ensemble_intermediate_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
+                                @gr.render(inputs=[iterative_ensemble_intermediate_state, iterative_ensemble_intermediate_off_players_output])
+                                def preview_intermediate_results(input: list, off_players_output: bool):
                                     if input:
                                         for f_ in input:
-                                            define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
+                                            if off_players_output:
+                                                define_download_button_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["base"], variant="huggingface")
+                                            else:
+                                                define_audio_with_size(basename=True, label="", value=f_, scale=15, **base_c_params["output_audio"])
                                     else:
                                         gr.Markdown("<h3><center>"+_i18n("no_intermediate_results")+"</center></h3>", container=True)
                     
@@ -2452,7 +2460,7 @@ class App(Separator):
                                 outputs=[vbach_history, vbach_history_state],
                                 show_progress="hidden"
                             )
-                        vbach_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), value=False, **base_c_params["base"])
+                        vbach_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
                         vbach_state = gr.State()
                         @gr.render(inputs=[vbach_state, vbach_off_players_output])
                         def show_results(state, off_players_output: bool):

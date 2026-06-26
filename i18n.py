@@ -615,6 +615,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "write_metadata_info": "Добавляет информацию о обработке в метаданные файла\nЕсли в оригинальном аудио есть метаданные, то эта информация записывается вместе с оригинальной в метаданных",
         "write_metadata_error": "Ошибка при записи метаданных: {error}",
         "off_audio_players_output": "Отключить аудиоплееры на выводе",
+        "off_audio_players_output_info": "Отключает аудиоплееры на выводе, заменяя их на простые кнопки скачивания, что может ускорить работу интерфейса при большом количестве выходных файлов",
         "add_uploaded_files_to_current_list": "Добавить загруженные файлы в текущий список файлов",
     },
     "en": {
@@ -1213,6 +1214,7 @@ Example: `NAME_ITER` → `Song_iter_3`
         "write_metadata_info": "Adds processing information to the file's metadata.\nIf the original audio contains metadata, this information is written into the metadata alongside the original data.",
         "write_metadata_error": "Error writing metadata: {error}",
         "off_audio_players_output": "Off audio players in output",
+        "off_audio_players_output_info": "Disables audio players in the output, replacing them with simple download buttons; this can speed up the interface when dealing with a large count of output files.",
         "add_uploaded_files_to_current_list": "Add uploaded files to the current list of files",
     }
 }
