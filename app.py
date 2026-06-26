@@ -1425,7 +1425,7 @@ class App(Separator):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
                 
-                    custom_sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=True, **base_c_params["base"])
+                    custom_sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
                     @custom_separate_btn.click(
                         inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
                                 custom_sep_selected_stems, custom_sep_extract_instrumental, custom_sep_use_spec_invert,
