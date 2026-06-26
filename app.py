@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
-from extra_utils import tz, define_audio_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage
+from extra_utils import tz, define_audio_with_size, define_download_button_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage
 from inference import Separator, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple, custom_model_types, default_add_params
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
@@ -1217,6 +1217,7 @@ class App(Separator):
                         def separation_show_history_fn(key: list):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
+                    sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), value=False, **base_c_params["base"])
                     @separate_btn.click(inputs=[sep_input_files, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format, sep_sum_stems, add_params_user_state, sep_prefer_float], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
                     def separator_wrap(input_files: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, sum_stems: bool, add_params: dict, pref_f: bool, progress=gr.Progress(track_tqdm=True)):
                         results = []
@@ -1227,8 +1228,8 @@ class App(Separator):
                         )
                         self.history.add_to_history(model_name, results)
                         return results, gr.skip()
-                    @gr.render(inputs=[sep_state])
-                    def show_players(state):
+                    @gr.render(inputs=[sep_state, sep_off_players_output])
+                    def show_players(state, off_players_output: bool):
                         if state:
                             zip_is_generated = False
                             all_stems_dict = {}
@@ -1243,12 +1244,20 @@ class App(Separator):
                                         all_files.append(stem_path)
                                         all_stems_dict[stem_name].append(stem_path) 
                                         with gr.Row(equal_height=True):
-                                            output_audio = define_audio_with_size(
-                                                value=stem_path,
-                                                label=stem_name,
-                                                **base_c_params["output_audio"],
-                                                scale=15,
-                                            )
+                                            if off_players_output:
+                                                output_audio = define_download_button_with_size(
+                                                    value=stem_path,
+                                                    label=stem_name,
+                                                    **base_c_params["base"],
+                                                    scale=15,
+                                                )
+                                            else:
+                                                output_audio = define_audio_with_size(
+                                                    value=stem_path,
+                                                    label=stem_name,
+                                                    **base_c_params["output_audio"],
+                                                    scale=15,
+                                                )
                                             reuse_btn = gr.Button(
                                                 _i18n("reuse_btn"), 
                                                 variant="secondary", **base_c_params["base"]
@@ -1410,106 +1419,115 @@ class App(Separator):
                             state = self.history.get_from_history(one_element_list_to_value(key))
                             return state
                 
-                @custom_separate_btn.click(
-                    inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
-                            custom_sep_selected_stems, custom_sep_extract_instrumental, custom_sep_use_spec_invert,
-                            custom_sep_template, custom_sep_output_format, custom_sep_sum_stems, custom_add_params_user_state, custom_sep_prefer_float],
-                    outputs=[custom_sep_state, custom_sep_upload_files],
-                    trigger_mode="once", concurrency_id="mvsepless_app_inference"
-                )
-                def custom_separator_wrap(
-                    input_files: list, model_type: str, checkpoint: list, config: list,
-                    sel_stems: list, ext_inst: bool, spec_invert: bool, 
-                    tmpl: str, output_format: str, sum_stems: bool, add_params: dict, pref_f: bool, progress=gr.Progress(track_tqdm=True)
-                ):
-                    checkpoint_path = one_element_list_to_value(checkpoint)
-                    config_path = one_element_list_to_value(config)
-                    
-                    if not checkpoint_path or not config_path:
-                        gr.Warning(_i18n("paths_not_specified"))
-                        return [], gr.skip()
-                    
-                    results = self.custom_separate(
-                        input_files=input_files, 
-                        output_dir=self.output_dir.gen_output_dir(), 
-                        output_format=output_format, 
-                        template=tmpl,
-                        model_type=model_type,
-                        ckpt=checkpoint_path,
-                        conf=config_path,
-                        extract_instrumental=ext_inst,
-                        use_spec_invert=spec_invert,
-                        invert_plus=sum_stems,
-                        prefer_float=pref_f,
-                        selected_stems=sel_stems,
-                        add_params=add_params
+                    custom_sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), value=True, **base_c_params["base"])
+                    @custom_separate_btn.click(
+                        inputs=[custom_sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config,
+                                custom_sep_selected_stems, custom_sep_extract_instrumental, custom_sep_use_spec_invert,
+                                custom_sep_template, custom_sep_output_format, custom_sep_sum_stems, custom_add_params_user_state, custom_sep_prefer_float],
+                        outputs=[custom_sep_state, custom_sep_upload_files],
+                        trigger_mode="once", concurrency_id="mvsepless_app_inference"
                     )
+                    def custom_separator_wrap(
+                        input_files: list, model_type: str, checkpoint: list, config: list,
+                        sel_stems: list, ext_inst: bool, spec_invert: bool, 
+                        tmpl: str, output_format: str, sum_stems: bool, add_params: dict, pref_f: bool, progress=gr.Progress(track_tqdm=True)
+                    ):
+                        checkpoint_path = one_element_list_to_value(checkpoint)
+                        config_path = one_element_list_to_value(config)
+                        
+                        if not checkpoint_path or not config_path:
+                            gr.Warning(_i18n("paths_not_specified"))
+                            return [], gr.skip()
+                        
+                        results = self.custom_separate(
+                            input_files=input_files, 
+                            output_dir=self.output_dir.gen_output_dir(), 
+                            output_format=output_format, 
+                            template=tmpl,
+                            model_type=model_type,
+                            ckpt=checkpoint_path,
+                            conf=config_path,
+                            extract_instrumental=ext_inst,
+                            use_spec_invert=spec_invert,
+                            invert_plus=sum_stems,
+                            prefer_float=pref_f,
+                            selected_stems=sel_stems,
+                            add_params=add_params
+                        )
+                        
+                        model_name = Path(checkpoint_path).stem
+                        self.history.add_to_history(model_name, results)
+                        return results, gr.skip()
                     
-                    model_name = Path(checkpoint_path).stem
-                    self.history.add_to_history(model_name, results)
-                    return results, gr.skip()
-                
-                @gr.render(inputs=[custom_sep_state])
-                def show_custom_players(state):
-                    if state:
-                        zip_is_generated = False
-                        all_stems_dict = {}
-                        all_stems = set(stem_name_ for stem_list in (stems_list_ for basename_, stems_list_ in state) for stem_name_, stem_path_ in stem_list)
-                        all_files = []
-                        for stem in all_stems:
-                            all_stems_dict[stem] = []
-                        for basename, stems_list in state:
-                            with gr.Group():
-                                gr.Markdown(f"<h4><center>{basename}</center></h4>")
-                                for stem_name, stem_path in stems_list:
-                                    all_files.append(stem_path)
-                                    all_stems_dict[stem_name].append(stem_path) 
-                                    with gr.Row(equal_height=True):
-                                        output_audio = define_audio_with_size(
-                                            value=stem_path,
-                                            label=stem_name,
-                                            **base_c_params["output_audio"],
-                                            scale=15,
-                                        )
-                                        reuse_btn = gr.Button(
-                                            _i18n("reuse_btn"), 
-                                            variant="secondary", **base_c_params["base"]
-                                        )
-                                        @reuse_btn.click(
-                                            outputs=custom_sep_input_files,
-                                        )
-                                        def reuse_fn(stem=deepcopy(stem_path)) -> gr.update:
-                                            uploaded_files = self.input_files.upload([stem], copy=True)
-                                            return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
-                                        
-                        with gr.Column(variant="panel"):
+                    @gr.render(inputs=[custom_sep_state, custom_sep_off_players_output])
+                    def show_custom_players(state, off_players_output: bool):
+                        if state:
+                            zip_is_generated = False
+                            all_stems_dict = {}
+                            all_stems = set(stem_name_ for stem_list in (stems_list_ for basename_, stems_list_ in state) for stem_name_, stem_path_ in stem_list)
+                            all_files = []
+                            for stem in all_stems:
+                                all_stems_dict[stem] = []
+                            for basename, stems_list in state:
+                                with gr.Group():
+                                    gr.Markdown(f"<h4><center>{basename}</center></h4>")
+                                    for stem_name, stem_path in stems_list:
+                                        all_files.append(stem_path)
+                                        all_stems_dict[stem_name].append(stem_path) 
+                                        with gr.Row(equal_height=True):
+                                            if off_players_output:
+                                                output_audio = define_download_button_with_size(
+                                                    value=stem_path,
+                                                    label=stem_name,
+                                                    **base_c_params["base"],
+                                                    scale=15,
+                                                )
+                                            else:
+                                                output_audio = define_audio_with_size(
+                                                    value=stem_path,
+                                                    label=stem_name,
+                                                    **base_c_params["output_audio"],
+                                                    scale=15,
+                                                )
+                                            reuse_btn = gr.Button(
+                                                _i18n("reuse_btn"), 
+                                                variant="secondary", **base_c_params["base"]
+                                            )
+                                            @reuse_btn.click(
+                                                outputs=custom_sep_input_files,
+                                            )
+                                            def reuse_fn(stem=deepcopy(stem_path)) -> gr.update:
+                                                uploaded_files = self.input_files.upload([stem], copy=True)
+                                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                            
                             with gr.Column(variant="panel"):
-                                for stem_a in all_stems:
-                                    if len(all_stems_dict[stem_a]) > 1:
-                                        reuse_all_stem_btn = gr.Button(_i18n("reuse_all_stem", stem=stem_a), variant="huggingface", **base_c_params["base"])
-                                        @reuse_all_stem_btn.click(outputs=custom_sep_input_files)
-                                        def reuse_all_stem_fn(stem=deepcopy(stem_a)):
-                                            uploaded_files = self.input_files.upload(all_stems_dict[stem], copy=True)
-                                            return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                with gr.Column(variant="panel"):
+                                    for stem_a in all_stems:
+                                        if len(all_stems_dict[stem_a]) > 1:
+                                            reuse_all_stem_btn = gr.Button(_i18n("reuse_all_stem", stem=stem_a), variant="huggingface", **base_c_params["base"])
+                                            @reuse_all_stem_btn.click(outputs=custom_sep_input_files)
+                                            def reuse_all_stem_fn(stem=deepcopy(stem_a)):
+                                                uploaded_files = self.input_files.upload(all_stems_dict[stem], copy=True)
+                                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
+                                    
+                                reuse_all_stems_btn = gr.Button(_i18n("reuse_all_stems"), variant="primary", **base_c_params["base"])
+                                @reuse_all_stems_btn.click(outputs=custom_sep_input_files)
+                                def reuse_all_stems_fn():
+                                    uploaded_files = self.input_files.upload(all_files, copy=True)
+                                    return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                                 
-                            reuse_all_stems_btn = gr.Button(_i18n("reuse_all_stems"), variant="primary", **base_c_params["base"])
-                            @reuse_all_stems_btn.click(outputs=custom_sep_input_files)
-                            def reuse_all_stems_fn():
-                                uploaded_files = self.input_files.upload(all_files, copy=True)
-                                return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
-                            
-                            generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
-                            @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
-                            def generate_zip_fn():
-                                nonlocal zip_is_generated
-                                if zip_is_generated:
-                                    return gr.skip()
-                                else:
-                                    zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsepless"))
-                                    zip_is_generated = True
-                                    return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
-                    else:
-                        gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
+                                generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
+                                @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
+                                def generate_zip_fn():
+                                    nonlocal zip_is_generated
+                                    if zip_is_generated:
+                                        return gr.skip()
+                                    else:
+                                        zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsepless"))
+                                        zip_is_generated = True
+                                        return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
+                        else:
+                            gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
 
             with gr.Tab(_i18n("ensemble_tab")):
                 with gr.Tab(_i18n("auto_ensemble_tab")):
@@ -2422,19 +2440,27 @@ class App(Separator):
                                 outputs=[vbach_history, vbach_history_state],
                                 show_progress="hidden"
                             )
-                    
+                        vbach_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), value=False, **base_c_params["base"])
                         vbach_state = gr.State()
-                        @gr.render(inputs=[vbach_state])
-                        def show_results(state):
+                        @gr.render(inputs=[vbach_state, vbach_off_players_output])
+                        def show_results(state, off_players_output: bool):
                             if state:
                                 zip_is_generated = False
                                 for result_path in state:
                                     with gr.Group():
-                                        define_audio_with_size(
-                                            value=result_path,
-                                            label=Path(result_path).stem,
-                                            **base_c_params["output_audio"]
-                                        )
+                                        if off_players_output:
+                                            define_download_button_with_size(
+                                                value=stem_path,
+                                                label=stem_name,
+                                                **base_c_params["base"],
+                                                scale=15,
+                                            )
+                                        else:
+                                            define_audio_with_size(
+                                                value=result_path,
+                                                label=Path(result_path).stem,
+                                                **base_c_params["output_audio"]
+                                            )
 
                                 generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
                                 @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")

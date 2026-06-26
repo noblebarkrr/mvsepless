@@ -168,6 +168,15 @@ def update_audio_with_size(basename: bool = False, **kwargs):
         kwargs["label"] = temp_label
     return gr.update(**kwargs)
 
+def define_download_button_with_size(basename: bool = False, **kwargs):
+    path = kwargs.get("value", None)
+    if not path:
+        return gr.update(**kwargs)
+    file_path = Path(path)
+    if "label" in kwargs:
+        temp_label = f"[{size_readable(file_path.stat().st_size)}] " + (file_path.stem if basename else kwargs["label"])
+        kwargs["label"] = temp_label
+    return gr.DownloadButton(**kwargs)
 
 class DownloadError(Exception):
     """Custom exception for download errors"""

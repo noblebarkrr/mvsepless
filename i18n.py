@@ -610,7 +610,11 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "uncorrected_selected_stems": "Внимание! Не существующие стемы",
         "prefer_float": "Предочитать высокую точность вывода",
         "current_device": "Текущее устройство: {device}",
-        "no_has_taglib": "Зависимость \'pytaglib\' не установлена\nВыходные аудио-файлы будут записаны без метаданных"
+        "no_has_taglib": "Зависимость \'pytaglib\' не установлена\nВыходные аудио-файлы будут записаны без метаданных",
+        "write_metadata": "Запись метаданных",
+        "write_metadata_info": "Добавляет информацию о обработке в метаданные файла\nЕсли в оригинальном аудио есть метаданные, то эта информация записывается вместе с оригинальной в метаданных",
+        "write_metadata_error": "Ошибка при записи метаданных: {error}",
+        "off_audio_players_output": "Отключить аудиоплееры на выводе",
     },
     "en": {
         "bytes": "B",
@@ -1203,7 +1207,11 @@ Example: `NAME_ITER` → `Song_iter_3`
         "uncorrected_selected_stems": "Warning! Non-exist stems",
         "prefer_float": "Prefer high precision output",
         "current_device": "Current device: {device}",
-        "no_has_taglib": "Dependency 'pytaglib' is not installed\nOutput audio files will be written without metadata"
+        "no_has_taglib": "Dependency 'pytaglib' is not installed\nOutput audio files will be written without metadata",
+        "write_metadata": "Write metadata",
+        "write_metadata_info": "Adds processing information to the file's metadata.\nIf the original audio contains metadata, this information is written into the metadata alongside the original data.",
+        "write_metadata_error": "Error writing metadata: {error}",
+        "off_audio_players_output": "Off audio players in output",
     }
 }
 
