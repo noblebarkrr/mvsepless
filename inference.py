@@ -1134,6 +1134,7 @@ class MSSI: # Music Source Separation Inference
             chunk_size = int(samplerate * segment_sec)
             step = chunk_size // overlap
             fade_size = chunk_size // 10
+            n_src = self.config.model.n_src  # Получаем количество источников из конфига
             
             meter = pyln.Meter(samplerate)
             try:
@@ -1183,7 +1184,7 @@ class MSSI: # Music Source Separation Inference
                     chunk = mix_tensor[:, i:end_idx]
                     cur_chunk_len = chunk.shape[1]
                     
-                    chunk_results = torch.zeros((num_channels, 2, cur_chunk_len), dtype=torch.float32, device=self.device)
+                    chunk_results = torch.zeros((num_channels, n_src, cur_chunk_len), dtype=torch.float32, device=self.device)
                     
                     for ch in range(num_channels):
                         channel_chunk = chunk[ch:ch+1, :]
