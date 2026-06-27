@@ -617,6 +617,7 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "off_audio_players_output": "Отключить аудиоплееры на выводе",
         "off_audio_players_output_info": "Отключает аудиоплееры на выводе, заменяя их на простые кнопки скачивания, что может ускорить работу интерфейса при большом количестве выходных файлов",
         "add_uploaded_files_to_current_list": "Добавить загруженные файлы в текущий список файлов",
+        "vr_aggr_and_post_process_not_applied_vr_6": "Агрессивность и постобработка не были применены, как так модель на VR 6 предсказывает два стема одновременно"
     },
     "en": {
         "bytes": "B",
@@ -1216,6 +1217,7 @@ Example: `NAME_ITER` → `Song_iter_3`
         "off_audio_players_output": "Off audio players in output",
         "off_audio_players_output_info": "Disables audio players in the output, replacing them with simple download buttons; this can speed up the interface when dealing with a large count of output files.",
         "add_uploaded_files_to_current_list": "Add uploaded files to the current list of files",
+        "vr_aggr_and_post_process_not_applied_vr_6": "Aggressiveness and post-processing were not applied because the VR 6 model predicts two stems simultaneously."
     }
 }
 

@@ -699,7 +699,7 @@ class MSSI: # Music Source Separation Inference
         mono_bool = False
         if hasattr(self.config, "model"):
             if hasattr(self.config.model, "stereo"):
-                mono_bool = False if self.config.model.stereo else True
+                mono_bool = not self.config.model.stereo
         if not path:
             raise PathNotSpecified(_i18n("path_not_specified"))
         input_file = Path(path)
@@ -857,7 +857,7 @@ class MSSI: # Music Source Separation Inference
                     wav_resolution = "polyphase"
 
                 if d == bands_n:
-                    X_wave[d], _ = librosa.resample(
+                    X_wave[d] = librosa.resample(
                         y=self.input_mix,
                         orig_sr=self.sample_rate,
                         target_sr=bp["sr"],
@@ -952,6 +952,7 @@ class MSSI: # Music Source Separation Inference
                         pred = pred.detach().cpu().numpy()
                         pred = np.concatenate(pred, axis=2)
                         mask.append(pred)
+
                     if len(mask) == 0:
                         raise ValueError(
                             _i18n("window_size_error")
@@ -970,15 +971,26 @@ class MSSI: # Music Source Separation Inference
                     if stem == primary_stem.lower():
                         is_non_accom_stem = True
 
-                mask = spec_utils.adjust_aggr(mask, is_non_accom_stem, aggressiveness)
+                if mask.shape[0] == 4:
+                    print(_i18n("vr_aggr_and_post_process_not_applied_vr_6"))
+                    if self.model.is_complex:
+                        y_spec = X_spec * mask[:2]
+                        v_spec = X_spec * mask[2:]
+                    else:
+                        X_mag1 = np.abs(X_spec)
+                        X_phase1 = np.exp(1.j * np.angle(X_spec))
+                        y_spec = X_mag1 * mask[:2] * X_phase1
+                        v_spec = X_mag1 * mask[2:] * X_phase1
+                else:
+                    mask = spec_utils.adjust_aggr(mask, is_non_accom_stem, aggressiveness)
 
-                if enable_post_process:
-                    mask = spec_utils.merge_artifacts(
-                        mask, thres=post_process_threshold
-                    )
+                    if enable_post_process:
+                        mask = spec_utils.merge_artifacts(
+                            mask, thres=post_process_threshold
+                        )
 
-                y_spec = mask * X_mag * np.exp(1.0j * X_phase)
-                v_spec = (1 - mask) * X_mag * np.exp(1.0j * X_phase)
+                    y_spec = mask * X_mag * np.exp(1.0j * X_phase)
+                    v_spec = (1 - mask) * X_mag * np.exp(1.0j * X_phase)
 
                 return y_spec, v_spec
 
@@ -988,8 +1000,16 @@ class MSSI: # Music Source Separation Inference
                 n_frame, window_size, self.model.offset
             )
             X_mag_pad = np.pad(X_mag, ((0, 0), (0, 0), (pad_l, pad_r)), mode="constant")
-            X_mag_pad /= X_mag_pad.max()
-            mask = _execute(X_mag_pad, roi_size)
+            mag_max = X_mag_pad.max()
+            X_mag_pad /= mag_max
+
+            if hasattr(self.model, 'is_complex') and self.model.is_complex:
+
+                X_spec_pad = np.pad(X_spec, ((0, 0), (0, 0), (pad_l, pad_r)), mode="constant")
+                X_spec_pad /= mag_max
+                mask = _execute(X_spec_pad, roi_size)
+            else:
+                mask = _execute(X_mag_pad, roi_size)
 
             mask = mask[:, :, :n_frame]
 
