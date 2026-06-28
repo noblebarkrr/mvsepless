@@ -1288,10 +1288,13 @@ class App(Separator):
                                                 variant="secondary", **base_c_params["base"]
                                             )
                                             @reuse_btn.click(
+                                                inputs=[sep_input_files, sep_add_uploaded_files],
                                                 outputs=sep_input_files,
                                             )
-                                            def reuse_fn(stem=deepcopy(stem_path)) -> gr.update:
+                                            def reuse_fn(input_files: list, sep_add_uploaded_files: bool, stem=deepcopy(stem_path)) -> gr.update:
                                                 uploaded_files = self.input_files.upload([stem], copy=True)
+                                                if sep_add_uploaded_files:
+                                                    return gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                                                 return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                                             
                             with gr.Column(variant="panel"):
@@ -1522,10 +1525,13 @@ class App(Separator):
                                                 variant="secondary", **base_c_params["base"]
                                             )
                                             @reuse_btn.click(
+                                                inputs=[custom_sep_input_files, custom_sep_add_uploaded_files],
                                                 outputs=custom_sep_input_files,
                                             )
-                                            def reuse_fn(stem=deepcopy(stem_path)) -> gr.update:
+                                            def reuse_fn(input_files: list, sep_add_uploaded_files: bool, stem=deepcopy(stem_path)) -> gr.update:
                                                 uploaded_files = self.input_files.upload([stem], copy=True)
+                                                if sep_add_uploaded_files:
+                                                    return gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                                                 return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
                                             
                             with gr.Column(variant="panel"):
@@ -2183,11 +2189,13 @@ class App(Separator):
                             variant="secondary", visible=False, **base_c_params["base"]
                         )
                         @manual_ensemble_reuse_btn.click(
-                            inputs=[manual_ensemble_output_audio],
+                            inputs=[manual_ensemble_output_audio, manual_ensemble_input_files, manual_ensemble_add_uploaded_files],
                             outputs=manual_ensemble_input_files,
                         )
-                        def reuse_fn(stem_audio: str) -> gr.update:
+                        def reuse_fn(stem_audio: str, input_files: list, add_uploaded_files: bool) -> gr.update:
                             uploaded_files = self.input_files.upload([stem_audio], copy=True)
+                            if add_uploaded_files:
+                                return gr.update(choices=self.input_files.get_input_list(), value=[*uploaded_files, *input_files])
                             return gr.update(choices=self.input_files.get_input_list(), value=uploaded_files)
 
 
