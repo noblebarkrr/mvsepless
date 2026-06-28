@@ -591,13 +591,13 @@ class AutoEnsembleApp(UserDirectory, Separator):
                     print(_i18n("ensemble_flow_loaded")+": "+name)
                     gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
                     if warns_str:
-                        gr.Warning(message="<b>"+warns_str.replace("\n", "<br>")+"</b>", title="")
+                        gr.Warning(message="<b>"+warns_str.replace("\n", "<br> <br>")+"</b>", title="")
                         gr.Warning(title=_i18n("ensemble_run_error_with_incorrect_flow"), message="")
                     return state
                 except Exception as e:
                     print(_i18n("ensemble_flow_invalid")+": "+name)
                     print(e)
-                    gr.Error(title=_i18n("ensemble_flow_invalid")+": "+name, message="")
+                    gr.Warning(title=_i18n("ensemble_flow_invalid")+": "+name, message="")
                     return []
                 
             else:
@@ -718,7 +718,7 @@ class IterativeEnsembleApp(UserDirectory, Separator):
                     print(_i18n("ensemble_flow_loaded")+": "+name)
                     gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
                     if warns_str:
-                        gr.Warning(message="<b>"+warns_str.replace("\n", "<br>")+"</b>", title="")
+                        gr.Warning(message="<b>"+warns_str.replace("\n", "<br> <br>")+"</b>", title="")
                         gr.Warning(title=_i18n("ensemble_run_error_with_incorrect_flow"), message="")
                     return state
                 except Exception as e:
