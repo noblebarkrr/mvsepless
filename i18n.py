@@ -617,7 +617,20 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "off_audio_players_output": "Отключить аудиоплееры на выводе",
         "off_audio_players_output_info": "Отключает аудиоплееры на выводе, заменяя их на простые кнопки скачивания, что может ускорить работу интерфейса при большом количестве выходных файлов",
         "add_uploaded_files_to_current_list": "Добавить загруженные файлы в текущий список файлов",
-        "vr_aggr_and_post_process_not_applied_vr_6": "Агрессивность и постобработка не были применены, как так модель на VR 6 предсказывает два стема одновременно"
+        "vr_aggr_and_post_process_not_applied_vr_6": "Агрессивность и постобработка не были применены, как так модель на VR 6 предсказывает два стема одновременно",
+        "flow_empty": "Добавьте хотя бы одну модель в пресет",
+        "flow_validation_error": "Ошибка валидации потока: {error}",
+        "flow_not_list": "Поток должен быть списком или кортежем",
+        "flow_item_not_list": "Элемент #{index} не является списком (тип: {type})",
+        "flow_invalid_length": "Элемент #{index} имеет недопустимую длину: {length} (ожидается {expected})",
+        "flow_invalid_type": "Поле '{field}' имеет неверный тип (ожидается: {expected}, получено: {got})",
+        "flow_model_not_found": "Модель '{model}' не найдена. Доступные модели: {available}",
+        "flow_stem_not_found": "Стем '{stem}' не найден в модели '{model}'. Доступные стемы: {available}",
+        "flow_weight_empty": "Вес не может быть пустой строкой",
+        "flow_weight_invalid": "Некорректное значение веса: {value}",
+        "flow_validation_errors": "Найдено {count} ошибок валидации:",
+        "ensemble_flow_invalid": "Пресет ансамбля недействителен",
+        "ensemble_run_error_with_incorrect_flow": "Запуск ансамбля с этим пресетом вернёт ошибку"
     },
     "en": {
         "bytes": "B",
@@ -1217,7 +1230,20 @@ Example: `NAME_ITER` → `Song_iter_3`
         "off_audio_players_output": "Off audio players in output",
         "off_audio_players_output_info": "Disables audio players in the output, replacing them with simple download buttons; this can speed up the interface when dealing with a large count of output files.",
         "add_uploaded_files_to_current_list": "Add uploaded files to the current list of files",
-        "vr_aggr_and_post_process_not_applied_vr_6": "Aggressiveness and post-processing were not applied because the VR 6 model predicts two stems simultaneously."
+        "vr_aggr_and_post_process_not_applied_vr_6": "Aggressiveness and post-processing were not applied because the VR 6 model predicts two stems simultaneously.",
+        "flow_empty": "Add at least one model to the preset",
+        "flow_validation_error": "Flow validation error: {error}",
+        "flow_not_list": "Flow must be a list or tuple",
+        "flow_item_not_list": "Item #{index} is not a list (type: {type})",
+        "flow_invalid_length": "Item #{index} has invalid length: {length} (expected: {expected})",
+        "flow_invalid_type": "Field '{field}' has invalid type (expected: {expected}, got: {got})",
+        "flow_model_not_found": "Model '{model}' not found. Available models: {available}",
+        "flow_stem_not_found": "Stem '{stem}' not found in model '{model}'. Available stems: {available}",
+        "flow_weight_empty": "Weight cannot be an empty string",
+        "flow_weight_invalid": "Invalid weight value: {value}",
+        "flow_validation_errors": "Found {count} validation errors:",
+        "ensemble_flow_invalid": "Ensemble preset is invalid",
+        "ensemble_run_error_with_incorrect_flow": "Running ensemble with this preset will return an error"
     }
 }
 

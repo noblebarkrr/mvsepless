@@ -508,8 +508,6 @@ class HistoryVbach(History):
     def get_from_history(self, key: str):
         return deepcopy(self.history_dict.get(key, []))
 
-# Добавьте после класса HistoryVbach:
-
 class HistoryIterativeEnsemble(History):
     def __init__(self):
         super().__init__("iterative_ensembless")
@@ -565,7 +563,7 @@ class HistoryIterativeEnsemble(History):
             return state[0], state[1]
         return None, []
 
-class AutoEnsembleApp(UserDirectory):
+class AutoEnsembleApp(UserDirectory, Separator):
     def __init__(self):
         super().__init__()
         self.ensemble_base = self.user_directory / base_names_app_dirs[3]
@@ -585,10 +583,21 @@ class AutoEnsembleApp(UserDirectory):
         if name:
             path = self.ensemble_base / f"{Namer.sanitize(name)}.json"
             if path.exists():
-                state = json.loads(path.read_text("utf-8"))
-                print(_i18n("ensemble_flow_loaded")+": "+name)
-                gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
-                return state
+                try:
+                    state = json.loads(path.read_text("utf-8"))
+                    state, warns_str = self.validate_flow(state, non_exists_warn=True)
+                    print(warns_str)
+                    print(_i18n("ensemble_flow_loaded")+": "+name)
+                    gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
+                    if warns_str:
+                        gr.Warning(message="<b>"+warns_str.replace("\n", "<br>")+"</b>", title="")
+                        gr.Warning(title=_i18n("ensemble_run_error_with_incorrect_flow"), message="")
+                    return state
+                except Exception as e:
+                    print(_i18n("ensemble_flow_invalid")+": "+name)
+                    print(e)
+                    gr.Error(title=_i18n("ensemble_flow_invalid")+": "+name, message="")
+                    return []
                 
             else:
                 print(_i18n("ensemble_flow_not_exist")+": "+name)
@@ -680,7 +689,7 @@ class AutoEnsembleApp(UserDirectory):
             model_df.extend(model)
         return models_df
 
-class IterativeEnsembleApp(UserDirectory):
+class IterativeEnsembleApp(UserDirectory, Separator):
     def __init__(self):
         super().__init__()
         self.ensemble_base = self.user_directory / base_names_app_dirs[8]  # iterative_ensemble_flows
@@ -700,10 +709,21 @@ class IterativeEnsembleApp(UserDirectory):
         if name:
             path = self.ensemble_base / f"{Namer.sanitize(name)}.json"
             if path.exists():
-                state = json.loads(path.read_text("utf-8"))
-                print(_i18n("ensemble_flow_loaded")+": "+name)
-                gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
-                return state
+                try:
+                    state = json.loads(path.read_text("utf-8"))
+                    state, warns_str = self.validate_flow(state, non_exists_warn=True, iterative=True)
+                    print(warns_str)
+                    print(_i18n("ensemble_flow_loaded")+": "+name)
+                    gr.Info(title=_i18n("ensemble_flow_loaded")+": "+name, message="")
+                    if warns_str:
+                        gr.Warning(message="<b>"+warns_str.replace("\n", "<br>")+"</b>", title="")
+                        gr.Warning(title=_i18n("ensemble_run_error_with_incorrect_flow"), message="")
+                    return state
+                except Exception as e:
+                    print(_i18n("ensemble_flow_invalid")+": "+name)
+                    print(e)
+                    gr.Warning(title=_i18n("ensemble_flow_invalid")+": "+name, message="")
+                    return []
             else:
                 print(_i18n("ensemble_flow_not_exist")+": "+name)
                 gr.Warning(title=_i18n("ensemble_flow_not_exist")+": "+name, message="")

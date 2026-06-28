@@ -54,6 +54,7 @@ def generate_metadata_from_stem(input_file_name: str, metadata: dict, stem: str,
 
     return new_metadata
 
+class EnsembleFlowValidateError(Exception): pass
 class PathNotExist(Exception): pass
 class PathsNotExist(Exception): pass
 class PathNotSpecified(Exception): pass
@@ -1751,6 +1752,162 @@ class Separator(ModelManager):
         
         console.print(table)
 
+    def validate_flow(self, flow: list | tuple, non_exists_warn: bool = False, iterative: bool = False):
+        """
+        Валидация потока моделей для ансамбля
+        
+        Args:
+            flow: Список кортежей/списков вида [model_name, primary_stem, invert] или 
+                [model_name, primary_stem, invert, weight]
+        
+        Returns:
+            list: Валидированный поток моделей
+        
+        Raises:
+            EnsembleFlowValidateError: Если есть ошибки валидации
+        """
+        models = self.get_all_models()
+        errors = []
+        warns = []
+        validated_flow = []
+        
+        if not flow:
+            raise EnsembleFlowValidateError(_i18n("flow_empty"))
+        
+        if not isinstance(flow, (list, tuple)):
+            raise EnsembleFlowValidateError(
+                _i18n("flow_validation_error", error=_i18n("flow_not_list"))
+            )
+        
+        for i, model_flow in enumerate(flow):
+            valid = True
+            error_parts = []
+            
+            if not isinstance(model_flow, (list, tuple)):
+                errors.append({
+                    'index': i,
+                    'error': _i18n("flow_item_not_list", type=type(model_flow).__name__)
+                })
+                continue
+            
+            if len(model_flow) not in (3, 4):
+                errors.append({
+                    'index': i,
+                    'error': _i18n("flow_invalid_length", length=len(model_flow), expected="3 or 4")
+                })
+                continue
+            
+            if len(model_flow) == 3:
+                model_name, primary_stem, invert = model_flow
+                weight = 1.0
+                has_weight = False
+            else:
+                model_name, primary_stem, invert, weight = model_flow
+                has_weight = True
+            
+            if not isinstance(model_name, str):
+                error_parts.append(_i18n("flow_invalid_type", field="model_name", 
+                                        expected="str", got=type(model_name).__name__))
+                valid = False
+                model_exists = False
+            else:
+                model_exists = model_name in models
+                if not model_exists:
+                    if non_exists_warn:
+                        warns.append(_i18n("flow_model_not_found", 
+                                            model=model_name, 
+                                            available="self.get_all_models()"))
+                    else:
+                        error_parts.append(_i18n("flow_model_not_found", 
+                                                model=model_name, 
+                                                available="self.get_all_models()"))
+                        valid = False
+            
+            # Валидация primary_stem
+            if not isinstance(primary_stem, str):
+                error_parts.append(_i18n("flow_invalid_type", field="primary_stem",
+                                        expected="str", got=type(primary_stem).__name__))
+                valid = False
+            elif model_exists:
+
+                available_stems = self.get_stems(model_name)
+                if primary_stem not in available_stems:
+                    if non_exists_warn:
+                        warns.append(_i18n("flow_stem_not_found",
+                                            stem=primary_stem,
+                                            model=model_name,
+                                            available=', '.join(available_stems)))
+                    else:
+                        error_parts.append(_i18n("flow_stem_not_found",
+                                                stem=primary_stem,
+                                                model=model_name,
+                                                available=', '.join(available_stems)))
+                    valid = False
+            
+            if not isinstance(invert, bool):
+                error_parts.append(_i18n("flow_invalid_type", field="invert",
+                                        expected="bool", got=type(invert).__name__))
+                valid = False
+            
+            if has_weight:
+                try:
+                    if isinstance(weight, str):
+                        try:
+                            weight = float(weight)
+                        except ValueError:
+                            error_parts.append(_i18n("flow_weight_empty"))
+                            valid = False
+                            weight = 1.0
+                    elif not isinstance(weight, (int, float)):
+                        error_parts.append(_i18n("flow_invalid_type", field="weight",
+                                                expected="number", got=type(weight).__name__))
+                        valid = False
+                        weight = 1.0
+                    else:
+                        weight = float(weight)
+                except (ValueError, TypeError):
+                    error_parts.append(_i18n("flow_weight_invalid", value=weight))
+                    valid = False
+                    weight = 1.0
+            
+            if valid:
+                if iterative:
+                    if has_weight:
+                        validated_flow.append([model_name, primary_stem, invert])
+                    else:
+                        validated_flow.append([model_name, primary_stem, invert])
+                else:
+                    if has_weight:
+                        validated_flow.append([model_name, primary_stem, invert, weight])
+                    else:
+                        validated_flow.append([model_name, primary_stem, invert, 1.0])
+            else:
+                errors.append({
+                    'index': i,
+                    'error': '; '.join(error_parts),
+                    'raw': model_flow
+                })
+        
+        for error in errors:
+            if 'raw' in error:
+                print(f"{error['raw']} <-- {error['error']}")
+            else:
+                print(f"[{error['index']}] <-- {error['error']}")
+        
+        if errors:
+            error_messages = [
+                f"#{e['index']}: {e['error']}" 
+                for e in errors
+            ]
+            raise EnsembleFlowValidateError(
+                _i18n("flow_validation_errors", count=len(errors)) + "\n" + 
+                "\n".join(error_messages)
+            )
+        
+        warns_str = "\n".join(warns) if warns else ""
+
+        return validated_flow, warns_str
+
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def auto_ensemble_base(
             self, mssi: MSSI,
@@ -1798,6 +1955,7 @@ class Separator(ModelManager):
             gr.Info(title=_i18n("flow_empty"), message="")
             return None, None, []
         
+        flow, warns = self.validate_flow(flow)
         self.print_flow(flow)
 
         output_dir = Path(output_dir)
@@ -1927,6 +2085,7 @@ class Separator(ModelManager):
             gr.Info(title=_i18n("flow_empty"), message="")
             return None, []
 
+        flow, warns = self.validate_flow(flow, iterative=True)
         self.print_flow_iter(flow)
 
         input_mix, orig_sr = read(input_file, sr=44100)
