@@ -565,8 +565,8 @@ class HistoryIterativeEnsemble(History):
 
 class AutoEnsembleApp(UserDirectory, Separator):
     def __init__(self):
-        UserDirectory.__init__()
-        Separator.__init__()
+        UserDirectory.__init__(self)
+        Separator.__init__(self)
         self.ensemble_base = self.user_directory / base_names_app_dirs[3]
         self.ensemble_base.mkdir(parents=True, exist_ok=True)
         
@@ -692,8 +692,8 @@ class AutoEnsembleApp(UserDirectory, Separator):
 
 class IterativeEnsembleApp(UserDirectory, Separator):
     def __init__(self):
-        UserDirectory.__init__()
-        Separator.__init__()
+        UserDirectory.__init__(self)
+        Separator.__init__(self)
         self.ensemble_base = self.user_directory / base_names_app_dirs[8]  # iterative_ensemble_flows
         self.ensemble_base.mkdir(parents=True, exist_ok=True)
         
