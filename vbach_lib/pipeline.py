@@ -4,13 +4,17 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from scipy import signal
-import faiss
 import librosa
 import numpy as np
 from typing import Tuple, Any, Dict, List, Optional, Union, Callable
 from tqdm import tqdm
 from pathlib import Path
 import sys
+
+def lazy_faiss_import():
+    import faiss as module
+    return module
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(SCRIPT_DIR.parent))
 from i18n import _i18n
@@ -180,7 +184,7 @@ class VC:
         audio0: np.ndarray,
         pitch: Optional[torch.Tensor],
         pitchf: Optional[torch.Tensor],
-        index: Optional[faiss.Index],
+        index: Any,
         big_npy: Optional[np.ndarray],
         index_rate: float,
         version: str,
@@ -279,7 +283,7 @@ class VC:
         audio0: np.ndarray,
         pitch: Optional[torch.Tensor],
         pitchf: Optional[torch.Tensor],
-        index: Optional[faiss.Index],
+        index: Any,
         big_npy: Optional[np.ndarray],
         index_rate: float,
         version: str,
@@ -399,6 +403,7 @@ class VC:
             and os.path.exists(file_index)
             and index_rate != 0
         ):
+            faiss = lazy_faiss_import()
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
@@ -598,7 +603,7 @@ class VC:
     def _retrieve_speaker_embeddings(
         self, 
         feats: torch.Tensor, 
-        index: faiss.Index, 
+        index: Any, 
         big_npy: np.ndarray, 
         index_rate: float
     ) -> torch.Tensor:

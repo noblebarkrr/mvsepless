@@ -7,15 +7,29 @@ if __package__:
     from .hubert_manager import get_hubert, download_hubert, huberts_fairseq
     from .pipeline import VC
     from .config import Config
-    from .fairseq import load_model
-    from .algorithm.synthesizers import Synthesizer
 else:
     from vbach_lib.hubert_manager import get_hubert, download_hubert, huberts_fairseq
     from vbach_lib.pipeline import VC
     from vbach_lib.config import Config
-    from vbach_lib.fairseq import load_model
-    from vbach_lib.algorithm.synthesizers import Synthesizer
-from transformers import HubertModel
+
+def lazy_synthesizer_import():
+    if __package__:
+        from .algorithm.synthesizers import Synthesizer as module
+    else:
+        from vbach_lib.algorithm.synthesizers import Synthesizer as module
+    return module
+
+def lazy_hubert_transformers_import():
+    from transformers import HubertModel as module
+    return module
+
+def lazy_hubert_fairseq_import():
+    if __package__:
+        from .fairseq import load_model as module
+    else:
+        from vbach_lib.fairseq import load_model as module
+    return module
+
 from pathlib import Path
 import traceback
 from audio import read, write, split_channels, split_mid_side, multi_channel_array_from_arrays, output_formats, stereo_to_mono, reshape, mix_arrays, get_audio_files_from_list, check, get_metadata, check_taglib_not_installed
@@ -32,13 +46,6 @@ from copy import deepcopy
 class VbachModelNotFound(Exception): pass
 
 stereo_modes = ("mono", "left/right", "sim/dif")
-
-class HubertModelWithFinalProj(HubertModel):
-    """Hubert модель с финальной проекцией"""
-    
-    def __init__(self, config):
-        super().__init__(config)
-        self.final_proj = nn.Linear(config.hidden_size, config.classifier_proj_size)
 
 def load_audio(path: str | Path, sr: int, stereo_mode: str = stereo_modes[0]):
     mixtures = []
@@ -81,10 +88,18 @@ class VbachConverter:
 
     def load_hubert(self, name: str, use_transformers: bool):
         if use_transformers:
+            HubertModel = lazy_hubert_transformers_import()
+            class HubertModelWithFinalProj(HubertModel):
+                """Hubert модель с финальной проекцией"""
+                
+                def __init__(self, config):
+                    super().__init__(config)
+                    self.final_proj = nn.Linear(config.hidden_size, config.classifier_proj_size)
             model_path = get_hubert(name, True)
             self.hubert_model = HubertModelWithFinalProj.from_pretrained(model_path)
             self.hubert_model = self.hubert_model.to(self.config.device)
         else:
+            load_model = lazy_hubert_fairseq_import()
             model_path = get_hubert(name, False)
             self.hubert_model = load_model(model_path)
             self.hubert_model = self.hubert_model.to(self.config.device)
@@ -119,6 +134,7 @@ class VbachConverter:
             torch.cuda.empty_cache()
 
     def get_vc(self, model_path: str | Path, use_transformers: bool):
+        Synthesizer = lazy_synthesizer_import()
         self.cpt = torch.load(model_path, map_location="cpu", weights_only=True)
         self.required_keys = ["config", "weight"]
         self.missing_keys = [key for key in self.required_keys if key not in self.cpt]
