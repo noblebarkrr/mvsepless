@@ -23,7 +23,7 @@ transformers
 diffq>=0.2.1
 julius>=0.2.3
 openunmix
-asteroid
+asteroid>=0.6.0
 prodigyopt
 rotary_embedding_torch
 gradio<6.0
