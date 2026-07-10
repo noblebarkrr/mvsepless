@@ -3216,7 +3216,7 @@ if __name__ == "__main__":
     args = parse_app_args()
     app = App()
     if not args.full:
-        app.update_info()
+        app.update_info(False)
         app.load_info()
     app_ui = app.UI(theme, not args.full)
     app_ui.queue(default_concurrency_limit=1)
