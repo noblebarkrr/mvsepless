@@ -4,11 +4,19 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/noblebarkrr/mvsepless/blob/dzeta/MVSepLess_Dzeta_Colab.ipynb)
 
-[![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_zero_gpu) (Приостановлено)
+[![Open In Huggingface](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/noblebarkrr/mvsepless_zero_gpu)
 
 </div>
 
 <h2> */непростая обёртка*/ для <s>audio-separator</s> и Music-Source-Separation-Training </h2>
+
+## Информация о моделях
+
+Всю актуальную информацию о доступных моделях можно увидеть на отдельной странице:
+
+https://mvsepless-resources.github.io/model_info_page/
+
+(используется информация из репозитория [noblebarkrr/mvsepless_resources](https://huggingface.co/noblebarkrr/mvsepless_resources) на Hugging Face)
 
 ## Фишки
 
@@ -123,7 +131,7 @@ apt install -y wget curl git gcc libx11-dev ffmpeg build-essential cmake nano py
 
 # Клонирование репозитория
 
-git clone https://github.com/noblebarkrr/mvsepless -b dzeta
+git clone https://github.com/noblebarkrr/mvsepless -b dzeta --depth 1
 cd mvsepless
 
 # Если пакеты не устанваливаются без виртуального окружения
