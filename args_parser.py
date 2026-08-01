@@ -444,6 +444,81 @@ def parse_separator_args(add_params_args: dict = {}):
         help=_i18n("arg_only_installed_help")
     )
 
+    # phase_fixer
+    phase_fixer_parser = subparsers.add_parser(
+        "phase_fixer",
+        help=_i18n("arg_phase_fixer_help"),
+        description=_i18n("arg_phase_fixer_description"),
+        epilog=_i18n("arg_phase_fixer_epilog")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-i1", "--i1", "-target", "--target", "--target_file", "--target-file",
+        type=str, required=True, dest="target",
+        help=_i18n("arg_phase_fixer_target_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-i2", "--i2", "-source", "--source", "--source_file", "--source-file",
+        type=str, required=True, dest="source",
+        help=_i18n("arg_phase_fixer_source_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-o", "-out", "-output", "--output", "--output_dir", "--output-dir",
+        type=str, default=".", dest="output_dir",
+        help=_i18n("arg_output_dir_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-of", "-output_fmt", "--output_format", "--output-format",
+        type=str, choices=output_formats, default=output_formats[0], dest="output_format",
+        help=_i18n("arg_output_format_help", formats=", ".join(output_formats), default=output_formats[0])
+    )
+
+    phase_fixer_parser.add_argument(
+        "-tm", "-tmplt", "--template",
+        type=str, default="NAME_TYPE", dest="template",
+        help=_i18n("arg_template_help", keys=_i18n("template_keys_phase_fixer"), example="NAME_TYPE")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-tmag", "--transfer_magnitude", "--transfer-magnitude",
+        action="store_true", dest="transfer_magnitude",
+        help=_i18n("arg_transfer_magnitude_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-nphase", "--transfer_phase", "--transfer-phase",
+        action="store_true", dest="transfer_phase",
+        help=_i18n("arg_transfer_phase_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-nblend", "--freq_blend", "--freq-blend",
+        action="store_true", dest="freq_blend",
+        help=_i18n("arg_freq_blend_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-lc", "--low_cutoff", "--low-cutoff",
+        type=int, default=500, dest="low_cutoff",
+        help=_i18n("arg_low_cutoff_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-hc", "--high_cutoff", "--high-cutoff",
+        type=int, default=5000, dest="high_cutoff",
+        help=_i18n("arg_high_cutoff_help")
+    )
+
+    phase_fixer_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision",
+        "-pref-flt", "-pref_flt", "--prefer_float", "--prefer-float",
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
+
     return parser.parse_args()
 
 

@@ -23,6 +23,7 @@ https://mvsepless-resources.github.io/model_info_page/
 - Извлечение инструментала (инверсии выбранных стемов)
 - Встроенный авто-ансамбль, с возможностью выбрать основной стем для добавления в ансамбль
 - Базовый итеративный ансамбль
+- Создание собственных гибких пресетов разделения
 - Дополнительные параметры разделения, как в UVR
 - История обработок (Только в Web-UI)
 - Пакетная обработка по умолчанию (кроме авто-ансамбля и вычитания)
@@ -61,6 +62,7 @@ https://mvsepless-resources.github.io/model_info_page/
   - [Авто-ансамбль](#авто-ансамбль-использование)
   - [Ручной ансамбль](#ручной-ансамбль-использование)
   - [Вычитание](#вычитание)
+  - [Коррекция фазы](#коррекция-фазы-использование)
 - [Параметры методов класса Separator](#параметры-методов)
   - [Информация о моделях](#информация-о-моделях-метод)
   - [Скачать модель](#скачать-модель-метод)
@@ -69,6 +71,7 @@ https://mvsepless-resources.github.io/model_info_page/
   - [Авто-ансамбль](#авто-ансамбль-метод)
   - [Ручной ансамбль](#ручной-ансамбль-метод)
   - [Вычитание](#вычитание-метод)
+  - [Коррекция фазы](#коррекция-фазы-метод)
 - [Все параметры командной строки](#все-параметры-командной-строки)
   - [Информация о моделях](#информация-о-моделях-cli)
   - [Разделение](#разделение-cli)
@@ -77,6 +80,7 @@ https://mvsepless-resources.github.io/model_info_page/
   - [Авто-ансамбль](#авто-ансамбль-cli)
   - [Ручной ансамбль](#ручной-ансамбль-cli)
   - [Вычитание](#вычитание-cli)
+  - [Коррекция фазы](#коррекция-фазы-cli)
   - [Web-UI](#web-ui-cli)
 
 </details>
@@ -224,6 +228,12 @@ pip install -r requirements_old_torch_py310.txt
 - `TYPE` — тип инверсии (например: waveform, spectrogram)
 
 Пример: `NAME_TYPE` → `Song_waveform`
+
+**Для коррекции фазы (`phase_fixer`):** <span id="шаблон-коррекция-фазы"></span>
+`NAME` — имя целевого файла (без расширения)
+`TYPE` — тип операции (phase_fix)
+
+Пример: `NAME_TYPE` → `Song_phase_fix`
 
 ## Типы ансамбля <span id="типы-ансамбля-инфо"></span>
 
@@ -588,7 +598,7 @@ from inference import Separator
 
 separator = Separator()
 
-result = separator.manual_ensemble(
+result = separator.subtract(
   "audio1.mp3",                  # Оригинал
   "audio2.mp3",                  # Стем
   "output",                      # Директория вывода
@@ -596,6 +606,33 @@ result = separator.manual_ensemble(
   [1, 1],                        # Веса
   False,                         # Использовать ли спектрограмму при вычитании?
   "avg_fft",                     # Тип ансамбля
+)
+```
+
+### Коррекция фазы <span id="коррекция-фазы-использование"></span>
+
+#### Через командную строку
+```sh
+python inference.py phase_fixer -i1 "target.wav" -i2 "source.wav" -o "output" -of wav -tm "NAME_TYPE" --transfer_phase --freq_blend --low_cutoff 500 --high_cutoff 5000
+```
+
+#### Напрямую
+
+```python
+from inference import Separator
+separator = Separator()
+result = separator.phase_fixer(
+  "target.wav",                  # Целевое аудио (амплитуда сохраняется по умолчанию)
+  "source.wav",                  # Опорное аудио (донор фазы)
+  "output",                      # Директория вывода
+  "wav",                         # Формат вывода
+  "NAME_TYPE",                   # Шаблон имени файла
+  transfer_magnitude=False,      # Перенос амплитуды из source
+  transfer_phase=True,           # Перенос фазы из source
+  freq_blend_phases=True,        # Частотное смешение фаз
+  low_cutoff=500,                # Нижняя граница смешения (Гц)
+  high_cutoff=5000,              # Верхняя граница смешения (Гц)
+  prefer_float=False
 )
 ```
 
@@ -719,6 +756,24 @@ result = separator.manual_ensemble(
 
 **Возвращает**: `str` — путь к результату вычитания
 
+### Коррекция фазы (`Separator().phase_fixer()`) <span id="коррекция-фазы-метод"></span>
+
+| Параметр | Тип | Описание |
+| -------- | --- | -------- |
+| `target` | `str \| Path` | Путь к целевому аудиофайлу (амплитуда сохраняется по умолчанию) |
+| `source` | `str \| Path` | Путь к исходному аудиофайлу (донор фазы и опционально амплитуды) |
+| `output_dir` | `str \| Path` | Директория для сохранения результата |
+| `output_format` | `str` | Формат аудио |
+| `template` | `str` | Шаблон имени (ключи: `NAME`, `TYPE`) ([Подробнее](#шаблон-коррекция-фазы)) |
+| `transfer_magnitude` | `bool` | Переносить амплитуду из source (по умолчанию: False) |
+| `transfer_phase` | `bool` | Переносить фазу из source (по умолчанию: True) |
+| `freq_blend_phases` | `bool` | Плавное частотное смешение фаз между границами (по умолчанию: True) |
+| `low_cutoff` | `int` | Нижняя граница частотного смешения в Гц (по умолчанию: 500) |
+| `high_cutoff` | `int` | Верхняя граница частотного смешения в Гц (по умолчанию: 5000) |
+| `prefer_float` | `bool` | Предпочитать высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+
+**Возвращает**: `str` — путь к результату коррекции фазы
+
 ## Все параметры командной строки <span id="все-параметры-cli"></span>
 
 ### Информация о моделях <span id="информация-о-моделях-cli"></span>
@@ -834,7 +889,23 @@ result = separator.manual_ensemble(
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 
-##№ Web-UI <span id="web-ui-cli"></span>
+### Коррекция фазы <span id="коррекция-фазы-cli"></span>
+первичные аргументы - `inference.py phase_fixer`
+| Аргументы | Параметр | Тип | Описание |
+| --------- | -------- | --- | -------- |
+| `-i1`, `--i1`, `-target`, `--target`, `--target_file`, `--target-file` | `target` | `str \| Path` | Путь к целевому аудиофайлу. По умолчанию его амплитуда сохраняется, а фаза берётся из source |
+| `-i2`, `--i2`, `-source`, `--source`, `--source_file`, `--source-file` | `source` | `str \| Path` | Путь к исходному аудиофайлу. Используется как донор фазы, а при --transfer_magnitude — и амплитуды |
+| `-o`, `-out`, `-output`, `--output`, `--output_dir`, `--output-dir` | `output_dir` | `str \| Path` | Директория для сохранения результатов (по умолчанию: текущая папка) |
+| `-of`, `-output_fmt`, `--output_format`, `--output-format` | `output_format` | `str` | Формат выходного аудио. Доступны: mp3, wav, flac и др. (по умолчанию: mp3) |
+| `-tm`, `-tmplt`, `--template` | `template` | `str` | Шаблон имени выходного файла. Доступные ключи: NAME, TYPE. Пример: NAME_TYPE ([Подробнее](#шаблон-коррекция-фазы)) |
+| `-tmag`, `--transfer_magnitude`, `--transfer-magnitude` | `transfer_magnitude` | `bool` | Переносить амплитуду из исходного файла (по умолчанию выключено) |
+| `-nphase`, `--transfer_phase`, `--transfer-phase` | `transfer_phase` | `bool` | Включить перенос фазы из исходного файла |
+| `-nblend`, `--freq_blend`, `--freq-blend` | `freq_blend` | `bool` | Включить частотное смешение фаз |
+| `-lc`, `--low_cutoff`, `--low-cutoff` | `low_cutoff` | `int` | Нижняя граница частотного смешения фаз в Гц (по умолчанию: 500) |
+| `-hc`, `--high_cutoff`, `--high-cutoff` | `high_cutoff` | `int` | Верхняя граница частотного смешения фаз в Гц (по умолчанию: 5000) |
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer-float` | `prefer_float` | `bool` | Предпочитать высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114))|
+
+### Web-UI <span id="web-ui-cli"></span>
 
 первичные аргументы - `app.py`
 

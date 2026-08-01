@@ -10,7 +10,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 
-from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear, tz, print_current_device
+from collections import deque
+from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
 from datetime import datetime
 import torch
 import rich
@@ -18,11 +19,23 @@ nn = torch.nn
 import json
 from tqdm import tqdm
 import numpy as np
-from typing import Literal, Optional, List, Tuple, Any, Dict
+from typing import Literal, Optional, List, Tuple, Any, Dict, Set
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
 import gradio as gr
-from audio import read, write, output_formats, subtractor, check, easy_resampler, ensemble_types, ensemble, multiread, get_audio_files_from_list, stereo_to_mono, gain, get_metadata, check_taglib_not_installed
+from audio import (
+    read, write, 
+    output_formats, subtractor, 
+    check, easy_resampler, 
+    ensemble_types, ensemble, multiread, get_audio_files_from_list, 
+    stereo_to_mono, gain, get_metadata, 
+    check_taglib_not_installed, mono_to_stereo, 
+    split_channels, split_mid_side, multi_channel_array_from_arrays, 
+    mid_side_to_stereo, mix_arrays, 
+    stereo_split_types, fit_arrays, normalizer,
+    phase_shift, phase_corrector, trim, 
+    lowpass, highpass, lowpass_fft, highpass_fft
+)
 from args_parser import parse_separator_args, tobool
 from namer import Namer
 from i18n import _i18n
@@ -64,10 +77,12 @@ class FilesIsNotAudio(Exception): pass
 class MixNotFound(Exception): pass
 class MixIsEmpty(Exception): pass
 class UnknownModelType(Exception): pass
+class UnknownModelName(Exception): pass
 class DemixError(Exception): pass
 class ConfigNotLoaded(Exception): pass
 class ModelNotLoaded(Exception): pass
 class ModelStateDictError(Exception): pass
+class UnknownStem(Exception): pass
 
 model_types = (
     "mel_band_roformer",
@@ -254,6 +269,20 @@ for t_tab, t_components in add_params.items():
         add_params_list.append(t_component)
         add_params_args[t_component] = {"default": t_settings["default"], "type": t_settings["type"]}
         default_add_params[t_component] = t_settings["default"]
+
+preset_node_types = (
+    "input_file",
+    "separate",
+    "ensemble",
+    "mix",
+    "gain",
+    "split_stereo",
+    "join_stereo",
+    "stereo_to_mono"
+    "subtract",
+    "output_stem",
+)
+
 
 def get_add_params(args):
     """Безопасно получает add_params из args"""
@@ -586,7 +615,7 @@ class MSSI: # Music Source Separation Inference
 
         extra_clear_torch_cache()
         nuclear_clear_model()
-        emergency_ram_clear()
+        
         self.clear_gpu_cache()
 
     def clear_gpu_cache(self):
@@ -715,6 +744,11 @@ class MSSI: # Music Source Separation Inference
             print(_i18n("array_shape")+": "+str(self.input_mix.shape))
         else:
             raise FileIsNotAudio(_i18n("file_is_not_audio", path=path))
+
+    def get_model_sample_rate(self):
+        if self.config is None:
+            raise ConfigNotLoaded(_i18n("config_is_not_loaded"))
+        return self.sample_rate if self.sample_rate else None
 
     def load_array(self, array: np.ndarray, orig_sr: int):
         self.input_file_name = "temp_array"
@@ -1421,6 +1455,9 @@ class MSSI: # Music Source Separation Inference
 
     def get_outputs(self):
         return self.output_files_list
+
+    def get_outputs_arrays(self):
+        return self.output_arrays
     
     def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True, invert_plus: bool = False, prefer_float: bool = False):
         template = Namer.sanitize(template)
@@ -1437,6 +1474,16 @@ class MSSI: # Music Source Separation Inference
         self.write(template, "name_stems_list_append_self", prefer_float)
         self.clear_mix()
 
+    def _process_array(self, array: np.ndarray, sr: int, add_text_progress: str = ""):
+        self.clear_mix()
+        self.load_array(array, sr)
+        try:
+            self.demix(add_text_progress)
+        except Exception as e:
+            self.clear_mix()
+            raise DemixError(_i18n("demix_error", error=e)) from e
+        return self.get_outputs_arrays()
+
     def _process_array_ensemble(self, i: int, total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
         self.clear_mix()
         self.load_array(array, sr)
@@ -1450,16 +1497,6 @@ class MSSI: # Music Source Separation Inference
         else:
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
-
-    def _process_array(self, i: int, total: int, array: np.ndarray, sr: int):
-        self.clear_mix()
-        self.load_array(array, sr)
-        try:
-            self.demix(f" | {i}/{total} {_i18n('arrays')} | {self.ckpt_path.stem}")
-        except Exception as e:
-            self.clear_mix()
-            raise DemixError(_i18n("demix_error", error=e)) from e
-        return self.output_arrays, self.sample_rate
 
     def _process_array_iter_ensemble(self, i: int, total: int, iter_index: int, iter_total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
         self.clear_mix()
@@ -1506,32 +1543,51 @@ class ModelManager:
         self.load_info()
         self.cache_dir = Path(BASE_DIR) / "separation_cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        # Убираем lambda-функции, заменяем на обычные методы
         
     def get_all_models(self):
         return [mn for mn in self.info]
     
-    def get_stems(self, model_name):
+    def get_stems(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            print(_i18n("unknown_model_name", model=model_name))
         return [stem for stem in self.info.get(model_name, {}).get("stems", [])]
     
-    def get_target_instrument(self, model_name):
+    def get_target_instrument(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            print(_i18n("unknown_model_name", model=model_name))
         return self.info.get(model_name, {}).get("target_instrument", None)
     
-    def get_model_type(self, model_name):
+    def get_model_type(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            print(_i18n("unknown_model_name", model=model_name))
         return self.info.get(model_name, {}).get("model_type", "")
     
-    def get_links(self, model_name):
+    def get_links(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            raise UnknownModelName(_i18n("unknown_model_name_error", model=model_name))
         return (self.info.get(model_name, {}).get("checkpoint_url", None), 
                 self.info.get(model_name, {}).get("config_url", None))
-    
-    def generate_local_paths(self, model_name):
+
+    def get_category(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            print(_i18n("unknown_model_name", model=model_name))
+        return self.info.get(model_name, {}).get("category", "")
+
+    def get_full_name(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            raise UnknownModelName(_i18n("unknown_model_name_error", model=model_name))
+        return self.info.get(model_name, {}).get("full_name", "")
+
+    def generate_local_paths(self, model_name: str):
+        if not isinstance(model_name, str) or model_name not in self.info:
+            raise UnknownModelName(_i18n("unknown_model_name_error", model=model_name))
         return (self.cache_dir / f"{model_name}.ckpt", 
                 self.cache_dir / f"{model_name}_config.yaml")
     
-    def check_installed(self, model_name):
+    def check_installed(self, model_name: str):
         return [path.exists() for path in self.generate_local_paths(model_name)]
     
-    def check_installed2(self, model_name):
+    def check_installed2(self, model_name: str):
         return all(self.check_installed(model_name))
 
     def load_info(self):
@@ -2101,8 +2157,8 @@ class Separator(ModelManager):
                 comment += orig_comment + "\n\n"
             comment += f"{_i18n('num_iters')}: {num_iters}\n\n"
             comment += f"{_i18n('ensemble_settings')}:\n\n"
-            for (mn, pr_stem, invert, weight) in flow:
-                comment += f"{mn} / {pr_stem} / {invert} / {weight}\n"
+            for (mn, pr_stem, invert) in flow:
+                comment += f"{mn} / {pr_stem} / {invert}\n"
         current_mix = input_mix.copy()
         print(_i18n("num_iters") + f": {num_iters}")
         
@@ -2265,7 +2321,838 @@ class Separator(ModelManager):
             new_metadata["TITLE"] = f"[{_i18n('invert')}] {audio1.stem}"
 
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), inverted, min_sr, 320, prefer_float, new_metadata)
+
+    def phase_fixer(
+        self,
+        target: str | Path,
+        source: str | Path,
+        output_dir: str | Path = Path("."),
+        output_format: str = output_formats[0],
+        template: str = "NAME_TYPE",
+        transfer_magnitude: bool = False,
+        transfer_phase: bool = True,
+        freq_blend_phases: bool = True,
+        low_cutoff: int = 500,
+        high_cutoff: int = 5000,
+        prefer_float: bool = False
+    ) -> str:
+        """
+        Коррекция фазы целевого аудио по исходному аудио.
+
+        Args:
+            target: Целевой аудиофайл. По умолчанию его амплитуда сохраняется.
+            source: Исходный аудиофайл. Из него берётся фаза.
+            output_dir: Папка для сохранения результата.
+            output_format: Формат выходного файла.
+            template: Шаблон имени выходного файла.
+            transfer_magnitude: Переносить ли амплитуду из source.
+            transfer_phase: Переносить ли фазу из source.
+            freq_blend_phases: Использовать частотное смешение фаз.
+            low_cutoff: Нижняя частота смешения фаз.
+            high_cutoff: Верхняя частота смешения фаз.
+            prefer_float: Использовать float-формат при записи.
+
+        Returns:
+            Путь к сохранённому файлу.
+        """
+        if not output_dir:
+            output_dir = ""
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        if not target or not source:
+            raise PathsNotSpecified(_i18n("paths_not_specified"))
+
+        target = Path(target)
+        source = Path(source)
+
+        if not target.exists() or not source.exists():
+            raise PathsNotExist(_i18n("paths_not_exist"))
+
+        if not check(target) or not check(source):
+            raise FilesIsNotAudio(_i18n("files_is_not_audio"))
+
+        low_cutoff = int(low_cutoff)
+        high_cutoff = int(high_cutoff)
+
+        if low_cutoff <= 0 or high_cutoff <= 0 or low_cutoff >= high_cutoff:
+            raise ValueError(_i18n("phase_fixer_cutoff_invalid"))
+
+        if not transfer_phase and not transfer_magnitude:
+            print(_i18n("phase_fixer_no_operation"))
+
+        template = Namer.sanitize(template)
+        template = Namer.dedup_template(template, keys=["NAME", "TYPE"])
+        template = Namer.short(template, length=40)
+
+        target_array, target_sr = read(target)
+        source_array, source_sr = read(source)
+
+        metadata = get_metadata(target)
+
+        fixed_array, result_sr = phase_corrector(
+            target=target_array,
+            source=source_array,
+            target_sr=target_sr,
+            source_sr=source_sr,
+            freq_blend_phases=freq_blend_phases,
+            transfer_magnitude=transfer_magnitude,
+            transfer_phase=transfer_phase,
+            low_cutoff=low_cutoff,
+            high_cutoff=high_cutoff
+        )
+
+        operation_type = "phase_fix"
+
+        custom_name = Namer.template(
+            template,
+            TYPE=operation_type,
+            NAME=Namer.short_input_name_template(
+                template,
+                TYPE=operation_type,
+                NAME=target.stem
+            )
+        )
+
+        if "COMMENT" in metadata:
+            orig_comment = metadata["COMMENT"]
+        else:
+            orig_comment = ""
+
+        comment = ""
+
+        if orig_comment:
+            comment += orig_comment + "\n\n"
+
+        comment += f"{_i18n('phase_fixer_settings')}:\n\n"
+        comment += f"{_i18n('preset_node_transfer_magnitude')}: {_i18n('yes') if transfer_magnitude else _i18n('no')}\n"
+        comment += f"{_i18n('preset_node_transfer_phase')}: {_i18n('yes') if transfer_phase else _i18n('no')}\n"
+        comment += f"{_i18n('preset_node_freq_blend_phases')}: {_i18n('yes') if freq_blend_phases else _i18n('no')}\n"
+        comment += f"{_i18n('preset_node_low_cutoff')}: {low_cutoff}\n"
+        comment += f"{_i18n('preset_node_high_cutoff')}: {high_cutoff}\n"
+
+        new_metadata = {}
+
+        if metadata:
+            new_metadata = deepcopy(metadata)
+
+            if "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[{_i18n('phase_fixer')}] {metadata['TITLE']}"
+            else:
+                new_metadata["TITLE"] = f"[{_i18n('phase_fixer')}] {target.stem}"
+
+            new_metadata["COMMENT"] = comment
+        else:
+            new_metadata["TITLE"] = f"[{_i18n('phase_fixer')}] {target.stem}"
+            new_metadata["COMMENT"] = comment
+
+        return write(
+            Namer.iter(output_dir / f"{custom_name}.{output_format}"),
+            fixed_array,
+            result_sr,
+            320,
+            prefer_float,
+            new_metadata
+        )
+
+class PresetExecutor:
+    """
+    Исполнитель пресетов (графов обработки аудио).
+    Строит цепочку выполнения на основе связей между нодами и выполняет их.
+    """
     
+    def __init__(self, input_file: str | Path, output_dir: str | Path = ".", template: str = "NAME_STEM", add_params: dict = {}):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.model_manager = ModelManager()
+        self.cache: Dict[str, Any] = {}  # Кэш результатов нод
+        self.node_outputs: Dict[str, List[Tuple[np.ndarray, int]]] = {}  # Выходы каждой ноды
+        self.template = template
+        if not input_file:
+            raise PathNotSpecified(_i18n("path_not_specified"))
+        self.input_path = Path(input_file)
+        if not self.input_path.exists():
+            raise PathNotExist(_i18n("path_not_exist"))
+        if not check(self.input_path):
+            raise FileIsNotAudio(_i18n("file_is_not_audio", path=self.input_path))
+        self.add_params = add_params
+        self.metadata = {}
+        self.writed_stems = []
+        
+        # Регистрация функций-обработчиков для каждого типа ноды
+        self.handlers = {
+            "input_file": self._handle_input_file,
+            "separate": self._handle_separate,
+            "ensemble": self._handle_ensemble,
+            "mix": self._handle_mix,
+            "gain": self._handle_gain,
+            "normalize": self._handle_normalize,
+            "trim": self._handle_trim,
+            "phase_shift": self._handle_phase_shift,
+            "phase_correct": self._handle_phase_correct,
+            "filter": self._handle_filter,
+            "split_stereo": self._handle_split_stereo,
+            "join_stereo": self._handle_join_stereo,
+            "stereo_to_mono": self._handle_stereo_to_mono,
+            "subtract": self._handle_subtract,
+            "invert": self._handle_invert,
+            "output_file": self._handle_output_file,
+        }
+        
+        self.mssi = MSSI()
+    
+    def execute_preset(
+        self, 
+        preset: Dict[str, Any], progress_callback: Any = None
+    ) -> List[str]:
+        """
+        Выполнить пресет (граф обработки).
+        
+        Args:
+            preset: Словарь с описанием графа (nodes, links)
+            progress_callback: Функция обратного вызова для прогресса
+            
+        Returns:
+            Список путей к сохранённым файлам
+        """
+        # Проверка структуры пресета
+        if "nodes" not in preset or "links" not in preset:
+            raise ValueError(_i18n("preset_invalid_structure"))
+        
+        sub_progress = None
+        nodes = preset["nodes"]
+        links = preset["links"]
+
+        # Находим входные ноды (тип input_file)
+        input_nodes = [nid for nid, node in nodes.items() if node["type"] == "input_file"]
+        
+        if not input_nodes:
+            raise ValueError(_i18n("no_input_node_found"))
+
+        if len(input_nodes) != 1:
+            raise ValueError(_i18n("input_nodes_only_one"))
+
+        dependency_graph = self._build_dependency_graph(nodes, links)
+        
+        execution_order = self._get_topological_order(nodes, links)
+        
+        node_results: Dict[str, List[Tuple[np.ndarray, int]]] = {}
+        
+        total_nodes = len(execution_order)
+        self.node_outputs = {}
+        
+        try:
+            for idx, node_id in enumerate(execution_order):
+                node = nodes[node_id]
+                if idx < total_nodes - 1:
+                    next_node = nodes[execution_order[idx+1]]
+                    next_node_type = next_node["type"]
+                else:
+                    next_node_type = "final"
+                node_type = node["type"]
+                params = node.get("params", {})
+                with tqdm(desc=_i18n(f"preset_node_{node_type}") + " -> " + _i18n(f"preset_node_{next_node_type}"), total=total_nodes, unit=_i18n("links")) as sub_progress:
+                    sub_progress.update(idx + 1)
+
+                    # Если это входная нода, используем соответствующий файл
+                    if node_type == "input_file":
+                        input_mix = self._handle_input_file([], [])
+                        node_results[node_id] = input_mix
+                        self.node_outputs[node_id] = input_mix
+
+                    if progress_callback:
+                        progress_callback({"nodeId": node_id, "status": "active"})
+
+                    # Получаем входные данные из зависимостей
+                    inputs = self._get_node_inputs(node_id, node_results, nodes, links)
+                    
+                    # Выполняем ноду
+                    handler = self.handlers.get(node_type)
+                    if handler is None:
+                        raise ValueError(_i18n("unknown_node_type", type=node_type))
+                    
+                    try:
+                        # Выполняем обработку
+                        result = handler(
+                            inputs, 
+                            params,
+                            node_id=node_id,
+                            node=node
+                        )
+                        
+                        # Сохраняем результат
+                        if result:
+                            node_results[node_id] = result
+                            self.node_outputs[node_id] = result
+
+                        if progress_callback:
+                            progress_callback({"nodeId": node_id, "status": "success"})
+
+                    except Exception as e:
+                        # Сообщаем об ошибке в конкретной ноде (красная)
+                        if progress_callback:
+                            progress_callback({"nodeId": node_id, "status": "error"})
+                        raise e
+                    
+                    self.mssi.clear_model()
+                        
+            return self.writed_stems
+            
+        except Exception as e:
+            # Очищаем кэш моделей при ошибке
+            self.mssi.clear_model()
+            raise e
+        finally:
+            # Очищаем кэш моделей
+            self.mssi.clear_model()
+    
+    def _build_dependency_graph(
+        self, 
+        nodes: Dict[str, Any], 
+        links: List[Dict[str, Any]]
+    ) -> Dict[str, Set[str]]:
+        """
+        Построить граф зависимостей между нодами.
+        
+        Returns:
+            Словарь: node_id -> set(зависимые ноды)
+        """
+        graph = {node_id: set() for node_id in nodes}
+        
+        for link in links:
+            from_node = link["fromNode"]
+            to_node = link["toNode"]
+            
+            # Проверяем, что ноды существуют
+            if from_node in graph and to_node in graph:
+                graph[to_node].add(from_node)
+            else:
+                print(f"Warning: link references non-existent nodes: {from_node} -> {to_node}")
+        
+        return graph
+    
+    def _get_topological_order(
+        self, 
+        nodes: Dict[str, Any], 
+        links: List[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Получить топологический порядок выполнения нод.
+        Используется алгоритм Кана.
+        """
+        graph = self._build_dependency_graph(nodes, links)
+        
+        # Копируем граф для модификации
+        in_degree = {node: len(graph[node]) for node in graph}
+        queue = deque([node for node in in_degree if in_degree[node] == 0])
+        result = []
+        
+        # Строим обратный граф для обновления in_degree
+        reverse_graph = {node: set() for node in graph}
+        for to_node, from_nodes in graph.items():
+            for from_node in from_nodes:
+                reverse_graph[from_node].add(to_node)
+        
+        while queue:
+            node = queue.popleft()
+            result.append(node)
+            
+            for next_node in reverse_graph[node]:
+                in_degree[next_node] -= 1
+                if in_degree[next_node] == 0:
+                    queue.append(next_node)
+        
+        # Проверка на циклы
+        if len(result) != len(nodes):
+            remaining = set(nodes.keys()) - set(result)
+            raise ValueError(_i18n("cycle_detected", nodes=", ".join(remaining)))
+        
+        return result
+    
+    def _get_node_inputs(
+        self,
+        node_id: str,
+        node_results: Dict[str, List[Tuple[np.ndarray, int]]],
+        nodes: Dict[str, Any],
+        links: List[Dict[str, Any]]
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Получить входные данные для ноды из результатов зависимых нод.
+        """
+        inputs = []
+        
+        for link in links:
+            if link["toNode"] == node_id:
+                from_node = link["fromNode"]
+                from_port = link["fromPort"]
+                to_port = link["toPort"]
+                
+                if from_node in node_results:
+                    results = node_results[from_node]
+                    if from_port < len(results):
+                        audio, sr = results[from_port]
+                        inputs.append((audio, sr))
+                    else:
+                        print(f"Warning: Port {from_port} out of range for node {from_node}")
+                else:
+                    print(f"Warning: Node {from_node} not executed yet")
+        
+        return inputs
+    
+    def _get_default_params(self, node_type: str) -> Dict[str, Any]:
+        """Получить параметры по умолчанию для типа ноды."""
+        defaults = {
+            "input_file": {},
+            "separate": {"model_name": ""},
+            "ensemble": {"num_inputs": 2, "type": "avg_fft"},
+            "mix": {"num_inputs": 2},
+            "gain": {"gain": 1.0},
+            "normalize": {"peak": 1.0},
+            "trim": {"start": 0, "end": 30},
+            "phase_shift": {"degrees": 90},
+            "phase_correct": {},
+            "filter": {"kind": "hp", "fft_mode": True, "cutoff": 100},
+            "split_stereo": {"var": "left/right"},
+            "join_stereo": {"var": "left/right"},
+            "stereo_to_mono": {},
+            "subtract": {"use_spectrogram": False},
+            "invert": {},
+            "output_file": {
+                "name_stem": "output", 
+                "output_format": "mp3",
+                "prefer_float": False
+            },
+        }
+        return defaults.get(node_type, {})
+    
+    # === Обработчики нод ===
+    
+    def _handle_input_file(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        self.metadata = get_metadata(self.input_path)
+        return [read(self.input_path)]
+    
+    def _handle_separate(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для separate.
+        Разделяет аудио на стемы с помощью указанной модели.
+        """
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        model_name = params.get("model_name", "")
+        
+        if not model_name:
+            raise ValueError(_i18n("separate_no_model"))
+        
+        self.mssi.set_add_params(**self.add_params)
+        self.model_manager.download(model_name)
+        checkpoint, config = self.model_manager.generate_local_paths(model_name)
+        model_type = self.model_manager.get_model_type(model_name)
+        
+        self.mssi.load_model(model_type, checkpoint, config)
+        
+        model_sr = self.mssi.get_model_sample_rate()
+        
+        self.mssi.load_array(audio, sr)
+        self.mssi.demix()
+        
+        output_arrays = self.mssi.get_outputs_arrays()
+        results = []
+        for stem in self.model_manager.get_stems(model_name):
+            if stem in output_arrays:
+                results.append((output_arrays[stem], model_sr))
+            else:
+                raise UnknownStem(_i18n("unknown_stem", stem=stem))
+        
+        # Добавляем информацию о стемах в кэш ноды
+        if "node" in kwargs:
+            node = kwargs["node"]
+            stems = list(output_arrays.keys())
+            node["outs"] = stems
+
+        self.mssi.clear_model()
+
+        return results
+    
+    def _handle_ensemble(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для ensemble.
+        Объединяет несколько аудио потоков с помощью ансамбля.
+        """
+        num_inputs = params.get("num_inputs", 2)
+        etype = params.get("type", "avg_fft")
+        
+        if len(inputs) < num_inputs:
+            raise ValueError(_i18n("ensemble_insufficient_inputs", 
+                                   required=num_inputs, got=len(inputs)))
+        
+        # Берем только нужное количество входов
+        selected_inputs = inputs[:num_inputs]
+        arrays = [inp[0] for inp in selected_inputs]
+        srs = [inp[1] for inp in selected_inputs]
+        
+        result, result_sr = ensemble(arrays, srs, etype)
+        return [(result, result_sr)]
+    
+    def _handle_mix(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для mix.
+        Смешивает несколько аудио потоков.
+        """
+        num_inputs = params.get("num_inputs", 2)
+        
+        if len(inputs) != num_inputs:
+            raise ValueError(_i18n("mix_insufficient_inputs",
+                                   required=num_inputs, got=len(inputs)))
+        
+        selected_inputs = inputs[:num_inputs]
+        arrays = [inp[0] for inp in selected_inputs]
+        srs = [inp[1] for inp in selected_inputs]
+        
+        # Определяем целевую частоту (максимальную)
+        target_sr = max(srs)
+        
+        result, result_sr = mix_arrays(arrays, srs, target_sr)
+        return [(result, result_sr)]
+    
+    def _handle_gain(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для gain.
+        Применяет усиление к аудио.
+        """
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        gain_value = params.get("gain", 1.0)
+        
+        result = gain(audio, gain_value)
+        return [(result, sr)]
+
+    def _handle_invert(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для gain.
+        Применяет усиление к аудио.
+        """
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        
+        result = gain(audio, -1)
+        return [(result, sr)]
+
+    def _handle_normalize(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для normalize.
+        Нормализует аудио по пиковому значению.
+        """
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        peak = params.get("peak", 1.0)
+        
+        result = normalizer(audio, peak)
+        return [(result, sr)]
+    
+    def _handle_split_stereo(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для split_stereo.
+        Разделяет стерео на каналы/компоненты.
+        """
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        var = params.get("var", "left/right")
+        
+        if var == stereo_split_types[0]:  # left/right
+            channels = split_channels(audio)
+            results = [(ch, sr) for ch in channels]
+            return results
+            
+        elif var == stereo_split_types[1]:  # mid/side
+            mid, side = split_mid_side(audio, 1, sr)
+            return [(mid, sr), (side, sr)]
+            
+        elif var == stereo_split_types[2]:  # sim/dif
+            center, wide = split_mid_side(audio, 3, sr)
+            return [(center, sr), (wide, sr)]
+        
+        else:
+            raise ValueError(_i18n("unknown_stereo_mode", mode=var))
+
+    def _handle_trim(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        start = params.get("start", 0)
+        end = params.get("end", 30)
+        start_sample = start * sr
+        end_sample = end * sr
+
+        result = trim(audio, start_sample, end_sample)
+        return [(result, sr)]
+
+    def _handle_phase_shift(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        degrees = params.get("degrees", 90)
+
+        result = phase_shift(audio, degrees)
+        return [(result, sr)]
+
+    def _handle_phase_correct(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        mag_x, mag_sr = inputs[0]
+        phase_x, phase_sr = inputs[1]
+
+        transfer_magnitude = params.get("transfer_magnitude", False)
+        transfer_phase = params.get("transfer_phase", True)
+        freq_blend_phases = params.get("freq_blend_phases", True)
+        low_cutoff = params.get("low_cutoff", 500)
+        high_cutoff = params.get("high_cutoff", 5000)
+
+        result, new_sr = phase_corrector(mag_x, phase_x, mag_sr, phase_sr, freq_blend_phases=freq_blend_phases, transfer_magnitude=transfer_magnitude, transfer_phase=transfer_phase, low_cutoff=low_cutoff, high_cutoff=high_cutoff)
+        return [(result, new_sr)]
+
+    def _handle_filter(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        kind = params.get("kind", "hp")
+        fft_mode = params.get("fft_mode", True)
+        hz = params.get("cutoff", 100)
+
+        if kind == "lp":
+            result = lowpass_fft(audio, sr, hz) if fft_mode else lowpass(audio, sr, hz)
+        else:
+            result = highpass_fft(audio, sr, hz) if fft_mode else highpass(audio, sr, hz)
+        return [(result, sr)]
+
+    def _handle_join_stereo(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для join_stereo.
+        Объединяет каналы/компоненты в стерео.
+        """
+        var = params.get("var", "left/right")
+        
+        if var == stereo_split_types[0]:  # left/right
+            if len(inputs) < 2:
+                raise ValueError(_i18n("join_stereo_need_two"))
+            
+            left, left_sr = inputs[0]
+            right, right_sr = inputs[1]
+            max_sr = max(left_sr, right_sr)
+            
+            # Приводим к одному формату
+            fitted = fit_arrays([left, right], [left_sr, right_sr], 
+                              max_channels=1, min_sr=max_sr)
+            result = multi_channel_array_from_arrays(fitted[0], fitted[1], index=1, dtype=np.float32)
+            return [(result, max_sr)]
+            
+        elif var == stereo_split_types[1]:  # mid/side
+            if len(inputs) < 2:
+                raise ValueError(_i18n("join_stereo_need_two"))
+            
+            mid, mid_sr = inputs[0]
+            side, side_sr = inputs[1]
+            max_sr = max(mid_sr, side_sr)
+            
+            fitted = fit_arrays([mid, side], [mid_sr, side_sr],
+                              max_channels=1, min_sr=max_sr)
+            # result = mid_side_to_stereo(fitted[0], fitted[1], index=1) # Только для моно версий
+            result, max_sr = mix_arrays(fitted, [max_sr, max_sr], max_sr)
+            return [(result, max_sr)]
+            
+        elif var == stereo_split_types[2]:  # sim/dif
+            if len(inputs) < 2:
+                raise ValueError(_i18n("join_stereo_need_two"))
+            
+            sim, sim_sr = inputs[0]
+            dif, dif_sr = inputs[1]
+            max_sr = max(sim_sr, dif_sr)
+            
+            # Приводим к одному формату
+            fitted = fit_arrays([sim, dif], 
+                              [sim_sr, dif_sr],
+                              max_channels=2, min_sr=max_sr)
+            
+            result, max_sr = mix_arrays(fitted, [max_sr, max_sr], max_sr)
+            return [(result, max_sr)]
+        
+        else:
+            raise ValueError(_i18n("unknown_stereo_mode", mode=var))
+    
+    def _handle_stereo_to_mono(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для stereo_to_mono.
+        Преобразует стерео в моно.
+        """
+        if not inputs:
+            raise ValueError(_i18n("node_no_input"))
+        
+        audio, sr = inputs[0]
+        result = stereo_to_mono(audio)
+        return [(result, sr)]
+    
+    def _handle_subtract(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для subtract.
+        Вычитает одно аудио из другого.
+        """
+        if len(inputs) < 2:
+            raise ValueError(_i18n("subtract_need_two"))
+        
+        audio1, sr1 = inputs[0]
+        audio2, sr2 = inputs[1]
+        use_spectrogram = params.get("use_spectrogram", False)
+        
+        result, result_sr = subtractor(audio1, audio2, sr1, sr2, 
+                                      spectrogram=use_spectrogram)
+        return [(result, result_sr)]
+    
+    def _handle_output_file(
+        self,
+        inputs: List[Tuple[np.ndarray, int]],
+        params: Dict[str, Any],
+        **kwargs
+    ) -> List[Tuple[np.ndarray, int]]:
+        """
+        Обработчик для output_file.
+        Сохраняет аудио в файл и возвращает путь.
+        """
+        if not inputs:
+            raise ValueError(_i18n("no_input"))
+        
+        basename = self.input_path.stem
+        metadata = self.metadata
+        audio, sr = inputs[0]
+        name_stem = params.get("name_stem", "output")
+        output_format = params.get("output_format", "mp3")
+        prefer_float = params.get("prefer_float", False)
+        template = self.template
+        new_metadata = {}
+        if metadata:
+            new_metadata = deepcopy(metadata)
+            if "TITLE" in metadata:
+                new_metadata["TITLE"] = f"[{name_stem}] {metadata['TITLE']}"
+            else:
+                new_metadata["TITLE"] = f"[{name_stem}] {basename}"
+
+        else:
+            new_metadata["TITLE"] = f"[{name_stem}] {basename}"
+
+
+        custom_name = Namer.template(
+            template,
+            STEM=name_stem,
+            NAME=Namer.short_input_name_template(template, STEM=name_stem, NAME=basename)
+        )
+        
+        # Добавляем суффикс для уникальности
+        output_path = self.output_dir / f"{custom_name}.{output_format}"
+        output_path = Namer.iter(output_path)
+        
+        # Сохраняем файл
+        saved_path = write(output_path, audio, sr, 320, prefer_float, new_metadata)
+        
+        self.writed_stems.append([name_stem, saved_path])
+    
+    def _clear_model_cache(self):
+        """Очистить кэш моделей."""
+        for model_name, mssi in self.model_cache.items():
+            try:
+                mssi.clear_model()
+            except:
+                pass
+        self.model_cache.clear()
+
+
 if __name__ == "__main__":
     check_taglib_not_installed()
     separator = Separator()
@@ -2366,6 +3253,20 @@ if __name__ == "__main__":
             template=args.template,
             prefer_float=args.prefer_float
         )
+    elif args.mode == "phase_fixer":
+        separator.phase_fixer(
+            target=args.target,
+            source=args.source,
+            output_dir=args.output_dir,
+            output_format=args.output_format,
+            template=args.template,
+            transfer_magnitude=args.transfer_magnitude,
+            transfer_phase=args.transfer_phase,
+            freq_blend_phases=args.freq_blend,
+            low_cutoff=args.low_cutoff,
+            high_cutoff=args.high_cutoff,
+            prefer_float=args.prefer_float
+        )
     elif args.mode == "info":
         if args.update:
             separator.update_info(args.model_scope)
@@ -2375,4 +3276,4 @@ if __name__ == "__main__":
             separator.cache_dir.unlink(missing_ok=True)
         else:
             separator.show_info(args.limit, args.stem, args.only_installed)
-    
+

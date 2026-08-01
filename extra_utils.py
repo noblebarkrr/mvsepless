@@ -17,10 +17,12 @@ from audio import get_audio_files_from_list
 import psutil
 import os
 import ctypes
+import secrets
 import platform
 import numpy as np
 import yt_dlp
 import subprocess
+from urllib.parse import urlparse, urlunparse
 
 try:
     import spaces
@@ -370,60 +372,6 @@ def one_element_list_to_value(input_list: list | tuple):
     else:
         return None
 
-def emergency_ram_clear():
-    """
-    Экстренная очистка — удаление ВСЕХ больших объектов в процессе.
-    Использовать только если nuclear_clear_model недостаточно.
-    """
-    
-    process = psutil.Process(os.getpid())
-    mem_before = process.memory_info().rss
-    
-    # Удаляем все numpy массивы и тензоры из globals
-    for name in list(globals().keys()):
-        try:
-            obj = globals()[name]
-            if isinstance(obj, (np.ndarray, torch.Tensor)):
-                if isinstance(obj, np.ndarray):
-                    obj.fill(0)
-                del globals()[name]
-        except:
-            pass
-    
-    for name in list(locals().keys()):
-        try:
-            obj = locals()[name]
-            if isinstance(obj, (np.ndarray, torch.Tensor)) and name != 'self':
-                if isinstance(obj, np.ndarray):
-                    obj.fill(0)
-                del locals()[name]
-        except:
-            pass
-    
-    for _ in range(5):
-        gc.collect()
-    
-    system = platform.system()
-    if system == "Linux":
-        try:
-            ctypes.CDLL('libc.so.6').malloc_trim(0)
-        except:
-            pass
-    elif system == "Windows":
-        try:
-            ctypes.windll.psapi.EmptyWorkingSet(ctypes.c_void_p(-1))
-            ctypes.windll.kernel32.SetProcessWorkingSetSize(
-                ctypes.c_void_p(-1), ctypes.c_size_t(-1), ctypes.c_size_t(-1)
-            )
-        except:
-            pass
-    
-    mem_after = process.memory_info().rss
-    freed = (mem_before - mem_after) / (1024 * 1024)
-    print(f"[EMERGENCY] {_i18n('emeergency_ram')}: {freed:.1f} MB")
-    
-    return max(0, freed)
-
 def linux_nuclear_ram_clear():
     """Linux-специфичная очистка: malloc_trim + madvise"""
     try:
@@ -573,3 +521,21 @@ def extra_clear_torch_cache():
         try:
             torch._C._jit_pass_onnx_clear_scope_records()
         except Exception: pass
+
+def share_gradio_tunnel(server_name: str = "0.0.0.0", server_port: str | int = 7860, share_server_protocol: Literal ["http", "https"] | None = None, share_server_address: str | None = None):
+    share_token = secrets.token_urlsafe(32)
+    share_server_protocol = share_server_protocol or (
+        "http" if share_server_address is not None else "https"
+    )
+    share_url = gr.networking.setup_tunnel(
+        local_host=server_name,
+        local_port=server_port,
+        share_token=share_token,
+        share_server_address=None,
+        share_server_tls_certificate=None,
+    )
+    parsed_url = urlparse(share_url)
+    share_url_ = urlunparse(
+        (share_server_protocol,) + parsed_url[1:]
+    )
+    return share_url_

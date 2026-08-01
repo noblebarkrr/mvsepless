@@ -3,7 +3,7 @@ import subprocess
 import numpy as np
 from pathlib import Path
 import librosa
-from scipy.signal import ShortTimeFFT, resample
+from scipy.signal import ShortTimeFFT, resample, hilbert
 from scipy.signal.windows import dpss, hann
 from numpy.typing import DTypeLike
 import json
@@ -183,6 +183,19 @@ def get_codec_args(extension: str, prefer_float: bool) -> List[str]:
 
 allowed_chars: str = r"1234567890"
 
+mid_side_vars = (
+    "mid/side (orig - side)",
+    "mid/side (orig - mid)",
+    "sim/dif wave",
+    "sim/dif stft",
+    "mid/side (left - inverted right)"
+)
+
+stereo_split_types = (
+    "left/right",
+    "mid/side",
+    "sim/dif",
+)
 
 def sanitize_output(output: str) -> str:
     """
@@ -254,7 +267,7 @@ def get_channels(path: str | Path, stream: int = 0) -> int:
 
 def get_metadata(path: str | Path) -> dict:
     """
-    Получить количество каналов аудиофайла
+    Получить метаданные аудиофайла
     
     Args:
         path: Путь к файлу
@@ -674,7 +687,7 @@ def gain(y: np.ndarray, gain_value: Union[float, int]) -> np.ndarray:
     return convert_to_dtype(y, orig_dtype)
 
 
-def normalize(y: np.ndarray, target_peak: Union[float, int] = 1.0) -> np.ndarray:
+def normalizer(y: np.ndarray, target_peak: Union[float, int] = 1.0) -> np.ndarray:
     """
     Нормализовать аудио по пиковому значению
     
@@ -705,7 +718,7 @@ def create_zero_array(samples: int, dtype: DTypeLike) -> np.ndarray:
     Returns:
         Массив нулей
     """
-    return np.array([get_center_value_from_dtype(dtype) for _c in range(samples)], dtype=dtype)
+    return np.full((samples,), get_center_value_from_dtype(dtype), dtype=dtype)
 
 
 def split_channels(y: np.ndarray) -> Tuple[np.ndarray, ...]:
@@ -749,7 +762,7 @@ def get_stft_obj(sr: int, n_fft: int, hop: int) -> ShortTimeFFT:
 
 def split_mid_side(
     y: np.ndarray, 
-    var: int = 1, 
+    var: int | str = 1, 
     sr: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -774,15 +787,15 @@ def split_mid_side(
     right_channel = channels_arrays[1]
     mid_channel_one = (left_channel * 0.5) + (right_channel * 0.5)
     
-    if var == 0:
+    if var == 0 or var == "mid/side (orig - side)":
         print(_i18n("mid_side_var0"))
         side_channel = np.stack([(left_channel + -mid_channel_one), (right_channel + -mid_channel_one)], axis=axis)
         mid_channel = y + -side_channel
-    elif var == 1:
+    elif var == 1 or var == "mid/side (orig - mid)":
         print(_i18n("mid_side_var1"))
         mid_channel = np.stack([mid_channel_one, mid_channel_one], axis=axis)
         side_channel = y + -mid_channel
-    elif var == 2:
+    elif var == 2 or var == "sim/dif wave" or var == "center/wide wave":
         print(_i18n("mid_side_var2"))
         same_sign = (left_channel * right_channel) > 0
         center_mono = np.where(
@@ -794,7 +807,7 @@ def split_mid_side(
         stereo_L = left_channel - center_mono
         stereo_R = right_channel - center_mono
         side_channel = np.stack([stereo_L, stereo_R], axis=axis)
-    elif var == 3:
+    elif var == 3 or var == "sim/dif stft" or var == "center/wide stft":
         print(_i18n("mid_side_var3"))
         if not sr: 
             raise Exception(_i18n("sr_required"))
@@ -833,7 +846,7 @@ def split_mid_side(
         side_ch = multi_channel_array_from_arrays(side_l, side_r, index=array_index, dtype=y.dtype)
         
         return mid_ch, side_ch
-    elif var == 4:
+    elif var == 4 or var == "mid/side (left - inverted right)":
         print(_i18n("mid_side_var4"))
         mid_channel = mid_channel_one
         side_channel = left_channel + -right_channel
@@ -1456,7 +1469,8 @@ def mix_arrays(
     srs: list[int], 
     target_sr: int, 
     index: int = -1, 
-    dtype: DTypeLike = np.float32
+    dtype: DTypeLike = np.float32,
+    normalize: bool = False
 ) -> Tuple[np.ndarray, int]:
     """
     Смешать несколько аудио массивов (сложение с нормализацией)
@@ -1509,12 +1523,10 @@ def mix_arrays(
     
     # Нормализуем, чтобы избежать клиппинга
     # Делим на количество массивов для усреднения
-    mixed = mixed / num_arrays
-    
-    # Применяем мягкую нормализацию пиков (опционально)
-    max_peak = np.max(np.abs(mixed))
-    if max_peak > 0.95:
-        mixed = mixed * (0.95 / max_peak)
+    if normalize:
+        mixed = mixed / num_arrays
+        
+        mixed = normalizer(mixed, 1)
     
     # Преобразуем в целевой тип данных и нужную форму
     result = convert_to_dtype(mixed, dtype)
@@ -1534,6 +1546,344 @@ def mix_arrays(
     print(_i18n("mix_complete", count=num_arrays))
     return result, target_sr
 
+def frequency_blend_phases(phase1, phase2, freq_bins, low_cutoff=500, high_cutoff=5000):
+    """Blend two phase arrays with different weights depending on frequency."""
+    blended_phase = np.zeros_like(phase1)
+    for i, freq in enumerate(freq_bins):
+        if freq < low_cutoff:
+            blend_factor = 0.1  # Mostly keep original phase for low frequencies
+        elif freq > high_cutoff:
+            blend_factor = 0.9  # Strongly blend with new phase for high frequencies
+        else:
+            blend_factor = 0.1 + 0.8 * ((freq - low_cutoff) / (high_cutoff - low_cutoff))
+        blended_phase[i, :] = (1 - blend_factor) * phase1[i, :] + blend_factor * phase2[i, :]
+    return blended_phase
+
+def phase_corrector(
+    target: np.ndarray,
+    source: np.ndarray,
+    target_sr: int,
+    source_sr: int,
+    freq_blend_phases: bool = False,
+    transfer_magnitude: bool = False, transfer_phase: bool = True, 
+    low_cutoff: int = 500, high_cutoff: int = 5000,
+) -> Tuple[np.ndarray, int]:
+
+    orig_dtype = target.dtype
+
+    target = convert_to_dtype(target, np.float32)
+    source = convert_to_dtype(source, np.float32)
+
+    ch_target = get_info_array(target)[0]
+    ch_source = get_info_array(source)[0]
+    max_channels = max(ch_target, ch_source, 1)
+
+    target, source = fit_arrays(
+        [target, source],
+        [target_sr, source_sr],
+        max_channels=max_channels,
+        min_sr=target_sr,
+        flatten=False,
+        extend=True
+    )
+
+    sft = get_stft_obj(target_sr, n_fft=n_fft, hop=hop)
+    final_length = target.shape[-1]
+
+    res_channels = []
+    for target_channel, source_channel in zip(split_channels(target), split_channels(source)):
+        target_spec = sft.stft(target_channel)
+        source_spec = sft.stft(source_channel)
+        target_magnitude, target_phase = np.abs(target_spec), np.angle(target_spec)
+        source_magnitude, source_phase = np.abs(source_spec), np.angle(source_spec)
+        freqs = librosa.fft_frequencies(sr=source_sr, n_fft=source_spec.shape[0] * 2 - 1)
+        modified_target_spec = target_spec.copy()
+
+        if transfer_magnitude:
+            modified_target_spec = source_magnitude * np.exp(1j * np.angle(modified_target_spec))
+
+        if transfer_phase:
+            if freq_blend_phases:
+                new_phase = frequency_blend_phases(target_phase, source_phase, freqs, low_cutoff, high_cutoff)
+            else:
+                new_phase = source_phase
+            
+            modified_target_spec = np.abs(modified_target_spec) * np.exp(1j * new_phase)
+
+        res_wav = sft.istft(modified_target_spec, k1=final_length)
+        res_channels.append(res_wav)
+        del target_spec, source_spec, modified_target_spec
+
+
+    result = multi_channel_array_from_arrays(
+        *res_channels, index=1, dtype=orig_dtype
+    )
+    return result, target_sr
+
+
+def phase_shift(
+    y: np.ndarray,
+    degrees: Union[float, int]
+) -> np.ndarray:
+    """
+    Константный фазовый сдвиг всех частот на заданный угол.
+
+    Реализован через преобразование Гильберта (всепроходный фазовый сдвиг),
+    поэтому не требует частоты дискретизации и не вносит оконных артефактов.
+    DC-составляющая (среднее) сохраняется неизменной.
+
+    Проверочные точки:
+        0   град -> сигнал не меняется
+        90  град -> -Hilbert(y)  (квадратурный сигнал)
+        180 град -> -y           (инверсия полярности)
+
+    Args:
+        y: Аудио массив (любая ориентация: 1D / (ch, s) / (s, ch))
+        degrees: Угол сдвига фазы в градусах
+
+    Returns:
+        Массив той же формы и dtype со сдвинутой фазой
+    """
+
+    orig_dtype = y.dtype
+    y_f = convert_to_dtype(y, np.float64)  # float64 для точности FFT
+
+    _, _, array_index, _ = get_info_array(y_f)
+    axis = array_index  # ось сэмплов (-1 для 1D, 0 или 1 для 2D)
+
+    theta = np.deg2rad(float(degrees))
+    factor = np.exp(1j * theta)
+
+    # Сохраняем DC отдельно: умножение аналитического сигнала на exp(j*theta)
+    # иначе повернуло бы и постоянную составляющую (при 90° среднее -> 0).
+    dc = np.mean(y_f, axis=axis, keepdims=True)
+    analytic = hilbert(y_f - dc, axis=axis)
+    shifted = np.real(analytic * factor) + dc
+
+    return convert_to_dtype(shifted, orig_dtype)
+
+def _iir_filter(
+    y: np.ndarray,
+    sr: int,
+    hz: Union[float, int],
+    btype: str,        # "low" | "high"
+    order: int = 8
+) -> np.ndarray:
+    """
+    Внутренний IIR-фильтр Баттерворта с нулевой фазой (sosfiltfilt).
+
+    Граничные частоты обработаны явно, чтобы butter не падал на Wn вне (0, 1):
+        lowpass:  hz <= 0      -> тишина (весь спектр срезан)
+                  hz >= sr/2   -> passthrough (нечего резать)
+        highpass: hz <= 0      -> passthrough
+                  hz >= sr/2   -> тишина
+
+    Args:
+        y: Аудио массив любой ориентации
+        sr: Частота дискретизации
+        hz: Частота среза в Гц
+        btype: "low" или "high"
+        order: Порядок фильтра (крутизна; 8 по умолчанию — хороший баланс)
+
+    Returns:
+        Массив той же формы и dtype
+    """
+    from scipy.signal import butter, sosfiltfilt  # локальный импорт
+
+    orig_dtype = y.dtype
+    _, samples, array_index, _ = get_info_array(y)
+
+    # Пустой сигнал — нечего фильтровать.
+    if samples == 0:
+        return y.copy()
+
+    nyq = float(sr) * 0.5
+    wn = float(hz) / nyq  # нормированная частота (доля от Найквиста)
+
+    # --- Граничные случаи (вне допустимого для butter диапазона (0, 1)) ---
+    if btype == "low":
+        if wn >= 1.0:
+            return y.copy()                 # passthrough
+        if wn <= 0.0:
+            return np.zeros_like(y)         # всё срезано -> тишина
+    else:  # "high"
+        if wn <= 0.0:
+            return y.copy()                 # passthrough
+        if wn >= 1.0:
+            return np.zeros_like(y)         # всё срезано -> тишина
+
+    # Работаем в float64 для устойчивости IIR.
+    y_f = convert_to_dtype(y, np.float64)
+
+    # wn уже строго внутри (0, 1) после проверок выше.
+    # Небольшой clamp на всякий случай от float-ошибок на границах.
+    wn = float(np.clip(wn, 1e-7, 1.0 - 1e-7))
+
+    sos = butter(order, wn, btype=btype, output="sos")
+
+    # sosfiltfilt по оси сэмплов. На очень коротких сигналах дефолтный padlen
+    # может превысить длину -> ValueError; тогда отключаем padding (padlen=0).
+    filtered = sosfiltfilt(sos, y_f, axis=array_index, padlen=0)
+
+    return convert_to_dtype(filtered, orig_dtype)
+
+def _brickwall_mask(
+    sr: int,
+    hz: Union[float, int],
+    kind: str  # "lowpass" | "highpass"
+) -> np.ndarray:
+    """
+    Вещественная маска кирпичной стены с косинусным переходом в 1 бин.
+    Возвращает массив формы (n_fft // 2 + 1,) в диапазоне [0, 1].
+    """
+    n_bins = n_fft // 2 + 1
+    freqs = np.arange(n_bins, dtype=np.float64) * (float(sr) / n_fft)
+    half_bin = (float(sr) / n_fft) * 0.5  # половина ширины бина -> переход = 1 бин
+    f_low = float(hz) - half_bin
+    f_high = float(hz) + half_bin
+
+    if kind == "lowpass":
+        mask = np.ones(n_bins, dtype=np.float32)
+        mask[freqs >= f_high] = 0.0
+        trans = (freqs >= f_low) & (freqs < f_high)
+        if f_high > f_low:
+            mask[trans] = 0.5 * (
+                1.0 + np.cos(np.pi * (freqs[trans] - f_low) / (f_high - f_low))
+            )
+    else:  # highpass = инверсия lowpass (DC корректно вырезается)
+        mask = np.zeros(n_bins, dtype=np.float32)
+        mask[freqs >= f_high] = 1.0
+        trans = (freqs >= f_low) & (freqs < f_high)
+        if f_high > f_low:
+            mask[trans] = 0.5 * (
+                1.0 - np.cos(np.pi * (freqs[trans] - f_low) / (f_high - f_low))
+            )
+    return mask
+
+
+def lowpass_fft(
+    y: np.ndarray,
+    sr: int,
+    hz: Union[float, int]
+) -> np.ndarray:
+    """
+    Фильтр низких частот (brickwall, линейная фаза) через STFT-маску.
+    Оставляет всё ниже `hz`, плавно срезая полосу в 1 бин вокруг среза.
+
+    Args:
+        y: Аудио массив (любая ориентация: 1D / (ch, s) / (s, ch))
+        sr: Частота дискретизации
+        hz: Частота среза в Гц
+
+    Returns:
+        Массив той же формы и dtype, пропущенный через ФНЧ
+    """
+    orig_dtype = y.dtype
+    channels, samples, array_index, flatten = get_info_array(y)
+    y_f = convert_to_dtype(y, np.float32)
+
+    sft = get_stft_obj(int(sr), n_fft=n_fft, hop=hop)
+    mask = _brickwall_mask(sr, hz, "lowpass").reshape(-1, 1)  # (F, 1) для broadcast
+
+    res_channels = []
+    for ch in split_channels(y_f):
+        spec = sft.stft(ch.astype(np.float32))
+        spec_filtered = spec * mask
+        res_wav = sft.istft(spec_filtered, k1=ch.shape[-1])
+        res_channels.append(res_wav)
+        del spec, spec_filtered
+
+    if flatten:
+        return convert_to_dtype(res_channels[0], orig_dtype)
+    return multi_channel_array_from_arrays(
+        *res_channels, index=array_index, dtype=orig_dtype
+    )
+
+
+def highpass_fft(
+    y: np.ndarray,
+    sr: int,
+    hz: Union[float, int]
+) -> np.ndarray:
+    """
+    Фильтр высоких частот (brickwall, линейная фаза) через STFT-маску.
+    Оставляет всё выше `hz`, плавно срезая полосу в 1 бин вокруг среза.
+    Постоянная составляющая (DC) при hz > 0 корректно удаляется.
+
+    Args:
+        y: Аудио массив (любая ориентация: 1D / (ch, s) / (s, ch))
+        sr: Частота дискретизации
+        hz: Частота среза в Гц
+
+    Returns:
+        Массив той же формы и dtype, пропущенный через ФВЧ
+    """
+    orig_dtype = y.dtype
+    channels, samples, array_index, flatten = get_info_array(y)
+    y_f = convert_to_dtype(y, np.float32)
+
+    sft = get_stft_obj(int(sr), n_fft=n_fft, hop=hop)
+    mask = _brickwall_mask(sr, hz, "highpass").reshape(-1, 1)  # (F, 1) для broadcast
+
+    res_channels = []
+    for ch in split_channels(y_f):
+        spec = sft.stft(ch.astype(np.float32))
+        spec_filtered = spec * mask
+        res_wav = sft.istft(spec_filtered, k1=ch.shape[-1])
+        res_channels.append(res_wav)
+        del spec, spec_filtered
+
+    if flatten:
+        return convert_to_dtype(res_channels[0], orig_dtype)
+    return multi_channel_array_from_arrays(
+        *res_channels, index=array_index, dtype=orig_dtype
+    )
+
+def lowpass(
+    y: np.ndarray,
+    sr: int,
+    hz: Union[float, int],
+    order: int = 8
+) -> np.ndarray:
+    """
+    Фильтр низких частот (IIR Баттерворта, нулевая фаза через sosfiltfilt).
+    Оставляет всё ниже `hz`. Крутизна склона ~ 6 дБ/октаву на каждый порядок
+    (order=8 -> ~48 дБ/окт). Фаза в полосе пропускания не искажается
+    (двойной проход filtfilt компенсирует задержку).
+
+    Args:
+        y: Аудио массив (любая ориентация: 1D / (ch, s) / (s, ch))
+        sr: Частота дискретизации
+        hz: Частота среза в Гц (0 < hz < sr/2)
+        order: Порядок фильтра (по умолчанию 8)
+
+    Returns:
+        Массив той же формы и dtype, пропущенный через ФНЧ
+    """
+    return _iir_filter(y, sr, hz, btype="low", order=order)
+
+
+def highpass(
+    y: np.ndarray,
+    sr: int,
+    hz: Union[float, int],
+    order: int = 8
+) -> np.ndarray:
+    """
+    Фильтр высоких частот (IIR Баттерворта, нулевая фаза через sosfiltfilt).
+    Оставляет всё выше `hz`, постоянная составляющая (DC) удаляется.
+    Крутизна склона ~ 6 дБ/октаву на каждый порядок.
+
+    Args:
+        y: Аудио массив (любая ориентация: 1D / (ch, s) / (s, ch))
+        sr: Частота дискретизации
+        hz: Частота среза в Гц (0 < hz < sr/2)
+        order: Порядок фильтра (по умолчанию 8)
+
+    Returns:
+        Массив той же формы и dtype, пропущенный через ФВЧ
+    """
+    return _iir_filter(y, sr, hz, btype="high", order=order)
 
 def write(
     path: str | Path, 

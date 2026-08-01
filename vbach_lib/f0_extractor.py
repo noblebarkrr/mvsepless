@@ -15,7 +15,7 @@ from audio import read
 from namer import Namer
 
 import json
-from extra_utils import dw_file, nuclear_clear_model, emergency_ram_clear, extra_clear_torch_cache, hf_spaces_gpu
+from extra_utils import dw_file, nuclear_clear_model, extra_clear_torch_cache, hf_spaces_gpu
 from args_parser import parse_f0_extract
 if __package__:
     from .predictors.FCPE import FCPEF0Predictor
@@ -315,7 +315,7 @@ def f0_extract_and_write(input_audio: str | Path, f0_method: str = f0_methods[0]
     del f0_info, f0
     extra_clear_torch_cache()
     nuclear_clear_model()
-    emergency_ram_clear()
+    
     return output_path.as_posix()
 
 def f0_import(input_json: str | Path):

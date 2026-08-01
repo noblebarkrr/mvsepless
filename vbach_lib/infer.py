@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(SCRIPT_DIR.parent))
-from extra_utils import hf_spaces_gpu, extra_clear_torch_cache, nuclear_clear_model, emergency_ram_clear, print_current_device
+from extra_utils import hf_spaces_gpu, extra_clear_torch_cache, nuclear_clear_model, print_current_device
 if __package__:
     from .hubert_manager import get_hubert, download_hubert, huberts_fairseq
     from .pipeline import VC
@@ -78,7 +78,7 @@ def post_process_audio(mixtures: list[np.ndarray], target_sr: int, stereo_mode: 
         dtype = sim.dtype
         sim_channel = multi_channel_array_from_arrays(sim, sim, index=1, dtype=dtype)
         dif_channel = multi_channel_array_from_arrays(dif_l, dif_r, index=1, dtype=dtype)
-        return mix_arrays([sim_channel, dif_channel], [target_sr, target_sr], target_sr, index=1, dtype=dtype)[0]
+        return mix_arrays([sim_channel, dif_channel], [target_sr, target_sr], target_sr, index=1, dtype=dtype, normalize=True)[0]
 
 class VbachConverter:
     def __init__(self):
@@ -113,7 +113,7 @@ class VbachConverter:
         gc.collect()
         extra_clear_torch_cache()
         nuclear_clear_model()
-        emergency_ram_clear()
+        
 
     def unload_model(self):
         self.net_g = self.net_g.cpu()
@@ -121,7 +121,7 @@ class VbachConverter:
         self.cpt = self.version = self.net_g = self.tgt_sr = self.vc = self.use_f0 = self.vocoder = self.emb_weight_shape = self.required_keys = self.missing_keys = self.text_enc_hidden_dim = None
         extra_clear_torch_cache()
         nuclear_clear_model()
-        emergency_ram_clear()
+        
 
     def clear_gpu_cache(self):
         gc.collect()
