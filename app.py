@@ -3406,7 +3406,7 @@ class App(Separator):
                     downloadAnchorNode.remove();
                 }
 
-function setupImport() {
+                function setupImport() {
                     const importBtn = document.getElementById('import-btn');
                     const importFile = document.getElementById('import-file');
                     
@@ -5565,29 +5565,54 @@ function setupImport() {
             document.getElementById('st-zoom').textContent = Math.round(scale * 100) + '%';
         }
         // ==================== HISTORY ====================
+        let historyDirty = false;
+
+        function markDirty() {
+            historyDirty = true;
+        }
+
         function saveState() {
-        if (historyIndex < historyStack.length - 1) {
-        historyStack = historyStack.slice(0, historyIndex + 1);
+            if (!historyDirty && historyIndex >= 0 && historyStack.length > 0) {
+                return;
+            }
+
+            if (historyIndex < historyStack.length - 1) {
+                historyStack = historyStack.slice(0, historyIndex + 1);
+            }
+
+            historyStack.push([...f0Data.freqs]);
+
+            if (historyStack.length > MAX_HISTORY) {
+                historyStack.shift();
+            }
+
+            historyIndex = historyStack.length - 1;
+            historyDirty = false;
         }
-        historyStack.push([...f0Data.freqs]);
-        if (historyStack.length > MAX_HISTORY) historyStack.shift();
-        historyIndex = historyStack.length - 1;
-        }
+
         function undo() {
-        if (historyIndex > 0) {
-        historyIndex--;
-        f0Data.freqs = [...historyStack[historyIndex]];
-        syncAndRender();
+            if (historyIndex > 0) {
+                historyIndex--;
+                f0Data.freqs = [...historyStack[historyIndex]];
+                historyDirty = false;
+                syncAndRender();
+            }
         }
-        }
+
         function redo() {
-        if (historyIndex < historyStack.length - 1) {
-        historyIndex++;
-        f0Data.freqs = [...historyStack[historyIndex]];
-        syncAndRender();
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                f0Data.freqs = [...historyStack[historyIndex]];
+                historyDirty = false;
+                syncAndRender();
+            }
         }
+
+        function syncAndRender() {
+            updatePoints();
+            renderF0();
+            updateStatusCounts();
         }
-        function syncAndRender() { updatePoints(); renderF0(); updateStatusCounts(); }
         // ==================== TOOLS ====================
         function setTool(t) {
         currentTool = t;
@@ -5633,7 +5658,9 @@ function setupImport() {
         f0Data.freqs[currentIndex] = newFreq;
         }
         lastProcessedIndex = currentIndex;
-        updatePoints(); renderF0();
+        markDirty();
+        updatePoints();
+        renderF0();
         }
         }
         // ==================== INTERACTIONS ====================
@@ -5789,18 +5816,28 @@ function setupImport() {
         renderF0();
         }
         if (isDragging && (selectedPoint || isDraggingGroup)) {
-        const baseHeight = spectrogramImage.naturalHeight || f0Data.spec_height;
-        const fStart = yToFreq(dragStartY, baseHeight);
-        const fCurrent = yToFreq(coords.y, baseHeight);
-        if (fStart > 0 && fCurrent > 0) {
-        const ratio = fCurrent / fStart;
-        initialFrequencies.forEach((startFreq, idx) => {
-        if (startFreq > 0) {
-        f0Data.freqs[idx] = Math.min(f0Data.original_sample_rate / 2, Math.max(0, parseFloat((startFreq * ratio).toFixed(2))));
-        }
-        });
-        }
-        updatePoints(); renderF0(); return;
+            const baseHeight = spectrogramImage.naturalHeight || f0Data.spec_height;
+            const fStart = yToFreq(dragStartY, baseHeight);
+            const fCurrent = yToFreq(coords.y, baseHeight);
+
+            if (fStart > 0 && fCurrent > 0) {
+                const ratio = fCurrent / fStart;
+
+                initialFrequencies.forEach((startFreq, idx) => {
+                    if (startFreq > 0) {
+                        f0Data.freqs[idx] = Math.min(
+                            f0Data.original_sample_rate / 2,
+                            Math.max(0, parseFloat((startFreq * ratio).toFixed(2)))
+                        );
+                    }
+                });
+
+                markDirty();
+            }
+
+            updatePoints();
+            renderF0();
+            return;
         } else if (isPanning) {
         panX += coords.screenX - lastX; panY += coords.screenY - lastY;
         lastX = coords.screenX; lastY = coords.screenY;
@@ -5874,21 +5911,50 @@ function setupImport() {
         // ==================== ACTIONS ====================
         function deselectAll() { selectedIndices.clear(); selectedPoint = null; renderF0(); }
         function resetF0() {
-        if (!editorInitialized) return;
-        saveState();
-        const targetIndices = selectedIndices.size > 0 ? Array.from(selectedIndices) : f0Data.freqs.map((_, i) => i);
-        targetIndices.forEach(i => { f0Data.freqs[i] = f0Data.originalFreqs[i] || 0; });
-        updatePoints(); renderF0(); updateStatusCounts();
+            if (!editorInitialized) return;
+
+            saveState();
+
+            const targetIndices = selectedIndices.size > 0
+                ? Array.from(selectedIndices)
+                : f0Data.freqs.map((_, i) => i);
+
+            targetIndices.forEach(i => {
+                f0Data.freqs[i] = f0Data.originalFreqs[i] || 0;
+            });
+
+            markDirty();
+            saveState();
+
+            updatePoints();
+            renderF0();
+            updateStatusCounts();
         }
         function transpose(semitones) {
-        if (!editorInitialized) return;
-        saveState();
-        const factor = Math.pow(2, semitones / 12);
-        const targetIndices = selectedIndices.size > 0 ? Array.from(selectedIndices) : f0Data.freqs.map((_, i) => i);
-        targetIndices.forEach(i => {
-        if (f0Data.freqs[i] > 0) f0Data.freqs[i] = Math.min(f0Data.freqs[i] * factor, f0Data.original_sample_rate / 2);
-        });
-        updatePoints(); renderF0(); updateStatusCounts();
+            if (!editorInitialized) return;
+
+            saveState();
+
+            const factor = Math.pow(2, semitones / 12);
+            const targetIndices = selectedIndices.size > 0
+                ? Array.from(selectedIndices)
+                : f0Data.freqs.map((_, i) => i);
+
+            targetIndices.forEach(i => {
+                if (f0Data.freqs[i] > 0) {
+                    f0Data.freqs[i] = Math.min(
+                        f0Data.freqs[i] * factor,
+                        f0Data.original_sample_rate / 2
+                    );
+                }
+            });
+
+            markDirty();
+            saveState();
+
+            updatePoints();
+            renderF0();
+            updateStatusCounts();
         }
         // === Логика модального окна для Pitch Shift ===
         let pitchShiftResolve = null;
@@ -5939,41 +6005,56 @@ function setupImport() {
         // === Обновленная функция сдвига питча ===
         async function shiftPitch() {
             if (!editorInitialized) return;
-            
             const semitones = await openPitchShiftModal();
             if (semitones === null || semitones === 0) return;
-            
             saveState();
             const factor = Math.pow(2, semitones / 12);
             const targetIndices = selectedIndices.size > 0 ? Array.from(selectedIndices) : f0Data.freqs.map((_, i) => i);
-            
             targetIndices.forEach(i => {
                 if (f0Data.freqs[i] > 0) f0Data.freqs[i] = parseFloat((f0Data.freqs[i] * factor).toFixed(2));
             });
-            
             updatePoints(); 
             renderF0(); 
             updateStatusCounts();
         }
         function smoothF0() {
-        if (!editorInitialized) return;
-        saveState();
-        const windowSize = 2;
-        const newFreqs = [...f0Data.freqs];
-        const targetIndices = selectedIndices.size > 0 ? Array.from(selectedIndices) : f0Data.freqs.map((_, i) => i);
-        for (let i of targetIndices) {
-        if (f0Data.freqs[i] <= 0) continue;
-        let sum = 0, count = 0;
-        for (let j = -windowSize; j <= windowSize; j++) {
-        const idx = i + j;
-        if (idx >= 0 && idx < f0Data.freqs.length && f0Data.freqs[idx] > 0) {
-        sum += f0Data.freqs[idx]; count++;
-        }
-        }
-        if (count > 0) newFreqs[i] = sum / count;
-        }
-        f0Data.freqs = newFreqs;
-        updatePoints(); renderF0(); updateStatusCounts();
+            if (!editorInitialized) return;
+
+            saveState();
+
+            const windowSize = 2;
+            const newFreqs = [...f0Data.freqs];
+            const targetIndices = selectedIndices.size > 0
+                ? Array.from(selectedIndices)
+                : f0Data.freqs.map((_, i) => i);
+
+            for (let i of targetIndices) {
+                if (f0Data.freqs[i] <= 0) continue;
+
+                let sum = 0;
+                let count = 0;
+
+                for (let j = -windowSize; j <= windowSize; j++) {
+                    const idx = i + j;
+                    if (idx >= 0 && idx < f0Data.freqs.length && f0Data.freqs[idx] > 0) {
+                        sum += f0Data.freqs[idx];
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    newFreqs[i] = sum / count;
+                }
+            }
+
+            f0Data.freqs = newFreqs;
+
+            markDirty();
+            saveState();
+
+            updatePoints();
+            renderF0();
+            updateStatusCounts();
         }
         function autoFixOctaveJumps() {
         if (!editorInitialized || !f0Data.freqs) return;
@@ -6004,11 +6085,15 @@ function setupImport() {
         }
         }
         if (correctionsCount > 0) {
-        f0Data.freqs = newFreqs;
-        updatePoints(); renderF0(); updateStatusCounts();
-        showTooltipMessage('✨ """ + f"{_i18n('f0_corrector_fixed_points')}" + """' + correctionsCount);
+            f0Data.freqs = newFreqs;
+            markDirty();
+            saveState();
+            updatePoints();
+            renderF0();
+            updateStatusCounts();
+            showTooltipMessage('✨ """ + f"{_i18n('f0_corrector_fixed_points')}" + """' + correctionsCount);
         } else {
-        showTooltipMessage('✨ 0');
+            showTooltipMessage('✨ 0');
         }
         }
         // ==================== EXPORT / SEND ====================
@@ -6334,15 +6419,31 @@ function setupImport() {
         }
         // ==================== HOTKEYS / INIT ====================
         document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
-        else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
-        else if (e.key === '1') setTool('pan');
-        else if (e.key === '2') setTool('cursor');
-        else if (e.key === '3') setTool('select');
-        else if (e.key === '4') setTool('pencil');
-        else if (e.key === '5') setTool('eraser');
-        else if (e.key === 'Escape') deselectAll();
+            if (e.target.tagName === 'INPUT') return;
+
+            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
+            } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
+                e.preventDefault();
+                redo();
+            } else if (e.key === '1') {
+                setTool('pan');
+            } else if (e.key === '2') {
+                setTool('cursor');
+            } else if (e.key === '3') {
+                setTool('select');
+            } else if (e.key === '4') {
+                setTool('pencil');
+            } else if (e.key === '5') {
+                setTool('eraser');
+            } else if (e.key === 'Escape') {
+                deselectAll();
+            }
         });
         window.addEventListener('resize', () => { if (editorInitialized) updateTransform(); });
         if (document.fonts && document.fonts.ready) {
