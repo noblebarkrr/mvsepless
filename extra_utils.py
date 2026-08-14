@@ -121,17 +121,20 @@ base_c_params = {
     }
 }
 
-def size_readable(size_bytes: int):
-    if size_bytes == 0:
-        return f"0 {_i18n('bytes')}"
-    # Единицы измерения
-    units = (_i18n('bytes'), _i18n('kbytes'), _i18n('mbytes'), _i18n('gbytes'), _i18n('tbytes'))
-    i = 0
-    # Делим на 1024, пока размер > 1024
-    while size_bytes >= 1024 and i < len(units) - 1:
-        size_bytes /= 1024
-        i += 1
-    return f"{size_bytes:.2f} {units[i]}"
+def size_readable(size_bytes: int | bool):
+    if isinstance(size_bytes, int):
+        if size_bytes == 0:
+            return f"0 {_i18n('bytes')}"
+        # Единицы измерения
+        units = (_i18n('bytes'), _i18n('kbytes'), _i18n('mbytes'), _i18n('gbytes'), _i18n('tbytes'))
+        i = 0
+        # Делим на 1024, пока размер > 1024
+        while size_bytes >= 1024 and i < len(units) - 1:
+            size_bytes /= 1024
+            i += 1
+        return f"{size_bytes:.2f} {units[i]}"
+    elif size_bytes == False:
+        return _i18n("path_not_exist")
 
 def get_size_folder(folder: str | Path):
     folder_path = Path(folder)
@@ -150,13 +153,20 @@ def get_disk_usage(path="/content/drive/MyDrive", user_dir="", user_gdrive_dir="
     except Exception as e:
         return ""
 
+def get_size_from_path(path: Path):
+    path = Path(path)
+    if path.exists():
+        return path.stat().st_size
+    else:
+        return False
+
 def define_audio_with_size(basename: bool = False, **kwargs):
     path = kwargs.get("value", None)
     if not path:
         return gr.update(**kwargs)
     file_path = Path(path)
     if "label" in kwargs:
-        temp_label = f"[{size_readable(file_path.stat().st_size)}] " + (file_path.stem if basename else kwargs["label"])
+        temp_label = f"[{size_readable(get_size_from_path(file_path))}] " + (file_path.stem if basename else kwargs["label"])
         kwargs["label"] = temp_label
     return gr.Audio(**kwargs)
 
@@ -166,7 +176,7 @@ def update_audio_with_size(basename: bool = False, **kwargs):
         return gr.update(**kwargs)
     file_path = Path(path)
     if "label" in kwargs:
-        temp_label = f"[{size_readable(file_path.stat().st_size)}] " + (file_path.stem if basename else kwargs["label"])
+        temp_label = f"[{size_readable(get_size_from_path(file_path))}] " + (file_path.stem if basename else kwargs["label"])
         kwargs["label"] = temp_label
     return gr.update(**kwargs)
 
@@ -176,7 +186,7 @@ def define_download_button_with_size(basename: bool = False, **kwargs):
         return gr.update(**kwargs)
     file_path = Path(path)
     if "label" in kwargs:
-        temp_label = f"[{size_readable(file_path.stat().st_size)}] " + (file_path.stem if basename else kwargs["label"])
+        temp_label = f"[{size_readable(get_size_from_path(file_path))}] " + (file_path.stem if basename else kwargs["label"])
         kwargs["label"] = temp_label
     return gr.DownloadButton(**kwargs)
 
