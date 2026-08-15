@@ -827,7 +827,19 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "f0_corrector_name_source": "С именем исходного файла",  # en: "With source file name"
         "f0_corrector_name_custom": "Кастомное имя",             # en: "Custom name"
         "f0_corrector_curve_name": "Имя файла",                  # en: "File name"
-
+        "arg_custom_model_info_help": "Путь к JSON-файлу с кастомным каталогом моделей (дополнительно к основному)",
+        "arg_custom_models_dir_help": "Путь к директории с кастомными моделями (дополнительно к основной)",
+        "custom_model_info_loaded": "Загружен кастомный каталог моделей: {path}",
+        "custom_models_dir_added": "Добавлена кастомная директория моделей: {path}",
+        "custom_model_info_not_found": "Файл с кастомным каталогом моделей не найден: {path}",
+        "custom_models_dir_not_found": "Кастомная директория моделей не найдена: {path}",
+        "arg_model_source_help": "Источник каталога моделей: hface (HuggingFace) или mscope (ModelScope). По умолчанию: hface",
+        "custom_model_info_loaded": "Загружен кастомный каталог моделей: {path}",
+        "custom_models_dir_added": "Добавлена кастомная директория моделей: {path}",
+        "custom_model_info_not_found": "Файл с кастомным каталогом моделей не найден: {path}",
+        "custom_models_dir_not_found": "Кастомная директория моделей не найдена: {path}",
+        "custom_model_info_load_error": "Ошибка загрузки кастомного каталога моделей: {error}",
+        "models_merged_count": "Всего моделей в объединённом каталоге: {count}",
     },
     "en": {
         "bytes": "B",
@@ -1637,7 +1649,20 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "f0_corrector_name_default": "Default (f0_corrected_datetime)",
         "f0_corrector_name_source": "With source file name",
         "f0_corrector_name_custom": "Custom name",
-        "f0_corrector_curve_name": "File name"
+        "f0_corrector_curve_name": "File name",
+        "arg_custom_model_info_help": "Path to JSON file with custom model catalog (in addition to main)",
+        "arg_custom_models_dir_help": "Path to directory with custom models (in addition to main)",
+        "custom_model_info_loaded": "Custom model catalog loaded: {path}",
+        "custom_models_dir_added": "Custom models directory added: {path}",
+        "custom_model_info_not_found": "Custom model catalog file not found: {path}",
+        "custom_models_dir_not_found": "Custom models directory not found: {path}",
+        "arg_model_source_help": "Model catalog source: hface (HuggingFace) or mscope (ModelScope). Default: hface",
+        "custom_model_info_loaded": "Custom model catalog loaded: {path}",
+        "custom_models_dir_added": "Custom models directory added: {path}",
+        "custom_model_info_not_found": "Custom model catalog file not found: {path}",
+        "custom_models_dir_not_found": "Custom models directory not found: {path}",
+        "custom_model_info_load_error": "Error loading custom model catalog: {error}",
+        "models_merged_count": "Total models in merged catalog: {count}",
 
     }
 }

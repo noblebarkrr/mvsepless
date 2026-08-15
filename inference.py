@@ -67,6 +67,11 @@ def generate_metadata_from_stem(input_file_name: str, metadata: dict, stem: str,
 
     return new_metadata
 
+MODEL_CATALOG_URLS = {
+    **dict.fromkeys(["huggingface", "hf", "hface"], {"url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/models.json?download=true", "name": "models_hf.json"}),
+    **dict.fromkeys(["modelscope", "ms", "mscope"], {"url": "https://modelscope.cn/models/noblebarkrr/mvsepless_resources/resolve/master/models_alt1.json", "name": "models_mscope.json"})
+}
+
 class EnsembleFlowValidateError(Exception): pass
 class PathNotExist(Exception): pass
 class PathsNotExist(Exception): pass
@@ -1536,14 +1541,27 @@ class MSSI: # Music Source Separation Inference
         return self.get_outputs()
     
 class ModelManager:
-    def __init__(self):
-        self.info = {}
-        self.info_url = "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/models.json?download=true"
-        self.info_path = Path(BASE_DIR) / "models.json"
-        self.load_info()
+    def __init__(self, source="hface",
+                 custom_model_info_path=None,
+                 custom_models_dir=None):
+        self.info: dict = {}
+        self.custom_models_dir: Path | None = None
+        # ✅ Сохраняем путь для повторного мержа
+        self.custom_model_info_path = custom_model_info_path
+
+        if source not in MODEL_CATALOG_URLS:
+            source = "hface"
+        self.model_source = source
+        self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
+        self.load_info(source)
+
+        if custom_models_dir:
+            self.add_custom_models_dir(custom_models_dir)
+
         self.cache_dir = Path(BASE_DIR) / "separation_cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
+        print(_i18n("models_merged_count", count=len(self.info)))
+
     def get_all_models(self):
         return [mn for mn in self.info]
     
@@ -1581,17 +1599,123 @@ class ModelManager:
     def generate_local_paths(self, model_name: str):
         if not isinstance(model_name, str) or model_name not in self.info:
             raise UnknownModelName(_i18n("unknown_model_name_error", model=model_name))
-        return (self.cache_dir / f"{model_name}.ckpt", 
+        return (self.cache_dir / f"{model_name}.ckpt",
                 self.cache_dir / f"{model_name}_config.yaml")
     
     def check_installed(self, model_name: str):
-        return [path.exists() for path in self.generate_local_paths(model_name)]
-    
+        """Проверяет наличие файлов модели в cache_dir И в custom_models_dir."""
+        cache_paths = self.generate_local_paths(model_name)
+        ckpt_exists = cache_paths[0].exists()
+        conf_exists = cache_paths[1].exists()
+
+        # Если не нашли в кэше — ищем в кастомной директории
+        if self.custom_models_dir and self.custom_models_dir.exists():
+            cd = self.custom_models_dir
+            if not ckpt_exists:
+                for ext in (".ckpt", ".pth", ".pt", ".th", ".chpt"):
+                    if (cd / f"{model_name}{ext}").exists():
+                        ckpt_exists = True
+                        break
+            if not conf_exists:
+                for ext in (".yaml", ".yml"):
+                    if (cd / f"{model_name}_config{ext}").exists() or (cd / f"{model_name}{ext}").exists():
+                        conf_exists = True
+                        break
+
+        return [ckpt_exists, conf_exists]
+
+    def resolve_model_paths(self, model_name: str) -> tuple[Path, Path]:
+        """
+        Возвращает реальные пути (checkpoint, config) для модели.
+        Сначала ищет в cache_dir, потом в custom_models_dir.
+        """
+        ckpt_path, conf_path = self.generate_local_paths(model_name)
+
+        if ckpt_path.exists() and conf_path.exists():
+            return ckpt_path, conf_path
+
+        if self.custom_models_dir and self.custom_models_dir.exists():
+            cd = self.custom_models_dir
+            # Ищем чекпоинт
+            if not ckpt_path.exists():
+                for ext in (".ckpt", ".pth", ".pt", ".th", ".chpt"):
+                    candidate = cd / f"{model_name}{ext}"
+                    if candidate.exists():
+                        ckpt_path = candidate
+                        break
+            # Ищем конфиг
+            if not conf_path.exists():
+                for ext in (".yaml", ".yml"):
+                    for name_variant in (f"{model_name}_config{ext}", f"{model_name}{ext}"):
+                        candidate = cd / name_variant
+                        if candidate.exists():
+                            conf_path = candidate
+                            break
+                    if conf_path.exists():
+                        break
+
+        return ckpt_path, conf_path
+
     def check_installed2(self, model_name: str):
         return all(self.check_installed(model_name))
 
-    def load_info(self):
-        self.info = json.loads(self.info_path.read_text("utf-8"))
+    def load_info(self, source=None):
+        if source is None:
+            source = getattr(self, "model_source", "hface")
+        if source not in MODEL_CATALOG_URLS:
+            source = "hface"
+        self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
+        if not self.info_path.exists():
+            dw_file(MODEL_CATALOG_URLS[source]["url"], self.info_path)
+        try:
+            self.info = json.loads(self.info_path.read_text("utf-8"))
+        except Exception:
+            self.info = {}
+        # ✅ Ре-мерджим кастомный каталог после загрузки базового
+        if getattr(self, "custom_model_info_path", None):
+            self.load_custom_info(self.custom_model_info_path)
+
+    def update_info(self, source=None):
+        if source is None:
+            source = getattr(self, "model_source", "hface")
+        if source not in MODEL_CATALOG_URLS:
+            source = "hface"
+        url = MODEL_CATALOG_URLS[source]["url"]
+        self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
+        dw_file(url, self.info_path)
+        self.load_info(source)  # load_info уже ре-мерджит
+        print(_i18n("model_info_updated"))
+
+    def load_custom_info(self, path: str | Path):
+        """Загружает кастомный JSON-каталог и ОБЪЕДИНЯЕТ его с основным self.info."""
+        path = Path(path)
+        if not path.exists():
+            print(_i18n("custom_model_info_not_found", path=str(path)))
+            return
+        try:
+            custom_catalog: dict = json.loads(path.read_text("utf-8"))
+            if not isinstance(custom_catalog, dict):
+                print(_i18n("custom_model_info_load_error", error="Not a dict"))
+                return
+            # Объединяем: кастомные модели добавляются к основным,
+            # при совпадении ключа кастомная запись перезаписывает основную
+            self.info.update(custom_catalog)
+            print(_i18n("custom_model_info_loaded", path=str(path)))
+        except Exception as e:
+            print(_i18n("custom_model_info_load_error", error=str(e)))
+
+    def add_custom_models_dir(self, path: str | Path):
+        """
+        Добавляет кастомную директорию с файлами моделей (.ckpt/.pth + .yaml).
+        Если в info ещё нет записи для модели, найденной в директории,
+        создаётся минимальная запись.
+        """
+        path = Path(path)
+        if not path.exists():
+            print(_i18n("custom_models_dir_not_found", path=str(path)))
+            return
+        self.custom_models_dir = path
+        print(_i18n("custom_models_dir_added", path=str(path)))
 
     def show_info(self, limit: int = None, stem: str = None, only_installed: bool = False):
         models = []
@@ -1634,24 +1758,26 @@ class ModelManager:
 
         console.print(table)
 
-    def update_info(self, alt1):
-        dw_file("https://modelscope.cn/models/noblebarkrr/mvsepless_resources/resolve/master/models_alt1.json" if alt1 else self.info_url, self.info_path)
-        print(_i18n("model_info_updated"))
-
-    def download(self, model_name: str):
+    def download(self, model_name: str, return_status: bool = False):
         status = ""
         urls = self.get_links(model_name)
         local_paths = self.generate_local_paths(model_name)
         local_exists = self.check_installed(model_name)
+
         for url, local_path, exists in zip(urls, local_paths, local_exists):
-            if not exists:
+            if not exists and url:
                 dw_file(url, local_path)
-        if all(local_exists):
+
+        if all(self.check_installed(model_name)):
             status = _i18n("model_already_downloaded")
         else:
             status = _i18n("model_downloaded")
+
         print(status)
-        return status
+        resolved = self.resolve_model_paths(model_name)
+        if return_status:
+            return status
+        return resolved
 
 class Ensembler:
     def __init__(self):
@@ -1672,8 +1798,14 @@ class Ensembler:
         self.arrays.clear()
 
 class Separator(ModelManager):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, source: str = "hface",
+                 custom_model_info_path: str | Path | None = None,
+                 custom_models_dir: str | Path | None = None):
+        super().__init__(
+            source=source,
+            custom_model_info_path=custom_model_info_path,
+            custom_models_dir=custom_models_dir
+        )
 
     @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def separate_base(
@@ -1718,8 +1850,7 @@ class Separator(ModelManager):
         mssi = MSSI()
         mssi.settings(output_dir=output_dir, output_format=output_format, use_spec_invert=use_spec_invert)
         mssi.set_add_params(**add_params)
-        self.download(model_name)
-        checkpoint, config = self.generate_local_paths(model_name)
+        checkpoint, config = self.download(model_name)
         results = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus, prefer_float)
         return results
 
@@ -2051,8 +2182,7 @@ class Separator(ModelManager):
         for i, (model_name, primary_stem, invert, weight) in enumerate(flow, start=1):
             print(f"{_i18n('model')} {i}/{model_count}")
             try:
-                self.download(model_name)
-                checkpoint, config = self.generate_local_paths(model_name)
+                checkpoint, config = self.download(model_name)
                 output, model_sr = self.auto_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, input_mix, orig_sr, primary_stem, invert)
                 auto_ensembler.add_array(output, model_sr)
                 weights.append(weight)
@@ -2196,8 +2326,7 @@ class Separator(ModelManager):
             for i, (model_name, primary_stem, invert) in enumerate(flow, start=1):
                 print(f"{_i18n('model')} {i}/{model_count}")
                 try:
-                    self.download(model_name)
-                    checkpoint, config = self.generate_local_paths(model_name)
+                    checkpoint, config = self.download(model_name)
                     output, model_sr = self.iterative_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, iteration, num_iters, current_mix, orig_sr, primary_stem, invert)
                     auto_ensembler.add_array(output, model_sr)
                     
@@ -2462,10 +2591,10 @@ class PresetExecutor:
     Строит цепочку выполнения на основе связей между нодами и выполняет их.
     """
     
-    def __init__(self, input_file: str | Path, output_dir: str | Path = ".", template: str = "NAME_STEM", add_params: dict = {}):
+    def __init__(self, input_file: str | Path, output_dir: str | Path = ".", template: str = "NAME_STEM", add_params: dict = {}, model_manager: ModelManager = "ModelManager"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.model_manager = ModelManager()
+        self.model_manager = model_manager
         self.cache: Dict[str, Any] = {}  # Кэш результатов нод
         self.node_outputs: Dict[str, List[Tuple[np.ndarray, int]]] = {}  # Выходы каждой ноды
         self.template = template
@@ -2757,9 +2886,8 @@ class PresetExecutor:
             raise ValueError(_i18n("separate_no_model"))
         
         self.mssi.set_add_params(**self.add_params)
-        self.model_manager.download(model_name)
-        checkpoint, config = self.model_manager.generate_local_paths(model_name)
         model_type = self.model_manager.get_model_type(model_name)
+        checkpoint, config = self.model_manager.download(model_name)
         
         self.mssi.load_model(model_type, checkpoint, config)
         
@@ -3155,8 +3283,12 @@ class PresetExecutor:
 
 if __name__ == "__main__":
     check_taglib_not_installed()
-    separator = Separator()
     args = parse_separator_args(add_params_args)
+    separator = Separator(
+        source=args.model_source,
+        custom_model_info_path=args.custom_model_info_path,
+        custom_models_dir=args.custom_models_dir
+    )
     if args.mode == "separate":
         separator.separate(
             input_files=args.input,
@@ -3269,7 +3401,7 @@ if __name__ == "__main__":
         )
     elif args.mode == "info":
         if args.update:
-            separator.update_info(args.model_scope)
+            separator.update_info(args.model_source)
         elif args.download:
             separator.download(args.model_name)
         elif args.clear_cache:

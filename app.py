@@ -297,10 +297,10 @@ class PresetLessApp(UserDirectory):
         path = self.base_dir / (name + ".json")
         path.unlink(missing_ok=True)
 
-class AutoEnsembleApp(UserDirectory, Separator):
-    def __init__(self):
+class AutoEnsembleApp(UserDirectory):
+    def __init__(self, separator: Separator = "Separator"):
         UserDirectory.__init__(self)
-        Separator.__init__(self)
+        self.separator = separator
         self.base_dir = self.user_directory / base_names_app_dirs[3]
         self.base_dir.mkdir(exist_ok=True)
 
@@ -310,7 +310,7 @@ class AutoEnsembleApp(UserDirectory, Separator):
     def load_preset(self, name: str):
         path = self.base_dir / (name + ".json")
         state = json.loads(path.read_text(encoding="utf-8"))
-        state, warns_str = self.validate_flow(state, non_exists_warn=True)
+        state, warns_str = self.separator.validate_flow(state, non_exists_warn=True)
         return state, warns_str
 
     def save_preset(self, name: str, data: dict):
@@ -814,9 +814,9 @@ class HistoryPhaseFixer(History):
         self.history_dict.update([(f"{timestamp} | {settings_str}", deepcopy(state))])
 
 class IterativeEnsembleApp(UserDirectory, Separator):
-    def __init__(self):
+    def __init__(self, separator: Separator = "Separator"):
         UserDirectory.__init__(self)
-        Separator.__init__(self)
+        self.separator = separator
         self.base_dir = self.user_directory / base_names_app_dirs[8]
         self.base_dir.mkdir(exist_ok=True)
         
@@ -826,7 +826,7 @@ class IterativeEnsembleApp(UserDirectory, Separator):
     def load_preset(self, name: str):
         path = self.base_dir / (name + ".json")
         state = json.loads(path.read_text(encoding="utf-8"))
-        state, warns_str = self.validate_flow(state, non_exists_warn=True, iterative=True)
+        state, warns_str = self.separator.validate_flow(state, non_exists_warn=True, iterative=True)
         return state, warns_str
 
     def save_preset(self, name: str, data: dict):
@@ -1063,21 +1063,31 @@ class CustomSeparationModelsDir(UserDirectory):
         return checkpoint_path, config_path
 
 class App(Separator):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, source: str = "hface",
+                 custom_model_info_path: str | Path | None = None,
+                 custom_models_dir: str | Path | None = None):
+        self.separator = Separator(
+            source=source,
+            custom_model_info_path=custom_model_info_path,
+            custom_models_dir=custom_models_dir
+        )
         self.input_files = InputFilesDatabase()
         self.output_dir = OutputDir()
         self.history = History()
         self.vbach_converter = VbachConverter()
         self.vbach_model_manager = VbachModelsDir()
-        self.auto_ensemble_app = AutoEnsembleApp()
+        self.auto_ensemble_app = AutoEnsembleApp(
+            self.separator
+        )
         self.auto_ensemble_history_app = HistoryAutoEnsemble()
         self.manual_ensemble_history_app = HistoryManualEnsemble()
         self.subtract_history_app = HistorySubtractor()
         self.vbach_history_app = HistoryVbach()
         self.f0_gen_output_path = F0GenerateOutPath()
         self.custom_sep_model_manager = CustomSeparationModelsDir()
-        self.iterative_ensemble_app = IterativeEnsembleApp()
+        self.iterative_ensemble_app = IterativeEnsembleApp(
+            self.separator
+        )
         self.iterative_ensemble_history_app = HistoryIterativeEnsemble()
         self.preset_history = HistoryPresetless()
         self.preset_manager = PresetLessApp()
@@ -1091,11 +1101,11 @@ class App(Separator):
         self._f0_analyze_semaphore = asyncio.Semaphore(2)
 
     def update_model_name(self, model_name):
-        stems = self.get_stems(model_name)
+        stems = self.separator.get_stems(model_name)
         return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems)
 
     def update_model_name_ensemble(self, model_name):
-        stems = self.get_stems(model_name)
+        stems = self.separator.get_stems(model_name)
         if stems:
             first_value = stems[0]
         else:
@@ -1225,9 +1235,9 @@ class App(Separator):
 
     def UI(self, theme=None, hf_space_mode=False) -> gr.Blocks:
         global GDRIVE_DIR, IS_CUSTOM_DIR
-        all_models = self.get_all_models()
+        all_models = self.separator.get_all_models()
         default_model = all_models[0]
-        stems_default = self.get_stems(default_model)
+        stems_default = self.separator.get_stems(default_model)
         ext_inst_visible_default = len(stems_default) > 2
 
         app = FastAPI()
@@ -2156,7 +2166,7 @@ class App(Separator):
                 const svgCanvas = document.getElementById('svg-canvas');
 
                 async function init() {
-                    try {""" + """                      modelsData = """ + json.dumps(self.info, ensure_ascii=False, indent=0) + ";" + """
+                    try {""" + """                      modelsData = """ + json.dumps(self.separator.info, ensure_ascii=False, indent=0) + ";" + """
                     } catch (e) {
                         console.error("Failed to load models.json", e);
                         modelsData = { "NO_MODELS": { "stems": ["Vocals", "Instrumental"] } }; 
@@ -3380,7 +3390,7 @@ class App(Separator):
                 });
 
                 async function init() {
-                    try {""" + """                      modelsData = """ + json.dumps(self.info, ensure_ascii=False, indent=0) + ";" + """
+                    try {""" + """                      modelsData = """ + json.dumps(self.separator.info, ensure_ascii=False, indent=0) + ";" + """
                     } catch (e) {
                         console.error("Failed to load models.json", e);
                         modelsData = { "NO_MODELS": { "stems": ["Vocals", "Instrumental"] } }; 
@@ -4234,7 +4244,7 @@ class App(Separator):
                 });
 
                 async function init() {
-                    try {""" + """                      modelsData = """ + json.dumps(self.info, ensure_ascii=False, indent=0) + ";" + """
+                    try {""" + """                      modelsData = """ + json.dumps(self.separator.info, ensure_ascii=False, indent=0) + ";" + """
                     } catch (e) {
                         console.error("Failed to load models.json", e);
                         modelsData = { "NO_MODELS": { "stems": ["Vocals", "Instrumental"] } }; 
@@ -7047,7 +7057,7 @@ class App(Separator):
                                     gr.Warning(_i18n("paths_not_specified"))
                                     return [], gr.skip()
                                 
-                                results = self.custom_separate(
+                                results = self.separator.custom_separate(
                                     input_files=input_files, 
                                     output_dir=self.output_dir.gen_output_dir(), 
                                     output_format=output_format, 
@@ -7065,7 +7075,7 @@ class App(Separator):
                                 
                                 model_name = Path(checkpoint_path).stem
                             else:
-                                results = self.separate(
+                                results = self.separator.separate(
                                     input_files=input_files, output_dir=self.output_dir.gen_output_dir(), 
                                     output_format=output_format, template=tmpl, model_name=model_name, extract_instrumental=ext_inst, 
                                     use_spec_invert=spec_invert, invert_plus=sum_stems, prefer_float=pref_f, selected_stems=sel_stems, add_params=add_params
@@ -7336,14 +7346,15 @@ class App(Separator):
                                     # <-- ИСПРАВЛЕНО: обновляем статус внутри словаря конкретной сессии
                                     self.sessions_statuses[session_hash][data["nodeId"]] = data["status"]
                             preset_name = preset.get("name", "no_named_preset")
-                            separator = PresetExecutor(
+                            preset_executor = PresetExecutor(
                                 input_file=one_element_list_to_value(input_file),
                                 output_dir=self.output_dir.gen_output_dir(),
                                 template=template,
-                                add_params=add_params
+                                add_params=add_params,
+                                model_manager=self.separator
                             )
                             try:
-                                result = separator.execute_preset(
+                                result = preset_executor.execute_preset(
                                     preset=preset, progress_callback=progress_callback
                                 )
                             finally:
@@ -7492,7 +7503,7 @@ class App(Separator):
 
                         @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems, auto_ensemble_preset_state, auto_ensemble_prefer_float], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn, auto_ensemble_generate_zip_btn, auto_ensemble_zip_is_generated], concurrency_id="mvsepless_app_inference_ensemble")
                         def auto_ensemble_wrapper_fn(input_file: list, template: str, etype: str, spec_invert: bool, out_format: str, save_pr_stems: bool, flow: list[list], pref_f: bool, progress=gr.Progress(track_tqdm=True)):
-                            out, iout, pr_stems = self.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=json.loads(flow), template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems, prefer_float=pref_f)
+                            out, iout, pr_stems = self.separator.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=json.loads(flow), template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems, prefer_float=pref_f)
                             self.auto_ensemble_history_app.add_to_history(etype, out, iout, pr_stems)
                             return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.skip(), gr.update(visible=True), gr.update(visible=True), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=True, **base_c_params["base"]), gr.update(value=False)
 
@@ -7695,7 +7706,7 @@ class App(Separator):
                                 gr.Warning(_i18n("flow_empty"))
                                 return update_audio_with_size(label=_i18n("ensemble_result"), value=None), [], gr.skip(), gr.update(visible=False), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=False, **base_c_params["base"]), gr.update(value=False)
                             
-                            result_path, intermediate_files = self.iterative_ensemble(
+                            result_path, intermediate_files = self.separator.iterative_ensemble(
                                 input_file=one_element_list_to_value(input_file),
                                 output_dir=self.output_dir.gen_output_dir(),
                                 flow=json.loads(flow),
@@ -7801,7 +7812,7 @@ class App(Separator):
                                 weights = [float(weight) for weight in weights_str.split(",")]
                             else:
                                 weights = []
-                            result = self.manual_ensemble(input_files, self.output_dir.gen_output_dir(), weights, template, etype, out_format, pref_f)
+                            result = self.separator.manual_ensemble(input_files, self.output_dir.gen_output_dir(), weights, template, etype, out_format, pref_f)
                             self.manual_ensemble_history_app.add_to_history(etype, result)
                             return update_audio_with_size(label=_i18n("ensemble_result"), value=result), gr.update(visible=True)
 
@@ -7888,7 +7899,7 @@ class App(Separator):
 
                         @subtract_run_btn.click(inputs=[subtract_1_input_file, subtract_2_input_file, subtract_output_format, subtract_use_spec_invert, subtract_template, subtract_prefer_float], outputs=[subtract_output_audio, subtract_output_audio_reuse_btn])
                         def subtract_run_fn(input_1: list, input_2: list, out_format: str, spec_invert: bool, template: str, pref_f: bool, progress=gr.Progress(track_tqdm=True)):
-                            result = self.subtract(one_element_list_to_value(input_1), one_element_list_to_value(input_2), self.output_dir.gen_output_dir(), out_format, spec_invert, template, pref_f)
+                            result = self.separator.subtract(one_element_list_to_value(input_1), one_element_list_to_value(input_2), self.output_dir.gen_output_dir(), out_format, spec_invert, template, pref_f)
                             self.subtract_history_app.add_to_history(("spectrogram" if spec_invert else "waveform"), result)
                             return update_audio_with_size(label=_i18n("inverted_result"), value=result), gr.update(visible=True)
 
@@ -7997,7 +8008,7 @@ class App(Separator):
                         if not target_val or not source_val:
                             gr.Warning(_i18n("paths_not_specified"))
                             return gr.skip(), gr.skip()
-                        result = self.phase_fixer(
+                        result = self.separator.phase_fixer(
                             target=target_val,
                             source=source_val,
                             output_dir=self.output_dir.gen_output_dir(),
@@ -8914,7 +8925,7 @@ class App(Separator):
                                     sep_download_status = gr.Textbox(label=_i18n("status"), value="", interactive=False, lines=3, max_lines=3)
                                     @sep_download_btn.click(inputs=sep_download_model_name, outputs=sep_download_status)
                                     def download_sep_model_fn(name: str, progress=gr.Progress(track_tqdm=True)):
-                                        status = self.download(name)
+                                        status = self.separator.download(name, return_status=True)
                                         gr.Info(title=status, message="")
                                         return status
                             # ===== Колонка 2: кастомные модели =====
@@ -9091,8 +9102,20 @@ theme = gr.themes.Base(
 if __name__ == "__main__":
     check_taglib_not_installed()
     args = parse_app_args()
-    app = App()
+
+    app = App(
+        source=args.model_source,
+        custom_model_info_path=args.custom_model_info_path,
+        custom_models_dir=args.custom_models_dir
+    )
+
     if not args.full:
-        app.update_info(False)
-        app.load_info()
-    app.launch(theme=theme, hf_space_mode=not args.full, share=args.share, server_port=args.port, server_name="0.0.0.0")
+        app.update_info()
+
+    app.launch(
+        theme=theme,
+        hf_space_mode=not args.full,
+        share=args.share,
+        server_port=args.port,
+        server_name="0.0.0.0"
+    )

@@ -38,6 +38,26 @@ class NestedStoreTrue(argparse.Action):
         setattr(groupspace, attr, True)
         setattr(namespace, group, groupspace)
 
+def add_custom_sources_args(parser):
+    parser.add_argument(
+        "--add_custom_model_info_path", "--add-custom-model-info-path",
+        "--model_info", "--model-info", "-minfo",
+        type=str, dest="custom_model_info_path", default=None,
+        help=_i18n("arg_custom_model_info_help")
+    )
+    parser.add_argument(
+        "--add_custom_models_dir", "--add-custom-models-dir",
+        "--models_dir", "--models-dir", "-mdir",
+        type=str, dest="custom_models_dir", default=None,
+        help=_i18n("arg_custom_models_dir_help")
+    )
+    parser.add_argument(
+        "--model_source", "--model-source", "-msrc",
+        type=str, dest="model_source", default="hface",
+        choices=["hface", "hf", "huggingface", "mscope", "ms", "modelscope"],
+        help=_i18n("arg_model_source_help")
+    )
+
 def parse_separator_args(add_params_args: dict = {}):
     parser = argparse.ArgumentParser(
         description=_i18n("arg_main_description"),
@@ -57,7 +77,7 @@ def parse_separator_args(add_params_args: dict = {}):
         description=_i18n("arg_separate_description"),
         epilog=_i18n("arg_separate_epilog")
     )
-    
+    add_custom_sources_args(separate_parser)
     # custom_separate
     custom_separate_parser = subparsers.add_parser(
         "custom_separate",
@@ -73,7 +93,7 @@ def parse_separator_args(add_params_args: dict = {}):
         description=_i18n("arg_info_description"),
         epilog=_i18n("arg_info_epilog")
     )
-    
+    add_custom_sources_args(info_parser)
     # auto_ensemble
     auto_ensemble_parser = subparsers.add_parser(
         "auto_ensemble",
@@ -81,7 +101,7 @@ def parse_separator_args(add_params_args: dict = {}):
         description=_i18n("arg_auto_ensemble_description"),
         epilog=_i18n("arg_auto_ensemble_epilog")
     )
-    
+    add_custom_sources_args(auto_ensemble_parser)
     # manual_ensemble
     manual_ensemble_parser = subparsers.add_parser(
         "manual_ensemble",
@@ -238,6 +258,7 @@ def parse_separator_args(add_params_args: dict = {}):
         description=_i18n("arg_iterative_ensemble_description"),
         epilog=_i18n("arg_iterative_ensemble_epilog")
     )
+    add_custom_sources_args(iterative_ensemble_parser)
     
     iterative_ensemble_parser.add_argument(
         "-i", "--i", "-input", "--input", "--input_file", "--input-file", 
@@ -778,6 +799,24 @@ def parse_app_args():
     parser = argparse.ArgumentParser(
         description=_i18n("app_description"),
         epilog=_i18n("app_epilog")
+    )
+    parser.add_argument(
+        "--add_custom_model_info_path", "--add-custom-model-info-path",
+        "--model_info", "--model-info", "-minfo",
+        type=str, dest="custom_model_info_path", default=None,
+        help=_i18n("arg_custom_model_info_help")
+    )
+    parser.add_argument(
+        "--add_custom_models_dir", "--add-custom-models-dir",
+        "--models_dir", "--models-dir", "-mdir",
+        type=str, dest="custom_models_dir", default=None,
+        help=_i18n("arg_custom_models_dir_help")
+    )
+    parser.add_argument(
+        "--model_source", "--model-source", "-msrc",
+        type=str, dest="model_source", default="hface",
+        choices=["hface", "hf", "huggingface", "mscope", "ms", "modelscope"],
+        help=_i18n("arg_model_source_help")
     )
     parser.add_argument(
         "-s", "-share", "--share", "--public", "--gradio_share", "--gradio-share", 
