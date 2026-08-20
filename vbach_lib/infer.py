@@ -205,10 +205,11 @@ class VbachConverter:
         template = Namer.short(template, length=40)
 
         if not model_path:
-            raise VbachModelNotFound()
+            raise VbachModelNotFound(_i18n("path_not_specified"))
     
         self.get_vc(model_path, use_transformers)
         model_name = Path(model_path).stem
+        short_model_name = Namer.short(model_name, length=50)
     
         if not self.hubert_model:
             self.load_hubert(embedder_model, use_transformers)
@@ -267,8 +268,8 @@ class VbachConverter:
                     template,
                     PITCH=pitch,
                     F0METHOD=f0_method,
-                    MODEL=model_name,
-                    NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD=f0_method, MODEL=model_name, NAME=input_file_name)
+                    MODEL=short_model_name,
+                    NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD=f0_method, MODEL=short_model_name, NAME=input_file_name)
                 )
                 new_metadata = {}
                 if metadata:
@@ -322,9 +323,10 @@ class VbachConverter:
         template = Namer.short(template, length=40)
 
         if not model_path:
-            raise VbachModelNotFound()
+            raise VbachModelNotFound(_i18n("path_not_specified"))
 
         model_name = Path(model_path).stem
+        short_model_name = Namer.short(model_name, length=50)
         self.get_vc(model_path, use_transformers)
     
         if not self.hubert_model:
@@ -381,8 +383,8 @@ class VbachConverter:
                 template,
                 PITCH=pitch,
                 F0METHOD="custom",
-                MODEL=model_name,
-                NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD="custom", MODEL=model_name, NAME=input_file_name)
+                MODEL=short_model_name,
+                NAME=Namer.short_input_name_template(template, PITCH=pitch, F0METHOD="custom", MODEL=short_model_name, NAME=input_file_name)
             )
             new_metadata = {}
             if metadata:
