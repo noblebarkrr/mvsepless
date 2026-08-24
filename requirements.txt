@@ -1,10 +1,14 @@
 torch>=2.6.0
 torchvision
 torchaudio
-numpy>=2.0.2,<2.1.3
+numpy>=2.0.0,<=2.0.2 ; python_version >= "3.10" and python_version < "3.13"
+numpy>=2.1.2,<=2.1.3 ; python_version == "3.13"
+numpy>=2.3.2,<=2.3.5 ; python_version == "3.14" # используются только бинарные версии
+numba==0.67.0 ; python_version == "3.14" # фикс для numpy 2.3.2 и выше
+pillow<13
 pandas
 scipy
-librosa
+librosa>=0.10.0
 samplerate==0.1.0
 matplotlib
 tqdm
@@ -35,12 +39,14 @@ onnx>=1.17
 onnx2torch>=0.3.0
 ml_dtypes
 resampy
+psutil # В некоторых средах выполнения этот пакет иногда не установлен по умолчанию
 yt_dlp
 pyngrok
 rich
 torchcrepe
 praat-parselmouth
-faiss-cpu==1.11
+faiss-cpu==1.11 ; python_version >= "3.10" and python_version <= "3.13"
+faiss-cpu==1.15 ; python_version == "3.14" # фикс для python 3.14
 local-attention
 tenacity
 pyworld

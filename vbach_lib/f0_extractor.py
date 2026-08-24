@@ -147,7 +147,7 @@ def f0_extract(
         )
         f0 = np.nan_to_num(target)
 
-    if f0_method in ["mangio-crepe+unvoiced_rmvpe", "mangio-crepe-tiny+unvoiced_rmvpe"]:
+    elif f0_method in ["mangio-crepe+unvoiced_rmvpe", "mangio-crepe-tiny+unvoiced_rmvpe"]:
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         audio = torch.from_numpy(x).to(device, copy=True).unsqueeze(0)

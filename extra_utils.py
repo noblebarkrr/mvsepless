@@ -469,12 +469,6 @@ def windows_nuclear_ram_clear():
         pass
 
 def nuclear_clear_model():
-    """
-    Ядерная очистка RAM. Возвращает освобожденные МБ.
-    
-    Args:
-        aggressive: Если True, использует платформенно-специфичные вызовы
-    """
     process = psutil.Process(os.getpid())
     mem_before = process.memory_info().rss
     
