@@ -11,7 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 
 from collections import deque
-from extra_utils import hf_spaces_gpu, dw_file, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
+from extra_utils import hf_spaces_gpu, dw_file, dw_file_parts, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
+from urllib.parse import urlparse
 from datetime import datetime
 import torch
 import rich
@@ -68,6 +69,7 @@ def generate_metadata_from_stem(input_file_name: str, metadata: dict, stem: str,
     return new_metadata
 
 MODEL_CATALOG_URLS = {
+    **dict.fromkeys(["github", "gh"], {"url": "https://raw.githubusercontent.com/mvsepless-resources/model_files/refs/heads/main/models.json", "name": "models_github.json"}),
     **dict.fromkeys(["huggingface", "hf", "hface"], {"url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/models.json?download=true", "name": "models_hf.json"}),
     **dict.fromkeys(["modelscope", "ms", "mscope"], {"url": "https://modelscope.cn/models/noblebarkrr/mvsepless_resources/resolve/master/models_alt1.json", "name": "models_mscope.json"})
 }
@@ -1541,7 +1543,7 @@ class MSSI: # Music Source Separation Inference
         return self.get_outputs()
     
 class ModelManager:
-    def __init__(self, source="hface",
+    def __init__(self, source="github",
                  custom_model_info_path=None,
                  custom_models_dir=None):
         self.info: dict = {}
@@ -1550,7 +1552,7 @@ class ModelManager:
         self.custom_model_info_path = custom_model_info_path
 
         if source not in MODEL_CATALOG_URLS:
-            source = "hface"
+            source = "github"
         self.model_source = source
         self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
         self.load_info(source)
@@ -1602,6 +1604,16 @@ class ModelManager:
         return (self.cache_dir / f"{model_name}.ckpt",
                 self.cache_dir / f"{model_name}_config.yaml")
     
+    def check_is_parts(self, model_name: str):
+        return "checkpoint_parts" in self.info.get(model_name, {})
+
+    def get_ckpt_parts(self, model_name: str):
+        return self.info.get(model_name, {}).get("checkpoint_parts", [])
+
+    def part_to_url(self, base_url: str, part_name: str):
+        url = urlparse(base_url)._replace(query="", fragment="").geturl()
+        return url + part_name
+
     def check_installed(self, model_name: str):
         """Проверяет наличие файлов модели в cache_dir И в custom_models_dir."""
         cache_paths = self.generate_local_paths(model_name)
@@ -1763,10 +1775,19 @@ class ModelManager:
         urls = self.get_links(model_name)
         local_paths = self.generate_local_paths(model_name)
         local_exists = self.check_installed(model_name)
+        is_partially = self.check_is_parts(model_name)
+        checkpoint_url, config_url = urls
+        checkpoint_path, config_path = local_paths
+        checkpoint_exists, config_exists = local_exists
+        if not checkpoint_exists and checkpoint_url:
+            if is_partially:
+                parts = [self.part_to_url(checkpoint_url, part) for part in self.get_ckpt_parts(model_name)]
+                dw_file_parts(parts, checkpoint_path)
+            else:
+                dw_file(checkpoint_url, checkpoint_path)
 
-        for url, local_path, exists in zip(urls, local_paths, local_exists):
-            if not exists and url:
-                dw_file(url, local_path)
+        if not config_exists and config_url:
+            dw_file(config_url, config_path)
 
         if all(self.check_installed(model_name)):
             status = _i18n("model_already_downloaded")

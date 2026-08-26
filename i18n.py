@@ -840,6 +840,11 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "custom_models_dir_not_found": "Кастомная директория моделей не найдена: {path}",
         "custom_model_info_load_error": "Ошибка загрузки кастомного каталога моделей: {error}",
         "models_merged_count": "Всего моделей в объединённом каталоге: {count}",
+        "download_no_content_length": "Сервер не вернул размер файла (Content-Length)",
+        "download_cannot_determine_size": "Не удалось определить размер файла для параллельной загрузки",
+        "combining_parts": "Склеивание частей",
+        "downloading_parts": "Скачивание частей файла",
+        "parts": "частей"
     },
     "en": {
         "bytes": "B",
@@ -1663,7 +1668,11 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "custom_models_dir_not_found": "Custom models directory not found: {path}",
         "custom_model_info_load_error": "Error loading custom model catalog: {error}",
         "models_merged_count": "Total models in merged catalog: {count}",
-
+        "download_no_content_length": "Server did not return file size (Content-Length)",
+        "download_cannot_determine_size": "Cannot determine file size for parallel download",
+        "combining_parts": "Combining parts",
+        "downloading_parts": "Downloading file parts",
+        "parts" : "parts"
     }
 }
 

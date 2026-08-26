@@ -22,7 +22,10 @@ import platform
 import numpy as np
 import yt_dlp
 import subprocess
+import tempfile
 from urllib.parse import urlparse, urlunparse
+from queue import Queue, Empty
+import threading
 
 try:
     import spaces
@@ -91,6 +94,7 @@ def easy_check_is_colab() -> bool:
         return False
 
 class DownloadError(Exception): pass
+class FileExistsError(Exception): pass
 
 base_c_params = {
     "input_file": {
@@ -224,94 +228,243 @@ def dw_file(
     local_path: Union[str, Path],
     retries: int = 180,
     timeout: int = 300,
-    chunk_size: int = 8192,
-    progress_callback: Optional[Callable[[int, int], None]] = None
+    chunk_size: int = 8 * 1024 * 1024,  # Увеличен до 8MB для снижения накладных расходов
+    progress_callback: Optional[Callable[[int, int], None]] = None,
+    expected_hash: Optional[str] = None,
+    hash_algorithm: str = "sha256",
+    desc: Optional[str] = None
 ) -> None:
     """
-    Download file with resume support and hash verification
-    
-    Args:
-        url_model: File URL
-        local_path: Local path for saving
-        retries: Number of retry attempts
-        timeout: Request timeout in seconds
-        chunk_size: Download chunk size in bytes
-        resume: Enable resume for partial downloads
-        expected_hash: Expected hash value (if None and auto_detect_hash=True, try to get from server)
-        hash_algorithm: Hash algorithm to use (md5, sha1, sha256, sha512)
-        auto_detect_hash: Try to get hash from server automatically
-        verify_after_download: Verify hash after download completion
-        progress_callback: Optional callback for progress updates (current, total)
-    
-    Raises:
-        DownloadError: If download fails or hash verification fails
+    Высокопроизводительная загрузка с неблокирующим I/O и стабильным прогрессом в Gradio.
     """
     local_path_ = Path(local_path)
     local_path_.parent.mkdir(parents=True, exist_ok=True)
-    
 
-    headers = {}
-    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; MVSepless/1.0)",
+        "Accept-Encoding": "identity" 
+    }
+
     for attempt in range(retries):
         try:
+            initial_pos = 0
+            mode = "wb"
+            
+            if local_path_.exists():
+                initial_pos = local_path_.stat().st_size
+                headers["Range"] = f"bytes={initial_pos}-"
+                mode = "ab"
+
             with requests.Session() as session:
-                session.headers.update({
-                    "User-Agent": "Mozilla/5.0 (compatible; MVSepless/1.0)"
-                })
+                response = session.get(url_model, stream=True, timeout=timeout, headers=headers)
                 
-                response = session.get(
-                    url_model, 
-                    stream=True, 
-                    timeout=timeout, 
-                    headers=headers
-                )
-                
-                # Handle response status
-                if response.status_code == 200:
-                    # Full download (not resumed)
+                if response.status_code == 206:
+                    total_size = int(response.headers.get("content-length", 0)) + initial_pos
+                elif response.status_code == 200:
+                    if initial_pos > 0:
+                        mode = "wb"
+                        initial_pos = 0
+                        del headers["Range"]
                     total_size = int(response.headers.get("content-length", 0))
-                    mode = "wb"
-                    initial_progress = 0
-                    print(f"[{_i18n('status')}] {_i18n('download_start')} {format_size(total_size)}")
-                    
                 else:
                     raise DownloadError(f"HTTP {response.status_code}")
+
+                if initial_pos == total_size and total_size > 0:
+                    return
+
+                display_name = desc if desc else local_path_.name
                 
-                # Download with progress bar
-                with tqdm(
-                    total=total_size,
-                    desc=local_path_.name,
-                    unit="B",
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    initial=initial_progress,
-                    bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
-                ) as progress_bar:
-                    
-                    with open(local_path_, mode) as f:
+                # Очередь для разделения сетевого чтения и записи на диск
+                write_queue: Queue = Queue(maxsize=10)
+                write_error = None
+
+                def writer_thread():
+                    nonlocal write_error
+                    try:
+                        with open(local_path_, mode, buffering=chunk_size * 2) as f:
+                            while True:
+                                chunk = write_queue.get()
+                                if chunk is None:
+                                    break
+                                f.write(chunk)
+                    except Exception as e:
+                        write_error = e
+
+                # Запускаем отдельный поток для записи
+                writer = threading.Thread(target=writer_thread, daemon=True)
+                writer.start()
+
+                try:
+                    with tqdm(
+                        total=total_size,
+                        initial=initial_pos,
+                        desc=display_name,
+                        unit="B",
+                        unit_scale=True,
+                        unit_divisor=1024,
+                        disable=False,
+                        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+                    ) as pbar:
                         for chunk in response.iter_content(chunk_size=chunk_size):
                             if chunk:
-                                f.write(chunk)
-                                progress_bar.update(len(chunk))
+                                # Сеть читает и сразу кладет в очередь, не блокируясь на диске
+                                write_queue.put(chunk)
+                                pbar.update(len(chunk))
+                                
+                                # Мгновенное обновление для Gradio
+                                if hasattr(pbar, 'container') and pbar.container is not None:
+                                    try:
+                                        pbar.refresh()
+                                    except:
+                                        pass
+                                        
                                 if progress_callback:
-                                    progress_callback(progress_bar.n, total_size)
-                
-                print(f"[{_i18n('status')}] ✓ {_i18n('download_complete')}: {local_path_}")
+                                    progress_callback(pbar.n, total_size)
+                    
+                    # Сигнал завершения записи
+                    write_queue.put(None)
+                    writer.join(timeout=30)
+                    
+                    if write_error:
+                        raise write_error
+                        
+                except Exception:
+                    write_queue.put(None)
+                    writer.join(timeout=5)
+                    raise
+                    
                 return
                 
         except (requests.RequestException, DownloadError) as e:
-            print(_i18n(
-                "download_attempt_failed", 
-                attempt=attempt + 1, 
-                retries=retries, 
-                error=str(e)
-            ))
-            
+            print(_i18n("download_attempt_failed", attempt=attempt+1, retries=retries, error=str(e)))
             if attempt < retries - 1:
-                print(_i18n("retrying"))
+                wait_time = min(2 ** attempt, 60)
+                time.sleep(wait_time)
             else:
-                print(_i18n("all_download_attempts_failed"))
                 raise DownloadError(f"{_i18n('download_error', error=str(e))}")
+
+def _download_chunk_worker(url: str, start: int, end: int, temp_path: Path, timeout: int, chunk_size: int):
+    """Воркер для загрузки одного куска файла в отдельном потоке."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; MVSepless/1.0)",
+        "Range": f"bytes={start}-{end}"
+    }
+    try:
+        with requests.Session() as s:
+            resp = s.get(url, stream=True, timeout=timeout, headers=headers)
+            if resp.status_code != 206:
+                raise DownloadError(f"Server does not support ranges or HTTP {resp.status_code}")
+            
+            with open(temp_path, 'wb', buffering=chunk_size) as f:
+                for chunk in resp.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        f.write(chunk)
+        return True
+    except Exception as e:
+        raise e
+
+def dw_file_parts(
+    urls: list[str],
+    local_path: Union[str, Path],
+    retries: int = 3,
+    timeout: int = 300,
+    max_workers: int = 4,
+    chunk_size: int = 4 * 1024 * 1024
+) -> None:
+    """
+    Параллельная загрузка частей файла с корректным отображением прогресса в Gradio.
+    """
+    local_path_ = Path(local_path)
+    local_path_.parent.mkdir(parents=True, exist_ok=True)
+
+    temp_dir = Path(tempfile.mkdtemp(prefix="mvsepless_dl_"))
+    temp_files = [temp_dir / f"part_{i}" for i in range(len(urls))]
+
+    print(f"[{_i18n('status')}] {_i18n('downloading_parts')} ({len(urls)} {_i18n('parts')})...")
+
+    # Очередь для передачи прогресса из рабочих потоков в основной
+    progress_queue: Queue = Queue()
+
+    try:
+        # Узнаем размеры всех файлов
+        sizes = []
+        for url in urls:
+            try:
+                r = requests.head(url, timeout=timeout, allow_redirects=True)
+                size = int(r.headers.get('content-length', 0))
+                sizes.append(size)
+            except:
+                sizes.append(0)
+        total_size = sum(sizes)
+
+        def worker_with_progress(url, t_path, idx):
+            """Воркер скачивает часть и кладёт размер каждого чанка в очередь."""
+            try:
+                h = {"User-Agent": "Mozilla/5.0 (compatible; MVSepless/1.0)"}
+                with requests.Session() as s:
+                    r = s.get(url, stream=True, timeout=timeout, headers=h)
+                    with open(t_path, 'wb', buffering=chunk_size) as f:
+                        for chunk in r.iter_content(chunk_size=chunk_size):
+                            if chunk:
+                                f.write(chunk)
+                                progress_queue.put(len(chunk))  # ← в очередь, не в pbar
+            except Exception as e:
+                progress_queue.put(e)  # Пробрасываем ошибку в основной поток
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(worker_with_progress, u, t, i)
+                for i, (u, t) in enumerate(zip(urls, temp_files))
+            ]
+
+            # tqdm обновляется ТОЛЬКО в основном потоке — Gradio это видит
+            with tqdm(
+                total=total_size,
+                desc=_i18n("combining_parts"),
+                unit="B",
+                unit_scale=True
+            ) as pbar:
+                active_workers = len(futures)
+                while active_workers > 0:
+                    try:
+                        item = progress_queue.get(timeout=0.1)
+                        if isinstance(item, Exception):
+                            raise item
+                        pbar.update(item)
+                    except Empty:
+                        pass
+                    # Считаем завершённые воркеры
+                    active_workers = sum(1 for f in futures if not f.done())
+
+                # Дочитываем остаток очереди (на случай race condition)
+                while not progress_queue.empty():
+                    try:
+                        item = progress_queue.get_nowait()
+                        if isinstance(item, Exception):
+                            raise item
+                        pbar.update(item)
+                    except Empty:
+                        break
+
+        # Склеивание
+        print(f"[{_i18n('status')}] {_i18n('combining_parts')}...")
+        with open(local_path_, 'wb', buffering=chunk_size) as outfile:
+            for t_path in temp_files:
+                with open(t_path, 'rb') as infile:
+                    while True:
+                        data = infile.read(chunk_size)
+                        if not data:
+                            break
+                        outfile.write(data)
+
+        print(f"[{_i18n('status')}] ✓ {_i18n('download_complete')}: {local_path_}")
+
+    finally:
+        for t_path in temp_files:
+            if t_path.exists():
+                t_path.unlink()
+        if temp_dir.exists():
+            temp_dir.rmdir()
 
 def dw_yt_dlp(
     url: str,

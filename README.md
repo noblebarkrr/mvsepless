@@ -18,6 +18,13 @@ https://mvsepless-resources.github.io/model_info_page/
 
 (используется информация из репозитория [noblebarkrr/mvsepless_resources](https://huggingface.co/noblebarkrr/mvsepless_resources) на Hugging Face)
 
+## Источники моделей
+
+- Hugging Face ("hface", "hf", "huggingface") - Оригинал
+- Github ("github", "gh") - Перезалив оригинала на Github Releases (более быстрая загрузка, чекпоинты тяжелее 2 гб разделены на несколько частей, по 2 гб каждая)
+- ModelScope ("mscope", "ms", "modelscope") - Запасной вариант (редко обновляется, зачастую загрузка очень медленная)
+
+
 ## Фишки
 
 - Извлечение инструментала (инверсии выбранных стемов)
