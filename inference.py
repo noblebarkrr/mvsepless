@@ -3425,6 +3425,8 @@ if __name__ == "__main__":
     elif args.mode == "info":
         if args.update:
             separator.update_info(args.model_source)
+        elif args.get:
+            separator.load_info(args.model_source)
         elif args.download:
             separator.download(args.model_name)
         elif args.clear_cache:

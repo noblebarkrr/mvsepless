@@ -435,7 +435,7 @@ def parse_separator_args(add_params_args: dict = {}):
         help=_i18n("arg_update_help")
     )
     info_parser.add_argument(
-        "-alt1", "--model_scope", dest="model_scope", action="store_true"
+        "-get", "--get", dest="get", action="store_true"
     )
     info_parser.add_argument(
         "-clear", "-clear_cache", "-clear-cache", "--clear_cache", "--clear-cache", 
