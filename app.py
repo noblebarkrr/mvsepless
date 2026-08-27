@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
-from extra_utils import tz, define_audio_with_size, define_download_button_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_yt_dlp, get_disk_usage, share_gradio_tunnel
+from extra_utils import tz, define_audio_with_size, define_download_button_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_file_legacy, dw_yt_dlp, get_disk_usage, share_gradio_tunnel
 from inference import Separator, PresetExecutor, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple, custom_model_types, default_add_params
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
@@ -1012,7 +1012,7 @@ class CustomSeparationModelsDir(UserDirectory):
         config_status = None
         checkpoint_status = None
         if config_url:
-            dw_file(config_url, Namer.iter(self.configs_dir / self.get_config_name_from_link(config_url)))
+            dw_file_legacy(config_url, Namer.iter(self.configs_dir / self.get_config_name_from_link(config_url)))
             config_status = _i18n("custom_model_config_downloaded")+"\n"
         if checkpoint_url:
             dw_file(checkpoint_url, Namer.iter(self.checkpoints_dir / self.get_checkpoint_name_from_link(checkpoint_url)))
