@@ -815,7 +815,7 @@ def parse_app_args():
     parser.add_argument(
         "--model_source", "--model-source", "-msrc",
         type=str, dest="model_source", default="hface",
-        choices=["hface", "hf", "huggingface", "mscope", "ms", "modelscope"],
+        choices=["hface", "hf", "huggingface", "mscope", "ms", "modelscope", "github", "gh"],
         help=_i18n("arg_model_source_help")
     )
     parser.add_argument(

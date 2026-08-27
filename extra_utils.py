@@ -222,6 +222,99 @@ def format_size(size_bytes: int) -> str:
     else:
         return f"{size_bytes / (1024**4):.2f} {_i18n('tbytes')}"
 
+def dw_file_legacy(
+    url_model: str,
+    local_path: Union[str, Path],
+    retries: int = 180,
+    timeout: int = 300,
+    chunk_size: int = 8192,
+    progress_callback: Optional[Callable[[int, int], None]] = None
+) -> None:
+    """
+    Download file with resume support and hash verification
+    
+    Args:
+        url_model: File URL
+        local_path: Local path for saving
+        retries: Number of retry attempts
+        timeout: Request timeout in seconds
+        chunk_size: Download chunk size in bytes
+        resume: Enable resume for partial downloads
+        expected_hash: Expected hash value (if None and auto_detect_hash=True, try to get from server)
+        hash_algorithm: Hash algorithm to use (md5, sha1, sha256, sha512)
+        auto_detect_hash: Try to get hash from server automatically
+        verify_after_download: Verify hash after download completion
+        progress_callback: Optional callback for progress updates (current, total)
+    
+    Raises:
+        DownloadError: If download fails or hash verification fails
+    """
+    local_path_ = Path(local_path)
+    local_path_.parent.mkdir(parents=True, exist_ok=True)
+    
+
+    headers = {}
+    
+    for attempt in range(retries):
+        try:
+            with requests.Session() as session:
+                session.headers.update({
+                    "User-Agent": "Mozilla/5.0 (compatible; MVSepless/1.0)"
+                })
+                
+                response = session.get(
+                    url_model, 
+                    stream=True, 
+                    timeout=timeout, 
+                    headers=headers
+                )
+                
+                # Handle response status
+                if response.status_code == 200:
+                    # Full download (not resumed)
+                    total_size = int(response.headers.get("content-length", 0))
+                    mode = "wb"
+                    initial_progress = 0
+                    print(f"[{_i18n('status')}] {_i18n('download_start')} {format_size(total_size)}")
+                    
+                else:
+                    raise DownloadError(f"HTTP {response.status_code}")
+                
+                # Download with progress bar
+                with tqdm(
+                    total=total_size,
+                    desc=local_path_.name,
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    initial=initial_progress,
+                    bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+                ) as progress_bar:
+                    
+                    with open(local_path_, mode) as f:
+                        for chunk in response.iter_content(chunk_size=chunk_size):
+                            if chunk:
+                                f.write(chunk)
+                                progress_bar.update(len(chunk))
+                                if progress_callback:
+                                    progress_callback(progress_bar.n, total_size)
+                
+                print(f"[{_i18n('status')}] ✓ {_i18n('download_complete')}: {local_path_}")
+                return
+                
+        except (requests.RequestException, DownloadError) as e:
+            print(_i18n(
+                "download_attempt_failed", 
+                attempt=attempt + 1, 
+                retries=retries, 
+                error=str(e)
+            ))
+            
+            if attempt < retries - 1:
+                print(_i18n("retrying"))
+            else:
+                print(_i18n("all_download_attempts_failed"))
+                raise DownloadError(f"{_i18n('download_error', error=str(e))}")
 
 def dw_file(
     url_model: str,

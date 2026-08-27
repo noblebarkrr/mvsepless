@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 
 from collections import deque
-from extra_utils import hf_spaces_gpu, dw_file, dw_file_parts, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
+from extra_utils import hf_spaces_gpu, dw_file, dw_file_parts, dw_file_legacy, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
 from urllib.parse import urlparse
 from datetime import datetime
 import torch
@@ -1672,13 +1672,14 @@ class ModelManager:
         return all(self.check_installed(model_name))
 
     def load_info(self, source=None):
-        if source is None:
-            source = getattr(self, "model_source", "hface")
         if source not in MODEL_CATALOG_URLS:
-            source = "hface"
-        self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
+            source = None
+        if source is None:
+            self.info_path = Path(BASE_DIR) / "models.json"
+        else:
+            self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
         if not self.info_path.exists():
-            dw_file(MODEL_CATALOG_URLS[source]["url"], self.info_path)
+            dw_file_legacy(MODEL_CATALOG_URLS[source]["url"], self.info_path)
         try:
             self.info = json.loads(self.info_path.read_text("utf-8"))
         except Exception:
@@ -1694,7 +1695,7 @@ class ModelManager:
             source = "hface"
         url = MODEL_CATALOG_URLS[source]["url"]
         self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
-        dw_file(url, self.info_path)
+        dw_file_legacy(url, self.info_path)
         self.load_info(source)  # load_info уже ре-мерджит
         print(_i18n("model_info_updated"))
 
@@ -1779,6 +1780,12 @@ class ModelManager:
         checkpoint_url, config_url = urls
         checkpoint_path, config_path = local_paths
         checkpoint_exists, config_exists = local_exists
+
+        if all(self.check_installed(model_name)):
+            status = _i18n("model_already_downloaded")
+        else:
+            status = _i18n("model_downloaded")
+
         if not checkpoint_exists and checkpoint_url:
             if is_partially:
                 parts = [self.part_to_url(checkpoint_url, part) for part in self.get_ckpt_parts(model_name)]
@@ -1787,12 +1794,7 @@ class ModelManager:
                 dw_file(checkpoint_url, checkpoint_path)
 
         if not config_exists and config_url:
-            dw_file(config_url, config_path)
-
-        if all(self.check_installed(model_name)):
-            status = _i18n("model_already_downloaded")
-        else:
-            status = _i18n("model_downloaded")
+            dw_file_legacy(config_url, config_path)
 
         print(status)
         resolved = self.resolve_model_paths(model_name)
