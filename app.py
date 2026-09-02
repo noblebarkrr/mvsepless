@@ -8378,7 +8378,7 @@ class App(Separator):
                                     gr.Markdown(_i18n("f0_file_info"), container=True)
                                     gr.Markdown(f"<h4><center>{_i18n('f0_extraction_results')}</center></h4>")
                                     f0_result_file = gr.File(value=None, label=_i18n("download_f0_json"), type="filepath", interactive=False)
-                                    with gr.Row():
+                                    with gr.Row(equal_height=True):
                                         f0_to_corrector_btn = gr.Button(_i18n("f0_send_to_corrector"), variant="secondary", **base_c_params["base"])
                                         f0_to_custom_inference_btn = gr.Button(_i18n("f0_send_to_custom_inference"), variant="primary", **base_c_params["base"])
 
