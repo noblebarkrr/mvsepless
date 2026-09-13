@@ -844,7 +844,8 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "download_cannot_determine_size": "Не удалось определить размер файла для параллельной загрузки",
         "combining_parts": "Склеивание частей",
         "downloading_parts": "Скачивание частей файла",
-        "parts": "частей"
+        "parts": "частей",
+        "path_is_directory": "Это директория"
     },
     "en": {
         "bytes": "B",
@@ -1672,7 +1673,8 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "download_cannot_determine_size": "Cannot determine file size for parallel download",
         "combining_parts": "Combining parts",
         "downloading_parts": "Downloading file parts",
-        "parts" : "parts"
+        "parts" : "parts",
+        "path_is_directory": "Specified path is directory"
     }
 }
 

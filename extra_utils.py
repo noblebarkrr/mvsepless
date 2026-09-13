@@ -165,8 +165,10 @@ def define_audio_with_size(basename: bool = False, **kwargs):
     file_path = Path(path)
     if "label" in kwargs:
         size_str = _i18n("path_not_exist")
-        if file_path.exists():
+        if file_path.is_file():
             size_str = size_readable(get_size_from_path(file_path))
+        elif file_path.is_dir():
+            size_str = _i18n("path_is_directory")
         temp_label = f"[{size_str}] " + (file_path.stem if basename else kwargs["label"])
         kwargs["label"] = temp_label
     return gr.Audio(**kwargs)
@@ -178,8 +180,10 @@ def update_audio_with_size(basename: bool = False, **kwargs):
     file_path = Path(path)
     if "label" in kwargs:
         size_str = _i18n("path_not_exist")
-        if file_path.exists():
+        if file_path.is_file():
             size_str = size_readable(get_size_from_path(file_path))
+        elif file_path.is_dir():
+            size_str = _i18n("path_is_directory")
         temp_label = f"[{size_str}] " + (file_path.stem if basename else kwargs["label"])
         kwargs["label"] = temp_label
     return gr.update(**kwargs)
@@ -191,8 +195,10 @@ def define_download_button_with_size(basename: bool = False, **kwargs):
     file_path = Path(path)
     if "label" in kwargs:
         size_str = _i18n("path_not_exist")
-        if file_path.exists():
+        if file_path.is_file():
             size_str = size_readable(get_size_from_path(file_path))
+        elif file_path.is_dir():
+            size_str = _i18n("path_is_directory")
         temp_label = f"[{size_str}] " + (file_path.stem if basename else kwargs["label"])
         kwargs["label"] = temp_label
     return gr.DownloadButton(**kwargs)
