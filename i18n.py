@@ -860,7 +860,12 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "preset_upload_error": "Ошибка загрузки пресетов",
         "upload_presets_info": "Загрузка JSON-файлов пресетов (авто-ансамбль, итеративный ансамбль, PresetLess)",
         "model_source_not_specified": "Источник моделей не указан\nИспользуется встроенный каталог моделей",
-        "model_source_not_in_list": "Выбранного источника моделей не существует\nБудет использован источник по умолчанию: {default_model_source}"
+        "model_source_not_in_list": "Выбранного источника моделей не существует\nБудет использован источник по умолчанию: {default_model_source}",
+        "current_catalog": "Текущий каталог моделей: {model_source}",
+        "arg_preset_help": "Выполнить пресет (PresetLess)",
+        "arg_preset_description": "Выполняет граф обработки аудио, описанный в JSON-файле пресета. Поддерживает разделение, ансамбли, фильтрацию и другие операции",
+        "arg_preset_epilog": "Пример: python inference.py preset -i audio.mp3 -p preset.json -o output",
+        "arg_preset_path_help": "Путь к JSON-файлу с пресетом (PresetLess)",
     },
     "en": {
         "bytes": "B",
@@ -1703,8 +1708,13 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "preset_upload_wrong_type": "Invalid data format for selected preset type",
         "preset_upload_error": "Preset upload error",
         "upload_presets_info": "Upload JSON preset files (auto ensemble, iterative ensemble, PresetLess)",
+        "current_catalog": "Current model catalog: {model_source}",
         "model_source_not_specified": "Model source not specified\nUsing built-in model catalog",
-        "model_source_not_in_list": "Selected model source does not exist\nDefault source will be used: {default_model_source}"
+        "model_source_not_in_list": "Selected model source does not exist\nDefault source will be used: {default_model_source}",
+        "arg_preset_help": "Run preset (PresetLess)",
+        "arg_preset_description": "Executes an audio processing graph described in a preset JSON file. Supports separation, ensembles, filtering, and other operations.",
+        "arg_preset_epilog": "Example: python inference.py preset -i audio.mp3 -p preset.json -o output",
+        "arg_preset_path_help": "Path to the preset JSON file (PresetLess)",
     }
 }
 

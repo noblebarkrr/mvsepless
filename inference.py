@@ -1555,8 +1555,9 @@ class ModelManager:
 
         if isinstance(source, str):
             if source not in MODEL_CATALOG_URLS:
-                print(_i18n("model_source_not_in_list"))
+                print(_i18n("model_source_not_in_list", default_model_source="github"))
                 source = "github"
+            print(_i18n("current_catalog", model_source=source))
             self.model_source = source
             self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
         else:
@@ -3553,6 +3554,17 @@ if __name__ == "__main__":
             low_cutoff=args.low_cutoff,
             high_cutoff=args.high_cutoff,
             prefer_float=args.prefer_float
+        )
+    elif args.mode == "preset":
+        separator.run_preset(
+            input_files=args.input,
+            output_dir=args.output_dir,
+            output_format=args.output_format,
+            template=args.template,
+            preset=args.preset,
+            prefer_float=args.prefer_float,
+            selected_stems=args.selected_stems,
+            add_params=get_add_params(args)
         )
     elif args.mode == "info":
         if args.update:

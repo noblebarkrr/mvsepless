@@ -58,6 +58,8 @@ https://mvsepless-resources.github.io/model_info_page/
     - [Ручной ансамбль](#шаблон-ручной-ансамбль)
     - [Вычитание](#шаблон-вычитание)
 - [Типы ансамбля](#типы-ансамбля-инфо)
+- [Пресеты разделения](#пресеты-инфо)
+- [Кастомные каталоги моделей](#каталоги-инфо)
 - [Пример пресета для авто-ансамбля](#пример-пресета-для-авто-ансамбля)
 - [Пример пресета для итеративного ансамбля](#пример-итеративный-ансамбль)
 - [Пример использования](#пример-использования-кода)
@@ -70,7 +72,9 @@ https://mvsepless-resources.github.io/model_info_page/
   - [Ручной ансамбль](#ручной-ансамбль-использование)
   - [Вычитание](#вычитание)
   - [Коррекция фазы](#коррекция-фазы-использование)
+  - [Пресеты](#пресеты-использование)
 - [Параметры методов класса Separator](#параметры-методов)
+  - [Инициализация класса](#инициализация-метод)
   - [Информация о моделях](#информация-о-моделях-метод)
   - [Скачать модель](#скачать-модель-метод)
   - [Разделение](#разделение-separatorseparate)
@@ -79,8 +83,10 @@ https://mvsepless-resources.github.io/model_info_page/
   - [Ручной ансамбль](#ручной-ансамбль-метод)
   - [Вычитание](#вычитание-метод)
   - [Коррекция фазы](#коррекция-фазы-метод)
+  - [Пресеты](#пресеты-метод)
 - [Все параметры командной строки](#все-параметры-командной-строки)
   - [Информация о моделях](#информация-о-моделях-cli)
+  - [Работа с каталогами моделей](#каталоги-cli)
   - [Разделение](#разделение-cli)
   - [Разделение с кастомной моделью](#разделение-с-кастомной-моделью-cli)
   - [Итеративный ансамбль](#итеративный-ансамбль-cli)
@@ -88,22 +94,23 @@ https://mvsepless-resources.github.io/model_info_page/
   - [Ручной ансамбль](#ручной-ансамбль-cli)
   - [Вычитание](#вычитание-cli)
   - [Коррекция фазы](#коррекция-фазы-cli)
+  - [Пресеты](#пресеты-cli)
   - [Web-UI](#web-ui-cli)
 
 </details>
 
 ---
 
-## 🛠️ Установка <span id="установка"></span>
+## 🛠️ Установка <a id="установка"></a>
 
-### Совместимость: <span id="совместимость-кода"></span>
+### Совместимость: <a id="совместимость-кода"></a>
 
 - *Python: 3.10-3.12* (версии 3.13 и 3.14 тестируются)
 - *Pytorch: 1.13-latest*
 
-### Подготовка среды выполнения <span id="подготовка-среды-выполнения-для-начала"></span>
+### Подготовка среды выполнения <a id="подготовка-среды-выполнения-для-начала"></a>
 
-#### **Windows:** <span id="установка-windows"></span>
+#### **Windows:** <a id="установка-windows"></a>
 1. Установите Python с включенными опциями `Add Python 3.x to PATH` и `Disable path length limit`: https://www.python.org/ftp/python/3.11.6/python-3.11.6-amd64.exe
 2. Скачайте архив с FFMPEG, распакуйте его и добавьте распакованную папку в переменную PATH: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
 3. Установите Microsoft Visual C++ 2015-2022 (x64): https://aka.ms/vs/17/release/vc_redist.x64.exe
@@ -133,7 +140,7 @@ pip install pytaglib
 <br> - Выполните `python setup.py install` <br>
 <br>
 
-#### **Linux (Ubuntu/Debian):** <span id="установка-linux"></span>
+#### **Linux (Ubuntu/Debian):** <a id="установка-linux"></a>
 ```sh
 # Установка базовых зависимостей
 apt update -y
@@ -168,8 +175,8 @@ cd ../..
 pip install pytaglib
 ```
 
-### Установка зависимостей <span id="установка-зависимостей-для-работы"></span>
-- через uv: <span id="установка-зависимостей-через-uv"></span>
+### Установка зависимостей <a id="установка-зависимостей-для-работы"></a>
+- через uv: <a id="установка-зависимостей-через-uv"></a>
 ```sh
 pip install uv
 # Обычные зависимости
@@ -178,7 +185,7 @@ uv pip install --no-cache-dir -r requirements.txt
 uv pip install --no-cache-dir -r requirements_old_torch_py310.txt
 ```
 
-- через pip (медленее): <span id="установка-зависимостей-через-pip"></span>
+- через pip (медленее): <a id="установка-зависимостей-через-pip"></a>
 ```sh
 # Обычные зависимости
 pip install -r requirements.txt
@@ -186,17 +193,17 @@ pip install -r requirements.txt
 pip install -r requirements_old_torch_py310.txt
 ```
 
-## VBach (форк PolGen-RVC) <span id="vbach"></span>
+## VBach (форк PolGen-RVC) <a id="vbach"></a>
 
 ### [Документация](vbach_lib/README.md)
 
-## Специфичные атрибуты конфигов Roformer моделей <span id="specific_keys"></span>
+## Специфичные атрибуты конфигов Roformer моделей <a id="specific_keys"></a>
 
 ### Все атрибуты находятся [здесь](models/ROFORMER_SPECIFIC_KEYS.md)
 
-## Шаблоны имен файлов <span id="шаблоны-имен"></span>
+## Шаблоны имен файлов <a id="шаблоны-имен"></a>
 
-**Для разделения (`separate`, `custom_separate`):** <span id="шаблон-разделение"></span>
+**Для разделения (`separate`, `custom_separate`):** <a id="шаблон-разделение"></a>
 - `NAME` — имя входного файла (без расширения)
 - `STEM` — название стема (например: vocals, instrumental)
 - `MODEL` — имя модели (например: bs_6stem)
@@ -205,7 +212,7 @@ pip install -r requirements_old_torch_py310.txt
 
 ---
 
-**Для итеративного ансамбля:** <span id="шаблон-итеративный-ансамбль"></span>
+**Для итеративного ансамбля:** <a id="шаблон-итеративный-ансамбль"></a>
 - `NAME` — имя входного файла (без расширения)
 - `ITER` — номер итерации (iter_N)
 
@@ -213,7 +220,7 @@ pip install -r requirements_old_torch_py310.txt
 
 ---
 
-**Для авто-ансамбля (`auto_ensemble`):** <span id="шаблон-авто-ансамбль"></span>
+**Для авто-ансамбля (`auto_ensemble`):** <a id="шаблон-авто-ансамбль"></a>
 - `NAME` — имя входного файла (без расширения)
 - `TYPE` — тип ансамбля (например: min_fft, avg_fft)
 - `COUNT` — количество используемых моделей/файлов
@@ -222,7 +229,7 @@ pip install -r requirements_old_torch_py310.txt
 
 ---
 
-**Для ручного ансамбля (`manual_ensemble`):** <span id="шаблон-ручной-ансамбль"></span>
+**Для ручного ансамбля (`manual_ensemble`):** <a id="шаблон-ручной-ансамбль"></a>
 - `NAME` — имя входного файла (без расширения)
 - `TYPE` — тип ансамбля (например: min_fft, avg_fft)
 
@@ -230,19 +237,19 @@ pip install -r requirements_old_torch_py310.txt
 
 ---
 
-**Для вычитания (`subtract`):** <span id="шаблон-вычитание"></span>
+**Для вычитания (`subtract`):** <a id="шаблон-вычитание"></a>
 - `NAME` — имя входного файла (без расшириения)
 - `TYPE` — тип инверсии (например: waveform, spectrogram)
 
 Пример: `NAME_TYPE` → `Song_waveform`
 
-**Для коррекции фазы (`phase_fixer`):** <span id="шаблон-коррекция-фазы"></span>
+**Для коррекции фазы (`phase_fixer`):** <a id="шаблон-коррекция-фазы"></a>
 `NAME` — имя целевого файла (без расширения)
 `TYPE` — тип операции (phase_fix)
 
 Пример: `NAME_TYPE` → `Song_phase_fix`
 
-## Типы ансамбля <span id="типы-ансамбля-инфо"></span>
+## Типы ансамбля <a id="типы-ансамбля-инфо"></a>
 
 | Тип | Описание |
 |-----|----------|
@@ -251,8 +258,16 @@ pip install -r requirements_old_torch_py310.txt
 | `min_fft` | Минимум, более чистый результат |
 | `max_fft` | Максимум, более полный, но "грязный" результат |
 
-## Пример пресета для авто-ансамбля <span id="пример-авто-ансамбль"></span>
-### Python <span id="пример-авто-ансамбль-python"></span>
+## Пресеты разделения <a id="пресеты-инфо"></a>
+
+### Схема пресета и информация о нодах находятся [здесь](PRESETLESS.md)
+
+## Кастомные каталоги моделей <a id="каталоги-инфо"></a>
+
+### Схема каталога и правила работы с ним находятся [здесь](MODEL_CATALOG.md)
+
+## Пример пресета для авто-ансамбля <a id="пример-авто-ансамбль"></a>
+### Python <a id="пример-авто-ансамбль-python"></a>
 ```python
 [
     ["имя_модели1", "основной_стем1", False, 1],
@@ -267,7 +282,7 @@ pip install -r requirements_old_torch_py310.txt
     ...
 ]
 ```
-### JSON <span id="пример-авто-ансамбль-json"></span>
+### JSON <a id="пример-авто-ансамбль-json"></a>
 ```json
 [
     ["имя_модели1", "основной_стем1", false, 1],
@@ -283,7 +298,7 @@ pip install -r requirements_old_torch_py310.txt
     ...
 ]
 ```
-### В командной строке <span id="пример-авто-ансамбль-cli"></span>
+### В командной строке <a id="пример-авто-ансамбль-cli"></a>
 ```sh
 --flow имя_модели1:основной_стем_1:False:1 имя_модели2:основной_стем_2:False:2 ...
 ```
@@ -294,8 +309,8 @@ pip install -r requirements_old_torch_py310.txt
 
 ---
 
-## Пример пресета для итеративного ансамбля <span id="пример-итеративный-ансамбль"></span>
-### Python <span id="пример-итеративного-ансамбля-python"></span>
+## Пример пресета для итеративного ансамбля <a id="пример-итеративный-ансамбль"></a>
+### Python <a id="пример-итеративного-ансамбля-python"></a>
 ```python
 [
     ["имя_модели1", "основной_стем1", False],
@@ -312,7 +327,7 @@ pip install -r requirements_old_torch_py310.txt
 ]
 ```
 
-### JSON <span id="пример-итеративного-ансамбля-json"></span>
+### JSON <a id="пример-итеративного-ансамбля-json"></a>
 ```json
 [
     ["имя_модели1", "основной_стем1", false],
@@ -321,7 +336,7 @@ pip install -r requirements_old_torch_py310.txt
 ]
 ```
 
-### В командной строке <span id="пример-итеративного-ансамбля-cli"></span>
+### В командной строке <a id="пример-итеративного-ансамбля-cli"></a>
 ```sh
 --flow имя_модели1:основной_стем_1:False имя_модели2:основной_стем_2:False ...
 ```
@@ -331,9 +346,9 @@ pip install -r requirements_old_torch_py310.txt
 ```
 
 
-## 🚀 Пример использования <span id="пример-использования-кода"></span>
+## 🚀 Пример использования <a id="пример-использования-кода"></a>
 
-### Web-UI <span id="web-ui-использование"></span>
+### Web-UI <a id="web-ui-использование"></a>
 
 #### Через командную строку
 
@@ -360,7 +375,7 @@ app_ui.launch(
 
 ---
 
-### Информация о моделях <span id="информация-о-моделях-использование"></span>
+### Информация о моделях <a id="информация-о-моделях-использование"></a>
 
 #### Через командную строку
 
@@ -426,7 +441,7 @@ separator.show_info(
 
 ---
 
-### Разделение <span id="разделение-использование"></span>
+### Разделение <a id="разделение-использование"></a>
 
 #### Через командную строку
 
@@ -454,7 +469,7 @@ results = separator.separate(
 
 ---
 
-### Разделение с кастомной моделью <span id="разделение-с-кастомной-моделью-использование"></span>
+### Разделение с кастомной моделью <a id="разделение-с-кастомной-моделью-использование"></a>
 
 #### Через командную строку
 
@@ -482,7 +497,7 @@ results = separator.custom_separate(
 
 ---
 
-### Итеративный ансамбль (пример использования) <span id="итеративный-ансамбль-использование"></span>
+### Итеративный ансамбль (пример использования) <a id="итеративный-ансамбль-использование"></a>
 
 #### Через командную строку
 
@@ -526,7 +541,7 @@ print(f"Промежуточные файлы: {intermediate_files}")
 
 ---
 
-### Авто-ансамбль <span id="авто-ансамбль-использование"></span>
+### Авто-ансамбль <a id="авто-ансамбль-использование"></a>
 
 #### Через командную строку
 
@@ -563,7 +578,7 @@ result, invert_result = separator.auto_ensemble(
 
 ---
 
-### Ручной ансамбль <span id="ручной-ансамбль-использование"></span>
+### Ручной ансамбль <a id="ручной-ансамбль-использование"></a>
 
 #### Через командную строку
 
@@ -590,7 +605,7 @@ result = separator.manual_ensemble(
 
 ---
 
-### Вычитание <span id="вычитание-использование"></span>
+### Вычитание <a id="вычитание-использование"></a>
 
 #### Через командную строку
 
@@ -616,7 +631,7 @@ result = separator.subtract(
 )
 ```
 
-### Коррекция фазы <span id="коррекция-фазы-использование"></span>
+### Коррекция фазы <a id="коррекция-фазы-использование"></a>
 
 #### Через командную строку
 ```sh
@@ -643,9 +658,40 @@ result = separator.phase_fixer(
 )
 ```
 
-## 📋 Параметры методов класса Separator <span id="параметры-методов"></span>
+### Пресеты (Preset) <a id="пресеты-использование"></a>
 
-### Информация о моделях (`Separator().show_info()`) <span id="информация-о-моделях-метод"></span>
+#### Через командную строку
+
+```sh
+python inference.py preset -i "audio.mp3" -o "output" -of mp3 -p "my_preset.json" -tm "NAME_STEM"
+```
+
+#### Напрямую
+
+```python
+from inference import Separator
+
+separator = Separator()
+results = separator.run_preset(
+  "audio.mp3",                    # Входной файл/папка
+  "output",                      # Директория вывода
+  "mp3",                         # Формат вывода
+  "NAME_STEM",                   # Шаблон имени файла
+  "my_preset.json",              # Путь к JSON-пресету или dict
+)
+```
+
+## 📋 Параметры методов класса Separator <a id="параметры-методов"></a>
+
+### Инициализация класса (`Separator.__init__()`) <a id="инициализация-метод"></a>
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `source` | `str \| None` | Источник для скачивания моделей<br >Доступные варианты:<br>- `hface`, `hf`, `huggingface` (Hugging Face, по умолчанию)<br>- `github`, `gh` (GitHub Releases, быстрее для больших файлов)<br>- `mscope`, `ms`, `modelscope` (ModelScope, запасной вариант) |
+| `custom_model_info_path` | `str \| Path` | Путь к пользовательскому файлу информации о моделях (JSON)<br> Позволяет расширить стандартный список моделей |
+| `custom_models_dir` | `str \| Path` | Путь к дополнительной директории, где хранятся локальные модели<br> Используется для поиска чекпоинтов вне стандартной папки кэша |
+
+### Информация о моделях (`Separator().show_info()`) <a id="информация-о-моделях-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -659,7 +705,7 @@ result = separator.phase_fixer(
 |----------|-----|----------|
 | `model_name` | `str` | Имя модели для скачивания |
 
-### Разделение (`Separator().separate()`) <span id="разделение-метод"></span>
+### Разделение (`Separator().separate()`) <a id="разделение-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -677,13 +723,13 @@ result = separator.phase_fixer(
 
 **Возвращает**: 
 ```python
-[
+([
   [имя_файла (str), [[стем (str), путь_к_файлу (str)], ...]],
   ...
-]
+], [строка с ошибкой для отображения в интерфейсе (str), ...])
 ```
 
-### Разделение с кастомной моделью (`Separator().custom_separate()`) <span id="разделение-с-кастомной-моделью-метод"></span>
+### Разделение с кастомной моделью (`Separator().custom_separate()`) <a id="разделение-с-кастомной-моделью-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -703,7 +749,7 @@ result = separator.phase_fixer(
 
 **Возвращает**: аналогично `separate()`
 
-### Итеративный ансамбль (`Separator().iterative_ensemble()`) <span id="итеративный-ансамбль-метод"></span>
+### Итеративный ансамбль (`Separator().iterative_ensemble()`) <a id="итеративный-ансамбль-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -718,7 +764,7 @@ result = separator.phase_fixer(
 
 **Возвращает**: `(путь_к_финальному_ансамблю, список_промежуточных_файлов)`
 
-### Авто-ансамбль (`Separator().auto_ensemble()`) <span id="авто-ансамбль-метод"></span>
+### Авто-ансамбль (`Separator().auto_ensemble()`) <a id="авто-ансамбль-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -734,7 +780,7 @@ result = separator.phase_fixer(
 
 **Возвращает**: `(путь_к_ансамблю, путь_к_инверсии, список_основных_стемов)`
 
-### Ручной ансамбль (`Separator().manual_ensemble()`) <span id="ручной-ансамбль-метод"></span>
+### Ручной ансамбль (`Separator().manual_ensemble()`) <a id="ручной-ансамбль-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -748,7 +794,7 @@ result = separator.phase_fixer(
 
 **Возвращает**: `str` — путь к результату ансамбля
 
-### Вычитание (`Separator().subtract()`) <span id="вычитание-метод"></span>
+### Вычитание (`Separator().subtract()`) <a id="вычитание-метод"></a>
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
@@ -763,7 +809,7 @@ result = separator.phase_fixer(
 
 **Возвращает**: `str` — путь к результату вычитания
 
-### Коррекция фазы (`Separator().phase_fixer()`) <span id="коррекция-фазы-метод"></span>
+### Коррекция фазы (`Separator().phase_fixer()`) <a id="коррекция-фазы-метод"></a>
 
 | Параметр | Тип | Описание |
 | -------- | --- | -------- |
@@ -781,9 +827,23 @@ result = separator.phase_fixer(
 
 **Возвращает**: `str` — путь к результату коррекции фазы
 
-## Все параметры командной строки <span id="все-параметры-cli"></span>
+### Пресеты (`Separator().run_preset()`) <a id="пресеты-метод"></a>
+| Параметр | Тип | Описание |
+| -------- | --- | -------- |
+| `input_files`| `str \| Path \| list` | Путь к файлу/папке или список путей |
+| `output_dir` | `str \| Path` | Директория для сохранения результатов |
+| `output_format` | `str` | Формат аудио |
+| `template` | `str` | Шаблон имени файла (ключи: `NAME`, `STEM`, `MODEL`) ([Подробнее](#шаблон-разделение)) |
+| `preset` | `str \| Path \| dict` | Путь к JSON-файлу пресета или словарь с графом обработки |
+| `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `selected_stems` | `list` | Список стемов для сохранения (фильтрация нод типа `output_file`) |
+| `add_params` | `dict` | Дополнительные параметры разделения для нод типа `separate`|
 
-### Информация о моделях <span id="информация-о-моделях-cli"></span>
+**Возвращает**: аналогично `separate()`
+
+## Все параметры командной строки <a id="все-параметры-cli"></a>
+
+### Информация о моделях <a id="информация-о-моделях-cli"></a>
 
 первичные аргументы - `inference.py info`
 
@@ -797,7 +857,16 @@ result = separator.phase_fixer(
 | `-s`, `-stem`, `--stem` | `stem` | `str` | Показать только модели, которые содержат указанный стем (например: vocals, drums) |
 | `-oi`, `-installed`, `--only_installed`, `--only-installed` | `only_installed` | `bool` | Показывать только установленные (скачанные) модели |
 
-### Разделение <span id="разделение-cli"></span>
+### Специфичные аргументы для работы с каталогами моделей <a id="каталоги-cli"></a>
+
+| Аргументы | Параметр | Тип | Описание |
+| --- | --- | --- | --- |
+| `--add_custom_model_info_path`, `--add-custom-model-info-path`, `--model_info`, `--model-info`, `-minfo` | `custom_model_info_path` | `str` | Путь к пользовательскому файлу информации о моделях (JSON)<br> Позволяет расширить стандартный список моделей |
+| `--add_custom_models_dir`, `--add-custom-models-dir`, `--models_dir`, `--models-dir`, `-mdir` | `custom_models_dir` | `str` | Путь к дополнительной директории, где хранятся локальные модели<br> Используется для поиска чекпоинтов вне стандартной папки кэша |
+| `--model_source`, `--model-source`, `-msrc` | `model_source` | `str` | Источник для скачивания моделей<br >Доступные варианты:<br>- `hface`, `hf`, `huggingface` (Hugging Face, по умолчанию)<br>- `github`, `gh` (GitHub Releases, быстрее для больших файлов)<br>- `mscope`, `ms`, `modelscope` (ModelScope, запасной вариант) |
+
+
+### Разделение <a id="разделение-cli"></a>
 
 первичные аргументы - `inference.py separate`
 
@@ -815,7 +884,7 @@ result = separator.phase_fixer(
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
 
-### Разделение с кастомной моделью <span id="разделение-с-кастомной-моделью-cli"></span>
+### Разделение с кастомной моделью <a id="разделение-с-кастомной-моделью-cli"></a>
 
 первичные аргументы - `inference.py custom_separate`
 
@@ -835,7 +904,7 @@ result = separator.phase_fixer(
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
 
-### Итеративный ансамбль <span id="итеративный-ансамбль-cli"></span>
+### Итеративный ансамбль <a id="итеративный-ансамбль-cli"></a>
 
 первичные аргументы - `inference.py iterative_ensemble`
 
@@ -851,7 +920,7 @@ result = separator.phase_fixer(
 | `-flow`, `--flow` | `flow` | `list` | Пресет в виде строк: `МОДЕЛЬ`:`ОСНОВНОЙ_СТЕМ`:`ИНВЕРСИЯ`. ([Пример](#пример-итеративного-ансамбля-cli)) |
 | `-json`, `-preset`, `-preset_json`, `-preset-json`, `--preset_json`, `--preset-json` | `preset` | `str` | Путь к JSON-файлу с пресетом ансамбля ([Пример](#пример-итеративного-ансамбля-json)) |
 
-### Авто-ансамбль <span id="авто-ансамбль-cli"></span>
+### Авто-ансамбль <a id="авто-ансамбль-cli"></a>
 
 первичные аргументы - `inference.py auto_ensemble`
 
@@ -868,7 +937,7 @@ result = separator.phase_fixer(
 | `-flow`, `--flow` | `flow` | `list` | Пресет в виде строк: `МОДЕЛЬ`:`ОСНОВНОЙ_СТЕМ`:`ИНВЕРСИЯ`:`ВЕС`. ([Пример](#пример-авто-ансамбль-cli)) |
 | `-json`, `-preset`, `-preset_json`, `-preset-json`, `--preset_json`, `--preset-json` | `preset` | `str` | Путь к JSON-файлу с пресетом ансамбля ([Пример](#пример-авто-ансамбль-json)) |
 
-### Ручной ансамбль <span id="ручной-ансамбль-cli"></span>
+### Ручной ансамбль <a id="ручной-ансамбль-cli"></a>
 
 первичные аргументы - `inference.py manual_ensemble`
 
@@ -882,7 +951,7 @@ result = separator.phase_fixer(
 | `-w`, `-weights`, `--weights` | `weights` | `list` | Веса для каждого аудиофайла (обязательно для типа avg_fft). Пример: -w 1.0 0.5 0.2 |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 
-### Вычитание <span id="вычитание-cli"></span>
+### Вычитание <a id="вычитание-cli"></a>
 
 первичные аргументы - `inference.py subtract`
 
@@ -896,7 +965,7 @@ result = separator.phase_fixer(
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
 
-### Коррекция фазы <span id="коррекция-фазы-cli"></span>
+### Коррекция фазы <a id="коррекция-фазы-cli"></a>
 первичные аргументы - `inference.py phase_fixer`
 | Аргументы | Параметр | Тип | Описание |
 | --------- | -------- | --- | -------- |
@@ -912,7 +981,20 @@ result = separator.phase_fixer(
 | `-hc`, `--high_cutoff`, `--high-cutoff` | `high_cutoff` | `int` | Верхняя граница частотного смешения фаз в Гц (по умолчанию: 5000) |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer-float` | `prefer_float` | `bool` | Предпочитать высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114))|
 
-### Web-UI <span id="web-ui-cli"></span>
+### Пресеты <a id="пресеты-cli"></a>
+первичные аргументы - `inference.py preset`
+| Аргументы | Параметр | Тип | Описание |
+| --------- | -------- | --- | -------- |
+| `-i`,  `--i`,  `-input`, `--input`, `--input_files`, `--input-files` | `input` | `str \| Path \| list` |Путь к входному аудиофайлу, папке с файлами или список путей|
+| `-o`, `-out`,  `-output`, `--output`, `--output_dir`, `--output-dir` | `output_dir` | `str \| Path` |Директория для сохранения результатов (по умолчанию: текущая папка)|
+| `-of`, `-output_fmt`, `--output_format`, `--output-format` | `output_format` | `str` | Формат выходного аудио. Доступны: mp3, wav, flac и др. (по умолчанию: mp3)|
+| `-tm`, `-tmplt`, `--template` | `template` | `str` | Шаблон имени выходного файла. Доступные ключи: NAME, STEM, MODEL. Пример: NAME_STEM_MODEL ([Подробнее](#шаблон-разделение)) |
+| `-p`, `-preset`, `--preset`, `--preset_path`, `--preset-path` | `preset` | `str \| Path` |Путь к JSON-файлу с пресетом (графом обработки)|
+| `-st`,  `--st`,  `-stems`,  `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы из пресета|
+| `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer-float` | `prefer_float` | `bool` | Предпочитать высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114))|
+| `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения (применяется к нодам типа `separate` внутри пресета)|
+
+### Web-UI <a id="web-ui-cli"></a>
 
 первичные аргументы - `app.py`
 

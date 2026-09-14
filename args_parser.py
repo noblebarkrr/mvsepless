@@ -118,6 +118,14 @@ def parse_separator_args(add_params_args: dict = {}):
         epilog=_i18n("arg_subtract_epilog")
     )
 
+    preset_parser = subparsers.add_parser(
+        "preset",
+        help=_i18n("arg_preset_help"),
+        description=_i18n("arg_preset_description"),
+        epilog=_i18n("arg_preset_epilog")
+    )
+    add_custom_sources_args(preset_parser)
+
     # separate
     separate_parser.add_argument(
         "-i", "--i", "-input", "--input", "--input_files", "--input-files", 
@@ -539,6 +547,56 @@ def parse_separator_args(add_params_args: dict = {}):
         action="store_true", dest="prefer_float",
         help=_i18n("prefer_float")
     )
+
+    preset_parser.add_argument(
+        "-i", "--i", "-input", "--input", "--input_files", "--input-files", 
+        nargs="+", dest="input",
+        help=_i18n("arg_input_help")
+    )
+    preset_parser.add_argument(
+        "-o", "-out", "-output", "--output", "--output_dir", "--output-dir", 
+        type=str, default=".", dest="output_dir",
+        help=_i18n("arg_output_dir_help")
+    )
+    preset_parser.add_argument(
+        "-of", "-output_fmt", "--output_format", "--output-format", 
+        type=str, choices=output_formats, default=output_formats[0], dest="output_format",
+        help=_i18n("arg_output_format_help", formats=", ".join(output_formats), default=output_formats[0])
+    )
+    preset_parser.add_argument(
+        "-tm", "-tmplt", "--template", type=str, default="NAME_STEM_MODEL", dest="template",
+        help=_i18n("arg_template_help", keys=_i18n("template_keys_separate"), example="NAME_STEM_MODEL")
+    )
+    preset_parser.add_argument(
+        "-p", "-preset", "--preset", "--preset_path", "--preset-path", 
+        type=str, required=True, dest="preset",
+        help=_i18n("arg_preset_path_help")
+    )
+    preset_parser.add_argument(
+        "-st", "--st", "-stems", "--stems", "--selected_stems", "--selected-stems", 
+        nargs="*", metavar="STEM", dest="selected_stems",
+        help=_i18n("arg_selected_stems_help")
+    )
+    preset_parser.add_argument(
+        "-hi-prec", "-hi_prec", "-hi-precision", "--hi_precision", "-pref-flt", "-pref_flt", "--prefer_float", "--prefer_float",  
+        action="store_true", dest="prefer_float",
+        help=_i18n("prefer_float")
+    )
+    
+    # Добавляем поддержку add_params для пресетов (так как ноды separate внутри пресета могут использовать их)
+    for param_name, param_value in add_params_args.items():
+        param_type = param_value.get("type")
+        default = param_value.get("default")
+        preset_parser.add_argument(
+            f"--{param_name}", 
+            action=NestedStoreTrue if param_type == "bool" else NestedAction,
+            type=None if param_type == "bool" else (int if param_type == "int" else (float if param_type == "float" else str)),
+            default=default,
+            dest=f"add_params.{param_name}",
+            help=_i18n("arg_add_param_help")
+        )
+
+    return parser.parse_args()
 
     return parser.parse_args()
 
