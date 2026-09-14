@@ -1553,10 +1553,16 @@ class ModelManager:
         # ✅ Сохраняем путь для повторного мержа
         self.custom_model_info_path = custom_model_info_path
 
-        if source not in MODEL_CATALOG_URLS:
-            source = "github"
-        self.model_source = source
-        self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
+        if isinstance(source, str):
+            if source not in MODEL_CATALOG_URLS:
+                print(_i18n("model_source_not_in_list"))
+                source = "github"
+            self.model_source = source
+            self.info_path = Path(BASE_DIR) / MODEL_CATALOG_URLS[source]["name"]
+        else:
+            self.model_source = None
+            self.info_path = Path(BASE_DIR) / "models.json"
+            print(_i18n("model_source_not_specified"))
         self.load_info(source)
 
         if custom_models_dir:

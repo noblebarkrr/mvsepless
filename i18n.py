@@ -859,6 +859,8 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "preset_upload_wrong_type": "Неверный формат данных для выбранного типа пресета",
         "preset_upload_error": "Ошибка загрузки пресетов",
         "upload_presets_info": "Загрузка JSON-файлов пресетов (авто-ансамбль, итеративный ансамбль, PresetLess)",
+        "model_source_not_specified": "Источник моделей не указан\nИспользуется встроенный каталог моделей",
+        "model_source_not_in_list": "Выбранного источника моделей не существует\nБудет использован источник по умолчанию: {default_model_source}"
     },
     "en": {
         "bytes": "B",
@@ -1701,6 +1703,8 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "preset_upload_wrong_type": "Invalid data format for selected preset type",
         "preset_upload_error": "Preset upload error",
         "upload_presets_info": "Upload JSON preset files (auto ensemble, iterative ensemble, PresetLess)",
+        "model_source_not_specified": "Model source not specified\nUsing built-in model catalog",
+        "model_source_not_in_list": "Selected model source does not exist\nDefault source will be used: {default_model_source}"
     }
 }
 
