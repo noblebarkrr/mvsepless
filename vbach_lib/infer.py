@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import gradio as gr
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(SCRIPT_DIR.parent))
 from extra_utils import hf_spaces_gpu, extra_clear_torch_cache, nuclear_clear_model, print_current_device
@@ -290,6 +291,7 @@ class VbachConverter:
                 processed_audios.append(write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), post_process_audio(converted_mixtures, self.tgt_sr, stereo_mode), self.tgt_sr, 320, False, new_metadata))
             except Exception as e:
                 traceback.print_exc()
+                gr.Warning(title="", message=traceback.format_exc(limit=3).replace("\n", "<br>"))
 
         self.unload_model()
         self.unload_hubert()
@@ -406,6 +408,7 @@ class VbachConverter:
             output_path = write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), audio_opt, self.tgt_sr, 320, False, new_metadata)
         except Exception as e:
             traceback.print_exc()
+            gr.Warning(title="", message=traceback.format_exc(limit=3).replace("\n", "<br>"))
 
         self.unload_model()
         self.unload_hubert()

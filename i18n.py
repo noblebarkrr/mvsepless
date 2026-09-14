@@ -845,7 +845,20 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "combining_parts": "Склеивание частей",
         "downloading_parts": "Скачивание частей файла",
         "parts": "частей",
-        "path_is_directory": "Это директория"
+        "path_is_directory": "Это директория",
+        "separation_mode": "Режим разделения",
+        "default": "Из каталога",
+        "custom_model": "Кастомная модель",
+        "preset": "Пресет (PresetLess)",
+        "upload_presets_tab": "Загрузить пресеты",
+        "preset_type": "Тип пресета",
+        "preset_type_auto_ensemble": "Авто-ансамбль",
+        "preset_type_iterative_ensemble": "Итеративный ансамбль",
+        "preset_type_presetless": "PresetLess",
+        "presets_uploaded": "Загружено пресетов: {count}",
+        "preset_upload_wrong_type": "Неверный формат данных для выбранного типа пресета",
+        "preset_upload_error": "Ошибка загрузки пресетов",
+        "upload_presets_info": "Загрузка JSON-файлов пресетов (авто-ансамбль, итеративный ансамбль, PresetLess)",
     },
     "en": {
         "bytes": "B",
@@ -1674,7 +1687,20 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "combining_parts": "Combining parts",
         "downloading_parts": "Downloading file parts",
         "parts" : "parts",
-        "path_is_directory": "Specified path is directory"
+        "path_is_directory": "Specified path is directory",
+        "separation_mode": "Separation mode",
+        "default": "From catalog",
+        "custom_model": "Custom model",
+        "preset": "Preset (PresetLess)",
+        "upload_presets_tab": "Upload presets",
+        "preset_type": "Preset type",
+        "preset_type_auto_ensemble": "Auto ensemble",
+        "preset_type_iterative_ensemble": "Iterative ensemble",
+        "preset_type_presetless": "PresetLess",
+        "presets_uploaded": "Presets uploaded: {count}",
+        "preset_upload_wrong_type": "Invalid data format for selected preset type",
+        "preset_upload_error": "Preset upload error",
+        "upload_presets_info": "Upload JSON preset files (auto ensemble, iterative ensemble, PresetLess)",
     }
 }
 

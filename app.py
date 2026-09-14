@@ -52,6 +52,14 @@ def generate_add_params_component():
                       add_params_components.append(gr.Checkbox(label=_i18n(component_name), value=params["default"], info=_i18n(params.get("info", "")), **base_c_params["base"]))
     return add_params_components
 
+mapping_separation_modes = {
+    _i18n("default"): "default",
+    _i18n("custom_model"): "custom_model",
+}
+mapping_upload_presets = {
+    _i18n("preset_type_auto_ensemble"): "auto_ensemble",
+    _i18n("preset_type_iterative_ensemble"): "iterative_ensemble",
+}
 def melspectrogram_full_reassigned(
     *,
     y=None,
@@ -1241,6 +1249,11 @@ class App(Separator):
         ext_inst_visible_default = len(stems_default) > 2
 
         app = FastAPI()
+
+        global mapping_separation_modes, mapping_upload_presets
+        if not hf_space_mode:
+            mapping_separation_modes[_i18n("preset")] = "presetless"
+            mapping_upload_presets[_i18n("preset_type_presetless")] = "presetless"
 
         F0C_TRIGGER_JS = (
             "() => { try {"
@@ -6941,6 +6954,7 @@ class App(Separator):
             iterative_ensemble_input_state = gr.State([])
             iterative_ensemble_history_state = gr.State([])
             presetless_input_state = gr.State([])
+            presetless_paths_state = gr.State([])
             presetless_history_state = gr.State([])
             phase_fixer_target_state = gr.State([])
             phase_fixer_source_state = gr.State([])
@@ -6948,6 +6962,7 @@ class App(Separator):
             with gr.Tab(_i18n("separation_tab")):
                 with gr.Tab(_i18n("inference")):
                     sep_state = gr.State()
+                    sep_errors_state = gr.State()
                     with gr.Row():
                         with gr.Column():
                             sep_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
@@ -6993,7 +7008,7 @@ class App(Separator):
                                 
                                 custom_sep_config = gr.Dropdown(
                                     label=_i18n("config_path"), 
-                                    multiselect=True,  allow_custom_value=True, visible=False,
+                                    multiselect=True, allow_custom_value=True, visible=False,
                                     max_choices=1,
                                     **base_c_params["base"]
                                 )
@@ -7003,17 +7018,82 @@ class App(Separator):
                                     outputs=[custom_sep_config, custom_sep_configs_state],
                                     show_progress="hidden"
                                 )
-                                sep_use_custom_model = gr.Checkbox(label=_i18n("use_custom_model"), value=False, **base_c_params["base"])
+                                presetless_preset_path = gr.Dropdown(
+                                    label=_i18n("preset"),
+                                    multiselect=True, allow_custom_value=True, visible=False,
+                                    max_choices=1,
+                                    **base_c_params["base"]
+                                )
+                                @presetless_preset_path.focus(inputs=[presetless_preset_path, presetless_paths_state], outputs=[presetless_preset_path, presetless_paths_state], show_progress="hidden")
+                                def update_preset_choices(path, state):
+                                    presets = self.preset_manager.get_list()
+                                    if presets == state:
+                                        return gr.skip()
+                                    return gr.update(choices=presets, value=path), presets
+
+                                sep_separation_mode = gr.Dropdown(
+                                    label=_i18n("separation_mode"),
+                                    choices=list(mapping_separation_modes.keys()),
+                                    value=list(mapping_separation_modes.keys())[0],
+                                    **base_c_params["base"]
+                                )
                                 sep_selected_stems = gr.CheckboxGroup(label=_i18n("select_stems"), info=_i18n("select_stems_info"), choices=stems_default, value=[], **base_c_params["base"])
+                                @presetless_preset_path.input(
+                                    inputs=presetless_preset_path,
+                                    outputs=sep_selected_stems
+                                )
+                                def get_stems_from_preset_fn(preset_name_list):
+                                    stems = []
+                                    preset_name = one_element_list_to_value(preset_name_list)
+                                    if preset_name:
+                                        try:
+                                            preset = self.preset_manager.load_preset(preset_name)
+                                            stems = self.separator.get_list_all_stems_from_preset(self.get_preset_nodes(preset))
+                                        except Exception as e:
+                                            print(e)
+                                    return gr.update(value=[], choices=stems)
                                 sep_extract_instrumental = gr.Checkbox(label=_i18n("extract_instrumental"), visible=ext_inst_visible_default, value=False, **base_c_params["base"])
                                 sep_model_name.change(self.update_model_name, inputs=sep_model_name, outputs=[sep_extract_instrumental, sep_selected_stems])
-                                @sep_use_custom_model.change(inputs=[sep_use_custom_model], outputs=[sep_model_name, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config, sep_selected_stems, sep_extract_instrumental])
-                                def use_custom_fn(is_custom: bool):
-                                    if is_custom:
-                                        return gr.update(visible=False), gr.update(value=custom_model_types[0], choices=custom_model_types, visible=True), gr.update(value=[], visible=True), gr.update(value=[], visible=True), gr.update(choices=[], value=[], visible=True), gr.update(value=False, visible=False)
-                                    else:
-                                        return gr.update(visible=True, choices=all_models, value=default_model), gr.update(value=custom_model_types[0], choices=custom_model_types, visible=False), gr.update(value=[], visible=False), gr.update(value=[], visible=False), gr.update(choices=stems_default, value=[], visible=True), gr.update(value=False, visible=False)
-
+                                @sep_separation_mode.change(
+                                    inputs=[sep_separation_mode],
+                                    outputs=[
+                                        sep_model_name, custom_sep_model_type, custom_sep_checkpoint,
+                                        custom_sep_config, sep_selected_stems, sep_extract_instrumental,
+                                        presetless_preset_path
+                                    ]
+                                )
+                                def separation_mode_change(mode_label: str):
+                                    mode = mapping_separation_modes.get(mode_label, "default")
+                                    if mode == "custom_model":
+                                        return (
+                                            gr.update(visible=False),                          # sep_model_name
+                                            gr.update(value=custom_model_types[0], choices=custom_model_types, visible=True),  # model_type
+                                            gr.update(value=[], visible=True),                 # checkpoint
+                                            gr.update(value=[], visible=True),                 # config
+                                            gr.update(choices=[], value=[], visible=True),     # selected_stems
+                                            gr.update(value=False, visible=False),             # extract_instrumental
+                                            gr.update(visible=False),                          # presetless_preset_path
+                                        )
+                                    elif mode == "presetless":
+                                        return (
+                                            gr.update(visible=False),                          # sep_model_name
+                                            gr.update(visible=False),                          # model_type
+                                            gr.update(visible=False),                          # checkpoint
+                                            gr.update(visible=False),                          # config
+                                            gr.update(choices=[], value=[], visible=True),     # selected_stems
+                                            gr.update(value=False, visible=False),             # extract_instrumental
+                                            gr.update(visible=True),                           # presetless_preset_path
+                                        )
+                                    else:  # "default"
+                                        return (
+                                            gr.update(visible=True, choices=all_models, value=default_model),  # sep_model_name
+                                            gr.update(visible=False),                          # model_type
+                                            gr.update(value=[], visible=False),                # checkpoint
+                                            gr.update(value=[], visible=False),                # config
+                                            gr.update(choices=stems_default, value=[], visible=True),  # selected_stems
+                                            gr.update(value=False, visible=ext_inst_visible_default),  # extract_instrumental
+                                            gr.update(visible=False),                          # presetless_preset_path
+                                        )
                                 @custom_sep_config.input(inputs=[custom_sep_config, custom_sep_model_type], outputs=[sep_extract_instrumental, sep_selected_stems])
                                 def get_stems_from_config_fn(path: str, model_type: str):
                                     stems = get_stems_from_config_simple(one_element_list_to_value(path), model_type)
@@ -7046,21 +7126,38 @@ class App(Separator):
                                 state = self.history.get_from_history(one_element_list_to_value(key))
                                 return state
                         sep_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
-                        @separate_btn.click(inputs=[sep_input_files, custom_sep_model_type, custom_sep_checkpoint, custom_sep_config, sep_model_name, sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert, sep_template, sep_output_format, sep_sum_stems, add_params_user_state, sep_prefer_float, sep_use_custom_model], outputs=[sep_state, sep_upload_files], trigger_mode="once", concurrency_id="mvsepless_app_inference")
-                        def separator_wrap(input_files: list, model_type: str, checkpoint: list, config: list, model_name: str, sel_stems: list, ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str, sum_stems: bool, add_params: dict, pref_f: bool, is_custom: bool, progress=gr.Progress(track_tqdm=True)):
+                        @separate_btn.click(
+                            inputs=[
+                                sep_input_files, custom_sep_model_type, custom_sep_checkpoint,
+                                custom_sep_config, sep_model_name, presetless_preset_path,
+                                sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert,
+                                sep_template, sep_output_format, sep_sum_stems, add_params_user_state,
+                                sep_prefer_float, sep_separation_mode   # ← было sep_use_custom_model
+                            ],
+                            outputs=[sep_state, sep_errors_state, sep_upload_files],
+                            trigger_mode="once",
+                            concurrency_id="mvsepless_app_inference"
+                        )
+                        def separator_wrap(input_files: list, model_type: str, checkpoint: list,
+                                        config: list, model_name: str, preset: str, sel_stems: list,
+                                        ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str,
+                                        sum_stems: bool, add_params: dict, pref_f: bool,
+                                        separation_mode_label: str, progress=gr.Progress(track_tqdm=True)):
                             results = []
-                            if is_custom:
+                            errors = []
+                            # Маппим отображаемое значение → внутренний ключ
+                            separation_mode = mapping_separation_modes.get(separation_mode_label, "default")
+
+                            if separation_mode == "custom_model":
                                 checkpoint_path = one_element_list_to_value(checkpoint)
                                 config_path = one_element_list_to_value(config)
-                                
                                 if not checkpoint_path or not config_path:
                                     gr.Warning(_i18n("paths_not_specified"))
-                                    return [], gr.skip()
-                                
-                                results = self.separator.custom_separate(
-                                    input_files=input_files, 
-                                    output_dir=self.output_dir.gen_output_dir(), 
-                                    output_format=output_format, 
+                                    return [], [], gr.skip()
+                                results, errors = self.separator.custom_separate(
+                                    input_files=input_files,
+                                    output_dir=self.output_dir.gen_output_dir(),
+                                    output_format=output_format,
                                     template=tmpl,
                                     model_type=model_type,
                                     ckpt=checkpoint_path,
@@ -7072,16 +7169,50 @@ class App(Separator):
                                     selected_stems=sel_stems,
                                     add_params=add_params
                                 )
-                                
                                 model_name = Path(checkpoint_path).stem
-                            else:
-                                results = self.separator.separate(
-                                    input_files=input_files, output_dir=self.output_dir.gen_output_dir(), 
-                                    output_format=output_format, template=tmpl, model_name=model_name, extract_instrumental=ext_inst, 
-                                    use_spec_invert=spec_invert, invert_plus=sum_stems, prefer_float=pref_f, selected_stems=sel_stems, add_params=add_params
+
+                            elif separation_mode == "presetless":
+                                preset_basename_path = one_element_list_to_value(preset)
+                                if not preset_basename_path:
+                                    gr.Warning(_i18n("path_not_specified"))
+                                    return [], [], gr.skip()
+                                preset = self.preset_manager.load_preset(preset_basename_path)
+                                
+                                results, errors = self.separator.run_preset(
+                                    input_files=input_files,
+                                    output_dir=self.output_dir.gen_output_dir(),
+                                    preset=preset,
+                                    output_format=output_format,
+                                    template=tmpl,
+                                    prefer_float=pref_f,
+                                    selected_stems=sel_stems,
+                                    add_params=add_params
                                 )
+                                model_name = self.get_preset_name(preset)
+
+                            else:  # "default"
+                                results, errors = self.separator.separate(
+                                    input_files=input_files,
+                                    output_dir=self.output_dir.gen_output_dir(),
+                                    output_format=output_format,
+                                    template=tmpl,
+                                    model_name=model_name,
+                                    extract_instrumental=ext_inst,
+                                    use_spec_invert=spec_invert,
+                                    invert_plus=sum_stems,
+                                    prefer_float=pref_f,
+                                    selected_stems=sel_stems,
+                                    add_params=add_params
+                                )
+
                             self.history.add_to_history(model_name, results)
-                            return results, gr.skip()
+                            return results, errors, gr.skip()
+                        @gr.render(inputs=[sep_errors_state])
+                        def show_errors(errors: list):
+                            with gr.Group():
+                                if errors:
+                                    for error in errors:
+                                        gr.Markdown(f'<div style="background-color:red; padding:10px;"><center><span style="color:white !important;">{error}</span></center></div>', container=True, line_breaks=True, show_copy_button=True)
                         @gr.render(inputs=[sep_state, sep_off_players_output])
                         def show_players(state, off_players_output: bool):
                             if state:
@@ -9018,6 +9149,118 @@ class App(Separator):
                                                     def upload_vbach_index_fn(files: list, progress=gr.Progress(track_tqdm=True)):
                                                         self.vbach_model_manager.upload_index_model(files)
                                                         return gr.update(value=[])
+
+
+                with gr.Tab(_i18n("upload_presets_tab")):
+                    with gr.Row():
+                        with gr.Column():
+                            with gr.Group():
+                                gr.Markdown(
+                                    "<h3><center>" + _i18n("upload_presets_info") + "</center></h3>",
+                                    container=True
+                                )
+
+                                upload_presets_files = gr.File(
+                                    show_label=False,
+                                    file_count="multiple",
+                                    file_types=[".json"],
+                                    **base_c_params["base"]
+                                )
+
+                                upload_presets_type = gr.Dropdown(
+                                    label=_i18n("preset_type"),
+                                    choices=list(mapping_upload_presets.keys()),
+                                    value=list(mapping_upload_presets.keys())[0],
+                                    filterable=False,
+                                    **base_c_params["base"]
+                                )
+
+                                upload_presets_btn = gr.Button(
+                                    _i18n("upload"),
+                                    variant="primary",
+                                    **base_c_params["base"]
+                                )
+
+                                upload_presets_status = gr.Textbox(
+                                    label=_i18n("status"),
+                                    value="",
+                                    interactive=False,
+                                    lines=5,
+                                    max_lines=5
+                                )
+
+                                @upload_presets_btn.click(
+                                    inputs=[upload_presets_files, upload_presets_type],
+                                    outputs=[upload_presets_status, upload_presets_files]
+                                )
+                                def upload_presets_fn(
+                                    files: list,
+                                    preset_type_label: str,
+                                    progress=gr.Progress(track_tqdm=True)
+                                ):
+                                    preset_type = mapping_upload_presets.get(preset_type_label, "auto_ensemble")
+
+                                    if not files:
+                                        return _i18n("paths_not_specified"), gr.skip()
+
+                                    loaded = 0
+                                    errors = []
+
+                                    for file in files:
+                                        file_path = Path(file)
+
+                                        try:
+                                            data = json.loads(file_path.read_text(encoding="utf-8"))
+                                            name = Namer.sanitize(file_path.stem)
+
+                                            if preset_type == "presetless":
+                                                if not isinstance(data, dict) or "nodes" not in data or "links" not in data:
+                                                    raise ValueError(_i18n("preset_flow_invalid"))
+
+                                                data["name"] = name
+                                                self.preset_manager.save_preset(name, data)
+                                                loaded += 1
+
+                                            elif preset_type == "auto_ensemble":
+                                                if not isinstance(data, list):
+                                                    raise ValueError(_i18n("preset_upload_wrong_type"))
+
+                                                validated_flow, _ = self.separator.validate_flow(
+                                                    data,
+                                                    non_exists_warn=True,
+                                                    iterative=False
+                                                )
+                                                self.auto_ensemble_app.save_preset(name, validated_flow)
+                                                loaded += 1
+
+                                            elif preset_type == "iterative_ensemble":
+                                                if not isinstance(data, list):
+                                                    raise ValueError(_i18n("preset_upload_wrong_type"))
+
+                                                validated_flow, _ = self.separator.validate_flow(
+                                                    data,
+                                                    non_exists_warn=True,
+                                                    iterative=True
+                                                )
+                                                self.iterative_ensemble_app.save_preset(name, validated_flow)
+                                                loaded += 1
+
+                                        except Exception as e:
+                                            errors.append(f"{file_path.name}: {e}")
+
+                                    status = _i18n("presets_uploaded", count=loaded)
+
+                                    if errors:
+                                        status += "\n\n" + "\n".join(errors)
+
+                                    gr.Info(title=_i18n("presets_uploaded", count=loaded), message="")
+
+                                    if errors:
+                                        gr.Warning(title=_i18n("preset_upload_error"), message="\n".join(errors))
+
+                                    return status, gr.update(value=[])
+
+
                                         
             if GDRIVE_USER_DIR:
                 with gr.Tab(_i18n("google_drive")):
