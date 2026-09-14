@@ -3800,7 +3800,7 @@
             "wide"
         ],
         "target_instrument": null,
-        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/mdx23c/mdx23c_mid_side_gilliaaan.ckpt?download=true",
+        "checkpoint_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_mid_side_gilliaaan.ckpt?download=true",
         "config_url": "https://huggingface.co/noblebarkrr/mvsepless_resources/resolve/main/scnet/scnet_mid_side_gilliaaan_config.yaml?download=true"
     },
     "scnet_masked_small_4stem_zftrubo": {
