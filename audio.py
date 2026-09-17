@@ -20,7 +20,7 @@ ffprobe_path = "ffprobe"
 n_fft = 2048
 hop = 1024
 
-class NotIsAudio(Excpetion): pass
+class NotIsAudio(Exception): pass
 
 def print_saved(path: str | Path):
     if path:
