@@ -20,6 +20,8 @@ ffprobe_path = "ffprobe"
 n_fft = 2048
 hop = 1024
 
+class NotIsAudio(Excpetion): pass
+
 def print_saved(path: str | Path):
     if path:
         print(_i18n("saved_file")+": "+Path(path).as_posix())
@@ -240,24 +242,19 @@ def get_info(
 
             stdout, stderr = process.communicate()
 
-            if process.returncode != 0:
-                print(f"STDERR: {stderr.decode('utf-8')}")
-                print(f"STDOUT: {stdout.decode('utf-8')}")
-
             json_output = json.loads(stdout)
-            streams = json_output["streams"]
-            if len(streams) > 1:
-                print(_i18n("audio_have_many_streams"))
+            if json_output:
+                streams = json_output.get("streams", [])
+                if streams:
+                    if len(streams) > 1:
+                        print(_i18n("audio_have_many_streams"))
+                    else:
+                        for a, stream in enumerate(streams):
+                            audio_info[a] = {
+                                "sample_rate": int(stream.get("sample_rate", 0)),
+                                "channels": int(stream.get("channels", 0)),
+                            }
 
-            if not streams:
-                pass
-
-            else:
-                for a, stream in enumerate(streams):
-                    audio_info[a] = {
-                        "sample_rate": int(stream.get("sample_rate", 0)),
-                        "channels": int(stream.get("channels", 0)),
-                    }
         else:
             print(_i18n("path_not_exist"))
     else:
@@ -375,10 +372,17 @@ def read(
     Returns:
         Кортеж (аудиоданные, частота дискретизации)
     """
+    if not path:
+        raise ValueError(_i18n("path_not_specified"))
     path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(_i18n("path_not_exist"))
+
     output_format = SAMPLE_FORMATS_DICT.get(dtype, None)
     audio_info = get_info(path)
     total_streams = list(audio_info.keys())
+    if not total_streams:
+        raise NotIsAudio(_i18n("file_is_not_audio") + ": " + str(path))
     if stream not in total_streams:
         print(_i18n("audio_use_default_stream", i=0))
         stream = 0
