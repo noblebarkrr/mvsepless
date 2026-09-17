@@ -246,6 +246,9 @@ def get_info(
 
             json_output = json.loads(stdout)
             streams = json_output["streams"]
+            if len(streams) > 1:
+                print(_i18n("audio_have_many_streams"))
+
             if not streams:
                 pass
 
@@ -261,7 +264,7 @@ def get_info(
         print(_i18n("path_not_specified"))
     return audio_info
 
-def get_sr(path: str | Path, stream: int = 0) -> int:
+def get_sr(path: str | Path, stream: int = 0, audio_info: dict = None) -> int:
     """
     Получить частоту дискретизации аудиофайла
     
@@ -272,12 +275,13 @@ def get_sr(path: str | Path, stream: int = 0) -> int:
     Returns:
         Частота дискретизации
     """
-    audio_info = get_info(path)
+    if audio_info is None:
+        audio_info = get_info(path)
     sample_rate = int(audio_info.get(int(stream), {}).get("sample_rate", 0))
     return sample_rate
 
 
-def get_channels(path: str | Path, stream: int = 0) -> int:
+def get_channels(path: str | Path, stream: int = 0, audio_info: dict = None) -> int:
     """
     Получить количество каналов аудиофайла
     
@@ -289,7 +293,8 @@ def get_channels(path: str | Path, stream: int = 0) -> int:
         Количество каналов
     """
     path = Path(path)
-    audio_info = get_info(path)
+    if audio_info is None:
+        audio_info = get_info(path)
     sample_rate = int(audio_info.get(int(stream), {}).get("channels", 0))
     return sample_rate
 
@@ -371,10 +376,15 @@ def read(
     """
     path = Path(path)
     output_format = SAMPLE_FORMATS_DICT.get(dtype, None)
+    audio_info = get_info(path)
+    total_streams = list(audio_info.keys())
+    if stream not in total_streams:
+        print(_i18n("audio_use_default_stream", i=0))
+        stream = 0
     if not sr:
-        sr = get_sr(path, stream)
-    channels = 1 if mono else (get_channels(path, stream) if multi_channel else num_channels)
-    
+        sr = get_sr(path, stream, audio_info)
+    channels = 1 if mono else (get_channels(path, stream, audio_info) if multi_channel else num_channels)
+    print(_i18n("selected_stream", i=stream))
     if not output_format:
         output_format = "f32le"
         cmd = [ffmpeg_path, "-i", path.as_posix(), "-map", f"0:a:{stream}", "-vn", 
