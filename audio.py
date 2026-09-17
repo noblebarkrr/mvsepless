@@ -378,6 +378,15 @@ def read(
     if not path.exists():
         raise FileNotFoundError(_i18n("path_not_exist"))
 
+    if flatten:
+        mono = True
+        num_channels = 1
+        multi_channel = False
+
+    if mono:
+        num_channels = 1
+        multi_channel = False
+
     output_format = SAMPLE_FORMATS_DICT.get(dtype, None)
     audio_info = get_info(path)
     total_streams = list(audio_info.keys())
