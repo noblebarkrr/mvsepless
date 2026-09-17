@@ -55,10 +55,12 @@ def generate_add_params_component():
 mapping_separation_modes = {
     _i18n("default"): "default",
     _i18n("custom_model"): "custom_model",
+    _i18n("preset"): "presetless"
 }
 mapping_upload_presets = {
     _i18n("preset_type_auto_ensemble"): "auto_ensemble",
     _i18n("preset_type_iterative_ensemble"): "iterative_ensemble",
+    _i18n("preset_type_presetless"): "presetless"
 }
 def melspectrogram_full_reassigned(
     *,
@@ -1241,7 +1243,7 @@ class App(Separator):
             except OSError:
                 pass
 
-    def UI(self, theme=None, hf_space_mode=False) -> gr.Blocks:
+    def UI(self, theme=None) -> gr.Blocks:
         global GDRIVE_DIR, IS_CUSTOM_DIR
         all_models = self.separator.get_all_models()
         default_model = all_models[0]
@@ -1249,11 +1251,6 @@ class App(Separator):
         ext_inst_visible_default = len(stems_default) > 2
 
         app = FastAPI()
-
-        global mapping_separation_modes, mapping_upload_presets
-        if not hf_space_mode:
-            mapping_separation_modes[_i18n("preset")] = "presetless"
-            mapping_upload_presets[_i18n("preset_type_presetless")] = "presetless"
 
         F0C_TRIGGER_JS = (
             "() => { try {"
@@ -7287,213 +7284,212 @@ class App(Separator):
                             else:
                                 gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
 
-                if not hf_space_mode:
-                    with gr.Tab(_i18n("presets_tab")):
-                        presetless_state = gr.State()
-                        
-                        with gr.Row():
-                            with gr.Column():
-                                presetless_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
-                                with gr.Group():
-                                    presetless_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
-                                    presetless_input_file.focus(self.get_actual_input_list, inputs=[presetless_input_file, presetless_input_state], outputs=[presetless_input_file, presetless_input_state], show_progress="hidden")
-                                    presetless_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
-                                    @presetless_upload_file.upload(inputs=presetless_upload_file, outputs=[presetless_upload_file, presetless_input_file])
-                                    def upload_file_fn(file: str):
-                                        uploaded_files = self.input_files.upload([file])
-                                        all_uploaded_files = self.input_files.get_input_list()
-                                        if uploaded_files:
-                                            first_value = [uploaded_files[0]]
-                                        else:
-                                            first_value = []
-                                        return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
-                                    @gr.render(inputs=[presetless_input_file, presetless_input_preview_check])
-                                    def preview_input(input: list, preview: bool):
-                                        if preview:
-                                            if input:
-                                                define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
+                with gr.Tab(_i18n("presets_tab")):
+                    presetless_state = gr.State()
+                    
+                    with gr.Row():
+                        with gr.Column():
+                            presetless_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
+                            with gr.Group():
+                                presetless_input_file = gr.Dropdown(container=False, allow_custom_value=True, multiselect=True, max_choices=1, **base_c_params["base"])
+                                presetless_input_file.focus(self.get_actual_input_list, inputs=[presetless_input_file, presetless_input_state], outputs=[presetless_input_file, presetless_input_state], show_progress="hidden")
+                                presetless_input_preview_check = gr.Checkbox(label=_i18n("show_preview"), value=False, **base_c_params["base"])
+                                @presetless_upload_file.upload(inputs=presetless_upload_file, outputs=[presetless_upload_file, presetless_input_file])
+                                def upload_file_fn(file: str):
+                                    uploaded_files = self.input_files.upload([file])
+                                    all_uploaded_files = self.input_files.get_input_list()
+                                    if uploaded_files:
+                                        first_value = [uploaded_files[0]]
+                                    else:
+                                        first_value = []
+                                    return gr.update(value=None), gr.update(choices=all_uploaded_files, value=first_value)
+                                @gr.render(inputs=[presetless_input_file, presetless_input_preview_check])
+                                def preview_input(input: list, preview: bool):
+                                    if preview:
+                                        if input:
+                                            define_audio_with_size(basename=True, label="", value=one_element_list_to_value(input), **base_c_params["output_audio"])
 
-                            with gr.Column():
-                                with gr.Group():
-                                    with gr.Accordion(label=_i18n("separation_params"), open=False):
-                                        presetless_add_params_comp_seq = generate_add_params_component()
-                                        presetless_add_params_user_state = gr.State(default_add_params)
-                                        
-                                        for comp in presetless_add_params_comp_seq:
-                                            comp.input(
-                                                fn=self.update_add_params, 
-                                                inputs=[*presetless_add_params_comp_seq], outputs=presetless_add_params_user_state,
-                                                show_progress="hidden"
-                                            )
+                        with gr.Column():
+                            with gr.Group():
+                                with gr.Accordion(label=_i18n("separation_params"), open=False):
+                                    presetless_add_params_comp_seq = generate_add_params_component()
+                                    presetless_add_params_user_state = gr.State(default_add_params)
                                     
-                                    presetless_template = gr.Textbox(
-                                        label=_i18n("output_template"), 
-                                        info=_i18n("output_template2_info"), 
-                                        value="NAME_(STEM)", 
-                                        **base_c_params["base"]
-                                    )
-                                    presetless_run_button = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
-
-                        with gr.Group():
-                            presetless_preset_state = gr.Textbox(elem_id="hidden_preset_state")
-
-                            node_editor = gr.HTML("""
-                                <div id="preset-editor-container">
-                                    <iframe 
-                                        id="preset-editor-iframe"
-                                        src="about:blank" 
-                                        width="100%" 
-                                        height="900px" 
-                                        style="border:none;"
-                                        onload="
-                                            const urlParams = new URLSearchParams(window.location.search);
-                                            const themeValue = urlParams.get('__theme') || 'light';
-                                            const targetTheme = (themeValue === 'dark') ? 'dark' : 'light';
-                                            
-                                            // Функция для получения session_hash
-                                            function getSessionHash() {
-                                                try {
-                                                    if (window.parent && window.parent.gradio_config) {
-                                                        return window.parent.gradio_config.session_hash || '';
-                                                    }
-                                                } catch(e) {}
-                                                try {
-                                                    if (window.gradio_config) {
-                                                        return window.gradio_config.session_hash || '';
-                                                    }
-                                                } catch(e) {}
-                                                return '';
-                                            }
-                                            
-                                            const sessionHash = getSessionHash();
-                                            if(this.src.includes('about:blank')) {
-                                                this.src = '/preset_node_editor?__theme=' + targetTheme + '&session_hash=' + sessionHash;
-                                            }
-                                        ">
-                                    </iframe>
-                                </div>
-                                """, padding=False
-                            )
-
-                        with gr.Group():
-                            with gr.Row(equal_height=True):
-                                with gr.Column(min_width=110):
-                                    gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
-                                presetless_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
-                                presetless_history.focus(
-                                    self.get_actual_preset_history_list,
-                                    inputs=[presetless_history, presetless_history_state], 
-                                    outputs=[presetless_history, presetless_history_state], 
-                                    show_progress="hidden"
-                                )
+                                    for comp in presetless_add_params_comp_seq:
+                                        comp.input(
+                                            fn=self.update_add_params, 
+                                            inputs=[*presetless_add_params_comp_seq], outputs=presetless_add_params_user_state,
+                                            show_progress="hidden"
+                                        )
                                 
-                                @presetless_history.input(inputs=presetless_history, outputs=presetless_state)
-                                def custom_separation_show_history_fn(key: list):
-                                    state = self.preset_history.get_from_history(one_element_list_to_value(key))
-                                    return state
-                            presetless_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
-                            @gr.render(inputs=[presetless_state, presetless_off_players_output])
-                            def show_players(state, off_players_output: bool):
-                                if state:
-                                    zip_is_generated = False
-                                    all_files = []
+                                presetless_template = gr.Textbox(
+                                    label=_i18n("output_template"), 
+                                    info=_i18n("output_template2_info"), 
+                                    value="NAME_(STEM)", 
+                                    **base_c_params["base"]
+                                )
+                                presetless_run_button = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
 
-                                    for stem_name, stem_path in state:
-                                        all_files.append(stem_path)
-                                        with gr.Row(equal_height=True):
-                                            if off_players_output:
-                                                output_audio = define_download_button_with_size(
-                                                    value=stem_path,
-                                                    label=stem_name,
-                                                    **base_c_params["base"], variant="huggingface",
-                                                    scale=15,
-                                                )
-                                            else:
-                                                output_audio = define_audio_with_size(
-                                                    value=stem_path,
-                                                    label=stem_name,
-                                                    **base_c_params["output_audio"],
-                                                    scale=15,
-                                                )
-                                            reuse_btn = gr.Button(
-                                                _i18n("reuse_btn"), 
-                                                variant="secondary", **base_c_params["base"]
-                                            )
-                                            @reuse_btn.click(
-                                                inputs=[presetless_input_file],
-                                                outputs=presetless_input_file,
-                                            )
-                                            def reuse_fn(input_file: str, stem=deepcopy(stem_path)) -> gr.update:
-                                                uploaded_files = self.input_files.upload([stem], copy=True)
-                                                all_uploaded_files = self.input_files.get_input_list()
-                                                if all_uploaded_files:
-                                                    first_value = [all_uploaded_files[0]]
-                                                else:
-                                                    first_value = []
-                                                return gr.update(choices=all_uploaded_files, value=first_value)
-                                            
-                                    generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
-                                    @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
-                                    def generate_zip_fn():
-                                        nonlocal zip_is_generated
-                                        if zip_is_generated:
-                                            return gr.skip()
-                                        else:
-                                            zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsepless"))
-                                            zip_is_generated = True
-                                            return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
-                                else:
-                                    gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
+                    with gr.Group():
+                        presetless_preset_state = gr.Textbox(elem_id="hidden_preset_state")
 
-
-                        @presetless_run_button.click(
-                            inputs=[presetless_preset_state, presetless_input_file, presetless_template, presetless_add_params_user_state],
-                            outputs=[presetless_upload_file, presetless_state]
+                        node_editor = gr.HTML("""
+                            <div id="preset-editor-container">
+                                <iframe 
+                                    id="preset-editor-iframe"
+                                    src="about:blank" 
+                                    width="100%" 
+                                    height="900px" 
+                                    style="border:none;"
+                                    onload="
+                                        const urlParams = new URLSearchParams(window.location.search);
+                                        const themeValue = urlParams.get('__theme') || 'light';
+                                        const targetTheme = (themeValue === 'dark') ? 'dark' : 'light';
+                                        
+                                        // Функция для получения session_hash
+                                        function getSessionHash() {
+                                            try {
+                                                if (window.parent && window.parent.gradio_config) {
+                                                    return window.parent.gradio_config.session_hash || '';
+                                                }
+                                            } catch(e) {}
+                                            try {
+                                                if (window.gradio_config) {
+                                                    return window.gradio_config.session_hash || '';
+                                                }
+                                            } catch(e) {}
+                                            return '';
+                                        }
+                                        
+                                        const sessionHash = getSessionHash();
+                                        if(this.src.includes('about:blank')) {
+                                            this.src = '/preset_node_editor?__theme=' + targetTheme + '&session_hash=' + sessionHash;
+                                        }
+                                    ">
+                                </iframe>
+                            </div>
+                            """, padding=False
                         )
-                        def execute_preset(preset_json: dict | str,
-                                        input_file: list,
-                                        template: str, 
-                                        add_params: dict,
-                                        request: gr.Request, # <-- ДОБАВЛЕНО: нативный объект запроса Gradio
-                                        progress=gr.Progress(track_tqdm=True)):
-                            # Получаем уникальный ID сессии (конкретной вкладки браузера)
-                            session_hash = request.session_hash  # Получаем корректный хеш
-                            
-                            # Блокируем редактор перед началом выполнения
-                            self.sessions_statuses[session_hash] = {"_locked": True}
-                            
-                            if isinstance(preset_json, str):
-                                preset = json.loads(preset_json)
-                            else:
-                                preset = preset_json
-                            if not preset or "nodes" not in preset:
-                                gr.Warning(_i18n("preset_flow_invalid"))
-                                self.sessions_statuses[session_hash]["_locked"] = False
-                                return []
-                            # Callback для обновления словаря
-                            def progress_callback(data):
-                                # data = {"nodeId": "node_1", "status": "active" | "success" | "error"}
-                                if "nodeId" in data and "status" in data:
-                                    # <-- ИСПРАВЛЕНО: обновляем статус внутри словаря конкретной сессии
-                                    self.sessions_statuses[session_hash][data["nodeId"]] = data["status"]
-                            preset_name = preset.get("name", "no_named_preset")
-                            preset_executor = PresetExecutor(
-                                input_file=one_element_list_to_value(input_file),
-                                output_dir=self.output_dir.gen_output_dir(),
-                                template=template,
-                                add_params=add_params,
-                                model_manager=self.separator
+
+                    with gr.Group():
+                        with gr.Row(equal_height=True):
+                            with gr.Column(min_width=110):
+                                gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
+                            presetless_history = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
+                            presetless_history.focus(
+                                self.get_actual_preset_history_list,
+                                inputs=[presetless_history, presetless_history_state], 
+                                outputs=[presetless_history, presetless_history_state], 
+                                show_progress="hidden"
                             )
-                            try:
-                                result = preset_executor.execute_preset(
-                                    preset=preset, progress_callback=progress_callback
-                                )
-                            finally:
-                                # Разблокируем редактор после завершения (успешно или с ошибкой)
-                                self.sessions_statuses[session_hash]["_locked"] = False
-                                
-                            self.preset_history.add_to_history(preset_name, result)
-                            return gr.skip(), result
+                            
+                            @presetless_history.input(inputs=presetless_history, outputs=presetless_state)
+                            def custom_separation_show_history_fn(key: list):
+                                state = self.preset_history.get_from_history(one_element_list_to_value(key))
+                                return state
+                        presetless_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
+                        @gr.render(inputs=[presetless_state, presetless_off_players_output])
+                        def show_players(state, off_players_output: bool):
+                            if state:
+                                zip_is_generated = False
+                                all_files = []
+
+                                for stem_name, stem_path in state:
+                                    all_files.append(stem_path)
+                                    with gr.Row(equal_height=True):
+                                        if off_players_output:
+                                            output_audio = define_download_button_with_size(
+                                                value=stem_path,
+                                                label=stem_name,
+                                                **base_c_params["base"], variant="huggingface",
+                                                scale=15,
+                                            )
+                                        else:
+                                            output_audio = define_audio_with_size(
+                                                value=stem_path,
+                                                label=stem_name,
+                                                **base_c_params["output_audio"],
+                                                scale=15,
+                                            )
+                                        reuse_btn = gr.Button(
+                                            _i18n("reuse_btn"), 
+                                            variant="secondary", **base_c_params["base"]
+                                        )
+                                        @reuse_btn.click(
+                                            inputs=[presetless_input_file],
+                                            outputs=presetless_input_file,
+                                        )
+                                        def reuse_fn(input_file: str, stem=deepcopy(stem_path)) -> gr.update:
+                                            uploaded_files = self.input_files.upload([stem], copy=True)
+                                            all_uploaded_files = self.input_files.get_input_list()
+                                            if all_uploaded_files:
+                                                first_value = [all_uploaded_files[0]]
+                                            else:
+                                                first_value = []
+                                            return gr.update(choices=all_uploaded_files, value=first_value)
+                                        
+                                generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
+                                @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
+                                def generate_zip_fn():
+                                    nonlocal zip_is_generated
+                                    if zip_is_generated:
+                                        return gr.skip()
+                                    else:
+                                        zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsepless"))
+                                        zip_is_generated = True
+                                        return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
+                            else:
+                                gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
+
+
+                    @presetless_run_button.click(
+                        inputs=[presetless_preset_state, presetless_input_file, presetless_template, presetless_add_params_user_state],
+                        outputs=[presetless_upload_file, presetless_state]
+                    )
+                    def execute_preset(preset_json: dict | str,
+                                    input_file: list,
+                                    template: str, 
+                                    add_params: dict,
+                                    request: gr.Request, # <-- ДОБАВЛЕНО: нативный объект запроса Gradio
+                                    progress=gr.Progress(track_tqdm=True)):
+                        # Получаем уникальный ID сессии (конкретной вкладки браузера)
+                        session_hash = request.session_hash  # Получаем корректный хеш
+                        
+                        # Блокируем редактор перед началом выполнения
+                        self.sessions_statuses[session_hash] = {"_locked": True}
+                        
+                        if isinstance(preset_json, str):
+                            preset = json.loads(preset_json)
+                        else:
+                            preset = preset_json
+                        if not preset or "nodes" not in preset:
+                            gr.Warning(_i18n("preset_flow_invalid"))
+                            self.sessions_statuses[session_hash]["_locked"] = False
+                            return []
+                        # Callback для обновления словаря
+                        def progress_callback(data):
+                            # data = {"nodeId": "node_1", "status": "active" | "success" | "error"}
+                            if "nodeId" in data and "status" in data:
+                                # <-- ИСПРАВЛЕНО: обновляем статус внутри словаря конкретной сессии
+                                self.sessions_statuses[session_hash][data["nodeId"]] = data["status"]
+                        preset_name = preset.get("name", "no_named_preset")
+                        preset_executor = PresetExecutor(
+                            input_file=one_element_list_to_value(input_file),
+                            output_dir=self.output_dir.gen_output_dir(),
+                            template=template,
+                            add_params=add_params,
+                            model_manager=self.separator
+                        )
+                        try:
+                            result = preset_executor.execute_preset(
+                                preset=preset, progress_callback=progress_callback
+                            )
+                        finally:
+                            # Разблокируем редактор после завершения (успешно или с ошибкой)
+                            self.sessions_statuses[session_hash]["_locked"] = False
+                            
+                        self.preset_history.add_to_history(preset_name, result)
+                        return gr.skip(), result
 
                 with gr.Tab(_i18n("ensemble_tab")):
                     with gr.Tab(_i18n("auto_ensemble_tab")):
@@ -9282,12 +9278,12 @@ class App(Separator):
 
         return gr.mount_gradio_app(app, mvsepless_app, path="/", allowed_paths=["/"])
 
-    def launch(self, theme: Any = None, hf_space_mode: bool = False, server_name: str = "0.0.0.0", server_port: int | str = 8000, share: bool = True):
+    def launch(self, theme: Any = None, server_name: str = "0.0.0.0", server_port: int | str = 8000, share: bool = True):
         if not server_name:
             server_name = "0.0.0.0"
         if not server_port:
             server_port = 7860
-        app = self.UI(theme, hf_space_mode)
+        app = self.UI(theme)
         if share:
             share_url = share_gradio_tunnel(server_name, server_port)
             print(_i18n("public_url") +": " + share_url)
@@ -9352,12 +9348,8 @@ if __name__ == "__main__":
         custom_models_dir=args.custom_models_dir
     )
 
-    if not args.full:
-        app.update_info()
-
     app.launch(
         theme=theme,
-        hf_space_mode=not args.full,
         share=args.share,
         server_port=args.port,
         server_name="0.0.0.0"

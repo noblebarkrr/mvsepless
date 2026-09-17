@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 
 from collections import deque
-from extra_utils import hf_spaces_gpu, dw_file, dw_file_parts, dw_file_legacy, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
+from extra_utils import dw_file, dw_file_parts, dw_file_legacy, extra_clear_torch_cache, nuclear_clear_model, tz, print_current_device
 from urllib.parse import urlparse
 from datetime import datetime
 import torch
@@ -2549,7 +2549,6 @@ class Separator(ModelManager):
             custom_models_dir=custom_models_dir
         )
 
-    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def separate_base(
         self, mssi: MSSI, 
         input_valid_files: list[str | Path], 
@@ -2603,7 +2602,6 @@ class Separator(ModelManager):
         results, errors = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus, prefer_float)
         return results, errors
 
-    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def custom_separate(
         self,
         input_files: list,
@@ -2851,7 +2849,6 @@ class Separator(ModelManager):
 
         return validated_flow, warns_str
 
-    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def auto_ensemble_base(
             self, mssi: MSSI,
             model_name: str, 
@@ -2981,7 +2978,6 @@ class Separator(ModelManager):
 
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_, 320, prefer_float, new_metadata), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr, 320, prefer_float, new_metadata_invert), saved_primary_stems
 
-    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def iterative_ensemble_base(self, mssi: MSSI, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
         mssi.clear_model()
         mssi.load_model(

@@ -353,8 +353,8 @@ pip install -r requirements_old_torch_py310.txt
 #### Через командную строку
 
 ```sh
-# Если не указан флаг --full, то будет запущена версия для Hugging Face Spaces
-python app.py --share --full
+
+python app.py --share
 ```
 ---
 #### Напрямую
@@ -1002,5 +1002,4 @@ results = separator.run_preset(
 |-----------|----------|-----|----------|
 | `-s`, `-share`, `--share`, `--public`, `--gradio_share`, `--gradio-share` | `share` | `bool` | Создать публичную ссылку через Gradio Share (для доступа из интернета) |
 | `-p`, `-port`, `--port`, `--server_port`, `--server-port` | `port` | `int` | Порт для запуска сервера (по умолчанию: 7860) |
-| `-f`, `-full`, `--full`, `--no_hf_mode`, `--no-hf-mode` | `full` | `bool` | Запустить полную версию интерфейса (не режим Hugging Face Spaces) |
 

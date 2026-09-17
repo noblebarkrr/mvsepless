@@ -26,28 +26,6 @@ import tempfile
 from urllib.parse import urlparse, urlunparse
 from queue import Queue, Empty
 import threading
-
-try:
-    import spaces
-except ImportError:
-    spaces = None
-
-zerogpu_available = False
-
-def hf_spaces_gpu(*args, **kwargs):
-    """Декоратор для GPU на HF Spaces с fallback для локального запуска"""
-    if len(args) == 1 and callable(args[0]):
-        return args[0]
-    return lambda f: f
-
-if spaces is not None:
-    try:
-        if hasattr(spaces, 'GPU'):
-            zerogpu_available = True
-            print(_i18n("zerogpu=true"))
-            hf_spaces_gpu = spaces.GPU
-    except:
-        pass  # Если что-то пошло не так, оставляем заглушку
         
 import torch
 tz = timezone(timedelta(hours=3))

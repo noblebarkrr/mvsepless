@@ -3,7 +3,7 @@ import sys
 import gradio as gr
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(SCRIPT_DIR.parent))
-from extra_utils import hf_spaces_gpu, extra_clear_torch_cache, nuclear_clear_model, print_current_device
+from extra_utils import extra_clear_torch_cache, nuclear_clear_model, print_current_device
 if __package__:
     from .hubert_manager import get_hubert, download_hubert, huberts_fairseq
     from .pipeline import VC
@@ -177,7 +177,6 @@ class VbachConverter:
         self.vc = VC(self.tgt_sr, self.config, use_transformers)
         print(_i18n("checkpoint_loaded")+": "+Path(model_path).name)
 
-    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def convert_audio(
         self,
         audio_input: str | Path | list[str | Path],
@@ -298,7 +297,6 @@ class VbachConverter:
 
         return processed_audios
 
-    @hf_spaces_gpu # (duration=120) Для спейса LongQuota / длинная квота на HuggingFace ZeroGPU (по умолчанию 60 секунд)
     def convert_audio_custom_f0(
         self,
         audio_input: str | Path,

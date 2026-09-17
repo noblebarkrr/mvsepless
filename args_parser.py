@@ -886,9 +886,4 @@ def parse_app_args():
         type=int, default=None, dest="port",
         help=_i18n("app_port_help")
     )
-    parser.add_argument(
-        "-f", "-full", "--full", "--no_hf_mode", "--no-hf-mode", 
-        action="store_true", dest="full",
-        help=_i18n("app_full_help")
-    )
     return parser.parse_args()

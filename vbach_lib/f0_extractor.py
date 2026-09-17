@@ -15,7 +15,7 @@ from audio import read
 from namer import Namer
 
 import json
-from extra_utils import dw_file, nuclear_clear_model, extra_clear_torch_cache, hf_spaces_gpu
+from extra_utils import dw_file, nuclear_clear_model, extra_clear_torch_cache
 from args_parser import parse_f0_extract
 if __package__:
     from .predictors.FCPE import FCPEF0Predictor
@@ -289,8 +289,7 @@ def f0_extract(
         raise UnknownF0Method(_i18n("unknown_f0_method", method=f0_method))
     
     return f0
-    
-@hf_spaces_gpu
+
 def f0_extract_and_write(input_audio: str | Path, f0_method: str = f0_methods[0], f0_min: int = 50, f0_max: int = 1100, output_path: str | Path = None):
     path = Path(input_audio)
     sample_rate: int = 16000
