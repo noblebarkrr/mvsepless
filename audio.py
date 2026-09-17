@@ -339,7 +339,7 @@ def check(path: str | Path) -> bool:
     channels = get_channels(path)
     sr = get_sr(path)
     is_audio = channels != 0 and sr != 0
-    if path.exists and not is_audio:
+    if path.exists() and not is_audio:
         print(_i18n("file_is_not_audio") + ": " + str(path))
     return is_audio
 
