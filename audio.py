@@ -341,8 +341,9 @@ def check(path: str | Path) -> bool:
         True если файл содержит аудио
     """
     path = Path(path)
-    channels = get_channels(path)
-    sr = get_sr(path)
+    audio_info = get_info(path)
+    channels = get_channels(path, 0, audio_info)
+    sr = get_sr(path, 0, audio_info)
     is_audio = channels != 0 and sr != 0
     if path.exists() and not is_audio:
         print(_i18n("file_is_not_audio") + ": " + str(path))
