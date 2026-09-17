@@ -256,7 +256,7 @@ def get_info(
                 for a, stream in enumerate(streams):
                     audio_info[a] = {
                         "sample_rate": int(stream.get("sample_rate", 0)),
-                        "channels": float(stream.get("channels", 0)),
+                        "channels": int(stream.get("channels", 0)),
                     }
         else:
             print(_i18n("path_not_exist"))
