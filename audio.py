@@ -209,6 +209,57 @@ def sanitize_output(output: str) -> str:
     """
     return "".join([char for char in output if char in allowed_chars])
 
+def get_info(
+    i: str | Path | None = None,
+) -> dict[int, dict[int, float]]:
+    audio_info = {}
+    if i:
+        i = Path(i)
+        if i.exists():
+            cmd = [
+                ffprobe_path,
+                "-i",
+                str(i),
+                "-v",
+                "quiet",
+                "-hide_banner",
+                "-show_entries",
+                "stream=index,sample_rate,channels",
+                "-select_streams",
+                "a",
+                "-of",
+                "json",
+            ]
+
+            process = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            stdout, stderr = process.communicate()
+
+            if process.returncode != 0:
+                print(f"STDERR: {stderr.decode('utf-8')}")
+                print(f"STDOUT: {stdout.decode('utf-8')}")
+
+            json_output = json.loads(stdout)
+            streams = json_output["streams"]
+            if not streams:
+                pass
+
+            else:
+                for a, stream in enumerate(streams):
+                    audio_info[a] = {
+                        "sample_rate": int(stream.get("sample_rate", 0)),
+                        "channels": float(stream.get("channels", 0)),
+                    }
+        else:
+            print(_i18n("path_not_exist"))
+    else:
+        print(_i18n("path_not_specified"))
+    return audio_info
 
 def get_sr(path: str | Path, stream: int = 0) -> int:
     """
@@ -221,21 +272,9 @@ def get_sr(path: str | Path, stream: int = 0) -> int:
     Returns:
         Частота дискретизации
     """
-    path = Path(path)
-    cmd = [ffprobe_path, "-i", path.as_posix(), "-v", "quiet", "-hide_banner", 
-           "-show_entries", "stream=sample_rate", "-select_streams", f"a:{stream}", 
-           "-of", "compact=p=0:nk=1"]
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    stdout, stderr = process.communicate()
-    sample_rate = stdout.decode('utf-8').strip()
-    sample_rate = sanitize_output(sample_rate)
-    if sample_rate.isdigit():
-        return int(sample_rate)
-    else:
-        print(_i18n("sr_read_error", path=path))
-        return 0
+    audio_info = get_info(path)
+    sample_rate = int(audio_info.get(int(stream), {}).get("sample_rate", 0))
+    return sample_rate
 
 
 def get_channels(path: str | Path, stream: int = 0) -> int:
@@ -250,20 +289,9 @@ def get_channels(path: str | Path, stream: int = 0) -> int:
         Количество каналов
     """
     path = Path(path)
-    cmd = [ffprobe_path, "-i", path.as_posix(), "-v", "quiet", "-hide_banner", 
-           "-show_entries", "stream=channels", "-select_streams", f"a:{stream}", 
-           "-of", "compact=p=0:nk=1"]
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    stdout, stderr = process.communicate()
-    channels = stdout.decode('utf-8').strip()
-    channels = sanitize_output(channels)
-    if channels.isdigit():
-        return int(channels)
-    else:
-        print(_i18n("channels_read_error", path=path))
-        return 0
+    audio_info = get_info(path)
+    sample_rate = int(audio_info.get(int(stream), {}).get("channels", 0))
+    return sample_rate
 
 def get_metadata(path: str | Path) -> dict:
     """
@@ -307,9 +335,13 @@ def check(path: str | Path) -> bool:
     Returns:
         True если файл содержит аудио
     """
+    path = Path(path)
     channels = get_channels(path)
     sr = get_sr(path)
-    return channels != 0 and sr != 0
+    is_audio = channels != 0 and sr != 0
+    if path.exists and not is_audio:
+        print(_i18n("file_is_not_audio") + ": " + str(path))
+    return is_audio
 
 def read(
     path: str | Path, 
