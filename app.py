@@ -1108,11 +1108,11 @@ class App(Separator):
         self.f0_corrector_inbox = {}
         # Ограничение параллельных тяжёлых анализов (иначе один пользователь
         # кладёт event loop всем остальным)
-        self._f0_analyze_semaphore = asyncio.Semaphore(2)
+        self._f0_analyze_semaphore = asyncio.Semaphore(4)
 
     def update_model_name(self, model_name):
         stems = self.separator.get_stems(model_name)
-        return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems)
+        return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems), gr.update(value=False, visible=len(stems) > 2)
 
     def update_model_name_ensemble(self, model_name):
         stems = self.separator.get_stems(model_name)
@@ -1357,7 +1357,9 @@ class App(Separator):
         <html lang="ru">
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=overlays-content">
+
+
             <title>""" + f"{_i18n('preset_node_title')}" + """</title>
             <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
             <style>
@@ -1939,6 +1941,45 @@ class App(Separator):
                     }
                 }
 
+                // Bounding box графа. Корректен для любых координат, включая отрицательные:
+                // просто min/max по всем нодам, без предположений о знаке.
+                function getContentBounds() {
+                    const ids = Object.keys(nodes);
+                    if (!ids.length) return null;
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    ids.forEach(id => {
+                        const n = nodes[id];
+                        const el = document.getElementById(id);
+                        const w = el ? el.offsetWidth  : 180;
+                        const h = el ? el.offsetHeight : 120;
+                        minX = Math.min(minX, n.x);
+                        minY = Math.min(minY, n.y);
+                        maxX = Math.max(maxX, n.x + w);
+                        maxY = Math.max(maxY, n.y + h);
+                    });
+                    return { minX, minY, w: maxX - minX, h: maxY - minY };
+                }
+
+                // Вписывает граф в вьюпорт. Меняет ТОЛЬКО transform;
+                // node.x/node.y (в т.ч. отрицательные) остаются нетронутыми.
+                function fitViewToContent(padding = 40) {
+                    const b = getContentBounds();
+                    if (!b) return;
+                    const rect = workspace.getBoundingClientRect();
+                    const vw = rect.width, vh = rect.height;
+                    if (vw <= 0 || vh <= 0) return;              // вкладка скрыта — не трогаем вид
+                    const bw = Math.max(1, b.w), bh = Math.max(1, b.h);
+                    let scale = Math.min((vw - padding * 2) / bw, (vh - padding * 2) / bh);
+                    scale = Math.max(0.1, Math.min(1, scale));   // не апскейлим выше 100%
+                    transform.scale = scale;
+                    // Формула знаконезависимая: minX/minY могут быть < 0
+                    transform.x = (vw - bw * scale) / 2 - b.minX * scale;
+                    transform.y = (vh - bh * scale) / 2 - b.minY * scale;
+                    isPinching = false; pinchBaseline = null; pinchLastTouch = null;
+                    applyTransform();
+                    showZoomBadge();
+                }
+
                 window.addEventListener('message', (e) => {
                     if (e.data) {
                         if (e.data.type === 'set_preset') {
@@ -2044,7 +2085,7 @@ class App(Separator):
                     "input_file": { title: """ + f"\"{_i18n('preset_node_input_file')}\"" + """, params: {} },
                     "output_file": { title: """ + f"\"{_i18n('preset_node_output_file')}\"" + """, params: { name_stem: "output", output_format: "mp3", prefer_float: false }, html: `
                         <label>""" + f"{_i18n('preset_node_name_stem')}" + """</label>
-                        <input type="text" data-param="name_stem" placeholder=""" + f"\"{_i18n('preset_node_stem_name')}\"" + """>
+                        <input type="text" data-param="name_stem" enterkeyhint="go" placeholder=""" + f"\"{_i18n('preset_node_stem_name')}\"" + """>
                         <label>""" + f"{_i18n('preset_node_output_format')}" + """</label>
                         <div class="custom-select-container" data-param="output_format">
                             <div class="custom-select-input-wrapper">
@@ -2059,13 +2100,13 @@ class App(Separator):
                             <label class="toggle-switch"><input type="checkbox" data-param="prefer_float"><span class="slider"></span></label>
                         </div>
                     ` },
-                    "gain": { title: """ + f"\"{_i18n('preset_node_gain')}\"" + """, params: { gain: 1.0 }, html: `<label>""" + f"{_i18n('preset_node_gain_factor')}" + """</label><input type="number" step="0.01" min="0" max="20" data-param="gain">` },
-                    "normalize": { title: """ + f"\"{_i18n('preset_node_normalize')}\"" + """, params: { peak: 1.0 }, html: `<label>""" + f"{_i18n('preset_node_peak')}" + """</label><input type="number" step="0.01" min="0" max="20" data-param="peak">` },
+                    "gain": { title: """ + f"\"{_i18n('preset_node_gain')}\"" + """, params: { gain: 1.0 }, html: `<label>""" + f"{_i18n('preset_node_gain_factor')}" + """</label><input type="text" inputmode="decimal" step="0.01" min="0" max="20" enterkeyhint="go" data-param="gain">` },
+                    "normalize": { title: """ + f"\"{_i18n('preset_node_normalize')}\"" + """, params: { peak: 1.0 }, html: `<label>""" + f"{_i18n('preset_node_peak')}" + """</label><input type="text" inputmode="decimal" step="0.01" min="0" max="20" enterkeyhint="go" data-param="peak">` },
                     "trim": { title: """ + f"\"{_i18n('preset_node_trim')}\"" + """, params: { start: 0, end: 30 }, html: `
                         <label>""" + f"{_i18n('start_sec')}" + """</label>
-                        <input type="number" step="0.1" min="0" data-param="start">
+                        <input type="text" inputmode="decimal" step="0.1" min="0" enterkeyhint="go" data-param="start">
                         <label>""" + f"{_i18n('end_sec')}" + """</label>
-                        <input type="number" step="0.1" min="0.1" data-param="end">
+                        <input type="text" inputmode="decimal" step="0.1" min="0.1" enterkeyhint="go" data-param="end">
                     ` },
                     "filter": { title: """ + f"\"{_i18n('preset_node_filter')}\"" + """, params: { kind: "hp", fft_mode: true, cutoff: 100 }, html: `
                         <label>""" + f"{_i18n('preset_node_kind')}" + """</label>
@@ -2079,7 +2120,7 @@ class App(Separator):
                             </div>
                         </div>
                         <label>""" + f"{_i18n('preset_node_cutoff')}" + """</label>
-                        <input type="number" step="1" min="10" max="22050" data-param="cutoff">
+                        <input type="text" inputmode="decimal" enterkeyhint="go" step="1" min="10" max="22050" data-param="cutoff">
                         <div class="toggle-container">
                             <label>""" + f"{_i18n('preset_node_use_spectrogram')}" + """</label>
                             <label class="toggle-switch"><input type="checkbox" data-param="fft_mode" checked><span class="slider"></span></label>
@@ -2087,7 +2128,7 @@ class App(Separator):
                     ` },
                     "phase_shift": { title: """ + f"\"{_i18n('preset_node_phase_shift')}\"" + """, params: { degrees: 90 }, html: `
                         <label>""" + f"{_i18n('phase_angle')}" + """</label>
-                        <input type="number" step="1" min="-360" max="360" data-param="degrees">
+                        <input type="text" inputmode="decimal" enterkeyhint="go" step="1" min="-360" max="360" data-param="degrees">
                     ` },
                     "phase_correct": { title: """ + f"\"{_i18n('preset_node_phase_correct')}\"" + """, params: { transfer_magnitude: false, transfer_phase: true, freq_blend_phases: true, low_cutoff: 500, high_cutoff: 5000 }, html: `
                         <div class="toggle-container">
@@ -2103,14 +2144,14 @@ class App(Separator):
                             <label class="toggle-switch"><input type="checkbox" data-param="freq_blend_phases" checked><span class="slider"></span></label>
                         </div>
                         <label>""" + f"{_i18n('preset_node_low_cutoff')}" + """</label>
-                        <input type="number" step="10" min="20" max="20000" data-param="low_cutoff">
+                        <input type="text" inputmode="decimal" enterkeyhint="go" step="10" min="20" max="20000" data-param="low_cutoff">
                         <label>""" + f"{_i18n('preset_node_high_cutoff')}" + """</label>
-                        <input type="number" step="10" min="20" max="20000" data-param="high_cutoff">
+                        <input type="text" inputmode="decimal" enterkeyhint="go" step="10" min="20" max="20000" data-param="high_cutoff">
                     ` },
-                    "mix": { title: """ + f"\"{_i18n('preset_node_mix')}\"" + """, params: { num_inputs: 2 }, html: `<label>""" + f"{_i18n('preset_node_inputs')}" + """</label><input type="number" min="1" max="10" data-param="num_inputs" onchange="updateDynamicPorts(this)">` },
+                    "mix": { title: """ + f"\"{_i18n('preset_node_mix')}\"" + """, params: { num_inputs: 2 }, html: `<label>""" + f"{_i18n('preset_node_inputs')}" + """</label><input type="text" inputmode="decimal" enterkeyhint="go" min="1" max="10" data-param="num_inputs" onchange="updateDynamicPorts(this)">` },
                     "ensemble": { title: """ + f"\"{_i18n('preset_node_ensemble')}\"" + """, params: { num_inputs: 2, type: "avg_fft" }, html: `
                         <label>""" + f"{_i18n('preset_node_inputs')}" + """</label>
-                        <input type="number" min="1" max="10" data-param="num_inputs" onchange="updateDynamicPorts(this)">
+                        <input type="text" inputmode="decimal" enterkeyhint="go" min="1" max="10" data-param="num_inputs" onchange="updateDynamicPorts(this)">
                         <label>""" + f"{_i18n('preset_node_ensemble_type')}" + """</label>
                         <div class="custom-select-container" data-param="type">
                             <div class="custom-select-input-wrapper">
@@ -2156,7 +2197,7 @@ class App(Separator):
                         <label>""" + f"{_i18n('preset_node_model_name')}" + """</label>
                         <div class="custom-select-container filterable">
                             <div class="custom-select-input-wrapper">
-                                <input type="text" class="custom-select-input" data-param="model_name" placeholder=""" + f"\"{_i18n('preset_node_choose_model')}\"" + """ onfocus="openDropdown(this)" onclick="openDropdown(this)" oninput="filterOptions(this)" autocomplete="off">
+                                <input type="text" class="custom-select-input" data-param="model_name" enterkeyhint="go" placeholder=""" + f"\"{_i18n('preset_node_choose_model')}\"" + """ onfocus="openDropdown(this)" onclick="openDropdown(this)" oninput="filterOptions(this)" autocomplete="off">
                             </div>
                             <div class="custom-select-options custom-model-options"></div>
                         </div>
@@ -2852,11 +2893,21 @@ class App(Separator):
 
                 window.clearWorkspace = function() {
                     nodes = {}; links = [];
-                    document.getElementById('preset-name').value = ''
+                    document.getElementById('preset-name').value = '';
                     nodesContainer.innerHTML = ''; svgCanvas.innerHTML = '';
                     idCounter = 1;
-                    sendStateToParent(); 
-                }
+                    transform = { x: 0, y: 0, scale: 1 };   // сброс вида: редактирование с нуля без чужого офсета
+                    applyTransform();
+                    sendStateToParent();
+                };
+
+                // Двойной клик/тап по пустому месту — вернуть вид к контенту,
+                // если при редактировании ноды уехали в отрицательную область и «потерялись».
+                workspace.addEventListener('dblclick', e => {
+                    if (e.target === workspace || e.target === transformLayer || e.target.tagName === 'svg') {
+                        fitViewToContent();
+                    }
+                });
 
 
                 function loadJSON(data) {
@@ -2880,6 +2931,7 @@ class App(Separator):
                     // Загружаем только связи, ведущие на существующие ноды (чтобы удалить висячие хвосты от удаленных input_file)
                     links = (data.links || []).filter(l => nodes[l.fromNode] && nodes[l.toNode]); 
                     drawLinks();
+                    fitViewToContent();
                     sendStateToParent(); 
                 }
 
@@ -3008,7 +3060,6 @@ class App(Separator):
                 }, {passive: false});
                 workspace.addEventListener('touchend', endPinch);
                 workspace.addEventListener('touchcancel', endPinch);
-
                 init();
             </script>
         </body>
@@ -7050,54 +7101,15 @@ class App(Separator):
                                             print(e)
                                     return gr.update(value=[], choices=stems)
                                 sep_extract_instrumental = gr.Checkbox(label=_i18n("extract_instrumental"), visible=ext_inst_visible_default, value=False, **base_c_params["base"])
-                                sep_model_name.change(self.update_model_name, inputs=sep_model_name, outputs=[sep_extract_instrumental, sep_selected_stems])
-                                @sep_separation_mode.change(
-                                    inputs=[sep_separation_mode],
-                                    outputs=[
-                                        sep_model_name, custom_sep_model_type, custom_sep_checkpoint,
-                                        custom_sep_config, sep_selected_stems, sep_extract_instrumental,
-                                        presetless_preset_path
-                                    ]
-                                )
-                                def separation_mode_change(mode_label: str):
-                                    mode = mapping_separation_modes.get(mode_label, "default")
-                                    if mode == "custom_model":
-                                        return (
-                                            gr.update(visible=False),                          # sep_model_name
-                                            gr.update(value=custom_model_types[0], choices=custom_model_types, visible=True),  # model_type
-                                            gr.update(value=[], visible=True),                 # checkpoint
-                                            gr.update(value=[], visible=True),                 # config
-                                            gr.update(choices=[], value=[], visible=True),     # selected_stems
-                                            gr.update(value=False, visible=False),             # extract_instrumental
-                                            gr.update(visible=False),                          # presetless_preset_path
-                                        )
-                                    elif mode == "presetless":
-                                        return (
-                                            gr.update(visible=False),                          # sep_model_name
-                                            gr.update(visible=False),                          # model_type
-                                            gr.update(visible=False),                          # checkpoint
-                                            gr.update(visible=False),                          # config
-                                            gr.update(choices=[], value=[], visible=True),     # selected_stems
-                                            gr.update(value=False, visible=False),             # extract_instrumental
-                                            gr.update(visible=True),                           # presetless_preset_path
-                                        )
-                                    else:  # "default"
-                                        return (
-                                            gr.update(visible=True, choices=all_models, value=default_model),  # sep_model_name
-                                            gr.update(visible=False),                          # model_type
-                                            gr.update(value=[], visible=False),                # checkpoint
-                                            gr.update(value=[], visible=False),                # config
-                                            gr.update(choices=stems_default, value=[], visible=True),  # selected_stems
-                                            gr.update(value=False, visible=ext_inst_visible_default),  # extract_instrumental
-                                            gr.update(visible=False),                          # presetless_preset_path
-                                        )
-                                @custom_sep_config.input(inputs=[custom_sep_config, custom_sep_model_type], outputs=[sep_extract_instrumental, sep_selected_stems])
-                                def get_stems_from_config_fn(path: str, model_type: str):
-                                    stems = get_stems_from_config_simple(one_element_list_to_value(path), model_type)
-                                    return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems)
+
 
                                 sep_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
-                                sep_sum_stems = gr.Checkbox(label=_i18n("invert_plus"), info=_i18n("invert_plus_info"), value=False, **base_c_params["base"])
+                                sep_sum_stems = gr.Checkbox(label=_i18n("invert_plus"), info=_i18n("invert_plus_info"), value=False, visible=ext_inst_visible_default, **base_c_params["base"])
+                                sep_model_name.change(self.update_model_name, inputs=sep_model_name, outputs=[sep_extract_instrumental, sep_selected_stems, sep_sum_stems])
+                                @custom_sep_config.input(inputs=[custom_sep_config, custom_sep_model_type], outputs=[sep_extract_instrumental, sep_selected_stems, sep_sum_stems])
+                                def get_stems_from_config_fn(path: str, model_type: str):
+                                    stems = get_stems_from_config_simple(one_element_list_to_value(path), model_type)
+                                    return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems), gr.update(value=False, visible=len(stems) > 2)
                                 with gr.Accordion(label=_i18n("separation_params"), open=False):
                                     add_params_comp_seq = generate_add_params_component()
                                     add_params_user_state = gr.State(default_add_params)
@@ -7111,6 +7123,52 @@ class App(Separator):
                                 sep_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_template_info"), value="NAME_(STEM)_MODEL", **base_c_params["base"])
                                 sep_output_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
                                 sep_prefer_float = gr.Checkbox(label=_i18n("prefer_float"), value=False, **base_c_params["base"])
+                                @sep_separation_mode.change(
+                                    inputs=[sep_separation_mode],
+                                    outputs=[
+                                        sep_model_name, custom_sep_model_type, custom_sep_checkpoint,
+                                        custom_sep_config, sep_selected_stems, sep_extract_instrumental,
+                                        presetless_preset_path, sep_sum_stems, sep_use_spec_invert
+                                    ]
+                                )
+                                def separation_mode_change(mode_label: str):
+                                    mode = mapping_separation_modes.get(mode_label, "default")
+                                    if mode == "custom_model":
+                                        return (
+                                            gr.update(visible=False),                          # sep_model_name
+                                            gr.update(value=custom_model_types[0], choices=custom_model_types, visible=True),  # model_type
+                                            gr.update(value=[], visible=True),                 # checkpoint
+                                            gr.update(value=[], visible=True),                 # config
+                                            gr.update(choices=[], value=[], visible=True),     # selected_stems
+                                            gr.update(value=False, visible=False),             # extract_instrumental
+                                            gr.update(visible=False),                          # presetless_preset_path
+                                            gr.update(visible=False, value=False),
+                                            gr.update(visible=True, value=False),
+                                        )
+                                    elif mode == "presetless":
+                                        return (
+                                            gr.update(visible=False),                          # sep_model_name
+                                            gr.update(visible=False),                          # model_type
+                                            gr.update(visible=False),                          # checkpoint
+                                            gr.update(visible=False),                          # config
+                                            gr.update(choices=[], value=[], visible=True),     # selected_stems
+                                            gr.update(value=False, visible=False),             # extract_instrumental
+                                            gr.update(visible=True),                           # presetless_preset_path
+                                            gr.update(visible=False, value=False),
+                                            gr.update(visible=False, value=False),
+                                        )
+                                    else:  # "default"
+                                        return (
+                                            gr.update(visible=True, choices=all_models, value=default_model),  # sep_model_name
+                                            gr.update(visible=False),                          # model_type
+                                            gr.update(value=[], visible=False),                # checkpoint
+                                            gr.update(value=[], visible=False),                # config
+                                            gr.update(choices=stems_default, value=[], visible=True),  # selected_stems
+                                            gr.update(value=False, visible=ext_inst_visible_default),  # extract_instrumental
+                                            gr.update(visible=False),                          # presetless_preset_path
+                                            gr.update(visible=len(stems_default) > 2, value=False),
+                                            gr.update(visible=True, value=False),
+                                        )
                                 separate_btn = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
                     with gr.Group():
                         with gr.Row(equal_height=True):
