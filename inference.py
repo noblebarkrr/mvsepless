@@ -2314,8 +2314,8 @@ class PresetExecutor:
         audio, sr = inputs[0]
         start = float(params.get("start", 0))
         end = float(params.get("end", 30))
-        start_sample = start * sr
-        end_sample = end * sr
+        start_sample = int(start * sr)
+        end_sample = int(end * sr)
 
         result = trim(audio, start_sample, end_sample)
         return [(result, sr)]

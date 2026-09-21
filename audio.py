@@ -1492,6 +1492,10 @@ def trim(y: np.ndarray, start: int = 0, end: int = -1) -> np.ndarray:
     """
     channels, samples, array_index, flatten = get_info_array(y)
     end_index = samples
+    if isinstance(start, float):
+        start = int(start)
+    if isinstance(end, float):
+        end = int(end)
     _end = end if end > 0 and end <= end_index else end_index
     if flatten:
         return y[start:_end]
