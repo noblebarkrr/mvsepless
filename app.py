@@ -2405,7 +2405,17 @@ class App(Separator):
                                 else inp.value = node.params[inp.dataset.param];
                             }
                             inp.addEventListener('input', e => {
-                                node.params[inp.dataset.param] = inp.type === 'checkbox' ? inp.checked : (inp.type === 'number' ? parseFloat(inp.value) : inp.value);
+                                let val;
+                                if (inp.type === 'checkbox') {
+                                    val = inp.checked;
+                                } else if (inp.type === 'number' || inp.getAttribute('inputmode') === 'decimal') {
+                                    // Парсим число, если поле предназначено для цифр
+                                    const parsed = parseFloat(inp.value);
+                                    val = isNaN(parsed) ? inp.value : parsed; // Fallback на строку, если ввод некорректен
+                                } else {
+                                    val = inp.value;
+                                }
+                                node.params[inp.dataset.param] = val;
                                 sendStateToParent();
                             });
                         });

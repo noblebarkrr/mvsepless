@@ -2173,7 +2173,7 @@ class PresetExecutor:
         Обработчик для ensemble.
         Объединяет несколько аудио потоков с помощью ансамбля.
         """
-        num_inputs = params.get("num_inputs", 2)
+        num_inputs = int(params.get("num_inputs", 2))
         etype = params.get("type", "avg_fft")
         
         if len(inputs) < num_inputs:
@@ -2198,7 +2198,7 @@ class PresetExecutor:
         Обработчик для mix.
         Смешивает несколько аудио потоков.
         """
-        num_inputs = params.get("num_inputs", 2)
+        num_inputs = int(params.get("num_inputs", 2))
         
         if len(inputs) != num_inputs:
             raise ValueError(_i18n("mix_insufficient_inputs",
@@ -2228,7 +2228,7 @@ class PresetExecutor:
             raise ValueError(_i18n("node_no_input"))
         
         audio, sr = inputs[0]
-        gain_value = params.get("gain", 1.0)
+        gain_value = float(params.get("gain", 1.0))
         
         result = gain(audio, gain_value)
         return [(result, sr)]
@@ -2265,7 +2265,7 @@ class PresetExecutor:
             raise ValueError(_i18n("node_no_input"))
         
         audio, sr = inputs[0]
-        peak = params.get("peak", 1.0)
+        peak = float(params.get("peak", 1.0))
         
         result = normalizer(audio, peak)
         return [(result, sr)]
@@ -2312,8 +2312,8 @@ class PresetExecutor:
             raise ValueError(_i18n("node_no_input"))
         
         audio, sr = inputs[0]
-        start = params.get("start", 0)
-        end = params.get("end", 30)
+        start = int(params.get("start", 0))
+        end = int(params.get("end", 30))
         start_sample = start * sr
         end_sample = end * sr
 
@@ -2330,7 +2330,7 @@ class PresetExecutor:
             raise ValueError(_i18n("node_no_input"))
         
         audio, sr = inputs[0]
-        degrees = params.get("degrees", 90)
+        degrees = int(params.get("degrees", 90))
 
         result = phase_shift(audio, degrees)
         return [(result, sr)]
@@ -2350,8 +2350,8 @@ class PresetExecutor:
         transfer_magnitude = params.get("transfer_magnitude", False)
         transfer_phase = params.get("transfer_phase", True)
         freq_blend_phases = params.get("freq_blend_phases", True)
-        low_cutoff = params.get("low_cutoff", 500)
-        high_cutoff = params.get("high_cutoff", 5000)
+        low_cutoff = int(params.get("low_cutoff", 500))
+        high_cutoff = int(params.get("high_cutoff", 5000))
 
         result, new_sr = phase_corrector(mag_x, phase_x, mag_sr, phase_sr, freq_blend_phases=freq_blend_phases, transfer_magnitude=transfer_magnitude, transfer_phase=transfer_phase, low_cutoff=low_cutoff, high_cutoff=high_cutoff)
         return [(result, new_sr)]
@@ -2368,7 +2368,7 @@ class PresetExecutor:
         audio, sr = inputs[0]
         kind = params.get("kind", "hp")
         fft_mode = params.get("fft_mode", True)
-        hz = params.get("cutoff", 100)
+        hz = int(params.get("cutoff", 100))
 
         if kind == "lp":
             result = lowpass_fft(audio, sr, hz) if fft_mode else lowpass(audio, sr, hz)
