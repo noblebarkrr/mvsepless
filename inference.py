@@ -2312,8 +2312,8 @@ class PresetExecutor:
             raise ValueError(_i18n("node_no_input"))
         
         audio, sr = inputs[0]
-        start = int(params.get("start", 0))
-        end = int(params.get("end", 30))
+        start = float(params.get("start", 0))
+        end = float(params.get("end", 30))
         start_sample = start * sr
         end_sample = end * sr
 
