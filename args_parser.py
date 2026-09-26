@@ -887,3 +887,403 @@ def parse_app_args():
         help=_i18n("app_port_help")
     )
     return parser.parse_args()
+
+
+def parse_mvsep_api_args():
+    """
+    Парсер аргументов командной строки для MVSEP API.
+    Покрывает все методы класса MVSEP_Client.
+    """
+    parser = argparse.ArgumentParser(
+        description=_i18n("mvsep_api_cli_description"),  
+        epilog=_i18n("mvsep_api_cli_epilog"),            
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    # Глобальные аргументы
+    parser.add_argument(
+        "--token", "-t",
+        type=str, default=None,
+        help=_i18n("mvsep_api_arg_token_help")           
+    )
+    parser.add_argument(
+        "--region", "-r",
+        type=str, default="main",
+        choices=["main", "de", "de2", "sg", "hk"],
+        help=_i18n("mvsep_api_arg_region_help")          
+    )
+
+    subparsers = parser.add_subparsers(
+        title=_i18n("arg_subcommands_title"),
+        dest="command",
+        description=_i18n("mvsep_api_arg_commands_desc"), 
+        help=_i18n("arg_subcommands_help")
+    )
+
+    # ======================================================================
+    # register
+    # ======================================================================
+    reg_parser = subparsers.add_parser(
+        "register",
+        help=_i18n("mvsep_api_cmd_register_help"),       
+        description=_i18n("mvsep_api_cmd_register_desc") 
+    )
+    reg_parser.add_argument("--name", type=str, required=True,
+                            help=_i18n("mvsep_api_arg_name_help"))      
+    reg_parser.add_argument("--email", type=str, required=True,
+                            help=_i18n("mvsep_api_arg_email_help"))     
+    reg_parser.add_argument("--password", type=str, required=True,
+                            help=_i18n("mvsep_api_arg_password_help"))  
+
+    # ======================================================================
+    # login
+    # ======================================================================
+    login_parser = subparsers.add_parser(
+        "login",
+        help=_i18n("mvsep_api_cmd_login_help"),          
+        description=_i18n("mvsep_api_cmd_login_desc")    
+    )
+    login_parser.add_argument("--email", type=str, required=True,
+                              help=_i18n("mvsep_api_arg_email_help"))
+    login_parser.add_argument("--password", type=str, required=True,
+                              help=_i18n("mvsep_api_arg_password_help"))
+    # ======================================================================
+    # set_token
+    # ======================================================================
+    set_token_parser = subparsers.add_parser(
+        "set_token",
+        help=_i18n("mvsep_api_cmd_set_token_help"),
+        description=_i18n("mvsep_api_cmd_set_token_desc")
+    )
+    set_token_parser.add_argument(
+        "--token", "-t", 
+        type=str, 
+        required=True,
+        help=_i18n("mvsep_api_arg_token_help")
+    )
+    # ======================================================================
+    # user_info
+    # ======================================================================
+    subparsers.add_parser(
+        "user_info",
+        help=_i18n("mvsep_api_cmd_user_info_help"),      
+        description=_i18n("mvsep_api_cmd_user_info_desc") 
+    )
+
+    # ======================================================================
+    # check_token
+    # ======================================================================
+    subparsers.add_parser(
+        "check_token",
+        help=_i18n("mvsep_api_cmd_check_token_help"),    
+        description=_i18n("mvsep_api_cmd_check_token_desc") 
+    )
+
+    # ======================================================================
+    # separation_history
+    # ======================================================================
+    hist_parser = subparsers.add_parser(
+        "separation_history",
+        help=_i18n("mvsep_api_cmd_history_help"),        
+        description=_i18n("mvsep_api_cmd_history_desc")  
+    )
+    hist_parser.add_argument("--start", type=int, default=0,
+                             help=_i18n("mvsep_api_arg_start_help"))    
+    hist_parser.add_argument("--limit", type=int, default=10,
+                             help=_i18n("arg_limit_help"))
+    hist_parser.add_argument("--show-all", action="store_true",
+                             help=_i18n("mvsep_api_arg_show_all_help")) 
+
+    # ======================================================================
+    # purchases
+    # ======================================================================
+    purch_parser = subparsers.add_parser(
+        "purchases",
+        help=_i18n("mvsep_api_cmd_purchases_help"),      
+        description=_i18n("mvsep_api_cmd_purchases_desc") 
+    )
+    purch_parser.add_argument("--limit", type=int, default=20,
+                              help=_i18n("arg_limit_help"))
+    purch_parser.add_argument("--offset", type=int, default=0,
+                              help=_i18n("mvsep_api_arg_offset_help"))   
+    purch_parser.add_argument("--status", type=str, default="all",
+                              choices=["all", "completed", "pending", "failed"],
+                              help=_i18n("mvsep_api_arg_status_help"))   
+
+    # ======================================================================
+    # credit_alert
+    # ======================================================================
+    credit_parser = subparsers.add_parser(
+        "credit_alert",
+        help=_i18n("mvsep_api_cmd_credit_alert_help"),   
+        description=_i18n("mvsep_api_cmd_credit_alert_desc") 
+    )
+    credit_parser.add_argument("--set-threshold", type=int, default=None,
+                               help=_i18n("mvsep_api_arg_set_threshold_help")) 
+
+    # ======================================================================
+    # premium
+    # ======================================================================
+    prem_parser = subparsers.add_parser(
+        "premium",
+        help=_i18n("mvsep_api_cmd_premium_help"),        
+        description=_i18n("mvsep_api_cmd_premium_desc")  
+    )
+    prem_action = prem_parser.add_mutually_exclusive_group(required=True)
+    prem_action.add_argument("--enable", action="store_true",
+                             help=_i18n("mvsep_api_arg_enable_help"))   
+    prem_action.add_argument("--disable", action="store_true",
+                             help=_i18n("mvsep_api_arg_disable_help"))  
+
+    # ======================================================================
+    # long_filenames
+    # ======================================================================
+    lf_parser = subparsers.add_parser(
+        "long_filenames",
+        help=_i18n("mvsep_api_cmd_long_fn_help"),        
+        description=_i18n("mvsep_api_cmd_long_fn_desc")  
+    )
+    lf_action = lf_parser.add_mutually_exclusive_group(required=True)
+    lf_action.add_argument("--enable", action="store_true",
+                           help=_i18n("mvsep_api_arg_enable_help"))
+    lf_action.add_argument("--disable", action="store_true",
+                           help=_i18n("mvsep_api_arg_disable_help"))
+
+    # ======================================================================
+    # news
+    # ======================================================================
+    news_parser = subparsers.add_parser(
+        "news",
+        help=_i18n("mvsep_api_cmd_news_help"),           
+        description=_i18n("mvsep_api_cmd_news_desc")     
+    )
+    news_parser.add_argument("--lang", type=str, default="en",
+                             help=_i18n("mvsep_api_arg_lang_help"))     
+    news_parser.add_argument("--start", type=int, default=0,
+                             help=_i18n("mvsep_api_arg_start_help"))
+    news_parser.add_argument("--limit", type=int, default=10,
+                             help=_i18n("arg_limit_help"))
+
+    # ======================================================================
+    # queue
+    # ======================================================================
+    queue_parser = subparsers.add_parser(
+        "queue",
+        help=_i18n("mvsep_api_cmd_queue_help"),          
+        description=_i18n("mvsep_api_cmd_queue_desc")    
+    )
+    queue_parser.add_argument("--summary", action="store_true",
+                              help=_i18n("mvsep_api_arg_summary_help")) 
+
+    # ======================================================================
+    # demo
+    # ======================================================================
+    demo_parser = subparsers.add_parser(
+        "demo",
+        help=_i18n("mvsep_api_cmd_demo_help"),           
+        description=_i18n("mvsep_api_cmd_demo_desc")     
+    )
+    demo_parser.add_argument("--start", type=int, default=0,
+                             help=_i18n("mvsep_api_arg_start_help"))
+    demo_parser.add_argument("--limit", type=int, default=10,
+                             help=_i18n("arg_limit_help"))
+    demo_parser.add_argument("--algorithm-id", type=int, default=None,
+                             help=_i18n("mvsep_api_arg_algo_id_help"))  
+
+    # ======================================================================
+    # algorithms
+    # ======================================================================
+    algos_parser = subparsers.add_parser(
+        "algorithms",
+        help=_i18n("mvsep_api_cmd_algos_help"),          
+        description=_i18n("mvsep_api_cmd_algos_desc")    
+    )
+    algos_parser.add_argument("--raw", action="store_true",
+                              help=_i18n("mvsep_api_arg_raw_help"))      
+    algos_parser.add_argument("--scopes", type=str, default="single_upload",
+                              help=_i18n("mvsep_api_arg_scopes_help"))   
+
+    # ======================================================================
+    # separate (create + wait + download)
+    # ======================================================================
+    sep_parser = subparsers.add_parser(
+        "separate",
+        help=_i18n("arg_separate_help"),
+        description=_i18n("mvsep_api_cmd_separate_desc") 
+    )
+    sep_parser.add_argument("-i", "--input", type=str, required=True,
+                            help=_i18n("arg_input_single_help"))
+    sep_parser.add_argument("-o", "--output-dir", type=str, default=".",
+                            help=_i18n("arg_output_dir_help"))
+    sep_parser.add_argument("--sep-type", type=int, default=20,
+                            help=_i18n("mvsep_api_arg_sep_type_help"))   
+    sep_parser.add_argument("--add-opt1", type=str, default=None,
+                            help=_i18n("mvsep_api_arg_add_opt_help").format(n=1)) 
+    sep_parser.add_argument("--add-opt2", type=str, default=None,
+                            help=_i18n("mvsep_api_arg_add_opt_help").format(n=2))
+    sep_parser.add_argument("--add-opt3", type=str, default=None,
+                            help=_i18n("mvsep_api_arg_add_opt_help").format(n=3))
+    sep_parser.add_argument("--output-format", type=int, default=0,
+                            choices=[0, 1, 2, 3, 4, 5],
+                            help=_i18n("mvsep_api_arg_out_fmt_help"))    
+    sep_parser.add_argument("--url", type=str, default=None,
+                            help=_i18n("mvsep_api_arg_url_help"))        
+    sep_parser.add_argument("--remote-type", type=str, default="direct",
+                            help=_i18n("mvsep_api_arg_remote_type_help")) 
+    sep_parser.add_argument("--preset-id", type=int, default=None,
+                            help=_i18n("mvsep_api_arg_preset_id_help"))  
+    sep_parser.add_argument("--webhook-url", type=str, default=None,
+                            help=_i18n("mvsep_api_arg_webhook_help"))    
+    sep_parser.add_argument("--is-demo", action="store_true",
+                            help=_i18n("mvsep_api_arg_is_demo_help"))    
+
+    # ======================================================================
+    # status
+    # ======================================================================
+    status_parser = subparsers.add_parser(
+        "status",
+        help=_i18n("mvsep_api_cmd_status_help"),         
+        description=_i18n("mvsep_api_cmd_status_desc")   
+    )
+    status_parser.add_argument("--hash", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_hash_help"))    
+
+    # ======================================================================
+    # download
+    # ======================================================================
+    dl_parser = subparsers.add_parser(
+        "download",
+        help=_i18n("mvsep_api_cmd_download_help"),       
+        description=_i18n("mvsep_api_cmd_download_desc") 
+    )
+    dl_parser.add_argument("--hash", type=str, required=True,
+                           help=_i18n("mvsep_api_arg_hash_help"))
+    dl_parser.add_argument("-o", "--output-dir", type=str, default=".",
+                           help=_i18n("arg_output_dir_help"))
+    dl_parser.add_argument("--mirror", type=int, default=0,
+                           help=_i18n("mvsep_api_arg_mirror_help"))      
+
+    # ======================================================================
+    # cancel
+    # ======================================================================
+    cancel_parser = subparsers.add_parser(
+        "cancel",
+        help=_i18n("mvsep_api_cmd_cancel_help"),         
+        description=_i18n("mvsep_api_cmd_cancel_desc")   
+    )
+    cancel_parser.add_argument("--hash", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_hash_help"))
+
+    # ======================================================================
+    # delete
+    # ======================================================================
+    delete_parser = subparsers.add_parser(
+        "delete",
+        help=_i18n("mvsep_api_cmd_delete_help"),         
+        description=_i18n("mvsep_api_cmd_delete_desc")   
+    )
+    delete_parser.add_argument("--hash", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_hash_help"))
+
+    # ======================================================================
+    # qc_add (Quality Checker)
+    # ======================================================================
+    qc_add_parser = subparsers.add_parser(
+        "qc_add",
+        help=_i18n("mvsep_api_cmd_qc_add_help"),         
+        description=_i18n("mvsep_api_cmd_qc_add_desc")   
+    )
+    qc_add_parser.add_argument("--zipfile", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_zipfile_help")) 
+    qc_add_parser.add_argument("--algo-name", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_algo_name_help")) 
+    qc_add_parser.add_argument("--main-text", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_main_text_help")) 
+    qc_add_parser.add_argument("--password", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_password_help"))
+    qc_add_parser.add_argument("--dataset-type", type=str, default="0",
+                               help=_i18n("mvsep_api_arg_dataset_type_help")) 
+    qc_add_parser.add_argument("--ensemble", type=int, default=0,
+                               help=_i18n("mvsep_api_arg_ensemble_help")) 
+
+    # ======================================================================
+    # qc_get
+    # ======================================================================
+    qc_get_parser = subparsers.add_parser(
+        "qc_get",
+        help=_i18n("mvsep_api_cmd_qc_get_help"),         
+        description=_i18n("mvsep_api_cmd_qc_get_desc")   
+    )
+    qc_get_parser.add_argument("--entry-id", type=int, required=True,
+                               help=_i18n("mvsep_api_arg_entry_id_help")) 
+
+    # ======================================================================
+    # qc_delete
+    # ======================================================================
+    qc_del_parser = subparsers.add_parser(
+        "qc_delete",
+        help=_i18n("mvsep_api_cmd_qc_delete_help"),      
+        description=_i18n("mvsep_api_cmd_qc_delete_desc") 
+    )
+    qc_del_parser.add_argument("--entry-id", type=int, required=True,
+                               help=_i18n("mvsep_api_arg_entry_id_help"))
+    qc_del_parser.add_argument("--password", type=str, required=True,
+                               help=_i18n("mvsep_api_arg_password_help"))
+
+    # ======================================================================
+    # qc_queue
+    # ======================================================================
+    qc_queue_parser = subparsers.add_parser(
+        "qc_queue",
+        help=_i18n("mvsep_api_cmd_qc_queue_help"),       
+        description=_i18n("mvsep_api_cmd_qc_queue_desc") 
+    )
+    qc_queue_parser.add_argument("--start", type=int, default=0,
+                                 help=_i18n("mvsep_api_arg_start_help"))
+    qc_queue_parser.add_argument("--limit", type=int, default=10,
+                                 help=_i18n("arg_limit_help"))
+
+    # ======================================================================
+    # qc_leaderboard
+    # ======================================================================
+    qc_lb_parser = subparsers.add_parser(
+        "qc_leaderboard",
+        help=_i18n("mvsep_api_cmd_qc_lb_help"),          
+        description=_i18n("mvsep_api_cmd_qc_lb_desc")    
+    )
+    qc_lb_parser.add_argument("--dataset-type", type=str, default="0",
+                              help=_i18n("mvsep_api_arg_dataset_type_help"))
+    qc_lb_parser.add_argument("--start", type=int, default=0,
+                              help=_i18n("mvsep_api_arg_start_help"))
+    qc_lb_parser.add_argument("--limit", type=int, default=10,
+                              help=_i18n("arg_limit_help"))
+    qc_lb_parser.add_argument("--algo-filter", type=str, default=None,
+                              help=_i18n("mvsep_api_arg_algo_filter_help")) 
+    qc_lb_parser.add_argument("--sort", type=str, default=None,
+                              help=_i18n("mvsep_api_arg_sort_help"))        
+
+    # ======================================================================
+    # batch (пакетная обработка через batch_inference)
+    # ======================================================================
+    batch_parser = subparsers.add_parser(
+        "batch",
+        help=_i18n("mvsep_api_cmd_batch_help"),          
+        description=_i18n("mvsep_api_cmd_batch_desc")    
+    )
+    batch_parser.add_argument("-i", "--input", nargs="+", required=True,
+                              help=_i18n("arg_input_help"))
+    batch_parser.add_argument("-o", "--output-dir", type=str, default=".",
+                              help=_i18n("arg_output_dir_help"))
+    batch_parser.add_argument("--sep-type", type=str, required=True,
+                              help=_i18n("mvsep_api_arg_sep_type_name_help")) 
+    batch_parser.add_argument("--output-format", type=int, default=0,
+                              choices=[0, 1, 2, 3, 4, 5],
+                              help=_i18n("mvsep_api_arg_out_fmt_help"))
+    batch_parser.add_argument("--add-opt1", type=str, default=None,
+                              help=_i18n("mvsep_api_arg_add_opt_help").format(n=1))
+    batch_parser.add_argument("--add-opt2", type=str, default=None,
+                              help=_i18n("mvsep_api_arg_add_opt_help").format(n=2))
+    batch_parser.add_argument("--add-opt3", type=str, default=None,
+                              help=_i18n("mvsep_api_arg_add_opt_help").format(n=3))
+
+    return parser.parse_args()

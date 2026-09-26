@@ -4,6 +4,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*theme.
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*css.*")
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*head.*")
 import gradio as gr
+import os
 import sys
 import json
 import zipfile
@@ -12,7 +13,8 @@ from pathlib import Path, PurePosixPath
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 from extra_utils import tz, define_audio_with_size, define_download_button_with_size, update_audio_with_size, base_c_params, easy_check_is_colab, get_gdrive_dir, one_element_list_to_value, dw_file, dw_file_legacy, dw_yt_dlp, get_disk_usage, share_gradio_tunnel
-from inference import Separator, PresetExecutor, add_params, add_params_list, ensemble_types, BASE_DIR, get_stems_from_config_simple, custom_model_types, default_add_params
+from inference import Separator, PresetExecutor, add_params, add_params_list, ensemble_types, get_stems_from_config_simple, custom_model_types, default_add_params
+from mvsep_api import MVSEP_Client
 from vbach_lib.infer import VbachConverter, stereo_modes
 from vbach_lib.f0_extractor import f0_methods, crepe_like_f0_methods, f0_extract_and_write
 from vbach_lib.hubert_manager import download_hubert, huberts_fairseq, huberts_transformers
@@ -55,7 +57,8 @@ def generate_add_params_component():
 mapping_separation_modes = {
     _i18n("default"): "default",
     _i18n("custom_model"): "custom_model",
-    _i18n("preset"): "presetless"
+    _i18n("preset"): "presetless",
+    _i18n("mvsep_api"): "mvsep_api"  # <--- ДОБАВИТЬ
 }
 mapping_upload_presets = {
     _i18n("preset_type_auto_ensemble"): "auto_ensemble",
@@ -1102,6 +1105,7 @@ class App(Separator):
         self.preset_history = HistoryPresetless()
         self.preset_manager = PresetLessApp()
         self.phase_fixer_history_app = HistoryPhaseFixer()
+        self.mvsep_api_client = MVSEP_Client()
         self.add_params_dict = {}
         # Мультипользовательский inbox: ключ — session_hash Gradio,
         # чтобы пользователи не получали чужие загруженные файлы
@@ -1220,6 +1224,63 @@ class App(Separator):
             return gr.skip()
         return gr.update(choices=current_history, value=value), current_history
 
+    def get_actual_mvsep_api_history_list(self, value, state):
+        current_history = self.mvsep_api_client.get_separation_history(limit=20, no_raise=True)
+        if current_history == state:
+            return gr.skip()
+        return gr.update(choices=current_history, value=value), current_history
+
+    def download_results_from_mvsep(self, history_key: str):
+        """Скачивает файлы из выбранной записи истории во временную директорию"""
+        if not history_key:
+            return [], []
+        
+        temp_out = Path(tempfile.gettempdir()) / "mvsep_api_history" / history_key
+        temp_out.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            stems, status_str = self.mvsep_api_client.download_results(history_key, temp_out, no_raise=True, no_overwrite=False)
+            return stems, [status_str]
+        except Exception as e:
+            return [], [str(e)]
+
+    def _mvsep_auth_action(self, token, email, password):
+        """Обрабатывает установку токена или логин"""
+        if token and len(token.strip()) > 10:
+            self.mvsep_api_client.set_api_token(token.strip())
+            if self.mvsep_api_client.check_valid_api_token():
+                return (
+                    _i18n("mvsep_api_auth_success"), 
+                    self.get_actual_user_info(), 
+                    "", "", "" # Очищаем поля ввода
+                )
+            return ("Invalid Token", self.get_actual_user_info(), token, email, password)
+        
+        elif email and password:
+            try:
+                self.mvsep_api_client.login(email, password)
+                return (
+                    _i18n("mvsep_api_auth_success"), 
+                    self.get_actual_user_info(), 
+                    "", "", ""
+                )
+            except Exception as e:
+                return (str(e), self.get_actual_user_info(), token, email, password)
+                
+        return (_i18n("mvsep_api_invalid_token"), self.get_actual_user_info(), token, email, password)
+
+    def _mvsep_toggle_setting(self, setting_name: str, enable: bool):
+        """Переключает настройки премиума/длинных имен"""
+        try:
+            if setting_name == "premium":
+                res = self.mvsep_api_client.enable_premium() if enable else self.mvsep_api_client.disable_premium()
+            elif setting_name == "long_fn":
+                res = self.mvsep_api_client.enable_long_filenames() if enable else self.mvsep_api_client.disable_long_filenames()
+            return self.get_actual_user_info()
+        except Exception as e:
+            print(f"MVSEP Setting Error: {e}")
+            return self.get_actual_user_info()
+
     def f0_path_allowed(self, path: str) -> bool:
         """Мультипользовательская защита: разрешаем только файлы из директорий приложения и tempdir."""
         try:
@@ -1233,6 +1294,48 @@ class App(Separator):
             roots.append(Path(GDRIVE_USER_DIR).resolve())
         return any(p.is_relative_to(r) for r in roots)
 
+    def build_add_opt_updates(self, sep_type):
+        """Собирает updates для add_opt1..3 на основе текста и значений."""
+        info = self.mvsep_api_client.get_add_opts_info(sep_type)
+        updates = []
+        for key in ("add_opt1", "add_opt2", "add_opt3"):
+            item = info.get(key)
+            if item:
+                choices = item["choices"]
+                value = choices[0] if choices else None
+                updates.append(gr.update(
+                    label=item["text"],
+                    choices=choices,
+                    value=value,
+                    visible=bool(choices),
+                ))
+            else:
+                updates.append(gr.update(
+                    label=key,
+                    choices=[],
+                    value=None,
+                    visible=False,
+                ))
+        return updates
+
+    def get_actual_user_info(self):
+        mvsep_api_authorized_check = self.mvsep_api_client.check_valid_api_token()
+        mvsep_api_user_info_str = ""
+        if not mvsep_api_authorized_check:
+            mvsep_api_user_info_str += _i18n("mvsep_api_is_not_authorized")
+        else:
+            try:
+                copy_metadata, long_filenames, premium_minutes, premium_enabled = self.mvsep_api_client.get_user_info()
+                
+                premium_enabled_str = _i18n("mvsep_api_premium") + ": " + (_i18n('yes') if premium_enabled == True else _i18n('no'))
+                premium_minutes_str = _i18n("mvsep_api_premium_minutes") + ": " + str(premium_minutes)
+                long_filenames_str = _i18n("mvsep_api_long_filenames") + ": " + (_i18n('yes') if long_filenames == True else _i18n('no'))
+                copy_metadata_str = _i18n("mvsep_api_copy_metadata") + ": " + (_i18n('yes') if copy_metadata == True else _i18n('no'))
+                mvsep_api_user_info_str += f"{premium_enabled_str}\n{premium_minutes_str}\n{long_filenames_str}\n{copy_metadata_str}"
+            except:
+                mvsep_api_user_info_str += _i18n("mvsep_api_user_info_failed")
+        return mvsep_api_user_info_str
+        
     @staticmethod
     def _purge_old_f0_tempfiles(session_dir: Path, max_age_hours: int = 24):
         cutoff = datetime.now(tz).timestamp() - max_age_hours * 3600
@@ -7017,8 +7120,9 @@ class App(Separator):
             phase_fixer_target_state = gr.State([])
             phase_fixer_source_state = gr.State([])
             phase_fixer_history_state = gr.State([])
-            with gr.Tab(_i18n("separation_tab")):
-                with gr.Tab(_i18n("inference")):
+            mvsep_api_history_state = gr.State([])
+            with gr.Tab(_i18n("separation_tab")) as separation_tab:
+                with gr.Tab(_i18n("inference")) as separation_inference_tab:
                     sep_state = gr.State()
                     sep_errors_state = gr.State()
                     with gr.Row():
@@ -7043,6 +7147,12 @@ class App(Separator):
                                                 define_audio_with_size(basename=True, label="", value=f_, **base_c_params["output_audio"])
                         with gr.Column():
                             with gr.Group():
+                                sep_separation_mode = gr.Dropdown(
+                                    label=_i18n("separation_mode"),
+                                    choices=list(mapping_separation_modes.keys()),
+                                    value=list(mapping_separation_modes.keys())[0],
+                                    **base_c_params["base"]
+                                )
                                 sep_model_name = gr.Dropdown(label=_i18n("model_name"), choices=all_models, value=default_model, **base_c_params["base"])
                                 custom_sep_model_type = gr.Dropdown(
                                     label=_i18n("model_type"),
@@ -7089,12 +7199,6 @@ class App(Separator):
                                         return gr.skip()
                                     return gr.update(choices=presets, value=path), presets
 
-                                sep_separation_mode = gr.Dropdown(
-                                    label=_i18n("separation_mode"),
-                                    choices=list(mapping_separation_modes.keys()),
-                                    value=list(mapping_separation_modes.keys())[0],
-                                    **base_c_params["base"]
-                                )
                                 sep_selected_stems = gr.CheckboxGroup(label=_i18n("select_stems"), info=_i18n("select_stems_info"), choices=stems_default, value=[], **base_c_params["base"])
                                 @presetless_preset_path.input(
                                     inputs=presetless_preset_path,
@@ -7120,7 +7224,7 @@ class App(Separator):
                                 def get_stems_from_config_fn(path: str, model_type: str):
                                     stems = get_stems_from_config_simple(one_element_list_to_value(path), model_type)
                                     return gr.update(value=False, visible=len(stems) > 2), gr.update(value=[], choices=stems), gr.update(value=False, visible=len(stems) > 2)
-                                with gr.Accordion(label=_i18n("separation_params"), open=False):
+                                with gr.Accordion(label=_i18n("separation_params"), open=False) as add_params_accordion:
                                     add_params_comp_seq = generate_add_params_component()
                                     add_params_user_state = gr.State(default_add_params)
 
@@ -7131,14 +7235,48 @@ class App(Separator):
                                             show_progress="hidden"
                                         )
                                 sep_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_template_info"), value="NAME_(STEM)_MODEL", **base_c_params["base"])
+                                with gr.Row(equal_height=True, visible=False) as mvsep_markdown_row:
+                                    with gr.Column(scale=4, min_width=80):
+                                        mvsep_api_markdown_user_info = gr.Markdown(value="", container=True, line_breaks=True)
+                                    mvsep_api_markdown_refresh_btn = gr.Button(_i18n("refresh"), variant="primary", **base_c_params["base"], scale=2, min_width=40, size="sm")
+                                    mvsep_api_markdown_refresh_btn.click(fn=lambda: gr.update(value=_i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")), outputs=mvsep_api_markdown_user_info)
+                                separation_inference_tab.select(fn=lambda: gr.update(value=_i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")), outputs=mvsep_api_markdown_user_info)
+                                mvsep_api_sep_type = gr.Dropdown(
+                                    label=_i18n("separation_type"),
+                                    **base_c_params["base"],
+                                    visible=False
+                                )
+                                mvsep_api_add_opt1 = gr.Dropdown(
+                                    **base_c_params["base"],
+                                    visible=False
+                                )
+                                mvsep_api_add_opt2 = gr.Dropdown(
+                                    **base_c_params["base"],
+                                    visible=False
+                                )
+                                mvsep_api_add_opt3 = gr.Dropdown(
+                                    **base_c_params["base"],
+                                    visible=False
+                                )
+
                                 sep_output_format = gr.Dropdown(label=_i18n("output_format"), choices=output_formats, value=output_formats[0], filterable=False, **base_c_params["base"])
                                 sep_prefer_float = gr.Checkbox(label=_i18n("prefer_float"), value=False, **base_c_params["base"])
+
+
+                                @mvsep_api_sep_type.input(
+                                    inputs=mvsep_api_sep_type,
+                                    outputs=[mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3],
+                                )
+                                def get_add_opts_from_sep_type(sep_type):
+                                    return self.build_add_opt_updates(sep_type)
+
+
                                 @sep_separation_mode.change(
                                     inputs=[sep_separation_mode],
                                     outputs=[
                                         sep_model_name, custom_sep_model_type, custom_sep_checkpoint,
                                         custom_sep_config, sep_selected_stems, sep_extract_instrumental,
-                                        presetless_preset_path, sep_sum_stems, sep_use_spec_invert
+                                        presetless_preset_path, sep_sum_stems, sep_use_spec_invert, mvsep_api_sep_type, mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3, sep_output_format, sep_template, add_params_accordion, mvsep_api_markdown_user_info, mvsep_markdown_row
                                     ]
                                 )
                                 def separation_mode_change(mode_label: str):
@@ -7152,8 +7290,14 @@ class App(Separator):
                                             gr.update(choices=[], value=[], visible=True),     # selected_stems
                                             gr.update(value=False, visible=False),             # extract_instrumental
                                             gr.update(visible=False),                          # presetless_preset_path
-                                            gr.update(visible=False, value=False),
-                                            gr.update(visible=True, value=False),
+                                            gr.update(visible=False, value=False),             # sep_sum_stems
+                                            gr.update(visible=True, value=False),              # sep_use_spec_invert
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(choices=output_formats, value=output_formats[0]),
+                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False)
                                         )
                                     elif mode == "presetless":
                                         return (
@@ -7164,9 +7308,37 @@ class App(Separator):
                                             gr.update(choices=[], value=[], visible=True),     # selected_stems
                                             gr.update(value=False, visible=False),             # extract_instrumental
                                             gr.update(visible=True),                           # presetless_preset_path
-                                            gr.update(visible=False, value=False),
-                                            gr.update(visible=False, value=False),
+                                            gr.update(visible=False, value=False),             # sep_sum_stems
+                                            gr.update(visible=False, value=False),             # sep_use_spec_invert
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(choices=output_formats, value=output_formats[0]),
+                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False)
                                         )
+                                    elif mode == "mvsep_api":
+                                        mvsep_api_user_token_str = _i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")
+                                        try:
+                                            sep_types_list = self.mvsep_api_client.get_list_algos_map()
+                                        except:
+                                            sep_types_list = []
+                                        
+                                        default_sep_type = sep_types_list[0] if sep_types_list else None
+                                        default_updates = self.build_add_opt_updates(default_sep_type) if default_sep_type else [gr.update(visible=False)] * 3
+
+                                        return (
+                                            gr.update(visible=False),                          # sep_model_name
+                                            gr.update(visible=False),                          # model_type
+                                            gr.update(visible=False),                          # checkpoint
+                                            gr.update(visible=False),                          # config
+                                            gr.update(choices=[], value=[], visible=False),    # selected_stems
+                                            gr.update(value=False, visible=False),             # extract_instrumental
+                                            gr.update(visible=False),                          # presetless_preset_path
+                                            gr.update(visible=False, value=False),             # sep_sum_stems
+                                            gr.update(visible=False, value=False),             # sep_use_spec_invert
+                                            gr.update(choices=sep_types_list, value=default_sep_type, visible=True), # mvsep_api_sep_type
+                                        ) + tuple(default_updates) + (gr.update(choices=self.mvsep_api_client.output_formats, value=self.mvsep_api_client.output_formats[0]), gr.update(visible=False), gr.update(visible=False), gr.update(value=mvsep_api_user_token_str), gr.update(visible=True))
                                     else:  # "default"
                                         return (
                                             gr.update(visible=True, choices=all_models, value=default_model),  # sep_model_name
@@ -7176,8 +7348,15 @@ class App(Separator):
                                             gr.update(choices=stems_default, value=[], visible=True),  # selected_stems
                                             gr.update(value=False, visible=ext_inst_visible_default),  # extract_instrumental
                                             gr.update(visible=False),                          # presetless_preset_path
-                                            gr.update(visible=len(stems_default) > 2, value=False),
-                                            gr.update(visible=True, value=False),
+                                            gr.update(visible=len(stems_default) > 2, value=False), # sep_sum_stems
+                                            gr.update(visible=True, value=False),              # sep_use_spec_invert
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(visible=False, choices=[], value=None),
+                                            gr.update(choices=output_formats, value=output_formats[0]),
+                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False)
+                                            
                                         )
                                 separate_btn = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
                     with gr.Group():
@@ -7197,17 +7376,19 @@ class App(Separator):
                                 custom_sep_config, sep_model_name, presetless_preset_path,
                                 sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert,
                                 sep_template, sep_output_format, sep_sum_stems, add_params_user_state,
-                                sep_prefer_float, sep_separation_mode   # ← было sep_use_custom_model
+                                sep_prefer_float, sep_separation_mode, mvsep_api_sep_type, mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3
                             ],
                             outputs=[sep_state, sep_errors_state, sep_upload_files],
                             trigger_mode="once",
                             concurrency_id="mvsepless_app_inference"
                         )
                         def separator_wrap(input_files: list, model_type: str, checkpoint: list,
-                                        config: list, model_name: str, preset: str, sel_stems: list,
-                                        ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str,
-                                        sum_stems: bool, add_params: dict, pref_f: bool,
-                                        separation_mode_label: str, progress=gr.Progress(track_tqdm=True)):
+                            config: list, model_name: str, preset: str, sel_stems: list,
+                            ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str,
+                            sum_stems: bool, add_params: dict, pref_f: bool,
+                            separation_mode_label: str, 
+                            mvsep_sep_type: str, mvsep_opt1: str, mvsep_opt2: str, mvsep_opt3: str, # <--- Новые
+                            progress=gr.Progress(track_tqdm=True)):
                             results = []
                             errors = []
                             # Маппим отображаемое значение → внутренний ключ
@@ -7254,6 +7435,33 @@ class App(Separator):
                                     add_params=add_params
                                 )
                                 model_name = self.get_preset_name(preset)
+
+                            elif separation_mode == "mvsep_api":
+                                if not self.mvsep_api_client.api_token:
+                                    gr.Warning(_i18n("mvsep_api_invalid_token"))
+                                    return [], [], gr.skip()
+                                    
+                                if not input_files:
+                                    gr.Warning(_i18n("paths_not_specified"))
+                                    return [], [], gr.skip()
+
+                                api_output_format = self.mvsep_api_client.output_formats_map.get((output_format, pref_f), 0)
+
+                                output_dir = self.output_dir.gen_output_dir()
+                                
+                                sep_kwargs = self.mvsep_api_client.name_to_id_sep_kwargs(mvsep_sep_type, mvsep_opt1, mvsep_opt2, mvsep_opt3)
+                                
+                                # Используем tqdm через gr.Progress или передаем его в batch_inference
+                                # Gradio progress track_tqdm=True автоматически подхватывает tqdm
+                                with tqdm(total=len(input_files), desc="", unit=_i18n("files")) as pbar:
+                                    results, errors = self.mvsep_api_client.batch_inference(
+                                        input_files=input_files,
+                                        output_dir=output_dir,
+                                        output_format=api_output_format,
+                                        progress_bar=pbar, **sep_kwargs
+                                    )
+                                
+                                model_name = f"(MVSEP_API) {mvsep_sep_type}"
 
                             else:  # "default"
                                 results, errors = self.separator.separate(
@@ -7352,7 +7560,7 @@ class App(Separator):
                             else:
                                 gr.Markdown("<h3><center>"+_i18n("not_separated")+"</center></h3>", container=True)
 
-                with gr.Tab(_i18n("presets_tab")):
+                with gr.Tab(_i18n("presets_tab")) as presetless_tab:
                     presetless_state = gr.State()
                     
                     with gr.Row():
@@ -7559,8 +7767,8 @@ class App(Separator):
                         self.preset_history.add_to_history(preset_name, result)
                         return gr.skip(), result
 
-                with gr.Tab(_i18n("ensemble_tab")):
-                    with gr.Tab(_i18n("auto_ensemble_tab")):
+                with gr.Tab(_i18n("ensemble_tab")) as ensemble_tab:
+                    with gr.Tab(_i18n("auto_ensemble_tab")) as auto_ensemble_tab:
                         auto_ensemble_user_flow_state = gr.BrowserState([])
                         with gr.Row():
                             with gr.Column():
@@ -7729,7 +7937,7 @@ class App(Separator):
                                 zip_is_generated = True
                                 return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"]), zip_is_generated
 
-                    with gr.Tab(_i18n("iterative_ensemble_tab")):
+                    with gr.Tab(_i18n("iterative_ensemble_tab")) as iterative_ensemble_tab:
                         iterative_ensemble_user_flow_state = gr.BrowserState([])
                         with gr.Row():
                             with gr.Column():
@@ -7946,7 +8154,7 @@ class App(Separator):
                                 zip_is_generated = True
                                 return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"]), zip_is_generated
                 
-                    with gr.Tab(_i18n("man_ensemble_tab")):
+                    with gr.Tab(_i18n("man_ensemble_tab")) as manual_ensemble_tab:
                         with gr.Row():
                             with gr.Column():
                                 manual_ensemble_upload_files = gr.File(show_label=False, **base_c_params["input_files_multi"])
@@ -8017,8 +8225,8 @@ class App(Separator):
                             output = self.manual_ensemble_history_app.get_from_history(one_element_list_to_value(key))
                             return update_audio_with_size(label=_i18n("ensemble_result"), value=output), gr.update(visible=output is not None)
 
-            with gr.Tab(_i18n("extras_tab")):
-                with gr.Tab(_i18n("subtract_tab")):
+            with gr.Tab(_i18n("extras_tab")) as extras_tab:
+                with gr.Tab(_i18n("subtract_tab")) as subtract_tab:
                     with gr.Row():
                         with gr.Column():
                             with gr.Group():
@@ -8105,7 +8313,7 @@ class App(Separator):
                             return update_audio_with_size(label=_i18n("inverted_result"), value=output), gr.update(visible=output is not None)
 
 
-                with gr.Tab(_i18n("phase_fixer_tab")):
+                with gr.Tab(_i18n("phase_fixer_tab")) as phase_fixer_tab:
                     with gr.Row():
                         with gr.Column():
                             with gr.Group():
@@ -8227,18 +8435,107 @@ class App(Separator):
                         output = self.phase_fixer_history_app.get_from_history(one_element_list_to_value(key))
                         return update_audio_with_size(label=_i18n("phase_fixer_result"), value=output), gr.update(visible=output is not None)
 
+                with gr.Tab(_i18n("mvsep_api_tab")) as mvsep_api_tab:
+
+                    mvsep_history_files_state = gr.State([])
+                    mvsep_history_status_state = gr.State([])
+                    
+                    with gr.Tab(_i18n("mvsep_api_auth_title")):
+                        mvsep_status_msg = gr.Textbox(container=False, interactive=False)
+                        mvsep_token_input = gr.Textbox(
+                            label=_i18n("mvsep_api_token_label"), 
+                            type="password", 
+                            placeholder="••••••••••••••••"
+                        )
+                        with gr.Row():
+                            mvsep_email_input = gr.Textbox(label=_i18n("mvsep_api_login_label"), scale=1, **base_c_params["base"])
+                            mvsep_pass_input = gr.Textbox(label=_i18n("mvsep_api_password_label"), type="password", scale=1, **base_c_params["base"])
+                        
+                        with gr.Row():
+                            mvsep_btn_token = gr.Button(_i18n("mvsep_api_btn_set_token"), variant="secondary", **base_c_params["base"])
+                            mvsep_btn_login = gr.Button(_i18n("mvsep_api_btn_login"), variant="primary", **base_c_params["base"])
+
+                    with gr.Tab(label=_i18n("mvsep_api_settings_title")) as mvsep_api_settings_tab:
+                        with gr.Group():
+                            mvsep_user_info_display = gr.Markdown(value="", container=True, line_breaks=True)
+                            mvsep_user_info_refresh_btn = gr.Button(_i18n("refresh"), variant="primary", **base_c_params["base"])
+                            mvsep_user_info_refresh_btn.click(fn=self.get_actual_user_info, outputs=mvsep_user_info_display)
+                            mvsep_api_settings_tab.select(fn=self.get_actual_user_info, outputs=mvsep_user_info_display)
+                        with gr.Row():
+                            mvsep_btn_prem_on = gr.Button(_i18n("mvsep_api_premium_enable"), size="sm", **base_c_params["base"])
+                            mvsep_btn_prem_off = gr.Button(_i18n("mvsep_api_premium_disable"), size="sm", **base_c_params["base"])
+                        with gr.Row():
+                            mvsep_btn_lfn_on = gr.Button(_i18n("mvsep_api_long_fn_enable"), size="sm", **base_c_params["base"])
+                            mvsep_btn_lfn_off = gr.Button(_i18n("mvsep_api_long_fn_disable"), size="sm", **base_c_params["base"])
 
 
+                    with gr.Tab(label=_i18n("mvsep_api_history_title")) as mvsep_history_tab:
+                        with gr.Group():
+                            with gr.Row(equal_height=True):
+                                with gr.Column(min_width=110):
+                                    gr.Markdown("<h4><center>"+_i18n("history")+"</center></h4>")
+                                mvsep_history_dropdown = gr.Dropdown(container=False, scale=13, multiselect=True, max_choices=1, **base_c_params["base"])
+                                mvsep_history_dropdown.focus(self.get_actual_mvsep_api_history_list, inputs=[mvsep_history_dropdown, mvsep_api_history_state], outputs=[mvsep_history_dropdown, mvsep_api_history_state], show_progress="hidden")
 
+                            mvsep_api_off_players_output = gr.Checkbox(label=_i18n("off_audio_players_output"), info=_i18n("off_audio_players_output_info"), value=False, **base_c_params["base"])
+                            @mvsep_history_dropdown.input(inputs=mvsep_history_dropdown, outputs=[mvsep_api_off_players_output, mvsep_history_files_state, mvsep_history_status_state])
+                            def custom_separation_show_history_fn(key: list, progress=gr.Progress(track_tqdm=True)):
+                                state, status = self.download_results_from_mvsep(one_element_list_to_value(key))
+                                return gr.skip(), state, status
 
+                            @gr.render(inputs=[mvsep_history_status_state])
+                            def show_errors(statuses: list):
+                                with gr.Group():
+                                    if statuses:
+                                        for status in statuses:
+                                            gr.Markdown(f'<div style="background-color:black; padding:10px;"><center><span style="color:white !important;">{status}</span></center></div>', container=True, line_breaks=True, show_copy_button=True)
+                            @gr.render(inputs=[mvsep_history_files_state, mvsep_api_off_players_output])
+                            def show_players(state, off_players_output: bool):
+                                if state:
+                                    zip_is_generated = False
+                                    all_files = []
+                                    for stem_name, stem_path in state:
+                                        all_files.append(stem_path)
+                                        with gr.Row(equal_height=True):
+                                            if off_players_output:
+                                                output_audio = define_download_button_with_size(
+                                                    value=stem_path,
+                                                    label=stem_name,
+                                                    **base_c_params["base"], variant="huggingface",
+                                                    scale=15,
+                                                )
+                                            else:
+                                                output_audio = define_audio_with_size(
+                                                    value=stem_path,
+                                                    label=stem_name,
+                                                    **base_c_params["output_audio"],
+                                                    scale=15,
+                                                )
 
+                                    generate_zip_btn = gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", **base_c_params["base"])
+                                    @generate_zip_btn.click(outputs=generate_zip_btn, trigger_mode="once")
+                                    def generate_zip_fn():
+                                        nonlocal zip_is_generated
+                                        if zip_is_generated:
+                                            return gr.skip()
+                                        else:
+                                            zip_file = generate_zip_archive(all_files, get_zip_output_path("mvsep_api"))
+                                            zip_is_generated = True
+                                            return gr.DownloadButton(label=_i18n("download_zip_archive"), variant="huggingface", value=zip_file, **base_c_params["base"])
 
+                    
+                    auth_inputs = [mvsep_token_input, mvsep_email_input, mvsep_pass_input]
+                    auth_outputs = [mvsep_status_msg, mvsep_user_info_display, mvsep_token_input, mvsep_email_input, mvsep_pass_input]
+                    
+                    mvsep_btn_token.click(fn=self._mvsep_auth_action, inputs=auth_inputs, outputs=auth_outputs)
+                    mvsep_btn_login.click(fn=self._mvsep_auth_action, inputs=auth_inputs, outputs=auth_outputs)
+                    
+                    mvsep_btn_prem_on.click(fn=lambda: self._mvsep_toggle_setting("premium", True), outputs=mvsep_user_info_display)
+                    mvsep_btn_prem_off.click(fn=lambda: self._mvsep_toggle_setting("premium", False), outputs=mvsep_user_info_display)
+                    mvsep_btn_lfn_on.click(fn=lambda: self._mvsep_toggle_setting("long_fn", True), outputs=mvsep_user_info_display)
+                    mvsep_btn_lfn_off.click(fn=lambda: self._mvsep_toggle_setting("long_fn", False), outputs=mvsep_user_info_display)
 
-
-
-
-
-            with gr.Tab(_i18n("vbach_tab")):
+            with gr.Tab(_i18n("vbach_tab")) as vbach_tab:
                 vbach_inner_tabs = gr.Tabs()
                 with vbach_inner_tabs:
                     with gr.Tab(_i18n("inference"), id="vbach_infer"):
@@ -8514,7 +8811,7 @@ class App(Separator):
                             state = self.vbach_history_app.get_from_history(one_element_list_to_value(key))
                             return state
 
-                    with gr.Tab(_i18n("f0_extraction_tab"), id="vbach_f0_extract"):
+                    with gr.Tab(_i18n("f0_extraction_tab"), id="vbach_f0_extract") as vbach_f0_extractor_tab:
                         with gr.Row():
                             with gr.Column():
                                 f0_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
@@ -8599,7 +8896,7 @@ class App(Separator):
                             gr.Info(title=_i18n("f0_extraction_complete"), message="")
                             return result_path, gr.skip()
 
-                    with gr.Tab(_i18n("f0_corrector_tab"), id="vbach_f0_correct"):
+                    with gr.Tab(_i18n("f0_corrector_tab"), id="vbach_f0_correct") as vbach_f0_corrector_tab:
                         with gr.Row():
                             with gr.Column():
                                 f0c_upload_audio = gr.File(label=_i18n("f0_corrector_upload_audio"), elem_id="f0c_upload_audio", type="filepath", **base_c_params["base"])
@@ -8662,7 +8959,7 @@ class App(Separator):
                                 """, max_height="900px", padding=False
                             )
 
-                    with gr.Tab(_i18n("vbach_inference_custom_f0"), id="vbach_custom_f0"):
+                    with gr.Tab(_i18n("vbach_inference_custom_f0"), id="vbach_custom_f0") as vbach_inference_custom_f0_tab:
                         with gr.Row():
                             with gr.Column():
                                 vbach_custom_upload_file = gr.File(show_label=False, **base_c_params["input_file"])
@@ -8921,8 +9218,8 @@ class App(Separator):
 
 
 
-            with gr.Tab(_i18n("upload_manager")):
-                with gr.Tab(_i18n("upload_audio")):
+            with gr.Tab(_i18n("upload_manager")) as upload_manager_tab:
+                with gr.Tab(_i18n("upload_audio")) as uploader_audio_tab:
                     with gr.Row():
                         with gr.Accordion(label=_i18n("upload_from_zip"), open=True):
                             with gr.Group():
@@ -9108,8 +9405,8 @@ class App(Separator):
                                 gr.Info(title=status, message="")
                                 return status, gr.skip()
                     
-                with gr.Tab(_i18n("download_model")):
-                    with gr.Tab(_i18n("separation_tab")):
+                with gr.Tab(_i18n("download_model")) as download_model_tab:
+                    with gr.Tab(_i18n("separation_tab")) as loader_sep_models_tab:
                         with gr.Row():
                             # ===== Колонка 1: скачивание из списка =====
                             with gr.Column():
@@ -9157,7 +9454,7 @@ class App(Separator):
                                                         self.custom_sep_model_manager.upload_config(files)
                                                         return gr.update(value=[])
                                                     
-                    with gr.Tab(_i18n("vbach_models_tab")):
+                    with gr.Tab(_i18n("vbach_models_tab")) as loader_vbach_tab:
                         gr.Markdown("<h3><center>"+_i18n("supported_only_direct_links")+"</center></h3>")
                         with gr.Row():
                             with gr.Column():
@@ -9215,7 +9512,7 @@ class App(Separator):
                                                         return gr.update(value=[])
 
 
-                with gr.Tab(_i18n("upload_presets_tab")):
+                with gr.Tab(_i18n("upload_presets_tab")) as uploader_presets_tab:
                     with gr.Row():
                         with gr.Column():
                             with gr.Group():
@@ -9327,7 +9624,7 @@ class App(Separator):
 
                                         
             if GDRIVE_USER_DIR:
-                with gr.Tab(_i18n("google_drive")):
+                with gr.Tab(_i18n("google_drive")) as gdrive_settings_tab:
                     gdrive_info = gr.Textbox(lines=3, label=_i18n("status"), interactive=False)
                     gr.Timer().tick(lambda: gr.update(value=get_disk_usage(GDRIVE_DIR)), outputs=gdrive_info)
                     copy_to_gdrive_btn = gr.Button(_i18n("copy_from_current_user_dir_to_gdrive"), **base_c_params["base"])
