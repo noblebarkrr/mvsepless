@@ -7241,6 +7241,7 @@ class App(Separator):
                                     mvsep_api_markdown_refresh_btn = gr.Button(_i18n("refresh"), variant="primary", **base_c_params["base"], scale=2, min_width=40, size="sm")
                                     mvsep_api_markdown_refresh_btn.click(fn=lambda: gr.update(value=_i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")), outputs=mvsep_api_markdown_user_info)
                                 separation_inference_tab.select(fn=lambda: gr.update(value=_i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")), outputs=mvsep_api_markdown_user_info)
+                                separation_tab.select(fn=lambda: gr.update(value=_i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")), outputs=mvsep_api_markdown_user_info)
                                 mvsep_api_sep_type = gr.Dropdown(
                                     label=_i18n("separation_type"),
                                     **base_c_params["base"],
@@ -8440,7 +8441,7 @@ class App(Separator):
                     mvsep_history_files_state = gr.State([])
                     mvsep_history_status_state = gr.State([])
                     
-                    with gr.Tab(_i18n("mvsep_api_auth_title")):
+                    with gr.Tab(_i18n("mvsep_api_auth_title")) as mvsep_auth_tab:
                         mvsep_status_msg = gr.Textbox(container=False, interactive=False)
                         mvsep_token_input = gr.Textbox(
                             label=_i18n("mvsep_api_token_label"), 
@@ -8460,7 +8461,9 @@ class App(Separator):
                             mvsep_user_info_display = gr.Markdown(value="", container=True, line_breaks=True)
                             mvsep_user_info_refresh_btn = gr.Button(_i18n("refresh"), variant="primary", **base_c_params["base"])
                             mvsep_user_info_refresh_btn.click(fn=self.get_actual_user_info, outputs=mvsep_user_info_display)
+                            mvsep_api_tab.select(fn=self.get_actual_user_info, outputs=mvsep_user_info_display)
                             mvsep_api_settings_tab.select(fn=self.get_actual_user_info, outputs=mvsep_user_info_display)
+                            extras_tab.select(fn=self.get_actual_user_info, outputs=mvsep_user_info_display)
                         with gr.Row():
                             mvsep_btn_prem_on = gr.Button(_i18n("mvsep_api_premium_enable"), size="sm", **base_c_params["base"])
                             mvsep_btn_prem_off = gr.Button(_i18n("mvsep_api_premium_disable"), size="sm", **base_c_params["base"])
