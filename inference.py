@@ -2394,13 +2394,11 @@ class PresetExecutor:
             
             left, left_sr = inputs[0]
             right, right_sr = inputs[1]
-            left = stereo_to_mono(left, to_flatten=True)
-            right = stereo_to_mono(right, to_flatten=True)
             max_sr = max(left_sr, right_sr)
             
             # Приводим к одному формату
             fitted = fit_arrays([left, right], [left_sr, right_sr], 
-                              max_channels=1, min_sr=max_sr)
+                              max_channels=1, flatten=True, min_sr=max_sr)
             result = multi_channel_array_from_arrays(fitted[0], fitted[1], index=1, dtype=np.float32)
             return [(result, max_sr)]
             
