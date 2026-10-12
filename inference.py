@@ -727,7 +727,7 @@ class MSSI: # Music Source Separation Inference
                     self.clear_model()
                     raise RuntimeError(_i18n("load_state_dict_error", error=e_2))
 
-    def load_mix(self, path: str):
+    def load_mix(self, path: str, preserve_side: bool = False):
         self.input_file_name = None
         self.input_mix = None
         if self.config is None:
@@ -743,7 +743,7 @@ class MSSI: # Music Source Separation Inference
             raise PathNotExist(_i18n("path_not_exist"))
         if check(path):
             self.input_file_name = input_file.stem
-            self.input_mix, _ = read(path=input_file, sr=self.sample_rate, mono=mono_bool)
+            self.input_mix, _ = read(path=input_file, sr=self.sample_rate, mono=mono_bool, preserve_side=preserve_side)
             self.input_mix = self.input_mix.copy()
             self.input_file_metadata = get_metadata(input_file)
             print(_i18n("loaded_mix")+": "+input_file.name)
@@ -756,7 +756,7 @@ class MSSI: # Music Source Separation Inference
             raise ConfigNotLoaded(_i18n("config_is_not_loaded"))
         return self.sample_rate if self.sample_rate else None
 
-    def load_array(self, array: np.ndarray, orig_sr: int):
+    def load_array(self, array: np.ndarray, orig_sr: int, preserve_side: bool = False):
         self.input_file_name = "temp_array"
         if self.config is None:
             raise ConfigNotLoaded(_i18n("config_is_not_loaded"))
@@ -766,7 +766,7 @@ class MSSI: # Music Source Separation Inference
                 mono_bool = not self.config.model.stereo
         self.input_mix = easy_resampler(array.copy(), orig_sr, self.sample_rate) if orig_sr != self.sample_rate else array.copy()
         if mono_bool:
-            self.input_mix = stereo_to_mono(self.input_mix)
+            self.input_mix = stereo_to_mono(self.input_mix, preserve_side=preserve_side)
 
         print(_i18n("loaded_mix")+": "+_i18n("from_array"))
         print(_i18n("array_shape")+": "+str(self.input_mix.shape))
@@ -1465,12 +1465,12 @@ class MSSI: # Music Source Separation Inference
     def get_outputs_arrays(self):
         return self.output_arrays
     
-    def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True, invert_plus: bool = False, prefer_float: bool = False):
+    def _process(self, i: int, total: int, path: str, template: str, selected_stems: list = [], extract_instrumental: bool = True, invert_plus: bool = False, prefer_float: bool = False, preserve_side: bool = False):
         template = Namer.sanitize(template)
         template = Namer.dedup_template(template, keys=["NAME", "MODEL", "STEM"])
         template = Namer.short(template, length=40)
         self.clear_mix()
-        self.load_mix(path)
+        self.load_mix(path, preserve_side=preserve_side)
         try:
             self.demix(f" | {i}/{total} {_i18n('files')}")
         except Exception as e:
@@ -1480,9 +1480,9 @@ class MSSI: # Music Source Separation Inference
         self.write(template, "name_stems_list_append_self", prefer_float)
         self.clear_mix()
 
-    def _process_array(self, array: np.ndarray, sr: int, add_text_progress: str = ""):
+    def _process_array(self, array: np.ndarray, sr: int, add_text_progress: str = "", preserve_side: bool = False):
         self.clear_mix()
-        self.load_array(array, sr)
+        self.load_array(array, sr, preserve_side=preserve_side)
         try:
             self.demix(add_text_progress)
         except Exception as e:
@@ -1490,9 +1490,9 @@ class MSSI: # Music Source Separation Inference
             raise DemixError(_i18n("demix_error", error=e)) from e
         return self.get_outputs_arrays()
 
-    def _process_array_ensemble(self, i: int, total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
+    def _process_array_ensemble(self, i: int, total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False, preserve_side: bool = False):
         self.clear_mix()
-        self.load_array(array, sr)
+        self.load_array(array, sr, preserve_side=preserve_side)
         try:
             self.demix(f" | {i}/{total} {_i18n('models')} | {self.ckpt_path.stem}")
         except Exception as e:
@@ -1504,9 +1504,9 @@ class MSSI: # Music Source Separation Inference
             result = self.output_arrays[primary_stem]
         return result, self.sample_rate
 
-    def _process_array_iter_ensemble(self, i: int, total: int, iter_index: int, iter_total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False):
+    def _process_array_iter_ensemble(self, i: int, total: int, iter_index: int, iter_total: int, array: np.ndarray, sr: int, primary_stem: str | None = None, invert: bool = False, preserve_side: bool = False):
         self.clear_mix()
-        self.load_array(array, sr)
+        self.load_array(array, sr, preserve_side=preserve_side)
         try:
             self.demix(f" | {i}/{total} {_i18n('models')} | {self.ckpt_path.stem} | {_i18n('iteration')} {iter_index}/{iter_total}")
         except Exception as e:
@@ -1524,7 +1524,7 @@ class MSSI: # Music Source Separation Inference
         self.load_model_instance()
         self.load_checkpoint(ckpt=ckpt)
 
-    def inference(self, input: str | list, /, *inputs, template: str = "NAME_MDOEL_STEM", selected_stems: list = [], extract_instrumental: bool = False, invert_plus: bool = False, prefer_float: bool = False):
+    def inference(self, input: str | list, /, *inputs, template: str = "NAME_MDOEL_STEM", selected_stems: list = [], extract_instrumental: bool = False, invert_plus: bool = False, prefer_float: bool = False, preserve_side: bool = False):
         self.clear_outputs()
         all_inputs = []
         errors = []
@@ -1537,7 +1537,7 @@ class MSSI: # Music Source Separation Inference
         total = len(all_inputs)
         for i, input_file in enumerate(all_inputs, start=1):
             try:
-                self._process(i, total, input_file, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float)
+                self._process(i, total, input_file, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float, preserve_side=preserve_side)
             except Exception as e:
                 traceback.print_exc()
                 gr.Warning(title="", message=traceback.format_exc(limit=3).replace("\n", "<br>"))
@@ -2093,7 +2093,7 @@ class PresetExecutor:
             "filter": {"kind": "hp", "fft_mode": True, "cutoff": 100},
             "split_stereo": {"var": "left/right"},
             "join_stereo": {"var": "left/right"},
-            "stereo_to_mono": {},
+            "stereo_to_mono": {"preserve_side": False},
             "subtract": {"use_spectrogram": False},
             "invert": {},
             "output_file": {
@@ -2449,7 +2449,8 @@ class PresetExecutor:
             raise ValueError(_i18n("node_no_input"))
         
         audio, sr = inputs[0]
-        result = stereo_to_mono(audio)
+        preserve_side = params.get("preserve_side", False)
+        result = stereo_to_mono(audio, preserve_side=preserve_side)
         return [(result, sr)]
     
     def _handle_subtract(
@@ -2559,7 +2560,8 @@ class Separator(ModelManager):
         selected_stems: list, 
         extract_instrumental: bool,
         invert_plus: bool,
-        prefer_float: bool
+        prefer_float: bool,
+        preserve_side: bool
     ):
         errors = []
         results = []
@@ -2568,7 +2570,7 @@ class Separator(ModelManager):
             mssi.load_model(self.get_model_type(model_name), checkpoint, config)
             mssi.print_instruments()
             selected_stems = mssi.validate_selected_instruments(selected_stems)
-            results, errors = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float)
+            results, errors = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float, preserve_side=preserve_side)
         except Exception as e:
             traceback.print_exc()
             gr.Warning(title="", message=traceback.format_exc(limit=3).replace("\n", "<br>"))
@@ -2587,6 +2589,7 @@ class Separator(ModelManager):
         use_spec_invert: bool = False,
         invert_plus: bool = False,
         prefer_float: bool = False,
+        preserve_side: bool = False, 
         selected_stems: list = [],
         add_params: dict = {}
     ):
@@ -2599,7 +2602,7 @@ class Separator(ModelManager):
         mssi.settings(output_dir=output_dir, output_format=output_format, use_spec_invert=use_spec_invert)
         mssi.set_add_params(**add_params)
         checkpoint, config = self.download(model_name)
-        results, errors = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus, prefer_float)
+        results, errors = self.separate_base(mssi, input_valid_files, model_name, template, checkpoint, config, selected_stems, extract_instrumental, invert_plus, prefer_float, preserve_side)
         return results, errors
 
     def custom_separate(
@@ -2615,6 +2618,7 @@ class Separator(ModelManager):
         use_spec_invert: bool = False,
         invert_plus: bool = False,
         prefer_float: bool = False,
+        preserve_side: bool = False, 
         selected_stems: list = [],
         add_params: dict = {}
     ):
@@ -2636,7 +2640,7 @@ class Separator(ModelManager):
             self.previous_model_name = model_name
             mssi.print_instruments()
             selected_stems = mssi.validate_selected_instruments(selected_stems)
-            results, errors = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float)
+            results, errors = mssi.inference(input_valid_files, template=template, selected_stems=selected_stems, extract_instrumental=extract_instrumental, invert_plus=invert_plus, prefer_float=prefer_float, preserve_side=preserve_side)
         except Exception as e:
             traceback.print_exc()
             gr.Warning(title="", message=traceback.format_exc(limit=3).replace("\n", "<br>"))
@@ -2859,12 +2863,13 @@ class Separator(ModelManager):
             mix: np.ndarray,
             orig_sr: int,
             primary_stem: str,
-            invert: bool
+            invert: bool,
+            preserve_side: bool
         ):
         mssi.clear_model()
         mssi.load_model(self.get_model_type(model_name), checkpoint, config)
         mssi.print_instruments()
-        output, model_sr = mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert)
+        output, model_sr = mssi._process_array_ensemble(i, model_count, mix, orig_sr, primary_stem, invert, preserve_side)
         mssi.clear_model()
         return output, model_sr
 
@@ -2879,6 +2884,7 @@ class Separator(ModelManager):
         use_spec_invert: bool = False,
         save_primary_stems: bool = False,
         prefer_float: bool = False,
+        preserve_side: bool = False
     ) -> tuple[str, str, list[str]]:
         if not output_dir:
             output_dir = ""
@@ -2936,7 +2942,7 @@ class Separator(ModelManager):
             print(f"{_i18n('model')} {i}/{model_count}")
             try:
                 checkpoint, config = self.download(model_name)
-                output, model_sr = self.auto_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, input_mix, orig_sr, primary_stem, invert)
+                output, model_sr = self.auto_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, input_mix, orig_sr, primary_stem, invert, preserve_side)
                 auto_ensembler.add_array(output, model_sr)
                 weights.append(weight)
                 if save_primary_stems:
@@ -2978,7 +2984,7 @@ class Separator(ModelManager):
 
         return write(Namer.iter(output_dir / f"{custom_name}.{output_format}"), output_array, sr_, 320, prefer_float, new_metadata), write(Namer.iter(output_dir / f"{Namer.short(custom_name+invert_key)}.{output_format}"), inverted_array, i_sr, 320, prefer_float, new_metadata_invert), saved_primary_stems
 
-    def iterative_ensemble_base(self, mssi: MSSI, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool):
+    def iterative_ensemble_base(self, mssi: MSSI, model_name: str, checkpoint: str, config: str, i: int, model_count: int, iter_index: int, iter_total: int, current_mix: np.ndarray, orig_sr: int, primary_stem: str, invert: bool, preserve_side: bool):
         mssi.clear_model()
         mssi.load_model(
             self.get_model_type(model_name), 
@@ -2989,7 +2995,7 @@ class Separator(ModelManager):
         
         output, model_sr = mssi._process_array_iter_ensemble(
             i, model_count, iter_index, iter_total, current_mix, orig_sr, 
-            primary_stem, invert
+            primary_stem, invert, preserve_side
         )
         mssi.clear_model()
         return output, model_sr
@@ -3003,7 +3009,8 @@ class Separator(ModelManager):
         output_format: str = output_formats[0],
         template: str = "NAME_ITER",
         save_intermediate: bool = False,
-        prefer_float: bool = False
+        prefer_float: bool = False,
+        preserve_side: bool = False
     ) -> tuple[str, list[str]]:
         if not output_dir:
             output_dir = Path(".")
@@ -3079,7 +3086,7 @@ class Separator(ModelManager):
                 print(f"{_i18n('model')} {i}/{model_count}")
                 try:
                     checkpoint, config = self.download(model_name)
-                    output, model_sr = self.iterative_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, iteration, num_iters, current_mix, orig_sr, primary_stem, invert)
+                    output, model_sr = self.iterative_ensemble_base(mssi, model_name, checkpoint, config, i, model_count, iteration, num_iters, current_mix, orig_sr, primary_stem, invert, preserve_side)
                     auto_ensembler.add_array(output, model_sr)
                     
                 except Exception as e:
@@ -3453,7 +3460,8 @@ if __name__ == "__main__":
             invert_plus=args.invert_plus,
             selected_stems=args.selected_stems,
             add_params=get_add_params(args),
-            prefer_float=args.prefer_float
+            prefer_float=args.prefer_float,
+            preserve_side=args.preserve_side
         )
     elif args.mode == "custom_separate":
         separator.custom_separate(
@@ -3469,7 +3477,8 @@ if __name__ == "__main__":
             invert_plus=args.invert_plus,
             selected_stems=args.selected_stems,
             add_params=get_add_params(args),
-            prefer_float=args.prefer_float
+            prefer_float=args.prefer_float,
+            preserve_side=args.preserve_side
         )
     elif args.mode == "auto_ensemble":
         if args.preset:
@@ -3491,7 +3500,8 @@ if __name__ == "__main__":
             output_format=args.output_format,
             use_spec_invert=args.use_spec_invert, 
             save_primary_stems=args.save_primary_stems,
-            prefer_float=args.prefer_float
+            prefer_float=args.prefer_float,
+            preserve_side=args.preserve_side
         )
     elif args.mode == "iterative_ensemble":
         if args.preset:
@@ -3512,7 +3522,8 @@ if __name__ == "__main__":
             output_format=args.output_format,
             template=args.template,
             save_intermediate=args.save_intermediate,
-            prefer_float=args.prefer_float
+            prefer_float=args.prefer_float,
+            preserve_side=args.preserve_side,
         )
         print(_i18n("ensemble_complete") + f": {result_path}")
         if intermediate_files:

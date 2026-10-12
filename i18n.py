@@ -1088,6 +1088,11 @@ TRANSLATIONS: Dict[Language, Dict[str, str]] = {
         "mvsep_api_token_masked": "Токен установлен (скрыт)",
         "mvsep_api_is_authorized": "Вы авторизованы",
         "mvsep_api_is_not_authorized": "Вы не авторизованы",
+        "preserve_side": "Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом)",
+        "preserve_side2": "Перевести боковые каналы в моно",
+        "preserve_side_info": "Предотвращает исчезновение инструментов, находящихся исключительно в боковых каналах",
+        "arg_preserve_side_help": "Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом)",
+        "preset_node_stereo_to_mono": "Стерео в моно",
         "mvsep_api_app_not_authorized": """Вы не авторизованы
 
 Для разделения через MVSEP API,
@@ -2172,6 +2177,11 @@ Example: `NAME_TYPE` → `Song_phase_fix`
         "mvsep_api_token_masked": "Token is set (hidden)",
         "mvsep_api_is_authorized": "You are authorized",
         "mvsep_api_is_not_authorized": "You are not authorized",
+        "preserve_side": "Convert side channels to mono (For mono channel models)",
+        "preserve_side2": "Convert side channels to mono",
+        "preserve_side_info": "Prevents the disappearance of instruments located exclusively in the side channels",
+        "arg_preserve_side_help": "Convert side channels to mono (For mono channel models)",
+        "preset_node_stereo_to_mono": "Stereo to mono",
         "mvsep_api_app_not_authorized": """You are not authorized
 
 To separate via MVSEP API,

@@ -2294,6 +2294,7 @@ class App(Separator):
                             </div>
                         </div>
                     ` },
+                    "stereo_to_mono": { title: """ + f"\"{_i18n('preset_node_stereo_to_mono')}\"" + """, params: { preserve_side: false }, html: `<div class="toggle-container"><label>""" + f"{_i18n('preserve_side2')}" + """</label><label class="toggle-switch"><input type="checkbox" data-param="preserve_side"><span class="slider"></span></label></div>` },
                     "subtract": { title: """ + f"\"{_i18n('preset_node_subtract')}\"" + """, params: { use_spectrogram: false }, html: `<div class="toggle-container"><label>""" + f"{_i18n('preset_node_use_spectrogram')}" + """</label><label class="toggle-switch"><input type="checkbox" data-param="use_spectrogram"><span class="slider"></span></label></div>` },
                     "invert": { title: """ + f"\"{_i18n('preset_node_invert')}\"" + """, params: {} },
                     "separate": { title: """ + f"\"{_i18n('preset_node_separate')}\"" + """, params: { model_name: "" }, html: `
@@ -2620,6 +2621,7 @@ class App(Separator):
                         let num = Math.max(1, p.num_inputs || 1);
                         for(let i=0; i<num; i++) node.ins.push("audio"); node.outs = ["audio"];
                     } 
+                    else if (node.type === 'stereo_to_mono') { node.ins = ["stereo"]; node.outs = ["mono"]; }
                     else if (node.type === 'split_stereo') {
                         node.ins = ["audio"];
                         if (p.var === 'sim/dif') node.outs = ["sim", "dif"];
@@ -7216,7 +7218,12 @@ class App(Separator):
                                     return gr.update(value=[], choices=stems)
                                 sep_extract_instrumental = gr.Checkbox(label=_i18n("extract_instrumental"), visible=ext_inst_visible_default, value=False, **base_c_params["base"])
 
-
+                                sep_preserve_side = gr.Checkbox(
+                                    label=_i18n("preserve_side"), 
+                                    info=_i18n("preserve_side_info"), 
+                                    value=False, 
+                                    **base_c_params["base"]
+                                )
                                 sep_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
                                 sep_sum_stems = gr.Checkbox(label=_i18n("invert_plus"), info=_i18n("invert_plus_info"), value=False, visible=ext_inst_visible_default, **base_c_params["base"])
                                 sep_model_name.change(self.update_model_name, inputs=sep_model_name, outputs=[sep_extract_instrumental, sep_selected_stems, sep_sum_stems])
@@ -7277,7 +7284,7 @@ class App(Separator):
                                     outputs=[
                                         sep_model_name, custom_sep_model_type, custom_sep_checkpoint,
                                         custom_sep_config, sep_selected_stems, sep_extract_instrumental,
-                                        presetless_preset_path, sep_sum_stems, sep_use_spec_invert, mvsep_api_sep_type, mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3, sep_output_format, sep_template, add_params_accordion, mvsep_api_markdown_user_info, mvsep_markdown_row
+                                        presetless_preset_path, sep_sum_stems, sep_use_spec_invert, mvsep_api_sep_type, mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3, sep_output_format, sep_template, add_params_accordion, mvsep_api_markdown_user_info, mvsep_markdown_row, sep_preserve_side
                                     ]
                                 )
                                 def separation_mode_change(mode_label: str):
@@ -7298,7 +7305,7 @@ class App(Separator):
                                             gr.update(visible=False, choices=[], value=None),
                                             gr.update(visible=False, choices=[], value=None),
                                             gr.update(choices=output_formats, value=output_formats[0]),
-                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False)
+                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False), gr.update(visible=True, value=False)
                                         )
                                     elif mode == "presetless":
                                         return (
@@ -7316,7 +7323,7 @@ class App(Separator):
                                             gr.update(visible=False, choices=[], value=None),
                                             gr.update(visible=False, choices=[], value=None),
                                             gr.update(choices=output_formats, value=output_formats[0]),
-                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False)
+                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False), gr.update(visible=False, value=False)
                                         )
                                     elif mode == "mvsep_api":
                                         mvsep_api_user_token_str = _i18n("mvsep_api_is_authorized") if self.mvsep_api_client.check_valid_api_token() else _i18n("mvsep_api_is_not_authorized")
@@ -7339,7 +7346,7 @@ class App(Separator):
                                             gr.update(visible=False, value=False),             # sep_sum_stems
                                             gr.update(visible=False, value=False),             # sep_use_spec_invert
                                             gr.update(choices=sep_types_list, value=default_sep_type, visible=True), # mvsep_api_sep_type
-                                        ) + tuple(default_updates) + (gr.update(choices=self.mvsep_api_client.output_formats, value=self.mvsep_api_client.output_formats[0]), gr.update(visible=False), gr.update(visible=False), gr.update(value=mvsep_api_user_token_str), gr.update(visible=True))
+                                        ) + tuple(default_updates) + (gr.update(choices=self.mvsep_api_client.output_formats, value=self.mvsep_api_client.output_formats[0]), gr.update(visible=False), gr.update(visible=False), gr.update(value=mvsep_api_user_token_str), gr.update(visible=True), gr.update(visible=False, value=False))
                                     else:  # "default"
                                         return (
                                             gr.update(visible=True, choices=all_models, value=default_model),  # sep_model_name
@@ -7356,7 +7363,7 @@ class App(Separator):
                                             gr.update(visible=False, choices=[], value=None),
                                             gr.update(visible=False, choices=[], value=None),
                                             gr.update(choices=output_formats, value=output_formats[0]),
-                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False)
+                                            gr.update(visible=True), gr.update(visible=True), gr.skip(), gr.update(visible=False), gr.update(visible=True, value=False)
                                             
                                         )
                                 separate_btn = gr.Button(_i18n("separate"), variant="primary", **base_c_params["base"])
@@ -7377,7 +7384,7 @@ class App(Separator):
                                 custom_sep_config, sep_model_name, presetless_preset_path,
                                 sep_selected_stems, sep_extract_instrumental, sep_use_spec_invert,
                                 sep_template, sep_output_format, sep_sum_stems, add_params_user_state,
-                                sep_prefer_float, sep_separation_mode, mvsep_api_sep_type, mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3
+                                sep_prefer_float, sep_separation_mode, mvsep_api_sep_type, mvsep_api_add_opt1, mvsep_api_add_opt2, mvsep_api_add_opt3, sep_preserve_side
                             ],
                             outputs=[sep_state, sep_errors_state, sep_upload_files],
                             trigger_mode="once",
@@ -7388,7 +7395,7 @@ class App(Separator):
                             ext_inst: bool, spec_invert: bool, tmpl: str, output_format: str,
                             sum_stems: bool, add_params: dict, pref_f: bool,
                             separation_mode_label: str, 
-                            mvsep_sep_type: str, mvsep_opt1: str, mvsep_opt2: str, mvsep_opt3: str, # <--- Новые
+                            mvsep_sep_type: str, mvsep_opt1: str, mvsep_opt2: str, mvsep_opt3: str, preserve_side: bool, # <--- Новые
                             progress=gr.Progress(track_tqdm=True)):
                             results = []
                             errors = []
@@ -7414,7 +7421,8 @@ class App(Separator):
                                     invert_plus=sum_stems,
                                     prefer_float=pref_f,
                                     selected_stems=sel_stems,
-                                    add_params=add_params
+                                    add_params=add_params,
+                                    preserve_side=preserve_side
                                 )
                                 model_name = Path(checkpoint_path).stem
 
@@ -7476,7 +7484,8 @@ class App(Separator):
                                     invert_plus=sum_stems,
                                     prefer_float=pref_f,
                                     selected_stems=sel_stems,
-                                    add_params=add_params
+                                    add_params=add_params,
+                                    preserve_side=preserve_side
                                 )
 
                             self.history.add_to_history(model_name, results)
@@ -7795,6 +7804,12 @@ class App(Separator):
                             with gr.Column():
                                 with gr.Group():
                                     auto_ensemble_save_primary_stems = gr.Checkbox(label=_i18n("enable_save_primary_stems"), value=False, **base_c_params["base"])
+                                    auto_ensemble_preserve_side = gr.Checkbox(
+                                        label=_i18n("preserve_side"), 
+                                        info=_i18n("preserve_side_info"), 
+                                        value=False, 
+                                        **base_c_params["base"]
+                                    )
                                     auto_ensemble_use_spec_invert = gr.Checkbox(label=_i18n("use_spec_invert"), value=False, **base_c_params["base"])
                                     auto_ensemble_type = gr.Dropdown(label=_i18n("ensemble_type"), info=_i18n("ensemble_type_info"), choices=ensemble_types, value=ensemble_types[0], filterable=False, **base_c_params["base"])
                                     auto_ensemble_template = gr.Textbox(label=_i18n("output_template"), info=_i18n("output_etemplate_info"), value="NAME_(COUNT)_TYPE", **base_c_params["base"])
@@ -7905,9 +7920,12 @@ class App(Separator):
                                             else:
                                                 gr.Markdown("<h3><center>"+_i18n("not_ensembled_with_primary_stems")+"</center></h3>", container=True)
 
-                        @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems, auto_ensemble_preset_state, auto_ensemble_prefer_float], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn, auto_ensemble_generate_zip_btn, auto_ensemble_zip_is_generated], concurrency_id="mvsepless_app_inference_ensemble")
-                        def auto_ensemble_wrapper_fn(input_file: list, template: str, etype: str, spec_invert: bool, out_format: str, save_pr_stems: bool, flow: list[list], pref_f: bool, progress=gr.Progress(track_tqdm=True)):
-                            out, iout, pr_stems = self.separator.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=json.loads(flow), template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems, prefer_float=pref_f)
+                        @auto_ensemble_run_btn.click(inputs=[auto_ensemble_input_file, auto_ensemble_template, auto_ensemble_type, auto_ensemble_use_spec_invert, auto_ensemble_format, auto_ensemble_save_primary_stems, auto_ensemble_preset_state, auto_ensemble_prefer_float, auto_ensemble_preserve_side], outputs=[auto_ensemble_output_audio, auto_ensemble_ioutput_audio, auto_ensemble_primary_stems_state, auto_ensemble_upload_file, auto_ensemble_output_audio_reuse_btn, auto_ensemble_ioutput_reuse_btn, auto_ensemble_generate_zip_btn, auto_ensemble_zip_is_generated], concurrency_id="mvsepless_app_inference_ensemble")
+                        def auto_ensemble_wrapper_fn(input_file: list, template: str, etype: str, spec_invert: bool, out_format: str, save_pr_stems: bool, flow: list[list], pref_f: bool, pr_side: bool, progress=gr.Progress(track_tqdm=True)):
+                            if not flow:
+                                gr.Warning(_i18n("flow_empty"))
+                                return update_audio_with_size(label=_i18n("ensemble_result"), value=None), update_audio_with_size(label=_i18n("inverted_result"), value=None), [], gr.skip(), gr.update(visible=False), gr.update(visible=False), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=False, **base_c_params["base"]), gr.update(value=False)
+                            out, iout, pr_stems = self.separator.auto_ensemble(input_file=one_element_list_to_value(input_file), output_dir=self.output_dir.gen_output_dir(), flow=json.loads(flow), template=template, etype=etype, output_format=out_format, use_spec_invert=spec_invert, save_primary_stems=save_pr_stems, prefer_float=pref_f, preserve_side=pr_side)
                             self.auto_ensemble_history_app.add_to_history(etype, out, iout, pr_stems)
                             return update_audio_with_size(label=_i18n("ensemble_result"), value=out), update_audio_with_size(label=_i18n("inverted_result"), value=iout), pr_stems, gr.skip(), gr.update(visible=True), gr.update(visible=True), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=True, **base_c_params["base"]), gr.update(value=False)
 
@@ -7981,6 +7999,12 @@ class App(Separator):
                                     )
                                     iterative_ensemble_save_intermediate = gr.Checkbox(
                                         label=_i18n("save_intermediate"), 
+                                        value=False, 
+                                        **base_c_params["base"]
+                                    )
+                                    iterative_ensemble_preserve_side = gr.Checkbox(
+                                        label=_i18n("preserve_side"), 
+                                        info=_i18n("preserve_side_info"), 
                                         value=False, 
                                         **base_c_params["base"]
                                     )
@@ -8099,13 +8123,13 @@ class App(Separator):
                         
                         @iterative_ensemble_run_btn.click(
                             inputs=[iterative_ensemble_input_file, iterative_ensemble_num_iters, iterative_ensemble_save_intermediate, 
-                                    iterative_ensemble_template, iterative_ensemble_format, iterative_ensembless_state, iterative_ensemble_prefer_float], 
+                                    iterative_ensemble_template, iterative_ensemble_format, iterative_ensembless_state, iterative_ensemble_prefer_float, iterative_ensemble_preserve_side], 
                             outputs=[iterative_ensemble_output_audio, iterative_ensemble_intermediate_state, iterative_ensemble_upload_file, 
                                     iterative_ensemble_output_reuse_btn, iterative_ensemble_generate_zip_btn, iterative_ensemble_zip_is_generated], 
                             trigger_mode="once", 
                             concurrency_id="mvsepless_app_inference_ensemble"
                         )
-                        def iterative_ensemble_wrapper_fn(input_file: list, num_iters: int, save_intermediate: bool, template: str, out_format: str, flow: list[list], pref_f: bool, progress=gr.Progress(track_tqdm=True)):
+                        def iterative_ensemble_wrapper_fn(input_file: list, num_iters: int, save_intermediate: bool, template: str, out_format: str, flow: list[list], pref_f: bool, pr_side: bool, progress=gr.Progress(track_tqdm=True)):
                             if not flow:
                                 gr.Warning(_i18n("flow_empty"))
                                 return update_audio_with_size(label=_i18n("ensemble_result"), value=None), [], gr.skip(), gr.update(visible=False), gr.DownloadButton(label=_i18n("generate_zip_archive"), variant="huggingface", visible=False, **base_c_params["base"]), gr.update(value=False)
@@ -8118,7 +8142,8 @@ class App(Separator):
                                 output_format=out_format,
                                 template=template,
                                 save_intermediate=save_intermediate,
-                                prefer_float=pref_f
+                                prefer_float=pref_f,
+                                preserve_side=pr_side
                             )
                             
                             self.iterative_ensemble_history_app.add_to_history(result_path, intermediate_files, num_iters)

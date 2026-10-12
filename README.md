@@ -717,6 +717,7 @@ results = separator.run_preset(
 | `extract_instrumental` | `bool` | Создание инверсии выбранных стемов (стем `invert`) |
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
 | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 | `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `selected_stems` | `list` | Список стемов для сохранения (если не указан — все) |
 | `add_params` | `dict` | Дополнительные параметры разделения |
@@ -744,6 +745,7 @@ results = separator.run_preset(
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
 | `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 | `selected_stems` | `list` | Список стемов для сохранения |
 | `add_params` | `dict` | Дополнительные параметры разделения |
 
@@ -761,6 +763,7 @@ results = separator.run_preset(
 | `template` | `str` | Шаблон имени (ключи: `NAME`, `ITER`) ([Подробнее](#шаблон-итеративный-ансамбль)) |
 | `save_intermediate` | `bool` | Сохранять промежуточные результаты каждой итерации |
 | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 
 **Возвращает**: `(путь_к_финальному_ансамблю, список_промежуточных_файлов)`
 
@@ -777,6 +780,7 @@ results = separator.run_preset(
 | `use_spec_invert` | `bool` | Вычитание из спектрограммы вместо противофазы |
 | `save_primary_stems` | `bool` | Сохранять основные стемы в output_dir |
 | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 
 **Возвращает**: `(путь_к_ансамблю, путь_к_инверсии, список_основных_стемов)`
 
@@ -882,6 +886,7 @@ results = separator.run_preset(
 | `-iplus`, `-invert_plus`, `-invert-plus`, `--invert_plus`, `--invert-plus` | `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `-st`, `--st`, `-stems`, `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `--preserve_side` | `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
 
 ### Разделение с кастомной моделью <a id="разделение-с-кастомной-моделью-cli"></a>
@@ -902,6 +907,7 @@ results = separator.run_preset(
 | `-iplus`, `-invert_plus`, `-invert-plus`, `--invert_plus`, `--invert-plus` | `invert_plus` | `bool` | Использует сложение невыбранных стемов при создании инструментала |
 | `-st`, `--st`, `-stems`, `--stems`, `--selected_stems`, `--selected-stems` | `selected_stems` | `list` | Список стемов для сохранения (например: vocals drums). Если не указаны - сохраняются все стемы |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `--preserve_side` | `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 | `--{param_name}` | `add_params.{param_name}` | `int/float/str/bool` | Дополнительный параметр разделения |
 
 ### Итеративный ансамбль <a id="итеративный-ансамбль-cli"></a>
@@ -917,6 +923,7 @@ results = separator.run_preset(
 | `-n`, `-iters`, `--num_iters`, `--num-iters` | `num_iters` | `int` | Количество итераций (по умолчанию: 4). На каждой итерации применяется весь набор моделей к остатку от предыдущей итерации |
 | `-save_intermediate`, `-save-intermediate`, `--save_intermediate`, `--save-intermediate` | `save_intermediate` | `bool` | Сохранять промежуточные результаты каждой итерации |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `--preserve_side` | `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 | `-flow`, `--flow` | `flow` | `list` | Пресет в виде строк: `МОДЕЛЬ`:`ОСНОВНОЙ_СТЕМ`:`ИНВЕРСИЯ`. ([Пример](#пример-итеративного-ансамбля-cli)) |
 | `-json`, `-preset`, `-preset_json`, `-preset-json`, `--preset_json`, `--preset-json` | `preset` | `str` | Путь к JSON-файлу с пресетом ансамбля ([Пример](#пример-итеративного-ансамбля-json)) |
 
@@ -934,6 +941,7 @@ results = separator.run_preset(
 | `-ispec`, `-spec_invert`, `-spec-invert`, `--use_spec_invert`, `--use-spec-invert` | `use_spec_invert` | `bool` | Использовать вычитание из спектрограммы вместо противофазы при создании инверсии |
 | `-save_stems`, `-save-stems`, `-save_primary_stems`, `--save-primary-stems` | `save_primary_stems` | `bool` | Сохранять основные стемы в выходную директорию |
 | `-hi-prec`, `-hi_prec`, `-hi-precision`, `--hi_precision`, `-pref-flt`, `-pref_flt`, `--prefer_float`, `--prefer_float` | `prefer_float` | `bool` | Предочитает высокую точность вывода ([Используемые форматы сэмплов](https://github.com/noblebarkrr/mvsepless/blob/dzeta/audio.py#L114)) |
+| `--preserve_side` | `preserve_side` | `bool` | Перевести боковые каналы в моно (Для моделей, работающих только с моно сигналом) |
 | `-flow`, `--flow` | `flow` | `list` | Пресет в виде строк: `МОДЕЛЬ`:`ОСНОВНОЙ_СТЕМ`:`ИНВЕРСИЯ`:`ВЕС`. ([Пример](#пример-авто-ансамбль-cli)) |
 | `-json`, `-preset`, `-preset_json`, `-preset-json`, `--preset_json`, `--preset-json` | `preset` | `str` | Путь к JSON-файлу с пресетом ансамбля ([Пример](#пример-авто-ансамбль-json)) |
 

@@ -354,7 +354,8 @@ def read(
     multi_channel: bool = False, 
     num_channels: int = 2, 
     stream: int = 0, 
-    flatten: bool = False
+    flatten: bool = False,
+    preserve_side: bool = False
 ) -> Tuple[np.ndarray, int]:
     """
     Прочитать аудиофайл
@@ -384,7 +385,7 @@ def read(
         multi_channel = False
 
     if mono:
-        num_channels = 1
+        num_channels = 2 if preserve_side else 1
         multi_channel = False
 
     output_format = SAMPLE_FORMATS_DICT.get(dtype, None)
@@ -397,12 +398,12 @@ def read(
         stream = 0
     if not sr:
         sr = get_sr(path, stream, audio_info)
-    channels = 1 if mono else (get_channels(path, stream, audio_info) if multi_channel else num_channels)
+    output_channels = 1 if mono and not preserve_side else (get_channels(path, stream, audio_info) if multi_channel else num_channels)
     print(_i18n("selected_stream", i=stream))
     if not output_format:
         output_format = "f32le"
         cmd = [ffmpeg_path, "-i", path.as_posix(), "-map", f"0:a:{stream}", "-vn", 
-               "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
+               "-f", output_format, "-ac", str(output_channels), "-ar", str(sr), "-"]
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
         )
@@ -411,7 +412,7 @@ def read(
         y = convert_to_dtype(y, dtype)
     else:
         cmd = [ffmpeg_path, "-i", path.as_posix(), "-map", f"0:a:{stream}", "-vn", 
-               "-f", output_format, "-ac", str(channels), "-ar", str(sr), "-"]
+               "-f", output_format, "-ac", str(output_channels), "-ar", str(sr), "-"]
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8
         )
@@ -419,15 +420,20 @@ def read(
         y = np.frombuffer(stdout, dtype=dtype)
     
     if mono:
-        if flatten:
-            y = y.flatten()
+        if preserve_side:
+            mid, side = split_mid_side(y.reshape((-1, output_channels)).T, 4, sr)
+            y = mid + side
+            if not flatten:
+                y = y.reshape((-1, 1)).T
         else:
-            y = y.reshape((-1, 1)).T
+            if flatten:
+                y = y.flatten()
+            else:
+                y = y.reshape((-1, 1)).T  
     else:
-        y = y.reshape((-1, channels)).T
+        y = y.reshape((-1, output_channels)).T
     
     return y.copy(), sr
-
 
 def multiread(
     paths: Union[List[str | Path], Tuple[str | Path, ...]], 
@@ -970,15 +976,19 @@ def mono_to_stereo(
             return y
 
 
-def stereo_to_mono(y: np.ndarray, to_flatten: bool = False) -> np.ndarray:
+def stereo_to_mono(y: np.ndarray, to_flatten: bool = False, preserve_side: bool = False) -> np.ndarray:
     channels, samples, array_index, flatten = get_info_array(y)
     orig_dtype = y.dtype
     y = convert_to_dtype(y, np.float32)
     
     if channels > 1:
-        mono = create_zero_array(samples, np.float64)
-        for ch in split_channels(y):
-            mono = mono + gain(ch, (1 / channels))
+        if preserve_side:
+            mid, side = split_mid_side(y, 4)
+            mono = mid + side
+        else:
+            mono = create_zero_array(samples, np.float64)
+            for ch in split_channels(y):
+                mono = mono + gain(ch, (1 / channels))
         
         if not to_flatten:
             # Сохраняем ту же ориентацию, что и входной массив, но с 1 каналом
@@ -1530,7 +1540,8 @@ def mix_arrays(
     target_sr: int, 
     index: int = -1, 
     dtype: DTypeLike = np.float32,
-    normalize: bool = False
+    normalize: bool = False,
+    max_channels: int = 2
 ) -> Tuple[np.ndarray, int]:
     """
     Смешать несколько аудио массивов (сложение с нормализацией)
@@ -1556,7 +1567,6 @@ def mix_arrays(
     
     # Приводим все массивы к единому формату (одинаковая частота, длина, каналы)
     # Определяем максимальное количество каналов среди всех массивов
-    max_channels = 2  # По умолчанию стерео
     for array in arrays_float:
         channels, _, _, _ = get_info_array(array)
         if channels > max_channels:

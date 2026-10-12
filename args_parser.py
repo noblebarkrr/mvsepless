@@ -176,6 +176,11 @@ def parse_separator_args(add_params_args: dict = {}):
         action="store_true", dest="prefer_float",
         help=_i18n("prefer_float")
     )
+    separate_parser.add_argument(
+        "--preserve_side",
+        action="store_true",
+        help=_i18n("arg_preserve_side_help")
+    )
     for param_name, param_value in add_params_args.items():
         param_type = param_value.get("type")
         default = param_value.get("default")
@@ -248,6 +253,11 @@ def parse_separator_args(add_params_args: dict = {}):
         action="store_true", dest="prefer_float",
         help=_i18n("prefer_float")
     )
+    custom_separate_parser.add_argument(
+        "--preserve_side",
+        action="store_true",
+        help=_i18n("arg_preserve_side_help")
+    )
     for param_name, param_value in add_params_args.items():
         param_type = param_value.get("type")
         default = param_value.get("default")
@@ -313,6 +323,11 @@ def parse_separator_args(add_params_args: dict = {}):
         type=str, dest="preset",
         help=_i18n("arg_preset_json_help")
     )
+    iterative_ensemble_flow_group.add_argument(
+        "--preserve_side",
+        action="store_true",
+        help=_i18n("arg_preserve_side_help")
+    )
 
     # auto_ensemble
     auto_ensemble_parser.add_argument(
@@ -364,6 +379,11 @@ def parse_separator_args(add_params_args: dict = {}):
         "-json", "-preset", "-preset_json", "-preset-json", "--preset_json", "--preset-json", 
         type=str, dest="preset",
         help=_i18n("arg_preset_json_help")
+    )
+    auto_ensemble_flow_group.add_argument(
+        "--preserve_side",
+        action="store_true",
+        help=_i18n("arg_preserve_side_help")
     )
 
     # manual_ensemble
@@ -595,8 +615,6 @@ def parse_separator_args(add_params_args: dict = {}):
             dest=f"add_params.{param_name}",
             help=_i18n("arg_add_param_help")
         )
-
-    return parser.parse_args()
 
     return parser.parse_args()
 
