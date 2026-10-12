@@ -2392,8 +2392,8 @@ class PresetExecutor:
             if len(inputs) < 2:
                 raise ValueError(_i18n("join_stereo_need_two"))
             
-            left, left_sr = inputs[0]
-            right, right_sr = inputs[1]
+            left, left_sr = stereo_to_mono(inputs[0], to_flatten=True)
+            right, right_sr = stereo_to_mono(inputs[1], to_flatten=True)
             max_sr = max(left_sr, right_sr)
             
             # Приводим к одному формату
