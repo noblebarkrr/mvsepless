@@ -766,7 +766,9 @@ class MSSI: # Music Source Separation Inference
                 mono_bool = not self.config.model.stereo
         self.input_mix = easy_resampler(array.copy(), orig_sr, self.sample_rate) if orig_sr != self.sample_rate else array.copy()
         if mono_bool:
-            self.input_mix = stereo_to_mono(self.input_mix, preserve_side=preserve_side)
+            self.input_mix = stereo_to_mono(self.input_mix, preserve_side=preserve_side, flatten=False)
+        else:
+            self.input_mix = mono_to_stereo(self.input_mix, 1, 2)
 
         print(_i18n("loaded_mix")+": "+_i18n("from_array"))
         print(_i18n("array_shape")+": "+str(self.input_mix.shape))
