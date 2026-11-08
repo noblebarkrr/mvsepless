@@ -799,11 +799,12 @@ class MSSI: # Music Source Separation Inference
             step = chunk_size // num_overlap
             border = chunk_size - step
             self.model.post_init(segment_size, self.device)
-            length_init = mix_tensor.shape[-1]
 
+            length_init = mix_tensor.shape[-1]
             if length_init > 2 * border and border > 0:
                 wave = nn.functional.pad(mix_tensor, (border, border), mode="reflect")
-
+            else:
+                wave = mix_tensor.clone()
             window = _getWindowingArray(chunk_size, fade_size).to(self.device)
 
             with torch.no_grad():
