@@ -9,3 +9,5 @@ from .bs_roformer_unwa_inst_large_2 import BSRoformer_2
 from .bs_siamese_roformer import BSSiameseRoformer
 from .mel_band_roformer import MelBandRoformer
 from .mel_band_conformer import MelBandConformer
+from .ht_roformer import HybridTransformerRoformer
+from .sub_roformer import SubRoformer

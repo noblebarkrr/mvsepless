@@ -6,8 +6,7 @@ import torch
 import torch.nn.functional as F
 from beartype import beartype
 from beartype.typing import Callable
-from einops import pack, rearrange, unpack
-from einops.layers.torch import Rearrange
+from .rotary_embedding import RotaryEmbedding, rearrange, pack, unpack, Rearrange
 from torch import nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint

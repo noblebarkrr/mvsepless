@@ -12,14 +12,12 @@ librosa>=0.10.0
 samplerate==0.1.0
 matplotlib
 tqdm
-einops
 soundfile
 pydub
 webrtcvad
 audiomentations
 pedalboard
 ml_collections
-wandb
 bitsandbytes
 tokenizers
 huggingface-hub
@@ -29,7 +27,6 @@ julius>=0.2.3
 openunmix
 asteroid>=0.6.0
 prodigyopt
-rotary_embedding_torch
 gradio<6.0
 omegaconf
 beartype

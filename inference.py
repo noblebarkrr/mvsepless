@@ -94,6 +94,7 @@ class UnknownStem(Exception): pass
 model_types = (
     "mel_band_roformer",
     "bs_roformer",
+    "sub_roformer",
     "mdx23c",
     "scnet",
     "scnet_masked",
@@ -105,7 +106,7 @@ model_types = (
     "vr",
     "medley_vox"
 )
-custom_model_types = model_types[:9]
+custom_model_types = model_types[:10]
 
 HAS_OLD_AMP = False
 if hasattr(torch, "cuda"):
@@ -540,13 +541,25 @@ class MSSI: # Music Source Separation Inference
                 self.model_module = module.BSSiameseRoformer
                 self.model = self.model_module(**dict(self.config.model))
                 del module
+                
+            elif hasattr(self.config, "ht"):
+                from models import bs_roformer as module
+                self.model_module = module.HybridTransformerRoformer
+                self.model = self.model_module(**dict(self.config.model))
+                del module
 
             else:
                 from models import bs_roformer as module
                 self.model_module = module.BSRoformer
                 self.model = self.model_module(**dict(self.config.model))
                 del module
-    
+                
+        elif self.model_type == "sub_roformer":
+            from models import bs_roformer as module
+            self.model_module = module.SubRoformer
+            self.model = self.model_module(**dict(self.config.model))
+            del module
+            
         elif self.model_type == "bandit":
             from models.bandit.core import model as module
             self.model_module = module.MultiMaskMultiSourceBandSplitRNNSimple

@@ -20,6 +20,7 @@ bs_roformer
 | `conditional` | BS-Roformer Conditional (from [YingMusic-SVC](https://github.com/GiantAILab/YingMusic-SVC/blob/main/accom_separation/models/bs_roformer/bs_roformer.py)) |
 | `unwa_inst_large_2` | BS-Roformer Inst Large by Unwa |
 | `siamese` | BS-Siamese-Roformer by Unwa |
+| `ht` | Hybrid Transformer Roformer by Sucial |
 
 ## Пример использования атрибута в конфиге:
 
