@@ -7,7 +7,7 @@ import librosa
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .rotary_embedding import rearrange
+from einops import rearrange
 from torch import LongTensor, Tensor
 from torch.utils.checkpoint import checkpoint
 

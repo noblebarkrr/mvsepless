@@ -12,7 +12,10 @@ from torch.utils.checkpoint import checkpoint
 from beartype.typing import Tuple, Optional, List, Callable
 from beartype import beartype
 
-from .rotary_embedding import RotaryEmbedding, rearrange, pack, unpack, Rearrange
+from rotary_embedding_torch import RotaryEmbedding
+
+from einops import rearrange, pack, unpack
+from einops.layers.torch import Rearrange
 
 try:
     from .pope.attention import flash_attn_with_pope
@@ -55,7 +58,8 @@ class RMSNorm(Module):
 
     def forward(self, x):
         return F.normalize(x, dim=-1) * self.scale * self.gamma
-        
+
+
 # attention
 
 class FeedForward(Module):
